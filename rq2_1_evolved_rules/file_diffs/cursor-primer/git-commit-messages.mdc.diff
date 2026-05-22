@@ -1,0 +1,128 @@
+commit ffbdb8b45a93be7b295ffdf77eb7e0c78ecc7f87
+Author:     Alexander Buck <abuck@spear.ai>
+AuthorDate: Fri Apr 4 14:29:07 2025 -0400
+Commit:     Alexander Buck <abuck@spear.ai>
+CommitDate: Fri Apr 4 14:29:07 2025 -0400
+
+    feat: Add new Cursor rules for better AI interactions
+    
+    - Add cheerful-tone rule for maintaining positive engagement
+    
+    - Add git-commit-messages rule for proper commit formatting
+    
+    - Add rule-creation rule with improved file handling strategy
+
+diff --git a/.cursor/rules/registry/git-commit-messages.mdc b/.cursor/rules/registry/git-commit-messages.mdc
+new file mode 100644
+index 0000000..3e5d8c5
+--- /dev/null
++++ b/.cursor/rules/registry/git-commit-messages.mdc
+@@ -0,0 +1,80 @@
++---
++description: Guidelines for writing multi-line git commit messages in terminal commands
++type: auto_attached
++globs: ["*.sh", "*.yml", "*.yaml"]
++---
++
++# Git Commit Message Formatting in Terminal Commands
++
++## Context
++When writing git commit messages in terminal commands (especially in automation or AI-generated commands), attempting to use newline characters (\n) directly in the command string will fail. This is because terminal commands must be single-line instructions.
++
++## Key Rules
++
++1. **Use Multiple -m Flags**
++   - ❌ Don't use \n or literal newlines in the commit message
++   - ✅ Use multiple `-m` flags for each line of the commit message
++
++## Examples
++
++### ❌ Incorrect: Using newlines
++```bash
++# This will fail
++git commit -m "First line
++Second line
++Third line"
++
++# This will also fail
++git commit -m "First line\nSecond line\nThird line"
++```
++
++### ✅ Correct: Using multiple -m flags
++```bash
++git commit -m "First line" -m "Second line" -m "Third line"
++```
++
++### Real-world Example
++
++#### ❌ Incorrect: Complex commit with newlines
++```bash
++git commit -m "Initial commit: Project setup
++
++- Configure build system
++- Add dependencies
++- Setup testing framework
++- Add documentation"
++```
++
++#### ✅ Correct: Complex commit with multiple -m flags
++```bash
++git commit -m "Initial commit: Project setup" -m "- Configure build system" -m "- Add dependencies" -m "- Setup testing framework" -m "- Add documentation"
++```
++
++## Implementation Guidelines
++
++1. **First Line (Summary)**
++   - Use the first `-m` flag for the commit summary
++   - Keep it under 50 characters
++   - Example: `-m "Fix: Update user authentication"`
++
++2. **Subsequent Lines (Details)**
++   - Use additional `-m` flags for each detail line
++   - Each flag creates a new paragraph
++   - Example: `-m "- Updated JWT validation" -m "- Added refresh token support"`
++
++3. **Lists**
++   - Use separate `-m` flags for each list item
++   - Start each item with a hyphen for consistency
++   - Example: `-m "- Item 1" -m "- Item 2"`
++
++## Error Prevention
++
++Common patterns to avoid:
++1. Literal newlines in command strings
++2. Escaped newlines (\n)
++3. Backtick or quote wrapping of multi-line strings
++
++## Related Rules
++- Shell command formatting
++- GitHub Actions workflow commands
++- CI/CD pipeline commands
+
+
+commit 17627aff8849ca93d29381d38a120d13b45f5fa8
+Author:     Alexander Buck <abuck@spear.ai>
+AuthorDate: Fri Apr 4 16:02:25 2025 -0400
+Commit:     Alexander Buck <abuck@spear.ai>
+CommitDate: Fri Apr 4 16:02:25 2025 -0400
+
+    Fixed rule configuration and auto-attach patterns
+
+diff --git a/.cursor/rules/registry/git-commit-messages.mdc b/.cursor/rules/registry/git-commit-messages.mdc
+index 3e5d8c5..8dc8c71 100644
+--- a/.cursor/rules/registry/git-commit-messages.mdc
++++ b/.cursor/rules/registry/git-commit-messages.mdc
+@@ -1,9 +1,8 @@
+ ---
+ description: Guidelines for writing multi-line git commit messages in terminal commands
+-type: auto_attached
+-globs: ["*.sh", "*.yml", "*.yaml"]
++globs: 
++alwaysApply: false
+ ---
+-
+ # Git Commit Message Formatting in Terminal Commands
+ 
+ ## Context
+
+

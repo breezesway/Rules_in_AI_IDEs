@@ -1,0 +1,318 @@
+commit 8b58f5591a77f1248a97b4d46d05226d780569b1
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Wed Feb 26 16:01:26 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Wed Feb 26 16:01:26 2025 +0100
+
+    consistency improvements in css
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+new file mode 100644
+index 0000000..07e577d
+--- /dev/null
++++ b/.cursor/rules/frontend.mdc
+@@ -0,0 +1,9 @@
++---
++description: Creating frontend html and css files
++globs: *.html *.css
++alwaysApply: false
++---
++# Styling
++
++- use [style.css](mdc:src/static/css/style.css) for styling, do not inline styles in html files
++- Make sure to use consistent styling, re-use as much as possible and not create duplicates
+
+
+commit fbcdb2c4ffadd895133b606ba7e6e56f6818973a
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Wed Feb 26 17:27:26 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Wed Feb 26 17:27:26 2025 +0100
+
+    Refactor quiz page layout and styling for improved responsiveness
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 07e577d..2e96702 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -1,9 +1,11 @@
+ ---
+ description: Creating frontend html and css files
+-globs: *.html *.css
++globs: *.html, *.css
+ alwaysApply: false
+ ---
+ # Styling
+ 
+ - use [style.css](mdc:src/static/css/style.css) for styling, do not inline styles in html files
+ - Make sure to use consistent styling, re-use as much as possible and not create duplicates
++- Make simple layout using modern htmll and css best practices
++- Make sure the layout is responsive
+
+
+commit e61ad00008d43429e0172cb6c1ca540245105ffc
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Thu Feb 27 09:18:21 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Thu Feb 27 09:18:21 2025 +0100
+
+    UI improvements in list of quizzes; added implementation plans fro the future
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 2e96702..459badd 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -1,11 +1,98 @@
+ ---
+-description: Creating frontend html and css files
++description: Rule for editing and creating UI with HTML, CSS and JS
+ globs: *.html, *.css
+ alwaysApply: false
+ ---
+-# Styling
++# General
++- Make simple layout using modern html and css best practices
++- Make sure the layout is responsive
+ 
+-- use [style.css](mdc:src/static/css/style.css) for styling, do not inline styles in html files
++# Styling
++- Use [style.css](mdc:src/static/css/style.css) for styling
++- Do NOT inline styles in html files
+ - Make sure to use consistent styling, re-use as much as possible and not create duplicates
+-- Make simple layout using modern htmll and css best practices
+-- Make sure the layout is responsive
++
++ # Examples
++
++## Example 1: Using style.css instead of inline styles
++❌ Incorrect (inline styles):
++```html
++<div style="color: red; margin: 10px; font-weight: bold;">Error message</div>
++```
++
++✅ Correct (using style.css):
++```html
++<div class="error-message">Error message</div>
++```
++
++In style.css:
++```css
++.error-message {
++  color: red;
++  margin: 10px;
++  font-weight: bold;
++}
++```
++
++## Example 2: Consistent styling and avoiding duplicates
++❌ Incorrect (duplicate styles):
++```css
++.button-primary {
++  background-color: blue;
++  color: white;
++  padding: 10px 15px;
++  border-radius: 4px;
++}
++
++.submit-button {
++  background-color: blue;
++  color: white;
++  padding: 10px 15px;
++  border-radius: 4px;
++}
++```
++
++✅ Correct (reusing styles):
++```css
++.button {
++  padding: 10px 15px;
++  border-radius: 4px;
++}
++
++.button-primary {
++  background-color: blue;
++  color: white;
++}
++
++.button-secondary {
++  background-color: gray;
++  color: white;
++}
++```
++
++## Example 3: Responsive layout
++❌ Incorrect (fixed width):
++```css
++.main-content {
++  width: 960px;
++}
++```
++
++✅ Correct (responsive):
++```css
++.main-content {
++  width: 100%;
++  max-width: 960px;
++  margin: 0 auto;
++}
++
++@media (max-width: 768px) {
++  .row {
++    flex-direction: column;
++  }
++  
++  .column {
++    flex: none;
++    width: 100%;
++  }
++}
+\ No newline at end of file
+
+
+commit 8078d9b4460cee33b963e02656f20d149daac03a
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Thu Feb 27 09:52:21 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Thu Feb 27 09:52:21 2025 +0100
+
+    Fixed time dispaly; Updated frontend rules
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 459badd..9d18297 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -8,9 +8,10 @@ alwaysApply: false
+ - Make sure the layout is responsive
+ 
+ # Styling
+-- Use [style.css](mdc:src/static/css/style.css) for styling
+-- Do NOT inline styles in html files
+-- Make sure to use consistent styling, re-use as much as possible and not create duplicates
++- Use [style.css](mdc:src/static/css/style.css) for global styling (colors, common button styling, other re-usable components)
++- Do NOT inline styles
++- For component (html page) specific styling use <style> tag to keep it simple, but make it easy to move to dedicated css file
++- Make sure to use consistent styling, re-use existing styles to keep the UI consistent and not create duplicates
+ 
+  # Examples
+ 
+
+
+commit 613b3c7cfe5f254b2d314560eae9f7266a36896e
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Thu Feb 27 18:21:10 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Thu Feb 27 18:21:10 2025 +0100
+
+    Updated cursor rules
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 9d18297..773bb36 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -1,5 +1,5 @@
+ ---
+-description: Rule for editing and creating UI with HTML, CSS and JS
++description: Changing and creating UI with HTML, CSS and JS
+ globs: *.html, *.css
+ alwaysApply: false
+ ---
+@@ -8,10 +8,9 @@ alwaysApply: false
+ - Make sure the layout is responsive
+ 
+ # Styling
+-- Use [style.css](mdc:src/static/css/style.css) for global styling (colors, common button styling, other re-usable components)
+-- Do NOT inline styles
+-- For component (html page) specific styling use <style> tag to keep it simple, but make it easy to move to dedicated css file
+-- Make sure to use consistent styling, re-use existing styles to keep the UI consistent and not create duplicates
++- Use [style.css](mdc:src/static/css/style.css) for styling
++- Do NOT inline styles in html files
++- Make sure to use consistent styling, re-use as much as possible and not create duplicates
+ 
+  # Examples
+ 
+
+
+commit 3e4c749d1cab16a02a8efd6509049fa29b388230
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Fri Feb 28 11:31:14 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Fri Feb 28 11:31:33 2025 +0100
+
+    Updated Cursor rules
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 773bb36..7328952 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -3,18 +3,20 @@ description: Changing and creating UI with HTML, CSS and JS
+ globs: *.html, *.css
+ alwaysApply: false
+ ---
+-# General
++# Coding on frontend
++
++## General
+ - Make simple layout using modern html and css best practices
+ - Make sure the layout is responsive
+ 
+-# Styling
++## Styling
+ - Use [style.css](mdc:src/static/css/style.css) for styling
+ - Do NOT inline styles in html files
+ - Make sure to use consistent styling, re-use as much as possible and not create duplicates
+ 
+- # Examples
++## Examples
+ 
+-## Example 1: Using style.css instead of inline styles
++### Example 1: Using style.css instead of inline styles
+ ❌ Incorrect (inline styles):
+ ```html
+ <div style="color: red; margin: 10px; font-weight: bold;">Error message</div>
+@@ -34,7 +36,7 @@ In style.css:
+ }
+ ```
+ 
+-## Example 2: Consistent styling and avoiding duplicates
++### Example 2: Consistent styling and avoiding duplicates
+ ❌ Incorrect (duplicate styles):
+ ```css
+ .button-primary {
+@@ -70,7 +72,7 @@ In style.css:
+ }
+ ```
+ 
+-## Example 3: Responsive layout
++### Example 3: Responsive layout
+ ❌ Incorrect (fixed width):
+ ```css
+ .main-content {
+
+
+commit 196ccc837c195c771d6adc2531e300dc1650144b
+Author:     Filip Gibki <filip@solutions4delivery.com>
+AuthorDate: Fri Feb 28 12:16:19 2025 +0100
+Commit:     Filip Gibki <filip@solutions4delivery.com>
+CommitDate: Fri Feb 28 12:16:19 2025 +0100
+
+    Added icons; Updated cursor rule
+
+diff --git a/.cursor/rules/frontend.mdc b/.cursor/rules/frontend.mdc
+index 7328952..3a2292c 100644
+--- a/.cursor/rules/frontend.mdc
++++ b/.cursor/rules/frontend.mdc
+@@ -10,9 +10,10 @@ alwaysApply: false
+ - Make sure the layout is responsive
+ 
+ ## Styling
+-- Use [style.css](mdc:src/static/css/style.css) for styling
+ - Do NOT inline styles in html files
+-- Make sure to use consistent styling, re-use as much as possible and not create duplicates
++- Use [style.css](mdc:src/static/css/style.css) for styling global sytling (theme, colors, general buttons style etc.)
++- For component-specific styles place them directly in the .html file
++- Make sure to use consistent styling. Before creating new style consider if existing global or component style should not be used
+ 
+ ## Examples
+ 
+
+

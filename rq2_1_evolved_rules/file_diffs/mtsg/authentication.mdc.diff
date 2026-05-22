@@ -1,0 +1,150 @@
+commit 52dde9acd2b9996108f55cde7dc08fda3870bd90
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Tue Jul 29 17:13:08 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Tue Jul 29 17:13:08 2025 +0700
+
+    feat(dto): add authentication DTOs with tests
+    
+    Implement LoginRequest/LoginResponse DTOs and common response DTOs with
+    comprehensive unit tests. Includes nil pointer safety and proper validation
+    tags following the DTO rule patterns.
+
+diff --git a/internal/presentation/dto/.cursor/rules/authentication.mdc b/internal/presentation/dto/.cursor/rules/authentication.mdc
+new file mode 100644
+index 0000000..00aac37
+--- /dev/null
++++ b/internal/presentation/dto/.cursor/rules/authentication.mdc
+@@ -0,0 +1,97 @@
++# Authentication
++
++## LoginRequest
++
++LoginRequest consists of:
++- **email**: string, validated as email format
++- **password**: string, validated using internal/domain/user.Password.Validate()
++
++### Validation Rules
++- Email must be valid email format
++- Password must meet domain requirements (8+ chars, uppercase, lowercase, number, special char)
++
++### JSON Structure
++```json
++{
++  "email": "user@example.com",
++  "password": "SecurePass123!"
++}
++```
++
++### ToDomain Method
++Converts to `authentication.LoginInput` for use case layer
++
++### Implementation Example
++```go
++type LoginRequest struct {
++    Email    string `json:"email" validate:"required,email"`
++    Password string `json:"password" validate:"required,min=8"`
++}
++
++func (r *LoginRequest) ToDomain() authentication.LoginInput {
++    return authentication.LoginInput{
++        Email:    user.Email(r.Email),
++        Password: r.Password,
++    }
++}
++```
++
++### Error Handling
++- Validation failures return 400 Bad Request
++- Invalid credentials return 401 Unauthorized
++- User not found returns 404 Not Found 
++
++---
++
++## LoginResponse
++
++LoginResponse returns internal/domain/authentication.Session as the data
++
++### Structure
++- **access_token**: string, JWT access token for API authentication
++- **refresh_token**: string, JWT refresh token for token renewal
++
++### JSON Structure
++```json
++{
++  "status": "success",
++  "data": {
++    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
++    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
++  }
++}
++```
++
++### Implementation Example
++```go
++type LoginResponse struct {
++    AccessToken  string `json:"access_token"`
++    RefreshToken string `json:"refresh_token"`
++}
++
++func NewLoginResponse(session *authentication.Session) *LoginResponse {
++    return &LoginResponse{
++        AccessToken:  session.AccessToken,
++        RefreshToken: session.RefreshToken,
++    }
++}
++```
++
++### Usage in Handler
++```go
++func (h *AuthHandler) Login(c echo.Context) error {
++    // ... validation and use case call
++    
++    session, err := h.authUseCase.Login(ctx, credential)
++    if err != nil {
++        return error.NewUnauthorizedError("invalid credentials")
++    }
++    
++    return c.JSON(200, NewSuccessResponse(NewLoginResponse(session)))
++}
++```
++
++### Error Responses
++- **401 Unauthorized**: Invalid credentials
++- **404 Not Found**: User not found
++- **403 Forbidden**: Account locked or inactive 
+\ No newline at end of file
+
+
+commit f6639048d2e4e560a63a9b59ef1af98efcd51159
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Tue Jul 29 17:59:29 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Tue Jul 29 17:59:29 2025 +0700
+
+    feat: implement Echo HTTP server with ping endpoint and Swagger setup
+    
+    - Add Echo HTTP server with middleware (recovery, logger, CORS, request ID, gzip)
+    - Implement ping endpoint with JSON response
+    - Add health check endpoint
+    - Set up Swagger documentation generation with ping endpoint docs
+    - Integrate Echo-Swagger for API documentation
+    - Add graceful shutdown with signal handling
+    - Include comprehensive unit tests for server and handlers
+    - Update DI container to support HTTP server and handlers
+    - Add Swagger test to verify route registration
+
+diff --git a/internal/presentation/dto/.cursor/rules/authentication.mdc b/internal/presentation/dto/.cursor/rules/authentication.mdc
+index 00aac37..3b88ed4 100644
+--- a/internal/presentation/dto/.cursor/rules/authentication.mdc
++++ b/internal/presentation/dto/.cursor/rules/authentication.mdc
+@@ -1,6 +1,6 @@
+ # Authentication
+ 
+-## LoginRequest
++## LoginRequest 
+ 
+ LoginRequest consists of:
+ - **email**: string, validated as email format
+
+

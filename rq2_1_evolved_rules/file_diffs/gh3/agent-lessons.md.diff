@@ -1,0 +1,234 @@
+commit 92ec546ba591e5058d70960d494b5e5a532a8431
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 21:36:16 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 21:36:16 2025 +0700
+
+    docs: add lesson about missing Ferry generated files in commits
+    
+    Add comprehensive lesson to agent-lessons.md covering:
+    - Common problem of missing serializer files after build_runner
+    - Critical files to check (serializers.gql.dart, serializers.gql.g.dart)
+    - Best practices for staging all generated files
+    - Example commands to avoid missing files
+    
+    This addresses the issue where Ferry serializer files were missed in the
+    previous Task 3 commit, requiring a follow-up fix commit.
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/agent-lessons.md b/.kiro/steering/agent-lessons.md
+new file mode 100644
+index 0000000..7835bc7
+--- /dev/null
++++ b/.kiro/steering/agent-lessons.md
+@@ -0,0 +1,54 @@
++---
++inclusion: always
++---
++
++# Kiro Lessons Learned
++
++Quick reference for common issues and their solutions when working with Kiro.
++
++## Git Commands Hang in Terminal
++
++**Problem:** Git commands like `git diff` hang because they use interactive pager (less)
++
++**Solution:** Use `--no-pager` flag to bypass pager entirely
++
++**Command:** `git --no-pager diff`
++
++## Flutter Build Runner Deprecated Command
++
++**Problem:** `flutter packages pub run build_runner` shows deprecation warning
++
++**Solution:** Use `dart run build_runner` instead
++
++**Command:** `dart run build_runner build --delete-conflicting-outputs`
++
++## Missing Generated Files in Ferry/GraphQL Commits
++
++**Problem:** After running `flutter packages pub run build_runner build` or `dart run build_runner build`, some generated files may be missed when staging commits, particularly Ferry serializer files.
++
++**Solution:** Always check for and include ALL generated files when committing GraphQL/Ferry changes
++
++**Critical Files to Check:**
++- `lib/__generated__/serializers.gql.dart` - Ferry serialization registry
++- `lib/__generated__/serializers.gql.g.dart` - Built value serializers  
++- All `__generated__/*.graphql.dart` files in component directories
++- Updated `lib/src/init.config.dart` (Injectable dependency injection config)
++
++**Best Practice:**
++1. Run `git status` after build_runner to see ALL modified files
++2. Use `git add lib/__generated__/` to stage all generated files at once
++3. Double-check that serializer files are included before committing
++4. If missed, create immediate follow-up commit with missing files
++
++**Example Commands:**
++```bash
++# After running build_runner
++git status
++git add lib/__generated__/  # Stage all generated files
++git add lib/src/init.config.dart  # Don't forget Injectable config
++git status  # Verify all generated files are staged
++```
++
++---
++
++*Add new lessons here as they are discovered*
+\ No newline at end of file
+
+
+commit b2b9d6c018fcf45c43ffd9bf7045197242a71347
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 21:37:22 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 21:37:22 2025 +0700
+
+    docs: make Ferry generated files lesson more concise
+    
+    Simplified lesson to focus on essential commands and key files to avoid
+    missing Ferry serializer files in commits.
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/agent-lessons.md b/.kiro/steering/agent-lessons.md
+index 7835bc7..a40a52c 100644
+--- a/.kiro/steering/agent-lessons.md
++++ b/.kiro/steering/agent-lessons.md
+@@ -22,31 +22,16 @@ Quick reference for common issues and their solutions when working with Kiro.
+ 
+ **Command:** `dart run build_runner build --delete-conflicting-outputs`
+ 
+-## Missing Generated Files in Ferry/GraphQL Commits
++## Missing Ferry Generated Files in Commits
+ 
+-**Problem:** After running `flutter packages pub run build_runner build` or `dart run build_runner build`, some generated files may be missed when staging commits, particularly Ferry serializer files.
++**Problem:** Ferry serializer files missed when committing after `build_runner`
+ 
+-**Solution:** Always check for and include ALL generated files when committing GraphQL/Ferry changes
++**Solution:** Always stage ALL generated files together
+ 
+-**Critical Files to Check:**
+-- `lib/__generated__/serializers.gql.dart` - Ferry serialization registry
+-- `lib/__generated__/serializers.gql.g.dart` - Built value serializers  
+-- All `__generated__/*.graphql.dart` files in component directories
+-- Updated `lib/src/init.config.dart` (Injectable dependency injection config)
+-
+-**Best Practice:**
+-1. Run `git status` after build_runner to see ALL modified files
+-2. Use `git add lib/__generated__/` to stage all generated files at once
+-3. Double-check that serializer files are included before committing
+-4. If missed, create immediate follow-up commit with missing files
+-
+-**Example Commands:**
++**Commands:**
+ ```bash
+-# After running build_runner
+-git status
+-git add lib/__generated__/  # Stage all generated files
+-git add lib/src/init.config.dart  # Don't forget Injectable config
+-git status  # Verify all generated files are staged
++git add lib/__generated__/ lib/src/init.config.dart
++git status  # Verify serializers.gql.dart and serializers.gql.g.dart included
+ ```
+ 
+ ---
+
+
+commit f4df4d841a48c06475eea241fcf513e5ec1f30b3
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 21:38:29 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 21:38:29 2025 +0700
+
+    docs: add rule for adding lessons to agent-lessons.md
+    
+    Add clear guidelines for when and how to add new lessons:
+    - When to add: mistakes that could be prevented by following a process
+    - Format: Problem/Solution/Commands structure
+    - Style: Keep lessons short and actionable
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/agent-lessons.md b/.kiro/steering/agent-lessons.md
+index a40a52c..01ac521 100644
+--- a/.kiro/steering/agent-lessons.md
++++ b/.kiro/steering/agent-lessons.md
+@@ -6,6 +6,15 @@ inclusion: always
+ 
+ Quick reference for common issues and their solutions when working with Kiro.
+ 
++## Adding New Lessons
++
++**Rule**: When you encounter a mistake or issue that could be prevented by following a specific process, add a concise lesson here with:
++- **Problem**: Brief description of what went wrong
++- **Solution**: The correct approach or commands
++- **Commands**: Essential commands (if applicable)
++
++Keep lessons short and actionable. Add new lessons at the bottom before the "Add new lessons here" line.
++
+ ## Git Commands Hang in Terminal
+ 
+ **Problem:** Git commands like `git diff` hang because they use interactive pager (less)
+
+
+commit 6f0d0c8c031c230028eac5afce771feb56d0ec5a
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 21:39:50 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 21:39:50 2025 +0700
+
+    docs: separate rule from lessons in agent-lessons.md
+    
+    Move the rule for adding lessons outside of the "Lessons Learned" section
+    to clearly distinguish between instructions for maintaining the file and
+    the actual lessons content.
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/agent-lessons.md b/.kiro/steering/agent-lessons.md
+index 01ac521..5166d57 100644
+--- a/.kiro/steering/agent-lessons.md
++++ b/.kiro/steering/agent-lessons.md
+@@ -2,19 +2,23 @@
+ inclusion: always
+ ---
+ 
+-# Kiro Lessons Learned
++# Agent Lessons
+ 
+-Quick reference for common issues and their solutions when working with Kiro.
+-
+-## Adding New Lessons
++## Rule for Adding Lessons
+ 
+-**Rule**: When you encounter a mistake or issue that could be prevented by following a specific process, add a concise lesson here with:
++When you encounter a mistake or issue that could be prevented by following a specific process, add a concise lesson with:
+ - **Problem**: Brief description of what went wrong
+-- **Solution**: The correct approach or commands
++- **Solution**: The correct approach or commands  
+ - **Commands**: Essential commands (if applicable)
+ 
+ Keep lessons short and actionable. Add new lessons at the bottom before the "Add new lessons here" line.
+ 
++---
++
++# Lessons Learned
++
++Quick reference for common issues and their solutions when working with Kiro.
++
+ ## Git Commands Hang in Terminal
+ 
+ **Problem:** Git commands like `git diff` hang because they use interactive pager (less)
+
+

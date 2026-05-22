@@ -1,0 +1,346 @@
+commit ebb71b2fc6c4dbc241489f4f22d6618da56c9352
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 16:00:43 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 16:00:43 2025 +0700
+
+    docs: add examples to entity meta-rule for code generation
+    
+    - Provide clear examples for Identity, Enumerated String, and Constructor patterns
+    - Show how field definitions trigger type-safe code generation
+    - Clarify usage of constructor input tags for entity constructors
+    - Improve documentation for maintainability and onboarding
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+new file mode 100644
+index 0000000..07e53a8
+--- /dev/null
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -0,0 +1,59 @@
++# Entity
++
++This rule describe meta information of generic data type generation pattern.
++
++---
++## Identity
++Field Identity triggering definition of Identity of <EntityName>
++
++**Example:**
++```
++ID: Identity of Tenant
++```
++Generates:
++```go
++import "github.com/google/uuid"
++type TenantID uuid.UUID
++```
++
++---
++### Enumerated String 
++Field Enumerated string triggering definition of EnumeratedString of <EntityName>+<FieldName> 
++
++**Example:**
++```
++Status: Enumerated String of "active", "inactive", default "active"
++```
++Generates:
++```go
++type TenantStatus string
++
++const (
++    TenantStatusActive   TenantStatus = "active"
++    TenantStatusInactive TenantStatus = "inactive"
++    TenantStatusDefault  TenantStatus = TenantStatusActive // Default value
++)
++```
++
++---
++### Constructor
++Entity Definition also generates constructor with field with **constructor input** tags as args
++
++**Example:**
++```
++ID: Identity of Tenant // constructor input
++Name: string // constructor input
++Status: Tenant Status // constructor input
++CreatedAt: time.Time
++```
++Generates:
++```go
++func NewTenant(id TenantID, name string, status TenantStatus) *Tenant {
++    return &Tenant{
++        ID:     id,
++        Name:   name,
++        Status: status,
++        // other fields set to zero value or handled separately
++    }
++}
++``` 
+\ No newline at end of file
+
+
+commit 17e19b0acc817d9f7e7047ce5360982e4ebf06c3
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 16:30:01 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 16:30:01 2025 +0700
+
+    docs: update entity meta-rule for code generation and field tagging
+    
+    - Clarify that all fields are generated with JSON tags in snake_case by default
+    - Add support for 'secret' tag to exclude fields from JSON marshalling
+    - Expand examples to show field definitions, constructor inputs, and secret fields
+    - Improve documentation for maintainability, security, and code generation consistency
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index 07e53a8..44c8cec 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -36,24 +36,57 @@ const (
+ ```
+ 
+ ---
+-### Constructor
++### Entity
++All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
++
+ Entity Definition also generates constructor with field with **constructor input** tags as args
+ 
+ **Example:**
+ ```
+-ID: Identity of Tenant // constructor input
+-Name: string // constructor input
+-Status: Tenant Status // constructor input
+-CreatedAt: time.Time
++ID: Identity of Tenant - New Identity
++Name: string - constructor input
++Status: Enumerated string of "active", "inactive", default("active")
++CreatedAt: time.Time - Default: now
++SecretAttribute: string - secret
+ ```
+ Generates:
+ ```go
+-func NewTenant(id TenantID, name string, status TenantStatus) *Tenant {
++// TenantStatus represents the status of a tenant.
++type TenantStatus string
++
++const(
++    // TenantStatusActive indicates the tenant is active.
++    TenantStatusActive TenantStatus = "active"
++    // TenantStatusInactive indicates the tenant is inactive.
++    TenantStatusInactive TenantStatus = "inactive"
++)
++
++// Tenant represents a logical customer or organization using the application.
++type Tenant struct {
++    ID                  TenantID      `json:"id"` // Unique identifier for the tenant
++    Name                string        `json:"name"` // Tenant name
++    Status              TenantStatus  `json:"status"` // Status of the tenant (active or inactive)
++    CreatedAt           time.Time     `json:"created_at"` // Timestamp of tenant creation
++    SecretAttribute     string        `json:"-"` // Tenant Secret attribute
++}
++
++// NewTenant creates a new Tenant with the given name and status.
++// If status is empty, it defaults to TenantStatusActive.
++// Returns an error if ID generation fails.
++func NewTenant(name string, status TenantStatus) (*Tenant, error) {
++    id, err := uuid.New()
++    if err != nil {
++        return nil, err
++    }
++    now := time.Now().UTC()
++    if status == "" {
++        status = TenantStatusActive
++    }
+     return &Tenant{
+         ID:     id,
+         Name:   name,
+         Status: status,
+-        // other fields set to zero value or handled separately
+-    }
+-}
+-``` 
+\ No newline at end of file
++        CreatedAt: now,
++    }, nil
++} 
++
+
+
+commit 6190c501a204e0b979adba9de92c8ef9b08e61eb
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Sat Jul 12 12:14:44 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Sat Jul 12 12:14:44 2025 +0700
+
+    feat: implement updated entity.mdc rule with automatic audit fields
+    
+    - Regenerate Tenant and User entities with automatic audit field generation
+    - Add CreatedAt, UpdatedAt, DeletedAt, and IsDeleted fields automatically
+    - Fix constructor signatures to remove unnecessary error handling for uuid.New()
+    - Update import paths to use correct module path github.com/harungurubudi/mtsg
+    - Ensure consistent JSON tagging and secret field handling across entities
+    - Align code generation with enhanced entity.mdc meta-rules
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index 44c8cec..e734319 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -37,17 +37,23 @@ const (
+ 
+ ---
+ ### Entity
+-All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+-
+-Entity Definition also generates constructor with field with **constructor input** tags as args
++- Entity can be generated by list of field definition
++- By default, generated entity also automatically has following field: 
++  - CreatedAt time.Time, with default value : now in construction time 
++  - UpdatedAt time.Time, with default value : now in construction time
++  - DeletedAt time.Time, with default value : nil
++  - IsDeleted bool, with default value : false
++- All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
++- Entity Definition also generates constructor with field with **constructor input** tags as args
++- Automatic fields are set in the constructor automatically and are not passed as constructor parameters
++- Developers can override automatic fields by explicitly defining them in the field list (e.g., if different default values or field names are needed)
+ 
+ **Example:**
+ ```
+-ID: Identity of Tenant - New Identity
+-Name: string - constructor input
+-Status: Enumerated string of "active", "inactive", default("active")
+-CreatedAt: time.Time - Default: now
+-SecretAttribute: string - secret
++- ID: Identity of Tenant - New Identity
++- Name: string - constructor input
++- Status: Enumerated string of "active", "inactive", default("active")
++- SecretAttribute: string - secret
+ ```
+ Generates:
+ ```go
+@@ -66,8 +72,11 @@ type Tenant struct {
+     ID                  TenantID      `json:"id"` // Unique identifier for the tenant
+     Name                string        `json:"name"` // Tenant name
+     Status              TenantStatus  `json:"status"` // Status of the tenant (active or inactive)
+-    CreatedAt           time.Time     `json:"created_at"` // Timestamp of tenant creation
+     SecretAttribute     string        `json:"-"` // Tenant Secret attribute
++    CreatedAt           time.Time     `json:"created_at"` // Timestamp of tenant creation
++    UpdatedAt           time.Time     `json:"updated_at"` // Timestamp of tenant updated
++    DeletedAt           time.Time     `json:"-"` // Timestamp of tenant soft deletion
++    IsDeleted           bool          `json:"-"` // Flag that marks tenant is soft deleted
+ }
+ 
+ // NewTenant creates a new Tenant with the given name and status.
+@@ -87,6 +96,7 @@ func NewTenant(name string, status TenantStatus) (*Tenant, error) {
+         Name:   name,
+         Status: status,
+         CreatedAt: now,
++        UpdatedAt: now,
+     }, nil
+ } 
+ 
+
+
+commit 0fefbb7159860b4316d7af8821bd63aee55c1df8
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Sat Jul 12 12:25:48 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Sat Jul 12 12:25:48 2025 +0700
+
+    refactor: tidify the domain cursor rules
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index e734319..ecaa159 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -2,7 +2,6 @@
+ 
+ This rule describe meta information of generic data type generation pattern.
+ 
+----
+ ## Identity
+ Field Identity triggering definition of Identity of <EntityName>
+ 
+@@ -16,7 +15,6 @@ import "github.com/google/uuid"
+ type TenantID uuid.UUID
+ ```
+ 
+----
+ ### Enumerated String 
+ Field Enumerated string triggering definition of EnumeratedString of <EntityName>+<FieldName> 
+ 
+@@ -34,8 +32,6 @@ const (
+     TenantStatusDefault  TenantStatus = TenantStatusActive // Default value
+ )
+ ```
+-
+----
+ ### Entity
+ - Entity can be generated by list of field definition
+ - By default, generated entity also automatically has following field: 
+
+
+commit 35a7c5df9bc757e1e84a254deb66ad9afdaedc22
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Thu Jul 17 17:24:41 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Thu Jul 17 17:24:41 2025 +0700
+
+    docs: enhance entity.mdc rule with validation tag support
+    
+    - Add support for 'validate' struct tags compatible with go-playground/validator
+    - Clarify tags section: JSON tags (snake_case), secret fields, and validation tags
+    - Document how to specify validation requirements in field definitions
+    - Improve code generation rules for robust input validation and serialization
+    - Make entity rule more actionable for both code generation and manual implementation
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index ecaa159..c938ace 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -39,7 +39,10 @@ const (
+   - UpdatedAt time.Time, with default value : now in construction time
+   - DeletedAt time.Time, with default value : nil
+   - IsDeleted bool, with default value : false
+-- All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
++- Tags : 
++  - All fields are generated with JSON tags in snake_case by default. 
++  - Fields marked with the 'secret' tag are not marshaled to JSON.
++  - Fields described Validated as **something** have validate tag complied with github.com/go-playground/validator library.
+ - Entity Definition also generates constructor with field with **constructor input** tags as args
+ - Automatic fields are set in the constructor automatically and are not passed as constructor parameters
+ - Developers can override automatic fields by explicitly defining them in the field list (e.g., if different default values or field names are needed)
+
+
+commit a21735bafcb7c06efc7cdda719abda70bdae8aa2
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Tue Jul 29 16:51:02 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Tue Jul 29 16:51:02 2025 +0700
+
+    refactor(domain): move validation from domain to DTO layer
+    
+    Remove validate tags from domain entities and update entity rule to exclude
+    validation from domain layer. Validation is now handled in DTO layer using
+    go-playground/validator for better separation of concerns.
+
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index c938ace..38c3b1c 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -42,7 +42,6 @@ const (
+ - Tags : 
+   - All fields are generated with JSON tags in snake_case by default. 
+   - Fields marked with the 'secret' tag are not marshaled to JSON.
+-  - Fields described Validated as **something** have validate tag complied with github.com/go-playground/validator library.
+ - Entity Definition also generates constructor with field with **constructor input** tags as args
+ - Automatic fields are set in the constructor automatically and are not passed as constructor parameters
+ - Developers can override automatic fields by explicitly defining them in the field list (e.g., if different default values or field names are needed)
+@@ -99,3 +98,5 @@ func NewTenant(name string, status TenantStatus) (*Tenant, error) {
+     }, nil
+ } 
+ 
++Note: Validation is handled in the presentation layer (DTOs) using github.com/go-playground/validator. Domain entities focus purely on business logic without presentation concerns. 
++
+
+

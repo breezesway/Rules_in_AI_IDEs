@@ -1,0 +1,203 @@
+commit 580735d895dae12f2e0c83ba5d27a4bcc719538c
+Author:     Bin Wu <wubin28@gmail.com>
+AuthorDate: Fri May 9 14:25:21 2025 +0800
+Commit:     Bin Wu <wubin28@gmail.com>
+CommitDate: Fri May 9 14:25:21 2025 +0800
+
+    rules: added C4 model architecture description for Promptyoo-1 application after coding
+    
+    - Created detailed C4 model documentation outlining the context, containers, and components of the Promptyoo-1 application.
+    - Described the interaction flow between end users, the Promptyoo-1 system, and the DeepSeek API.
+    - Documented frontend and backend components, including their functionalities and interactions.
+    - Enhanced clarity on the architecture's separation of concerns and dependency injection for improved testability.
+
+diff --git a/.cursor/rules/c4-model-desc-after.mdc b/.cursor/rules/c4-model-desc-after.mdc
+new file mode 100644
+index 0000000..23f0bb2
+--- /dev/null
++++ b/.cursor/rules/c4-model-desc-after.mdc
+@@ -0,0 +1,94 @@
++---
++description: 
++globs: 
++alwaysApply: false
++---
++# C4 Model Architecture for Promptyoo-1 (after coding)
++
++## Context Level
++
++At the context level, Promptyoo-1 is an AI prompt optimization web application that helps users improve their initial prompts. The system consists of:
++
++- **End Users**: Individuals who need to optimize their AI prompts without having to answer multiple questions.
++- **Promptyoo-1 System**: The web application that processes user inputs and delivers optimized prompts.
++- **DeepSeek API**: An external AI service that performs the actual prompt optimization based on the RABPOC model.
++
++The core interaction flow involves users submitting an original prompt to Promptyoo-1, which then forwards it to the DeepSeek API for optimization according to the RABPOC model, and finally returns the enhanced prompt with streaming response capability.
++
++## Containers Level
++
++The Promptyoo-1 system is divided into two main containers:
++
++1. **Frontend Container**:
++   - Built with React 18, Vite, TypeScript, and Tailwind CSS
++   - Provides the user interface for submitting prompts and viewing results
++   - Handles streaming responses with a responsive UI
++   - Communicates with the backend via RESTful API
++   - Manages local state with React hooks
++
++2. **Backend Container**:
++   - Built with Node.js, Express, and TypeScript
++   - Acts as a proxy between the frontend and DeepSeek API
++   - Implements RESTful API endpoints for prompt optimization
++   - Handles both standard and streaming responses
++   - Protects the DeepSeek API key from direct exposure
++
++The containers communicate via HTTP/JSON through defined API endpoints, with the backend serving as the secure intermediary to the external DeepSeek AI service.
++
++## Components Level
++
++### Frontend Components
++
++1. **Page Components**:
++   - `Index.tsx`: The main page component that orchestrates prompt optimization
++   - `NotFound.tsx`: Error page for non-existent routes
++
++2. **UI Components**:
++   - `PromptForm.tsx`: Captures the user's purpose and original prompt
++   - `OptimizedResult.tsx`: Displays the optimized prompt with streaming capability
++   - `Sidebar.tsx`: Provides navigation and contextual information
++   - `LoadingIndicator.tsx`: Shows loading state during API calls
++   - `ui/*`: Various UI framework components (buttons, forms, toasts, etc.)
++
++3. **Service Components**:
++   - `api.ts`: Handles communication with the backend
++     - `optimizePrompt()`: Standard API call
++     - `optimizePromptStream()`: Streaming API call with SSE handling
++
++4. **Routing Components**:
++   - React Router with routes defined in `App.tsx`
++
++5. **State Management**:
++   - Local component state using React hooks
++   - React Query for API state management
++
++### Backend Components
++
++1. **API Router**:
++   - `prompt.routes.ts`: Defines the RESTful API endpoints:
++     - `/api/prompt/optimize`: Standard optimization endpoint
++     - `/api/prompt/optimize/stream`: Streaming optimization endpoint
++
++2. **Controllers**:
++   - `PromptController`: Handles API requests and delegates to services
++     - `optimizePrompt()`: Standard optimization
++     - `streamOptimizePrompt()`: Streaming optimization
++
++3. **Services**:
++   - `DeepSeekService`: Interacts with the DeepSeek API
++     - Configures and manages the OpenAI client for DeepSeek API
++     - Handles both standard and streaming requests
++
++4. **Middleware**:
++   - Error handling middleware
++   - Security middleware (Helmet)
++   - CORS configuration
++   - Request logging (Pino)
++
++5. **Dependency Injection**:
++   - `container.ts`: Registers and manages service dependencies using TSyringe
++
++6. **Types**:
++   - `api.ts`: Defines TypeScript interfaces for request/response data
++
++The architecture follows a clear separation of concerns with dependency injection for testability. The frontend focuses on user experience with streaming responses, while the backend securely manages the DeepSeek API integration, aligning with the RABPOC model optimization requirements specified in the project requirements.
+
+
+commit d7dbb984f5228c74b775c66a6b92f41a91610900
+Author:     Bin Wu <wubin28@gmail.com>
+AuthorDate: Fri May 9 14:35:51 2025 +0800
+Commit:     Bin Wu <wubin28@gmail.com>
+CommitDate: Fri May 9 14:35:51 2025 +0800
+
+    docs: updated C4 model description for Promptyoo-1 application after coding with versions for technical stacks
+    
+    - Enhanced the documentation of the C4 model architecture, specifying exact versions of frontend and backend technologies used, including React, Vite, TypeScript, and Tailwind CSS.
+    - Clarified the use of React Query for state management and updated details on the OpenAI SDK and middleware components.
+    - Improved descriptions of service components and dependency injection for better understanding of the system architecture.
+
+diff --git a/.cursor/rules/c4-model-desc-after.mdc b/.cursor/rules/c4-model-desc-after.mdc
+index 23f0bb2..979f47f 100644
+--- a/.cursor/rules/c4-model-desc-after.mdc
++++ b/.cursor/rules/c4-model-desc-after.mdc
+@@ -20,18 +20,19 @@ The core interaction flow involves users submitting an original prompt to Prompt
+ The Promptyoo-1 system is divided into two main containers:
+ 
+ 1. **Frontend Container**:
+-   - Built with React 18, Vite, TypeScript, and Tailwind CSS
++   - Built with React 18.3.1, Vite 5.4.1, TypeScript 5.5.3, and Tailwind CSS 3.4.11
+    - Provides the user interface for submitting prompts and viewing results
+    - Handles streaming responses with a responsive UI
+    - Communicates with the backend via RESTful API
+-   - Manages local state with React hooks
++   - Manages local state with React hooks and React Query 5.56.2
+ 
+ 2. **Backend Container**:
+-   - Built with Node.js, Express, and TypeScript
+-   - Acts as a proxy between the frontend and DeepSeek API
++   - Built with Node.js 20.x, Express 4.18.2, and TypeScript 5.2.2
++   - Acts as a proxy between the frontend and DeepSeek API using OpenAI SDK 4.22.0
+    - Implements RESTful API endpoints for prompt optimization
+    - Handles both standard and streaming responses
+    - Protects the DeepSeek API key from direct exposure
++   - Uses TSyringe 4.10.0 for dependency injection
+ 
+ The containers communicate via HTTP/JSON through defined API endpoints, with the backend serving as the secure intermediary to the external DeepSeek AI service.
+ 
+@@ -48,7 +49,7 @@ The containers communicate via HTTP/JSON through defined API endpoints, with the
+    - `OptimizedResult.tsx`: Displays the optimized prompt with streaming capability
+    - `Sidebar.tsx`: Provides navigation and contextual information
+    - `LoadingIndicator.tsx`: Shows loading state during API calls
+-   - `ui/*`: Various UI framework components (buttons, forms, toasts, etc.)
++   - `ui/*`: Various UI framework components (buttons, forms, toasts, etc.) using Radix UI components
+ 
+ 3. **Service Components**:
+    - `api.ts`: Handles communication with the backend
+@@ -56,11 +57,11 @@ The containers communicate via HTTP/JSON through defined API endpoints, with the
+      - `optimizePromptStream()`: Streaming API call with SSE handling
+ 
+ 4. **Routing Components**:
+-   - React Router with routes defined in `App.tsx`
++   - React Router 6.26.2 with routes defined in `App.tsx`
+ 
+ 5. **State Management**:
+    - Local component state using React hooks
+-   - React Query for API state management
++   - React Query 5.56.2 for API state management
+ 
+ ### Backend Components
+ 
+@@ -76,17 +77,17 @@ The containers communicate via HTTP/JSON through defined API endpoints, with the
+ 
+ 3. **Services**:
+    - `DeepSeekService`: Interacts with the DeepSeek API
+-     - Configures and manages the OpenAI client for DeepSeek API
++     - Configures and manages the OpenAI SDK 4.22.0 client for DeepSeek API
+      - Handles both standard and streaming requests
+ 
+ 4. **Middleware**:
+    - Error handling middleware
+-   - Security middleware (Helmet)
+-   - CORS configuration
+-   - Request logging (Pino)
++   - Security middleware (Helmet 7.1.0)
++   - CORS configuration (cors 2.8.5)
++   - Request logging (Pino 8.16.0 and pino-http 8.5.1)
+ 
+ 5. **Dependency Injection**:
+-   - `container.ts`: Registers and manages service dependencies using TSyringe
++   - `container.ts`: Registers and manages service dependencies using TSyringe 4.10.0
+ 
+ 6. **Types**:
+    - `api.ts`: Defines TypeScript interfaces for request/response data
+
+

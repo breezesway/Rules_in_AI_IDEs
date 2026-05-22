@@ -1,0 +1,306 @@
+commit 8a177c7120f48f49a0993b450b42e5fa341235e2
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jun 30 15:40:58 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jun 30 15:40:58 2025 -0500
+
+    feat: setup tests
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+new file mode 100644
+index 0000000..b93c988
+--- /dev/null
++++ b/.cursor/rules/components.mdc
+@@ -0,0 +1,5 @@
++---
++description:
++globs:
++alwaysApply: false
++---
+
+
+commit 4b6df968fb71202261d7cbf01ba12f285dc1249a
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 09:52:51 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 09:52:51 2025 -0500
+
+    hygen component template
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index b93c988..0dd2485 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -1,5 +1,6 @@
+ ---
+-description:
+-globs:
++description: rules for working with components 
++globs: 
+ alwaysApply: false
+ ---
++* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json
+\ No newline at end of file
+
+
+commit 27efe15f659d43e99f2e988861a0c1851107a0ec
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 16:58:49 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 16:58:49 2025 -0500
+
+    feat: more component rules
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index 0dd2485..9472099 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -1,6 +1,9 @@
+ ---
+-description: rules for working with components 
++description: rules for working with components
+ globs: 
+ alwaysApply: false
+ ---
+-* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json
+\ No newline at end of file
++* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json* When creating template refs always name them with the `El` suffix. For example:
++  * `const textareaEl = useTemplateRef('textareaEl')`  
++  * Always use `useTemplateRef('[ref identifier here]')` to define template refs (not `ref()`)
++  * ShadCN has components like `Textarea` that seem like native components but are not. Remember to account for that.
+
+
+commit 3dba0871cca14677003fa08b4513eef23c7175b2
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 17:00:50 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 17:00:50 2025 -0500
+
+    fix: read files after hygen
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index 9472099..bb53adb 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -3,7 +3,9 @@ description: rules for working with components
+ globs: 
+ alwaysApply: false
+ ---
+-* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json* When creating template refs always name them with the `El` suffix. For example:
++* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json* 
++* ALWAYS read the created files after running the hygen command.
++* When creating template refs always name them with the `El` suffix. For example:
+   * `const textareaEl = useTemplateRef('textareaEl')`  
+   * Always use `useTemplateRef('[ref identifier here]')` to define template refs (not `ref()`)
+   * ShadCN has components like `Textarea` that seem like native components but are not. Remember to account for that.
+
+
+commit 8ad5380a82c5a0034359229c355641dd9d88d3e3
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Wed Jul 2 03:20:23 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Wed Jul 2 03:20:23 2025 -0500
+
+    shadcn ui
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index bb53adb..16683ff 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -3,9 +3,65 @@ description: rules for working with components
+ globs: 
+ alwaysApply: false
+ ---
+-* When creating a brand new stand alone component (that's not a child/tightly coupled component), use the `nlx hygen component new --name [ComponentNameHere]` from package.json* 
+-* ALWAYS read the created files after running the hygen command.
+-* When creating template refs always name them with the `El` suffix. For example:
+-  * `const textareaEl = useTemplateRef('textareaEl')`  
+-  * Always use `useTemplateRef('[ref identifier here]')` to define template refs (not `ref()`)
+-  * ShadCN has components like `Textarea` that seem like native components but are not. Remember to account for that.
++## General Component Rules
++
++- Shad-cn Vue is installed and all of it's components are stored in `/components/Ui`. They can be for most common UI elements.
++
++## Component Organization and Naming Conventions
++
++- Organize components by feature within `app/components` for example:
++
++```
++app/components/
++    User
++        UserProfile
++            UserProfile.vue  // 👈 the "main" component
++            UserProfileImage.vue   // used in UserProfile.vue
++            UserProfileEdit.vue   // used in UserProfile.vue
++            UserProfile   // used in UserProfile.vue
++            UserProfile.nuxt.test.ts // 👈 test for the "main" component
++    Post
++        PostList
++            PostList
++            PostListHeader
++            PostListRow
++        PostCard
++            PostCard
++            PostCardImage
++            PostCardFooter
++```
++
++- Organize base/general that are NOT ShadCN components within `app/components/Base`
++
++## Component Definition Rules
++
++- Only create a new custom component is shad-cn doesn't already have a solution!! Rely primarily on ShadCN components!
++- NEVER try to generate a ShadCN component, all supported components are already installed (you can scan the `app/components/Ui` directory to see all available)
++- Do NOT create long components with a lot of responsibilities. Instead, break components down into smaller, more focused components
++- Create small, focused components (< 50 lines)
++- break complex logic into composables or utility functions
++- Always use TypeScript to define all components.
++- Use Typescript to define component props and emits.
++- use JS docs to document component props and emits
++- Use script setup
++- Provide the component sections in the following order:
++  - script
++  - template
++  - style 
++
++## Component Usage Rules
++
++- Do NOT import components defined within the project source code. They are auto-imported based on the file structure. For example:
++  - <PostList>, <PostCardImage>, <PostCardFooter>, `<UiTextarea>`, `<UiButton>` etc
++- The naming convention usage for ShadCN components are an exception  
++
++
++## Template Ref Rules
++
++- When creating template refs that reference a native DOM element always name them with the `El` suffix. For example:
++  -  `const textareaEl = useTemplateRef('textareaEl')`  
++- When creating template refs that reference a Vue Component always name them with the `ComponentRef` suffix. For example: 
++  - `const myComponentRef = useTemplateRef('myComponentRef')`   
++- Always use `useTemplateRef('[ref identifier here]')` to define template refs (not `ref()`)
++
++
+
+
+commit 7b5409a883777d96da1223e45d8efc1144bc121b
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Wed Jul 2 05:10:27 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Wed Jul 2 05:10:27 2025 -0500
+
+    ui rules udpates and prep
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index 16683ff..39896c6 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -3,6 +3,7 @@ description: rules for working with components
+ globs: 
+ alwaysApply: false
+ ---
++
+ ## General Component Rules
+ 
+ - Shad-cn Vue is installed and all of it's components are stored in `/components/Ui`. They can be for most common UI elements.
+@@ -64,4 +65,22 @@ app/components/
+   - `const myComponentRef = useTemplateRef('myComponentRef')`   
+ - Always use `useTemplateRef('[ref identifier here]')` to define template refs (not `ref()`)
+ 
++## Icons
++
++- Nuxt Icon is installed. 
++- Display an icon with the icon component. For example:
++  - `<Icon name="lucide:refresh">
++- Rember to prefix the icon with the packname (like `lucide:`)  
++- Any iconify icon can be used
++
++# Style
++
++- Primarily use shadcn classes for color styles. For example:
++  - bg-primary
++  - text-primary-foreground
++  - bg-muted
++  - text-muted-foreground
+ 
++- Pair bg and text-foreground colors appropriately. For example:
++  - bg-primary and text-primary-foreground
++  - bg-muted and text-muted-foreground
+\ No newline at end of file
+
+
+commit 5907aabe5d1d020eed01f1867b0b9c30450669c9
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Wed Jul 2 16:26:27 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Wed Jul 2 16:27:40 2025 -0500
+
+    fix: component rules
+
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index 39896c6..988825a 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -6,7 +6,7 @@ alwaysApply: false
+ 
+ ## General Component Rules
+ 
+-- Shad-cn Vue is installed and all of it's components are stored in `/components/Ui`. They can be for most common UI elements.
++- Shad-cn Vue is installed and all of it's components are stored in `/components/ui`. They can be for most common UI elements.
+ 
+ ## Component Organization and Naming Conventions
+ 
+@@ -15,11 +15,10 @@ alwaysApply: false
+ ```
+ app/components/
+     User
+-        UserProfile
++        UserProfile // very important it has prefix of parent directory name (ie User)
+             UserProfile.vue  // 👈 the "main" component
+             UserProfileImage.vue   // used in UserProfile.vue
+-            UserProfileEdit.vue   // used in UserProfile.vue
+-            UserProfile   // used in UserProfile.vue
++            UserProfileEdit.vue   // very important it has full prefix of parent directory name (ie UserProfile)
+             UserProfile.nuxt.test.ts // 👈 test for the "main" component
+     Post
+         PostList
+@@ -33,11 +32,12 @@ app/components/
+ ```
+ 
+ - Organize base/general that are NOT ShadCN components within `app/components/Base`
++- You should NOT structure custom project components directory or naming structure based on any ShadCN component
+ 
+ ## Component Definition Rules
+ 
+ - Only create a new custom component is shad-cn doesn't already have a solution!! Rely primarily on ShadCN components!
+-- NEVER try to generate a ShadCN component, all supported components are already installed (you can scan the `app/components/Ui` directory to see all available)
++- NEVER try to generate a ShadCN component, all supported components are already installed (you can scan the `app/components/ui` directory to see all available)
+ - Do NOT create long components with a lot of responsibilities. Instead, break components down into smaller, more focused components
+ - Create small, focused components (< 50 lines)
+ - break complex logic into composables or utility functions
+@@ -52,9 +52,11 @@ app/components/
+ 
+ ## Component Usage Rules
+ 
+-- Do NOT import components defined within the project source code. They are auto-imported based on the file structure. For example:
+-  - <PostList>, <PostCardImage>, <PostCardFooter>, `<UiTextarea>`, `<UiButton>` etc
+-- The naming convention usage for ShadCN components are an exception  
++- Do NOT import components defined within the project source code. They are auto-imported based on the compnent name. For example:
++  - `Post/PostList/PostList.vue` is used via <PostList>
++  - `Post/PostList/PostListItem.vue` is used via <PostListItem>
++  - `Post/PostCard/PostCardImage` is used via <PostCardImage>
++- The naming convention usage for ShadCN components are an exception. They are always autoimported and prefixed with `Ui` for example <UiButton>, <UiTexarea>, etc
+ 
+ 
+ ## Template Ref Rules
+@@ -83,4 +85,7 @@ app/components/
+ 
+ - Pair bg and text-foreground colors appropriately. For example:
+   - bg-primary and text-primary-foreground
+-  - bg-muted and text-muted-foreground
+\ No newline at end of file
++  - bg-muted and text-muted-foreground
++
++## Data Fetching 
++* Prefer to fetch data at the page level most of the time and keep components free from network requests as it makes them easier to test. 
+\ No newline at end of file
+
+

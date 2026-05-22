@@ -1,0 +1,112 @@
+commit c5ac8747dd98877e42fff764e5429faf0ff64ddc
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Mon Jun 23 07:35:12 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Mon Jun 23 07:35:12 2025 +0300
+
+    chore: cursor rules
+
+diff --git a/.cursor/rules/security/security-best-practices.mdc b/.cursor/rules/security/security-best-practices.mdc
+new file mode 100644
+index 0000000..c54582e
+--- /dev/null
++++ b/.cursor/rules/security/security-best-practices.mdc
+@@ -0,0 +1,63 @@
++---
++description: 
++globs: 
++alwaysApply: false
++---
++# Security Best Practices
++
++Rule for implementing security best practices and preventing common vulnerabilities.
++
++<rule>
++name: security_best_practices
++description: Enforce security best practices and prevent common vulnerabilities
++filters:
++  - type: file_extension
++    pattern: "\\.(js|ts|jsx|tsx|vue|svelte|php|py|java|cs)$"
++  - type: content
++    pattern: "(password|api_key|secret|token|auth)"
++
++actions:
++  - type: suggest
++    message: |
++      Security Best Practices:
++      
++      1. **Environment Variables**: Never hardcode secrets, use .env files
++      2. **Input Validation**: Always validate and sanitize user inputs
++      3. **SQL Injection**: Use parameterized queries, never concatenate SQL
++      4. **XSS Prevention**: Escape user content, use Content Security Policy
++      5. **CSRF Protection**: Implement CSRF tokens for state-changing operations
++      6. **Authentication**: Use secure authentication libraries
++      7. **Authorization**: Implement proper role-based access control
++      8. **HTTPS**: Always use HTTPS in production
++      9. **Dependencies**: Regularly update dependencies and scan for vulnerabilities
++      10. **Error Handling**: Don't expose sensitive information in error messages
++
++examples:
++  - input: |
++      // Bad: Hardcoded API key
++      const apiKey = "sk-1234567890abcdef";
++      fetch('/api/data', {
++        headers: { 'Authorization': `Bearer ${apiKey}` }
++      });
++    output: |
++      // Good: Environment variable
++      const apiKey = process.env.API_KEY;
++      if (!apiKey) {
++        throw new Error('API_KEY environment variable is required');
++      }
++      fetch('/api/data', {
++        headers: { 'Authorization': `Bearer ${apiKey}` }
++      });
++
++  - input: |
++      // Bad: SQL injection vulnerability
++      const query = `SELECT * FROM users WHERE id = ${userId}`;
++    output: |
++      // Good: Parameterized query
++      const query = 'SELECT * FROM users WHERE id = ?';
++      db.query(query, [userId]);
++
++metadata:
++  priority: critical
++  version: 1.0
++</rule>
+
+
+commit 97e585430c9e72905d3e27226f9c1a2dbe5c7a25
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Tue Jun 24 09:00:28 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Tue Jun 24 09:00:28 2025 +0300
+
+    feat(rules): add comprehensive Go-specific Cursor rules
+    
+    - Add 7 Go-specific rules covering all aspects of Go development
+    - go-code-organization: Package structure and naming conventions
+    - go-error-handling: Error handling patterns and wrapping
+    - go-concurrency: Goroutines, channels, and context usage
+    - go-performance: Memory management and optimization
+    - go-testing: Unit and integration testing best practices
+    - go-api-design: RESTful API design and middleware
+    - go-database: Database operations and connection management
+    - Update Prompt.md with new instruction documentation
+
+diff --git a/.cursor/rules/security/security-best-practices.mdc b/.cursor/rules/security/security-best-practices.mdc
+index c54582e..28cee71 100644
+--- a/.cursor/rules/security/security-best-practices.mdc
++++ b/.cursor/rules/security/security-best-practices.mdc
+@@ -1,7 +1,7 @@
+ ---
+ description: 
+ globs: 
+-alwaysApply: false
++alwaysApply: true
+ ---
+ # Security Best Practices
+ 
+
+

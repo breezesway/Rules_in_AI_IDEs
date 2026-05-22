@@ -1,0 +1,503 @@
+commit 84d24a8d994232d02298a776058115deb9a58ad3
+Author:     Adam Lohnes <adamalohnes@gmail.com>
+AuthorDate: Tue Apr 15 22:50:43 2025 -0700
+Commit:     Adam Lohnes <adamalohnes@gmail.com>
+CommitDate: Tue Apr 15 22:50:43 2025 -0700
+
+
+similarity index 64%
+rename from .cursor/rules/cursor_rule_creator.mdc
+rename to .cursor/rules/cursor_project_rules.mdc
+index 828bd82..eef11da 100644
+--- a/.cursor/rules/cursor_rule_creator.mdc
++++ b/.cursor/rules/cursor_project_rules.mdc
+@@ -1,7 +1,7 @@
+ ---
+-description: A rule for creating new Cursor Project Rules
++description: 
+ globs: 
+-alwaysApply: false
++alwaysApply: true
+ ---
+ # Cursor Rule Creator
+ 
+@@ -24,15 +24,40 @@ This rule provides guidance on creating and managing Cursor project rules, which
+ - **Adaptability Guidelines**: How the rule can be modified for different contexts
+ 
+ ### 3. Rule Development Workflow
+-1. Create the rule initially as a markdown (`.md`) file
++
++#### If a new Cursor Rule is being created:
++
++1. Create the rule initially as a markdown (`.md`) file in the `.cursor/rules/` directory
+ 2. Develop and refine the content
+-3. Test the rule by reviewing its effectiveness across different project types
+-4. Once finalized, use the terminal to convert to a `.mdc` file and move it to the `.cursor/rules/` directory
++3. Once finalized, use the terminal to convert to a `.mdc` file
++   ```bash
++   # Example command to copy an .md file to .mdc format
++   cp .cursor/rules/your_rule.md .cursor/rules/your_rule.mdc
++   ```
++4. Verify the content was correctly copied to the `.mdc` file
++
++#### If an existing Cursor Rule is being updated:
++
++1. Use the terminal to copy to the existing `.mdc` file as an editable `.md` file
++   ```bash
++   # Example command to copy an .mdc file to .md format
++   cp .cursor/rules/your_rule.mdc .cursor/rules/your_rule.md
++   ```
++2. Develop and refine the content of the new `.md` file
++3. Once finalized, use the terminal to convert to a `.mdc` file
+-   # Example command to copy a .md file to .mdc in the rules directory
+-   cp your_rule.md .cursor/rules/your_rule.mdc
++   # Example command to copy an .md file to .mdc format
++   cp .cursor/rules/your_rule.md .cursor/rules/your_rule.mdc
++   ```
++4. Verify the content was correctly copied to the `.mdc` file
++
++#### If an existing Cursor Rule is being re-used as-is in a new project setup:
++
++1. Use the terminal to copy to the `.mdc` file to whichever location 
++   ```bash
++   # Example command to copy an .mdc file to a newly created project structure
++   cp .cursor/rules/your_rule.mdc new_project_folder/.cursor/rules/your_rule.mdc
+-5. Verify the content was correctly copied to the .mdc file
+ 
+ ### 4. Rule Organization
+ - **IMPORTANT**: Place all rules directly in the `.cursor/rules/` directory without subdirectories
+@@ -54,16 +79,6 @@ This rule provides guidance on creating and managing Cursor project rules, which
+ - Consider versioning for significant changes
+ - Update for compatibility with new tools and APIs as they become available
+ 
+-## Implementation Steps
+-
+-1. Draft the rule content in a standard markdown file in the workspace root
+-2. Review and refine the rule content for various use cases
+-3. Use the terminal to convert to `.mdc` format and move to the rules directory:
+-   ```bash
+-   cp your_rule.md .cursor/rules/your_rule.mdc
+-   ```
+-4. Document the new rule in a central index or readme file
+-
+ ## Best Practices
+ 
+ - Keep rules focused but adaptable to different contexts
+new file mode 100644
+index 0000000..e81ed3f
+--- /dev/null
++++ b/.cursor/rules/date_checking.mdc
+@@ -0,0 +1,95 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++# Date Checking Guidelines
++
++## Overview
++
++Accurate date and time tracking is essential for maintaining project chronology, meeting deadlines, and ensuring proper documentation. This rule ensures that all temporal references in the project are verified and accurate.
++
++## Implementation Requirements
++
++### 1. Date Verification Process
++
++Before adding any date or timestamp to project documents, always verify the current date and time by running one of these terminal commands:
++
++```bash
++# Basic date and time
++date
++
++# Formatted date and time (recommended for consistency)
++date "+%Y-%m-%d %H:%M:%S"
++
++# ISO 8601 format
++date -u +"%Y-%m-%dT%H:%M:%SZ"
++```
++
++### 2. Date Usage Contexts
++
++Always verify the date when:
++
++- Creating new journal entries
++- Adding timestamps to documentation
++- Recording project milestones
++- Setting up deadline reminders
++- Creating Git commits for significant changes
++- Logging issues or bugs
++- Establishing timelines or schedules
++
++### 3. Date Formatting Standards
++
++Use consistent date formats throughout the project:
++
++- **Standard Date**: YYYY-MM-DD (e.g., 2023-05-15)
++- **Date with Time**: YYYY-MM-DD HH:MM:SS (e.g., 2023-05-15 14:30:00)
++- **File Naming**: YYYY-MM-DD-descriptor (e.g., 2023-05-15-meeting-notes.md)
++
++### 4. Time Zone Handling
++
++- Always be aware of the time zone context
++- For distributed teams, consider using UTC in documentation
++- Clearly indicate time zone when it's relevant to coordination
++- Use ISO 8601 format with 'Z' suffix for UTC times
++
++### 5. Date References in Project Planning
++
++- Verify actual dates when setting up project timelines
++- Double-check dates when estimating delivery timeframes
++- Confirm dates when referring to past events or future deadlines
++
++## Best Practices
++
++- Never assume the current date without verification
++- Include both date and time for activities requiring precise timing
++- Use relative time references (e.g., "three days ago") sparingly and only when absolute precision isn't necessary
++- When planning future activities, verify that dates account for weekends, holidays, and team availability
++
++## Implementation in Common Workflows
++
++### Journal Entries
++
++```bash
++# Get current timestamp
++TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
++
++# Use in journal entry header
++echo "# Journal Entry: Session Summary\n\n**Date**: $TIMESTAMP\n\n## Goals\n\n..." > journal/entries/$(date +%Y-%m-%d)-session.md
++```
++
++### Documentation Updates
++
++```bash
++# Add last updated timestamp to documentation
++echo "Last updated: $(date "+%Y-%m-%d %H:%M:%S")" >> docs/README.md
++```
++
++### Git Commits with Date References
++
++```bash
++# Include date in significant commit messages
++git commit -m "Complete Phase 1 milestones ($(date +%Y-%m-%d))"
++```
++
++Always prioritize accuracy in temporal references to maintain project integrity and ensure clear communication among all stakeholders.
+\ No newline at end of file
+new file mode 100644
+index 0000000..ed28046
+--- /dev/null
++++ b/.cursor/rules/documentation.mdc
+@@ -0,0 +1,104 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++# Documentation Best Practices
++
++## Overview
++
++This rule ensures comprehensive, up-to-date documentation throughout the project lifecycle. Proper documentation is essential for project continuity, collaboration, and long-term maintenance.
++
++## Documentation Types
++
++### 1. Planning Documentation
++
++- **Project Brief**: High-level overview of the project's purpose, goals, and scope
++- **Requirements Document**: Detailed specifications and acceptance criteria
++- **Architecture/Design Plans**: System design, data models, workflows, etc.
++- **Research Notes**: Findings from preliminary investigations
++
++### 2. Development Documentation
++
++- **Code Documentation**: Comments and docstrings within code
++- **Technical Guides**: How the system works internally
++- **API Documentation**: Endpoints, parameters, responses
++- **Setup Instructions**: Environment configuration and requirements
++
++### 3. User Documentation
++
++- **User Guides**: How to use the project/system
++- **FAQs**: Common questions and answers
++- **Tutorials**: Step-by-step instructions for common tasks
++- **Troubleshooting Guides**: Solutions to common problems
++
++### 4. Process Documentation
++
++- **Project Journal**: Daily/weekly progress entries
++- **Meeting Notes**: Records of discussions and decisions
++- **Change Log**: History of significant updates and changes
++- **Issue Tracking**: Problems encountered and solutions implemented
++
++## Documentation Guidelines
++
++### 1. Structure and Organization
++
++- Maintain a clear, hierarchical structure
++- Use consistent formatting and templating
++- Keep related documentation together
++- Include a table of contents for longer documents
++
++### 2. Writing Style
++
++- Use clear, concise language
++- Define technical terms and acronyms
++- Include examples for complex concepts
++- Separate instructions from explanations
++
++### 3. Maintenance Procedures
++
++- Update documentation alongside code changes
++- Review documentation regularly for accuracy
++- Mark outdated sections clearly until updated
++- Version documentation when appropriate
++
++### 4. Markdown Best Practices
++
++- Use appropriate heading levels (# for title, ## for sections, etc.)
++- Include code blocks with language specification for syntax highlighting
++- Utilize lists, tables, and other formatting to enhance readability
++- Add screenshots or diagrams for visual clarity
++
++## Implementation Requirements
++
++1. Create the documentation directory structure at project initialization
++2. Start with a comprehensive README.md at the project root
++3. Develop documentation templates for consistency
++4. Update relevant documentation with each significant change
++5. Verify documentation accuracy before finalizing project milestones
++
++## Example Directory Structure
++
++```
++/docs
++├── planning/
++│   ├── project-brief.md
++│   ├── requirements.md
++│   └── design-plans.md
++├── guides/
++│   ├── setup-guide.md
++│   ├── user-guide.md
++│   └── developer-guide.md
++├── reference/
++│   ├── api-docs.md
++│   └── architecture.md
++└── process/
++    ├── decisions.md
++    └── change-log.md
++```
++
++Always update documentation timestamps when making changes. Use the date command to ensure accuracy:
++
++```bash
++date +"%Y-%m-%d %H:%M:%S"
++```
+\ No newline at end of file
+diff --git a/.cursor/rules/git_workflow.mdc b/.cursor/rules/git_workflow.mdc
+new file mode 100644
+index 0000000..77e212c
+--- /dev/null
++++ b/.cursor/rules/git_workflow.mdc
+@@ -0,0 +1,91 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++# Git Workflow Best Practices
++
++## Overview
++
++This rule ensures proper version control throughout the project using Git. It establishes a consistent workflow for tracking changes, managing branches, and maintaining a clean repository history.
++
++## Implementation Requirements
++
++### 1. Repository Initialization
++
++- Initialize a Git repository at the start of any new project
++- Create a proper `.gitignore` file appropriate for the project type
++- Make an initial commit with the base project structure
++
++```bash
++git init
++# Create appropriate .gitignore
++git add .
++git commit -m "Initial project structure"
++```
++
++### 2. Commit Strategy
++
++- Make small, focused commits with clear purposes
++- Write descriptive commit messages following this format:
++  - First line: Concise summary (50 chars or less)
++  - Body: Detailed explanation if needed (wrap at 72 chars)
++- Commit after each significant change or milestone completion
++- Include references to tasks or issues in commit messages when applicable
++
++### 3. Branching Model
++
++- Maintain a stable `main` branch with working code
++- Create feature branches for new development work:
++  - Use descriptive branch names (e.g., `feature/user-authentication`, `fix/login-error`)
++  - Keep branches focused on single features or fixes
++- Merge completed work back to main using pull requests or direct merges when appropriate
++
++### 4. Code Reviews
++
++- Review code changes before merging to main
++- Address any identified issues or feedback
++- Ensure all tests pass before merging
++
++### 5. Tagging and Releases
++
++- Tag significant milestones and releases
++- Use Conventional Commits, when appropriate (see below)
++- Include release notes with each tag
++
++### 6. Repository Maintenance
++
++- Keep commit history clean and meaningful
++
++## Git Commands
++
++When running multiple git commands in sequence, it's typically preferred to combine them into a single command, unless that would break the intention of the command.
++
++```bash
++# Standard Example
++git add . && git commit -m "feat: detailed message about commit changes" && git status
++```
++
++## Conventional Commits
++
++Use the Conventional Commits convention of structuring commit messages (https://www.conventionalcommits.org/en/v1.0.0/):
++
++The commit message should be structured as follows:
++
++```
++<type>[optional scope]: <description>
++
++[optional body]
++
++[optional footer(s)]
++```
++
++The commit contains the following structural elements, to communicate intent to the consumers of your library:
++
++1. fix: a commit of the type `fix` patches a bug in your codebase (this correlates with `PATCH` in Semantic Versioning).
++2. feat: a commit of the type feat introduces a new feature to the codebase (this correlates with `MINOR` in Semantic Versioning).
++3. BREAKING CHANGE: a commit that has a footer `BREAKING CHANGE:`, or appends a ! after the type/scope, introduces a breaking API change (correlating with `MAJOR` in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
++4. types other than `fix:` and `feat:` are allowed, for example [@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) (based on the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines)) recommends `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.
++5. footers other than `BREAKING CHANGE: <description>` may be provided and follow a convention similar to [git trailer format](https://git-scm.com/docs/git-interpret-trailers).
++
++Additional types are not mandated by the Conventional Commits specification, and have no implicit effect in Semantic Versioning (unless they include a BREAKING CHANGE). A scope may be provided to a commit’s type, to provide additional contextual information and is contained within parenthesis, e.g., `feat(parser): add ability to parse arrays`.
+\ No newline at end of file
+
+commit ce90ee29165fbe80708b10aa3ee8b839976ef625
+Author:     Adam Lohnes <adamalohnes@gmail.com>
+AuthorDate: Tue Apr 15 23:54:16 2025 -0700
+Commit:     Adam Lohnes <adamalohnes@gmail.com>
+CommitDate: Tue Apr 15 23:54:16 2025 -0700
+
+    feat: adjust example rules
+
+diff --git a/example_rules/git_workflow.mdc b/example_rules/git_workflow.mdc
+new file mode 100644
+index 0000000..77e212c
+--- /dev/null
++++ b/example_rules/git_workflow.mdc
+@@ -0,0 +1,91 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++# Git Workflow Best Practices
++
++## Overview
++
++This rule ensures proper version control throughout the project using Git. It establishes a consistent workflow for tracking changes, managing branches, and maintaining a clean repository history.
++
++## Implementation Requirements
++
++### 1. Repository Initialization
++
++- Initialize a Git repository at the start of any new project
++- Create a proper `.gitignore` file appropriate for the project type
++- Make an initial commit with the base project structure
++
++```bash
++git init
++# Create appropriate .gitignore
++git add .
++git commit -m "Initial project structure"
++```
++
++### 2. Commit Strategy
++
++- Make small, focused commits with clear purposes
++- Write descriptive commit messages following this format:
++  - First line: Concise summary (50 chars or less)
++  - Body: Detailed explanation if needed (wrap at 72 chars)
++- Commit after each significant change or milestone completion
++- Include references to tasks or issues in commit messages when applicable
++
++### 3. Branching Model
++
++- Maintain a stable `main` branch with working code
++- Create feature branches for new development work:
++  - Use descriptive branch names (e.g., `feature/user-authentication`, `fix/login-error`)
++  - Keep branches focused on single features or fixes
++- Merge completed work back to main using pull requests or direct merges when appropriate
++
++### 4. Code Reviews
++
++- Review code changes before merging to main
++- Address any identified issues or feedback
++- Ensure all tests pass before merging
++
++### 5. Tagging and Releases
++
++- Tag significant milestones and releases
++- Use Conventional Commits, when appropriate (see below)
++- Include release notes with each tag
++
++### 6. Repository Maintenance
++
++- Keep commit history clean and meaningful
++
++## Git Commands
++
++When running multiple git commands in sequence, it's typically preferred to combine them into a single command, unless that would break the intention of the command.
++
++```bash
++# Standard Example
++git add . && git commit -m "feat: detailed message about commit changes" && git status
++```
++
++## Conventional Commits
++
++Use the Conventional Commits convention of structuring commit messages (https://www.conventionalcommits.org/en/v1.0.0/):
++
++The commit message should be structured as follows:
++
++```
++<type>[optional scope]: <description>
++
++[optional body]
++
++[optional footer(s)]
++```
++
++The commit contains the following structural elements, to communicate intent to the consumers of your library:
++
++1. fix: a commit of the type `fix` patches a bug in your codebase (this correlates with `PATCH` in Semantic Versioning).
++2. feat: a commit of the type feat introduces a new feature to the codebase (this correlates with `MINOR` in Semantic Versioning).
++3. BREAKING CHANGE: a commit that has a footer `BREAKING CHANGE:`, or appends a ! after the type/scope, introduces a breaking API change (correlating with `MAJOR` in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
++4. types other than `fix:` and `feat:` are allowed, for example [@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) (based on the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines)) recommends `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.
++5. footers other than `BREAKING CHANGE: <description>` may be provided and follow a convention similar to [git trailer format](https://git-scm.com/docs/git-interpret-trailers).
++
++Additional types are not mandated by the Conventional Commits specification, and have no implicit effect in Semantic Versioning (unless they include a BREAKING CHANGE). A scope may be provided to a commit’s type, to provide additional contextual information and is contained within parenthesis, e.g., `feat(parser): add ability to parse arrays`.
+\ No newline at end of file
+
+

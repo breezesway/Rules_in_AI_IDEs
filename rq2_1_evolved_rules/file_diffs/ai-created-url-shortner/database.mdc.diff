@@ -1,0 +1,196 @@
+commit 204c3b9541763723246bd8b995ca3eb6765483ab
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jun 30 10:58:48 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jun 30 10:58:48 2025 -0500
+
+    add database
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+new file mode 100644
+index 0000000..b22ff4a
+--- /dev/null
++++ b/.cursor/rules/database.mdc
+@@ -0,0 +1,8 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++This project uses drizzle as a databse ORM. 
++
++Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
+\ No newline at end of file
+
+
+commit 241553894715fdabcb2561870e62a7bd0a8f5d25
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jun 30 11:18:55 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jun 30 11:18:55 2025 -0500
+
+    fix: update database rules
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+index b22ff4a..2646371 100644
+--- a/.cursor/rules/database.mdc
++++ b/.cursor/rules/database.mdc
+@@ -3,6 +3,6 @@ description:
+ globs: 
+ alwaysApply: true
+ ---
+-This project uses drizzle as a databse ORM. 
+-
+-Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
+\ No newline at end of file
++* This project uses drizzle as a databse ORM. 
++* Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
++* On the server side, call the auto-imported `useDb()` function
+\ No newline at end of file
+
+
+commit bde69c40f7a0daef6a6f670a6281617b646c4c54
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jul 7 10:57:55 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jul 7 10:57:55 2025 -0500
+
+    wip
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+index 2646371..f44ce65 100644
+--- a/.cursor/rules/database.mdc
++++ b/.cursor/rules/database.mdc
+@@ -1,8 +1,24 @@
+ ---
+-description: 
++description: rules for working with the database
+ globs: 
+-alwaysApply: true
++alwaysApply: false
+ ---
+ * This project uses drizzle as a databse ORM. 
+ * Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
+-* On the server side, call the auto-imported `useDb()` function
+\ No newline at end of file
++* On the server side, call the auto-imported `useDb()` function
++* Seeds should be created as nitro tasks:
++
++```ts
++// server/tasks/seed/posts.ts
++export default defineTask({
++  meta: {
++      name: "seed:posts",
++      description: "Seed Posts",
++    },
++  run({ payload, context }) {
++    const db = useDb();
++    // do seeding
++    return { result: "Success" };
++  },
++});
++```
+\ No newline at end of file
+
+
+commit 089bfa4d17aed24c7a930f432fc34b0884cd0f91
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jul 7 14:30:36 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jul 7 14:30:36 2025 -0500
+
+    feat: update rules for common errors and database interactions
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+index f44ce65..7850774 100644
+--- a/.cursor/rules/database.mdc
++++ b/.cursor/rules/database.mdc
+@@ -5,6 +5,7 @@ alwaysApply: false
+ ---
+ * This project uses drizzle as a databse ORM. 
+ * Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
++* Changes to the schema should be made in the schema file and then run `npx drizzle-kit push` to update the database.
+ * On the server side, call the auto-imported `useDb()` function
+ * Seeds should be created as nitro tasks:
+ 
+@@ -21,4 +22,10 @@ export default defineTask({
+     return { result: "Success" };
+   },
+ });
+-```
+\ No newline at end of file
++```
++
++* Seeds can be run by making a request to the `/_nitro/tasks/[seed-name]` endpoint. For example:
++
++```bash
++curl -X GET http://localhost:3000/_nitro/tasks/seed:posts
++```
+
+
+commit f2a1ce8d1bb789b4af4b8687428d2f6a73fb1f91
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 29 14:44:00 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 29 14:44:00 2025 -0500
+
+    feat: add useDbSchema function and enable tasks in Nuxt config
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+index 7850774..9f85ca2 100644
+--- a/.cursor/rules/database.mdc
++++ b/.cursor/rules/database.mdc
+@@ -7,10 +7,12 @@ alwaysApply: false
+ * Project Schema - [drizzle-schema.ts](mdc:server/db/drizzle-schema.ts)
+ * Changes to the schema should be made in the schema file and then run `npx drizzle-kit push` to update the database.
+ * On the server side, call the auto-imported `useDb()` function
++* On the server side, call the auto-imported `useDbSchema()` function
+ * Seeds should be created as nitro tasks:
+ 
+ ```ts
+ // server/tasks/seed/posts.ts
++
+ export default defineTask({
+   meta: {
+       name: "seed:posts",
+@@ -18,6 +20,16 @@ export default defineTask({
+     },
+   run({ payload, context }) {
+     const db = useDb();
++    const schema = useDbSchema();
++    const posts = [
++      {
++        title: "Hello World",
++        content: "This is a test post",
++      },
++      // TODO: Add more here
++    ];
++
++    db.insert(schema.posts).values(posts);
+     // do seeding
+     return { result: "Success" };
+   },
+
+
+commit 053a407d985ebe257efcc5be3b46676d5438dd0b
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 29 15:03:04 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 29 15:03:04 2025 -0500
+
+    feat: uuid support for database ids
+
+diff --git a/.cursor/rules/database.mdc b/.cursor/rules/database.mdc
+index 9f85ca2..54a3b9a 100644
+--- a/.cursor/rules/database.mdc
++++ b/.cursor/rules/database.mdc
+@@ -8,6 +8,7 @@ alwaysApply: false
+ * Changes to the schema should be made in the schema file and then run `npx drizzle-kit push` to update the database.
+ * On the server side, call the auto-imported `useDb()` function
+ * On the server side, call the auto-imported `useDbSchema()` function
++* Use uuids for primary keys (`generateUuid` or `generateUuidv7`)
+ * Seeds should be created as nitro tasks:
+ 
+ ```ts
+
+

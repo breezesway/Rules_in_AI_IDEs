@@ -1,0 +1,394 @@
+commit cb2186b10a385650b379676db03b7d5488d1c13c
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Wed Jul 23 21:02:36 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Wed Jul 23 21:02:36 2025 +0700
+
+    Add initial steering rules for gh3 project
+    
+    - Add product.md: GitHub content viewer app overview
+    - Add tech.md: Flutter/Dart tech stack and architecture patterns
+    - Add structure.md: Modular screen architecture and project organization
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+new file mode 100644
+index 0000000..f254410
+--- /dev/null
++++ b/.kiro/steering/tech.md
+@@ -0,0 +1,115 @@
++# Technology Stack
++
++## Framework & Language
++- **Flutter** (Dart SDK ^3.8.1) - Cross-platform mobile development
++- **Dart** - Primary programming language
++
++## Architecture & Patterns
++- **Dependency Injection** pattern with Injectable + GetIt
++- **Screen-based modular architecture** - each screen is a self-contained module
++- **ViewModel pattern** - business logic separated from UI widgets
++- **GoRouter** for declarative routing and navigation
++- **Avoid strict layer separation** - focus on modularity and testability
++
++## Key Dependencies
++
++### Core Flutter
++- `flutter` - Flutter SDK
++- `go_router: ^16.0.0` - Declarative routing
++
++### State Management & DI
++- `injectable: ^2.5.0` - Code generation for dependency injection
++- `get_it: ^8.0.3` - Service locator for dependency injection
++
++### GraphQL & API
++- `ferry: ^0.16.2-dev.4` - GraphQL client for Flutter
++- `gql_http_link: ^1.1.0` - HTTP transport for GraphQL
++- `http: ^1.4.0` - HTTP client
++
++### Authentication & Storage
++- `shared_preferences: ^2.0.0` - Local data persistence
++- `flutter_custom_tabs: ^2.4.0` - OAuth authentication with custom tabs
++
++### UI & Utilities
++- `flutter_octicons: ^1.52.0` - GitHub-style icons
++- `flutter_markdown: ^0.7.4+1` - Markdown rendering
++- `envied: ^1.1.1` - Environment variable management
++
++### Development & Testing
++- `build_runner: ^2.5.4` - Code generation
++- `ferry_generator: ^0.14.0-dev.0` - GraphQL code generation
++- `mockito: ^5.4.4` - Mocking for tests
++- `flutter_test` - Testing framework
++
++## Build System & Code Generation
++
++### GraphQL Code Generation
++```bash
++# Generate GraphQL types and queries
++flutter packages pub run build_runner build
++
++# Watch for changes and regenerate
++flutter packages pub run build_runner watch
++```
++
++### Dependency Injection Generation
++```bash
++# Generate DI configuration
++flutter packages pub run build_runner build --delete-conflicting-outputs
++```
++
++## Common Commands
++
++### Development
++```bash
++# Run the app
++flutter run
++
++# Hot reload during development
++# Press 'r' in terminal or use IDE hot reload
++
++# Clean build
++flutter clean && flutter pub get
++```
++
++### Testing
++```bash
++# Run all tests
++flutter test
++
++# Run tests with coverage
++flutter test --coverage
++
++# Run specific test file
++flutter test test/path/to/test_file.dart
++```
++
++### Code Quality
++```bash
++# Analyze code
++flutter analyze
++
++# Format code
++dart format .
++
++# Check for linting issues
++flutter analyze --fatal-infos
++```
++
++### Build & Release
++```bash
++# Build APK (Android)
++flutter build apk
++
++# Build iOS
++flutter build ios
++
++# Build for release
++flutter build apk --release
++flutter build ios --release
++```
++
++## GraphQL Schema
++- Uses GitHub's GraphQL API v4
++- Schema file: `lib/github_schema.graphql`
++- Generated code in `lib/__generated__/` and component-specific `__generated__/` folders
+\ No newline at end of file
+
+
+commit 658e1cb1be4314c9a1aa6f19321464d5d218c770
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 17:50:53 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 17:50:53 2025 +0700
+
+    docs: update tech.md to reflect iOS-first platform strategy
+    
+    Corrected platform description and build commands to match product.md specifications - iOS as primary platform with future multi-platform support.
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index f254410..5edd21f 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -1,7 +1,7 @@
+ # Technology Stack
+ 
+ ## Framework & Language
+-- **Flutter** (Dart SDK ^3.8.1) - Cross-platform mobile development
++- **Flutter** (Dart SDK ^3.8.1) - iOS-first development (future: Android, macOS, Windows, Web)
+ - **Dart** - Primary programming language
+ 
+ ## Architecture & Patterns
+@@ -98,15 +98,17 @@ flutter analyze --fatal-infos
+ 
+ ### Build & Release
+ ```bash
+-# Build APK (Android)
+-flutter build apk
+-
+-# Build iOS
++# Build iOS (primary platform)
+ flutter build ios
+ 
+-# Build for release
+-flutter build apk --release
++# Build iOS for release
+ flutter build ios --release
++
++# Future platform builds:
++# flutter build apk (Android)
++# flutter build macos (macOS)
++# flutter build windows (Windows)
++# flutter build web (Web)
+ ```
+ 
+ ## GraphQL Schema
+
+
+commit 6d656213763a4583adc389d453a0f16911356689
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 18:11:28 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 18:11:28 2025 +0700
+
+    refactor: refine GitHub Client Authentication specification focus
+    
+    - Remove UI and feature requirements (moved to separate specs)
+    - Remove clean architecture requirements (moved to steering docs)
+    - Focus requirements on core authentication: OAuth device flow, token persistence, logout, error handling
+    - Update design to emphasize authentication module interface over app architecture
+    - Refine implementation tasks to authentication-only scope
+    - Move hybrid dependency injection patterns to steering documentation
+    - Update tech.md and structure.md with detailed architectural patterns
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 5edd21f..af7b7da 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -5,10 +5,12 @@
+ - **Dart** - Primary programming language
+ 
+ ## Architecture & Patterns
+-- **Dependency Injection** pattern with Injectable + GetIt
++- **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
+ - **Screen-based modular architecture** - each screen is a self-contained module
+-- **ViewModel pattern** - business logic separated from UI widgets
+-- **GoRouter** for declarative routing and navigation
++- **ViewModel Factory pattern** - Factories registered with DI create ViewModels with explicit dependencies
++- **RouteProvider pattern** - Each screen module provides its own route configuration
++- **GoRouter** for declarative routing with ViewModel factory integration
++- **Explicit dependency management** - All dependencies injected through constructors, no hidden GetIt calls
+ - **Avoid strict layer separation** - focus on modularity and testability
+ 
+ ## Key Dependencies
+
+
+commit c9886be4c2f1e245b25ed702b177acdc901a5f5b
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Thu Jul 24 19:52:23 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Thu Jul 24 19:52:23 2025 +0700
+
+    docs: add injectable-first dependency injection guidelines
+    
+    - Add injectable-first approach to tech.md architecture patterns
+    - Document preferred @injectable annotations over direct getIt calls
+    - Add comprehensive DI guidelines with code examples
+    - Specify acceptable getIt usage exceptions (main.dart, tests, generated code)
+    - Update dependency descriptions to clarify preferred vs underlying tools
+    - Remove redundant getIt exception documentation from structure.md
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index af7b7da..ecd6a5f 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -6,6 +6,7 @@
+ 
+ ## Architecture & Patterns
+ - **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
++- **Injectable-first approach** - Prefer `@injectable` annotations over direct `getIt` calls
+ - **Screen-based modular architecture** - each screen is a self-contained module
+ - **ViewModel Factory pattern** - Factories registered with DI create ViewModels with explicit dependencies
+ - **RouteProvider pattern** - Each screen module provides its own route configuration
+@@ -20,8 +21,8 @@
+ - `go_router: ^16.0.0` - Declarative routing
+ 
+ ### State Management & DI
+-- `injectable: ^2.5.0` - Code generation for dependency injection
+-- `get_it: ^8.0.3` - Service locator for dependency injection
++- `injectable: ^2.5.0` - Code generation for dependency injection (preferred approach)
++- `get_it: ^8.0.3` - Service locator for dependency injection (underlying container)
+ 
+ ### GraphQL & API
+ - `ferry: ^0.16.2-dev.4` - GraphQL client for Flutter
+@@ -43,6 +44,55 @@
+ - `mockito: ^5.4.4` - Mocking for tests
+ - `flutter_test` - Testing framework
+ 
++## Dependency Injection Guidelines
++
++### Injectable-First Approach
++**Prefer `@injectable` annotations over direct `getIt` calls** for better maintainability and testability.
++
++#### ✅ Preferred Pattern
++```dart
++@injectable
++class MyService {
++  final ApiClient _apiClient;
++  MyService(this._apiClient);
++}
++
++@injectable 
++class MyViewModel {
++  final MyService _service;
++  MyViewModel(this._service);
++}
++```
++
++#### ❌ Avoid Direct getIt
++```dart
++class MyService {
++  late final ApiClient _apiClient;
++  
++  MyService() {
++    _apiClient = getIt<ApiClient>(); // Avoid this
++  }
++}
++```
++
++#### Direct getIt Usage Exceptions
++Direct `getIt` calls are **only** acceptable in these specific locations:
++
++**Application Bootstrapping:**
++- `lib/main.dart` - Root application setup and initial dependency resolution
++
++**Integration Test Setup:**
++- `test/integration/*` - Test harness configuration and mock dependency setup
++
++**Generated Code:**
++- `*.g.dart` files - Code generation outputs (exempt from this rule)
++- `*.config.dart` files - Generated DI configuration files
++
++**Current Exception Locations in Codebase:**
++- `lib/main.dart:13-14` - `AuthService` and `RouteCollectionService` resolution for app bootstrap
++
++All other code locations should use `@injectable`, `@lazySingleton`, or `@singleton` annotations for dependency management.
++
+ ## Build System & Code Generation
+ 
+ ### GraphQL Code Generation
+
+
+commit 7b6f06edf2e7a5727ee827e5ef75a9de0b98cab4
+Author:     Jacob Dam <jacobdam@users.noreply.github.com>
+AuthorDate: Fri Jul 25 16:14:41 2025 +0700
+Commit:     Jacob Dam <jacobdam@users.noreply.github.com>
+CommitDate: Fri Jul 25 16:14:41 2025 +0700
+
+    fix: implement proper RouteProvider DI with @Named and @Injectable(as:)
+    
+    - Enable multiple registrations in GetIt configuration
+    - Update all RouteProviders to use @Named("ProviderName") with @Injectable(as: RouteProvider)
+    - Remove concrete type registrations to prevent duplicate registration errors
+    - Document RouteProvider DI pattern in steering/tech.md
+    - Resolves "GetIt: No Objects/factories with type RouteProvider are not registered" error
+    
+    🤖 Generated with [Claude Code](https://claude.ai/code)
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index ecd6a5f..a47a76b 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -93,6 +93,38 @@ Direct `getIt` calls are **only** acceptable in these specific locations:
+ 
+ All other code locations should use `@injectable`, `@lazySingleton`, or `@singleton` annotations for dependency management.
+ 
++### RouteProvider Dependency Injection Pattern
++
++RouteProviders follow a specific registration pattern to enable modular route collection:
++
++#### ✅ Correct Pattern
++```dart
++@Named("HomeRouteProvider")
++@Injectable(as: RouteProvider)
++class HomeRouteProvider implements RouteProvider {
++  final HomeViewModelFactory _factory;
++  HomeRouteProvider(this._factory);
++  
++  @override
++  RouteBase getRoute() => GoRoute(/* route config */);
++}
++```
++
++#### ❌ Incorrect Pattern
++```dart
++// Don't register concrete types
++@injectable
++class HomeRouteProvider implements RouteProvider { /* ... */ }
++```
++
++**Key Requirements:**
++- Use `@Named("ClassName")` for unique identification
++- Use `@Injectable(as: RouteProvider)` to register as interface type
++- **Do NOT** register concrete RouteProvider types with `@injectable`
++- Only register as the `RouteProvider` interface to enable `getAll<RouteProvider>()` collection
++
++This pattern enables `RouteCollectionService` to collect all routes via `GetIt.instance.getAll<RouteProvider>()` while maintaining modular architecture.
++
+ ## Build System & Code Generation
+ 
+ ### GraphQL Code Generation
+
+

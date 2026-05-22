@@ -1,0 +1,168 @@
+commit ab8396c95cf59eba7f49b365d1dad9fc1cd0058b
+Author:     Chuang Yu <cyu9960@gmail.com>
+AuthorDate: Sat Jun 28 20:55:53 2025 +0800
+Commit:     Chuang Yu <cyu9960@gmail.com>
+CommitDate: Sat Jun 28 20:55:53 2025 +0800
+
+    chore: add .cursorrules config file and conversations directory
+
+diff --git a/.cursorrules b/.cursorrules
+new file mode 100644
+index 0000000..9b225b8
+--- /dev/null
++++ b/.cursorrules
+@@ -0,0 +1,16 @@
++# Cursor Rules for ASCII Canvas Project
++
++## Chat History Management
++- Save all chat conversations to the `@/conversations` folder
++- Use markdown format for all conversation files
++- Refer to user as 'Chuang:' and assistant as 'Cursor:'
++- Summarize long responses for clarity while maintaining understanding
++- Note any code changes made during each conversation
++- Name files as `num-{conversation summary}.md` where num is 1 larger than the latest
++- Always ask for confirmation before creating the conversation file
++- Start numbering from 1 for the first conversation
++
++## Project Context
++- This is an ASCII Canvas project with Next.js
++- Main components: Canvas, CanvasContainer, CanvasToolbar, Sidebar
++- Uses TypeScript and modern React patterns 
+\ No newline at end of file
+
+
+commit 0b6e7f54d858ae33f37e1b8205604a54783a2c56
+Author:     Chuang Yu <cyu9960@gmail.com>
+AuthorDate: Sat Jun 28 21:09:52 2025 +0800
+Commit:     Chuang Yu <cyu9960@gmail.com>
+CommitDate: Sat Jun 28 21:09:52 2025 +0800
+
+    feat: implement drag and drop functionality for layers in Sidebar
+    
+        * Add dnd-kit library for drag and drop support
+        * Create SortableLayerItem component for draggable layers
+        * Update Sidebar to handle layer reordering with drag and drop
+        * Enhance rendering logic in Canvas to merge layers correctly
+        * Update .cursorrules to include bun for package management
+
+diff --git a/.cursorrules b/.cursorrules
+index 9b225b8..309904c 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -13,4 +13,5 @@
+ ## Project Context
+ - This is an ASCII Canvas project with Next.js
+ - Main components: Canvas, CanvasContainer, CanvasToolbar, Sidebar
+-- Uses TypeScript and modern React patterns 
+\ No newline at end of file
++- Uses TypeScript and modern React patterns
++- Use bun for package management (bun add, bun install, etc.) 
+\ No newline at end of file
+
+
+commit 90b3a56b7c5b5a36c43bbb3d751e75daf9a63f5b
+Author:     Chuang Yu <cyu9960@gmail.com>
+AuthorDate: Sun Jun 29 14:54:40 2025 +0800
+Commit:     Chuang Yu <cyu9960@gmail.com>
+CommitDate: Sun Jun 29 14:54:40 2025 +0800
+
+    docs: update .cursorrules to prioritize saving full conversations and clarify summarization guidelines
+    
+        * Save original conversations in full, prioritizing completeness
+        * Summarize only for long responses or repeated requests
+        * Update existing summarization rule for clarity
+    
+    Also add: conversations/23-update-chat-history-rules.md
+
+diff --git a/.cursorrules b/.cursorrules
+index 309904c..cd0907c 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -4,7 +4,10 @@
+ - Save all chat conversations to the `@/conversations` folder
+ - Use markdown format for all conversation files
+ - Refer to user as 'Chuang:' and assistant as 'Cursor:'
+-- Summarize long responses for clarity while maintaining understanding
++- Save the original conversation in full - prioritize completeness over summarization
++- Only summarize when:
++  - A long response is received from the agent (to maintain clarity)
++  - The same request repeatedly occurs (asking to fix something again and again)
+ - Note any code changes made during each conversation
+ - Name files as `num-{conversation summary}.md` where num is 1 larger than the latest
+ - Always ask for confirmation before creating the conversation file
+
+
+commit e5e7b8c9549243a3b73634c7f5d7b094a6ceffea
+Author:     Chuang Yu <cyu9960@gmail.com>
+AuthorDate: Sun Jun 29 16:16:04 2025 +0800
+Commit:     Chuang Yu <cyu9960@gmail.com>
+CommitDate: Sun Jun 29 16:16:04 2025 +0800
+
+    feat: implement Shift key drag mode and improved zoom for Canvas
+    
+        * Add Shift key support for temporarily enabling drag mode in CanvasContainer
+        * Update Zustand drag store to track Shift key status and previous drag state
+        * Move wheel/zoom event handling to document to ensure smooth zooming even when Shift is held
+        * Prevent shape drawing while in drag mode
+        * Disable manual drag toggle when Shift is pressed; toolbar drag button shows tooltip "Hold Shift to enter drag mode"
+        * Add tooltip UI support to CanvasToolbar using shadcn/ui
+        * Update .cursorrules with new development and conversation file documentation
+        * Add @radix-ui/react-tooltip dependency and Tooltip component
+        * Clean up Canvas, CanvasContainer, CanvasToolbar, and Zustand store to coordinate drag/zoom interactions for improved user experience
+
+diff --git a/.cursorrules b/.cursorrules
+index cd0907c..53e80c4 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -10,11 +10,45 @@
+   - The same request repeatedly occurs (asking to fix something again and again)
+ - Note any code changes made during each conversation
+ - Name files as `num-{conversation summary}.md` where num is 1 larger than the latest
+-- Always ask for confirmation before creating the conversation file
++- **ALWAYS ask for confirmation before creating the conversation file**
+ - Start numbering from 1 for the first conversation
+ 
++## Conversation File Format
++Follow this exact structure for all conversation files:
++```
++# Conversation X: [Title]
++
++**Date**: [Date]  
++**Participants**: Chuang, Cursor
++
++## Full Conversation
++[Include the actual conversation with user messages and assistant responses]
++
++## Code Changes Made
++[Detailed list of changes by file]
++
++## Technical Challenges Solved
++[Problems encountered and solutions implemented]
++
++## Features Implemented
++[Checklist of completed features]
++
++## Files Modified
++[List of files that were changed]
++```
++
+ ## Project Context
+ - This is an ASCII Canvas project with Next.js
+ - Main components: Canvas, CanvasContainer, CanvasToolbar, Sidebar
+ - Uses TypeScript and modern React patterns
+-- Use bun for package management (bun add, bun install, etc.) 
+\ No newline at end of file
++- Use bun for package management (bun add, bun install, etc.)
++- Uses Zustand for state management
++- Uses shadcn/ui for UI components
++
++## Development Guidelines
++- Always examine existing code before making changes
++- Test functionality after implementing changes
++- Follow TypeScript best practices
++- Maintain consistent code style
++- Document complex logic and state management
++- Handle edge cases and error states 
+\ No newline at end of file
+
+

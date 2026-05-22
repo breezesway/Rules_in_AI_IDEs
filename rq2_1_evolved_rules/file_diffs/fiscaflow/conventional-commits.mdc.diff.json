@@ -1,0 +1,167 @@
+[
+    {
+        "id": "E19_02",
+        "change_type": "modified",
+        "content": "- pattern: \"build_success\"\n- - type: file_change\n- pattern: \"\"\n+ pattern: \"file_save\"\n+ - type: event\n+ pattern: \"file_create\"\n+ - type: event\n+ pattern: \"file_change\"\n+ - type: event\n+ pattern: \"user_message\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_03",
+        "change_type": "modified",
+        "content": "- # Extract the change type and scope from the changes\n- CHANGE_TYPE=\"\"\n- case \"$CHANGE_DESCRIPTION\" in\n- \"add\" \"create\" \"implement\") CHANGE_TYPE=\"feat\";;\n- \"fix\" \"correct\" \"resolve\") CHANGE_TYPE=\"fix\";;\n- \"refactor\" \"restructure\") CHANGE_TYPE=\"refactor\";;\n- \"test\") CHANGE_TYPE=\"test\";;\n- \"doc\" \"comment\") CHANGE_TYPE=\"docs\";;\n- \"style\" \"format\") CHANGE_TYPE=\"style\";;\n- \"perf\" \"optimize\") CHANGE_TYPE=\"perf\";;\n- ) CHANGE_TYPE=\"chore\";;\n- esac\n-\n- # Extract scope from file path\n- SCOPE=$(dirname \"$FILE\" tr '/' '-')\n-\n- # Commit the changes\n- git add \"$FILE\"\n- git commit -m \"$CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION\"\n+ # Check if there are uncommitted changes\n+ if [ -n \"$(git status --porcelain)\" ]; then\n+ echo \"Uncommitted changes detected - should commit using conventional format\"\n+ \n+ # Extract the change type and scope from the changes\n+ CHANGE_TYPE=\"\"\n+ case \"$CHANGE_DESCRIPTION\" in\n+ \"add\" \"create\" \"implement\") CHANGE_TYPE=\"feat\";;\n+ \"fix\" \"correct\" \"resolve\") CHANGE_TYPE=\"fix\";;\n+ \"refactor\" \"restructure\") CHANGE_TYPE=\"refactor\";;\n+ \"test\") CHANGE_TYPE=\"test\";;\n+ \"doc\" \"comment\" \"readme\") CHANGE_TYPE=\"docs\";;\n+ \"style\" \"format\") CHANGE_TYPE=\"style\";;\n+ \"perf\" \"optimize\") CHANGE_TYPE=\"perf\";;\n+ *) CHANGE_TYPE=\"chore\";;\n+ esac\n+\n+ # Extract scope from file path or use default\n+ if [ -n \"$FILE\" ]; then\n+ SCOPE=$(dirname \"$FILE\" tr '/' '-' sed 's/^\\.-//')\n+ else\n+ SCOPE=\"root\"\n+ fi\n+\n+ echo \"Suggested commit: $CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION\"\n+ fi",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_04",
+        "change_type": "modified",
+        "content": "- Changes should be committed using conventional commits format:\n- Format: <type>(<scope>): <description>\n-\n+ CONVENTIONAL COMMIT ENFORCEMENT:\n+ \n+ MANDATORY: All file changes must be committed using conventional commits format\n+ \n Format: <type>(<scope>): <description>\n+ \n",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_05",
+        "change_type": "modified",
+        "content": "- The scope should be derived from the file path or affected component.\n- The description should be clear and concise, written in imperative mood.\n+ COMMIT IMMEDIATELY AFTER CHANGES:\n+ bash\n+ git add .\n+ git commit -m \"type(scope): description\"\n+ \n+ \n+ EXAMPLES:\n+ - feat(api): add user registration endpoint\n+ - fix(auth): resolve JWT token validation issue\n+ - docs(readme): update installation instructions\n+ - refactor(domain): restructure user service\n+ - test(handlers): add unit tests for transaction API\n+ - chore(deps): update Go dependencies\n+ \n+ SCOPE GUIDELINES:\n+ - api: API endpoints and handlers\n+ - domain: Business logic and models\n+ - database: Database migrations and schema\n+ - auth: Authentication and authorization\n+ - config: Configuration management\n+ - docs: Documentation files\n+ - deps: Dependencies and go.mod\n+ - root: Root level files (.gitignore, README, etc.)",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_06",
+        "change_type": "modified",
+        "content": "- - input: \n- # After adding a new function\n- CHANGE_DESCRIPTION=\"add user authentication function\"\n- FILE=\"src/auth/login.ts\"\n- output: \"feat(src-auth): add user authentication function\"\n-\n- - input: \n- # After fixing a bug\n- CHANGE_DESCRIPTION=\"fix incorrect date parsing\"\n- FILE=\"lib/utils/date.js\"\n- output: \"fix(lib-utils): fix incorrect date parsing\"\n+ - input: \n+ # After creating a new API handler\n+ FILE=\"internal/api/handlers/user.go\"\n+ CHANGE_DESCRIPTION=\"add user registration handler\"\n+ output: \n+ git add internal/api/handlers/user.go\n+ git commit -m \"feat(api): add user registration handler\"\n+\n+ - input: \n+ # After fixing a bug in authentication\n+ FILE=\"internal/domain/user/service.go\"\n+ CHANGE_DESCRIPTION=\"fix password validation logic\"\n+ output: \n+ git add internal/domain/user/service.go\n+ git commit -m \"fix(auth): fix password validation logic\"\n+\n+ - input: \n+ # After updating documentation\n+ FILE=\"README.md\"\n+ CHANGE_DESCRIPTION=\"update setup instructions\"\n+ output: \n+ git add README.md\n+ git commit -m \"docs(readme): update setup instructions\"\n+\n+ - input: \n+ # After adding new dependencies\n+ FILE=\"go.mod\"\n+ CHANGE_DESCRIPTION=\"add new Go dependencies\"\n+ output: \n+ git add go.mod go.sum\n+ git commit -m \"chore(deps): add new Go dependencies\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_07",
+        "change_type": "modified",
+        "content": "- priority: high\n- version: 1.0\n+ priority: critical\n+ version: 1.1\n+ tags: [\"git\", \"conventional-commits\", \"workflow\"]",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "e31ed46dc0b120347bd2db9c80f3cee714f53241",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_08",
+        "change_type": "modified",
+        "content": "- echo \"Uncommitted changes detected - should commit using conventional format\"\n+ echo \"Uncommitted changes detected - should run tests and commit using conventional format\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_09",
+        "change_type": "modified",
+        "content": "- echo \"Suggested commit: $CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION\"\n+ echo \"Suggested workflow: make test && git add . && git commit -m \\\"$CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION\\\"\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_10",
+        "change_type": "modified",
+        "content": "- MANDATORY: All file changes must be committed using conventional commits format\n+ MANDATORY: All file changes must be tested and committed using conventional commits format",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_11",
+        "change_type": "modified",
+        "content": "- COMMIT IMMEDIATELY AFTER CHANGES:\n+ MANDATORY WORKFLOW BEFORE COMMITTING:\n bash\n+ # 1. Run tests first\n+ make test\n+ \n+ # 2. If tests pass, stage and commit\n git add .\n git commit -m \"type(scope): description\"\n \n+ \n+ TEST REQUIREMENTS:\n+ - Unit tests must pass: make test-unit\n+ - Integration tests must pass: make test-integration\n+ - All tests must pass: make test\n+ - If tests fail, fix the issues before committing",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_12",
+        "change_type": "modified",
+        "content": "- output: \n- git add internal/api/handlers/user.go\n- git commit -m \"feat(api): add user registration handler\"\n+ output: \n+ make test\n+ git add internal/api/handlers/user.go\n+ git commit -m \"feat(api): add user registration handler\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_13",
+        "change_type": "modified",
+        "content": "- output: \n- git add internal/domain/user/service.go\n- git commit -m \"fix(auth): fix password validation logic\"\n+ output: \n+ make test\n+ git add internal/domain/user/service.go\n+ git commit -m \"fix(auth): fix password validation logic\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_14",
+        "change_type": "modified",
+        "content": "- output: \n- git add README.md\n- git commit -m \"docs(readme): update setup instructions\"\n+ output: \n+ make test\n+ git add README.md\n+ git commit -m \"docs(readme): update setup instructions\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_15",
+        "change_type": "modified",
+        "content": "- output: \n- git add go.mod go.sum\n- git commit -m \"chore(deps): add new Go dependencies\"\n+ output: \n+ make test\n+ git add go.mod go.sum\n+ git commit -m \"chore(deps): add new Go dependencies\"",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    },
+    {
+        "id": "E19_16",
+        "change_type": "modified",
+        "content": "- version: 1.1\n- tags: [\"git\", \"conventional-commits\", \"workflow\"]\n+ version: 1.2\n+ tags: [\"git\", \"conventional-commits\", \"workflow\", \"testing\"]",
+        "project": "fiscaflow",
+        "file": "conventional-commits.mdc.diff",
+        "commit_id": "4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76",
+        "first_level": "Development Workflow & Project Management",
+        "second_level": "Workflow Conventions",
+        "constraint_degree": "Mandatory"
+    }
+]

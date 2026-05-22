@@ -1,0 +1,1066 @@
+commit 68cdbbfcc96640122f8e95b7c9bac34f0742af40
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Mon Jul 14 13:40:19 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Mon Jul 14 13:40:19 2025 +0100
+
+    Add rules and update the readme
+
+diff --git a/.cursorrules b/.cursorrules
+new file mode 100644
+index 0000000..affaf5c
+--- /dev/null
++++ b/.cursorrules
+@@ -0,0 +1,125 @@
++# Cursor AI Rules for Accessibility Testing Application
++
++## Code Quality & Best Practices
++- Follow DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and SOLID principles
++- Write readable, maintainable, and well-structured code
++- Use meaningful variable and function names that clearly describe their purpose
++- Keep functions small and focused on a single responsibility
++- Remove unused imports, variables, and dead code
++- Follow consistent code formatting and style guidelines
++- Apply appropriate design patterns when beneficial
++
++## Documentation Requirements
++- Update all documentation to reflect any code changes
++- Add inline comments for complex logic, especially accessibility testing workflows
++- Update README files when functionality changes
++- Document API endpoints, parameters, and return values
++- Include JSDoc/TypeScript documentation for public functions and classes
++- Update changelog or release notes for significant changes
++- Document accessibility testing configurations and WCAG rule mappings
++
++## Testing & Quality Assurance
++- Write or update unit tests for new/modified functionality
++- Ensure all existing Playwright tests pass after changes
++- Test accessibility testing workflows with real websites
++- Consider edge cases in web crawling and accessibility analysis
++- Maintain or improve test coverage for service classes
++- Update test documentation and accessibility testing examples
++- Test CLI interactions and error scenarios
++
++## Error Handling & Resilience (Critical for Web Crawling)
++- Use the ErrorHandlerService for consistent error handling across all components
++- Implement retry logic with exponential backoff for network requests
++- Handle timeout scenarios gracefully in accessibility testing
++- Provide meaningful error messages for CLI users
++- Ensure proper cleanup in error scenarios (browser resources, file handles)
++- Log errors appropriately using the established logging patterns
++- Handle edge cases in website crawling (redirects, 404s, timeouts)
++
++## Performance & Resource Management
++- Consider memory usage in large-scale website crawling
++- Implement proper browser resource cleanup in Playwright tests
++- Use appropriate concurrency limits for parallel page testing
++- Optimize accessibility analysis for performance
++- Implement proper timeout management for web requests
++- Use efficient data structures for processing large accessibility reports
++- Monitor and manage memory usage during batch processing
++
++## Accessibility Standards Compliance
++- Ensure all accessibility testing follows WCAG 2.1 AA standards
++- Update axe-core and pa11y configurations when accessibility rules change
++- Maintain accurate WCAG rule mappings and severity levels
++- Ensure accessibility reports are comprehensive and actionable
++- Follow inclusive design principles in user interfaces
++- Test with assistive technologies when developing accessibility features
++
++## Service Architecture Standards
++- Follow the singleton pattern for service classes (ConfigurationService, ErrorHandlerService, etc.)
++- Use dependency injection patterns appropriately
++- Maintain consistent service interfaces and error handling
++- Ensure services are properly initialized and cleaned up
++- Use the established ServiceResult pattern for consistent return types
++- Follow the orchestration pattern for complex multi-step processes
++
++## TypeScript & Node.js Specific
++- Use proper TypeScript types and interfaces
++- Leverage TypeScript's type safety for accessibility testing APIs
++- Follow Node.js best practices for file system operations
++- Use async/await patterns consistently
++- Implement proper error handling in asynchronous operations
++- Use appropriate Node.js modules for system operations
++
++## Playwright & Browser Automation
++- Follow Playwright best practices for browser automation
++- Implement proper page lifecycle management
++- Use appropriate wait strategies for dynamic content
++- Handle browser context and page cleanup properly
++- Implement proper screenshot capture and storage
++- Use efficient selectors for accessibility testing
++
++## CLI & User Experience
++- Maintain consistent CLI color schemes and branding
++- Provide clear, actionable error messages for users
++- Implement proper input validation and user feedback
++- Ensure CLI remains responsive during long-running operations
++- Follow established CLI patterns and user interaction flows
++- Provide helpful progress indicators and status updates
++
++## Configuration Management
++- Use the ConfigurationService for all configuration needs
++- Ensure configuration changes are properly validated
++- Maintain backward compatibility in configuration formats
++- Document configuration options and their impact
++- Use environment variables appropriately for sensitive data
++- Implement proper configuration validation and error handling
++
++## Report Generation & File Operations
++- Use FileOperationsService for all file system operations
++- Ensure proper file path handling across different operating systems
++- Implement proper cleanup of temporary files and old reports
++- Maintain consistent report formatting and structure
++- Optimize PDF generation for large accessibility reports
++- Handle file system errors gracefully
++
++## Security Requirements
++- Never expose sensitive information in logs or reports
++- Validate all URLs before crawling to prevent security issues
++- Implement proper sandboxing for browser automation
++- Use secure defaults for Chrome/Chromium launch configurations
++- Validate file paths to prevent directory traversal attacks
++- Handle user input safely in CLI interactions
++
++## Before Every Code Change
++- Analyze the impact on existing accessibility testing workflows
++- Consider effects on service dependencies and initialization
++- Plan for proper testing of web crawling scenarios
++- Ensure changes align with service architecture patterns
++- Review impact on CLI user experience
++
++## After Every Code Change
++- Verify all Playwright tests pass with different websites
++- Check that accessibility analysis results remain accurate
++- Validate that error handling works correctly
++- Confirm proper resource cleanup in browser automation
++- Test CLI interactions and user feedback
++- Ensure accessibility reports are generated correctly
+\ No newline at end of file
+
+
+commit 513e2664f0287ff09bc713a3e1287eb5a9b6efaf
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Tue Jul 15 08:59:48 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Tue Jul 15 08:59:48 2025 +0100
+
+    fix: resolve critical linting issues
+    
+    - Fixed unused variables in multiple files
+    - Removed unused imports in service files
+    - Fixed ESLint configuration for scripts directory
+    - Reduced linting errors from 76 to 46
+    - Improved code quality and TypeScript compliance
+
+diff --git a/.cursorrules b/.cursorrules
+index affaf5c..6224912 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -1,125 +1,159 @@
+ # Cursor AI Rules for Accessibility Testing Application
+ 
+-## Code Quality & Best Practices
+-- Follow DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and SOLID principles
+-- Write readable, maintainable, and well-structured code
+-- Use meaningful variable and function names that clearly describe their purpose
+-- Keep functions small and focused on a single responsibility
+-- Remove unused imports, variables, and dead code
+-- Follow consistent code formatting and style guidelines
+-- Apply appropriate design patterns when beneficial
+-
+-## Documentation Requirements
+-- Update all documentation to reflect any code changes
+-- Add inline comments for complex logic, especially accessibility testing workflows
+-- Update README files when functionality changes
+-- Document API endpoints, parameters, and return values
+-- Include JSDoc/TypeScript documentation for public functions and classes
+-- Update changelog or release notes for significant changes
+-- Document accessibility testing configurations and WCAG rule mappings
+-
+-## Testing & Quality Assurance
++## CRITICAL PRIORITIES (Must Follow)
++These rules take absolute precedence and must be enforced on every change:
++
++### Code Quality Enforcement
++- **MANDATORY**: Run ESLint and Prettier before finalizing any code changes
++- **MANDATORY**: Ensure all linting errors are resolved and code is properly formatted
++- **MANDATORY**: Never remove existing features without explicit user approval
++- **MANDATORY**: Use TypeScript (.ts) files for all new code instead of JavaScript (.js)
++
++### Documentation & Versioning
++- **MANDATORY**: Add changelog entry for every change following semantic versioning
++- **MANDATORY**: Update version numbers (MAJOR.MINOR.PATCH) based on change type
++
++### UK Localisation Standards
++- **MANDATORY**: Use UK spelling (colour, behaviour, organisation, etc.)
++- **MANDATORY**: Use UK timezone and date formats (DD/MM/YYYY, GMT/BST)
++
++### Accessibility Compliance
++- **CRITICAL**: All documentation and PDF reports must comply with WCAG 2.1 AAA standards
++- **CRITICAL**: Ensure all brand colours meet WCAG 2.1 AAA contrast requirements (7:1 normal text, 4.5:1 large text)
++
++## HIGH PRIORITY (Should Follow)
++Important rules that should be followed but may have exceptions:
++
++### TypeScript & Type Safety
++- Provide proper TypeScript types for all functions, parameters, and return values
++- Use TypeScript interfaces and types to define data structures clearly
++- Leverage TypeScript's type safety features to prevent runtime errors
++- Add proper type annotations for better code documentation and IDE support
++
++### Testing & Quality Assurance
++- **MANDATORY**: Review and update unit tests after every change for comprehensive coverage
+ - Write or update unit tests for new/modified functionality
+ - Ensure all existing Playwright tests pass after changes
+ - Test accessibility testing workflows with real websites
+-- Consider edge cases in web crawling and accessibility analysis
+-- Maintain or improve test coverage for service classes
+-- Update test documentation and accessibility testing examples
+-- Test CLI interactions and error scenarios
+ 
+-## Error Handling & Resilience (Critical for Web Crawling)
++### Error Handling & Resilience
+ - Use the ErrorHandlerService for consistent error handling across all components
+ - Implement retry logic with exponential backoff for network requests
+ - Handle timeout scenarios gracefully in accessibility testing
+ - Provide meaningful error messages for CLI users
+-- Ensure proper cleanup in error scenarios (browser resources, file handles)
+-- Log errors appropriately using the established logging patterns
+-- Handle edge cases in website crawling (redirects, 404s, timeouts)
+ 
+-## Performance & Resource Management
++## MEDIUM PRIORITY (Follow When Possible)
++Best practices that should be implemented when practical:
++
++### Code Structure & Architecture
++- Follow DRY, KISS, and SOLID principles
++- Write readable, maintainable, and well-structured code
++- Use meaningful variable and function names
++- Keep functions small and focused on a single responsibility
++- Remove unused imports, variables, and dead code
++
++### Service Architecture Standards
++- Follow the singleton pattern for service classes
++- Use dependency injection patterns appropriately
++- Maintain consistent service interfaces and error handling
++- Use the established ServiceResult pattern for consistent return types
++
++### Performance & Resource Management
+ - Consider memory usage in large-scale website crawling
+ - Implement proper browser resource cleanup in Playwright tests
+ - Use appropriate concurrency limits for parallel page testing
+ - Optimize accessibility analysis for performance
+-- Implement proper timeout management for web requests
+-- Use efficient data structures for processing large accessibility reports
+-- Monitor and manage memory usage during batch processing
+-
+-## Accessibility Standards Compliance
+-- Ensure all accessibility testing follows WCAG 2.1 AA standards
+-- Update axe-core and pa11y configurations when accessibility rules change
+-- Maintain accurate WCAG rule mappings and severity levels
+-- Ensure accessibility reports are comprehensive and actionable
+-- Follow inclusive design principles in user interfaces
+-- Test with assistive technologies when developing accessibility features
+-
+-## Service Architecture Standards
+-- Follow the singleton pattern for service classes (ConfigurationService, ErrorHandlerService, etc.)
+-- Use dependency injection patterns appropriately
+-- Maintain consistent service interfaces and error handling
+-- Ensure services are properly initialized and cleaned up
+-- Use the established ServiceResult pattern for consistent return types
+-- Follow the orchestration pattern for complex multi-step processes
+-
+-## TypeScript & Node.js Specific
+-- Use proper TypeScript types and interfaces
+-- Leverage TypeScript's type safety for accessibility testing APIs
+-- Follow Node.js best practices for file system operations
+-- Use async/await patterns consistently
+-- Implement proper error handling in asynchronous operations
+-- Use appropriate Node.js modules for system operations
+-
+-## Playwright & Browser Automation
+-- Follow Playwright best practices for browser automation
+-- Implement proper page lifecycle management
+-- Use appropriate wait strategies for dynamic content
+-- Handle browser context and page cleanup properly
+-- Implement proper screenshot capture and storage
+-- Use efficient selectors for accessibility testing
+-
+-## CLI & User Experience
+-- Maintain consistent CLI color schemes and branding
+-- Provide clear, actionable error messages for users
+-- Implement proper input validation and user feedback
+-- Ensure CLI remains responsive during long-running operations
+-- Follow established CLI patterns and user interaction flows
+-- Provide helpful progress indicators and status updates
+-
+-## Configuration Management
+-- Use the ConfigurationService for all configuration needs
++
++## BRAND GUIDELINES (Visual Identity)
++Brand consistency requirements:
++
++### Colour Standards
++- Primary brand colours: Purple/Blue (#1e214d), Magenta (#db0064), Yellow (#fcc700)
++- Secondary colours: Dark Purple (#1b1532), Orange (#ff8a00), Light Blue (#ebf7fc)
++- Supporting colours: Green (#22b094), Blue (#00bcff)
++- **CRITICAL**: All brand colours must maintain WCAG 2.1 AAA contrast ratios
++
++### Typography
++- Use Poppins Bold for main titles and headers
++- Use Red Hat Display for smaller titles and body copy
++- Apply brand typography consistently across documentation and reports
++
++### Brand Application
++- Maintain consistent CLI colour schemes using brand colours
++- Apply brand colours to PDF reports with AAA accessibility compliance
++- Use supporting colours for status indicators with semantic meaning
++
++## CONFIGURATION & DEPENDENCIES
++Essential configuration requirements:
++
++### Tool Configuration
++- Use ConfigurationService for all configuration needs
+ - Ensure configuration changes are properly validated
+-- Maintain backward compatibility in configuration formats
+-- Document configuration options and their impact
+ - Use environment variables appropriately for sensitive data
+-- Implement proper configuration validation and error handling
+ 
+-## Report Generation & File Operations
++### File Operations
+ - Use FileOperationsService for all file system operations
+ - Ensure proper file path handling across different operating systems
+ - Implement proper cleanup of temporary files and old reports
+-- Maintain consistent report formatting and structure
+-- Optimize PDF generation for large accessibility reports
+-- Handle file system errors gracefully
+ 
+-## Security Requirements
++### Security Requirements
+ - Never expose sensitive information in logs or reports
+ - Validate all URLs before crawling to prevent security issues
+ - Implement proper sandboxing for browser automation
+ - Use secure defaults for Chrome/Chromium launch configurations
+-- Validate file paths to prevent directory traversal attacks
+-- Handle user input safely in CLI interactions
+-
+-## Before Every Code Change
+-- Analyze the impact on existing accessibility testing workflows
+-- Consider effects on service dependencies and initialization
+-- Plan for proper testing of web crawling scenarios
+-- Ensure changes align with service architecture patterns
+-- Review impact on CLI user experience
+-
+-## After Every Code Change
+-- Verify all Playwright tests pass with different websites
+-- Check that accessibility analysis results remain accurate
+-- Validate that error handling works correctly
+-- Confirm proper resource cleanup in browser automation
+-- Test CLI interactions and user feedback
+-- Ensure accessibility reports are generated correctly
+\ No newline at end of file
++
++## AUTOMATED ENFORCEMENT
++Scripts and tools to enforce rules:
++
++### Required Scripts
++- `npm run lint:fix` - Fix ESLint issues
++- `npm run format` - Apply Prettier formatting
++- `npm run typecheck` - Check TypeScript types
++- `npm run code:fix` - Run all code quality checks and fixes
++
++### Git Hooks
++- Pre-commit hook runs linting and formatting
++- Changelog validation on commits
++- Version bump validation
++
++## IMPLEMENTATION CHECKLIST
++Before every code change:
++- [ ] Analyze impact on existing accessibility testing workflows
++- [ ] Consider effects on service dependencies and initialisation
++- [ ] Plan for proper testing of web crawling scenarios
++- [ ] Ensure changes align with service architecture patterns
++- [ ] Verify brand colour usage maintains WCAG 2.1 AAA compliance
++
++After every code change:
++- [ ] Run `npm run code:fix` to ensure all linting/formatting is resolved
++- [ ] Verify all Playwright tests pass with different websites
++- [ ] Check that accessibility analysis results remain accurate
++- [ ] Validate that error handling works correctly
++- [ ] Confirm proper resource cleanup in browser automation
++- [ ] Test CLI interactions and user feedback with brand colours
++- [ ] Ensure accessibility reports are generated correctly with brand guidelines
++- [ ] Update changelog with appropriate semantic versioning
++- [ ] Review and update unit tests for comprehensive coverage
++
++## RULE COMPLIANCE MONITORING
++To ensure rules are followed:
++
++1. **Immediate Actions Required:**
++   - Fix all 2,683 ESLint/Prettier errors in codebase
++   - Convert remaining JavaScript files to TypeScript
++   - Update all `any` types to proper TypeScript types
++   - Remove unused variables and imports
++
++2. **Process Improvements:**
++   - Set up automated pre-commit hooks for linting
++   - Configure IDE to show linting errors in real-time
++   - Use git hooks to prevent commits with linting errors
++   - Regular code quality reviews
++
++3. **Documentation Updates:**
++   - Ensure all generated content meets AAA accessibility standards
++   - Update README with current setup instructions
++   - Document all service interfaces and error patterns
++   - Maintain comprehensive changelog
++
++The rules are comprehensive but require systematic implementation and automated enforcement to be effective.
+\ No newline at end of file
+
+
+commit 3a745b8a0acced7309ab92a8c4d01d295fad619f
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Tue Jul 15 10:23:26 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Tue Jul 15 10:23:26 2025 +0100
+
+    Lots of changes
+
+diff --git a/.cursorrules b/.cursorrules
+index 6224912..c0ee61b 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -138,22 +138,22 @@ After every code change:
+ ## RULE COMPLIANCE MONITORING
+ To ensure rules are followed:
+ 
+-1. **Immediate Actions Required:**
+-   - Fix all 2,683 ESLint/Prettier errors in codebase
+-   - Convert remaining JavaScript files to TypeScript
+-   - Update all `any` types to proper TypeScript types
+-   - Remove unused variables and imports
+-
+-2. **Process Improvements:**
+-   - Set up automated pre-commit hooks for linting
+-   - Configure IDE to show linting errors in real-time
+-   - Use git hooks to prevent commits with linting errors
+-   - Regular code quality reviews
+-
+-3. **Documentation Updates:**
+-   - Ensure all generated content meets AAA accessibility standards
+-   - Update README with current setup instructions
+-   - Document all service interfaces and error patterns
+-   - Maintain comprehensive changelog
+-
+-The rules are comprehensive but require systematic implementation and automated enforcement to be effective.
+\ No newline at end of file
++1. **Automated Enforcement:**
++   - Pre-commit hooks automatically run linting and formatting
++   - IDE integration shows linting errors in real-time
++   - Git hooks prevent commits with linting errors
++   - Regular automated code quality checks
++
++2. **Quality Standards:**
++   - All code must pass TypeScript compilation
++   - ESLint and Prettier must show zero errors
++   - All new code requires proper TypeScript types
++   - Unused imports and variables must be removed
++
++3. **Documentation Standards:**
++   - All generated content must meet AAA accessibility standards
++   - Service interfaces must be properly documented
++   - Changelog must be maintained with semantic versioning
++   - README must reflect current setup instructions
++
++The rules are comprehensive and are enforced through automated tooling and development processes.
+\ No newline at end of file
+
+
+commit bc6a8b71920412bb76bfa50813af297e23acc4b1
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Sat Jul 19 01:00:25 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Sat Jul 19 01:00:25 2025 +0100
+
+    It finally works... again
+
+diff --git a/.cursorrules b/.cursorrules
+index c0ee61b..d52f2f0 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -1,159 +1,157 @@
+ # Cursor AI Rules for Accessibility Testing Application
+ 
+-## CRITICAL PRIORITIES (Must Follow)
+-These rules take absolute precedence and must be enforced on every change:
+-
+-### Code Quality Enforcement
+-- **MANDATORY**: Run ESLint and Prettier before finalizing any code changes
+-- **MANDATORY**: Ensure all linting errors are resolved and code is properly formatted
++## MANDATORY RULES (Must Follow)
++All rules below are mandatory and must be enforced on every change:
++
++### Documentation & Reference Files
++- **MANDATORY**: Before making ANY changes, read and reference these files:
++  • `docs/AI_DEVELOPMENT_GUIDE.md` - AI-specific development guidelines and critical rules
++  • `docs/DEPENDENCY_MAP.md` - Complete dependency relationships and import patterns
++  • `docs/ARCHITECTURE_DIAGRAM.md` - Visual system architecture and data flow
++  • `docs/QUICK_REFERENCE.md` - Fast reference for common operations
++  • `docs/PROJECT_OVERVIEW.md` - High-level project understanding
++- **MANDATORY**: After making changes, update relevant reference files:
++  • New services → Update `docs/DEPENDENCY_MAP.md` service dependencies section
++  • New types → Update `docs/DEPENDENCY_MAP.md` core dependencies section
++  • New imports → Update `docs/DEPENDENCY_MAP.md` import patterns section
++  • Architecture changes → Update `docs/ARCHITECTURE_DIAGRAM.md` relevant sections
++  • New patterns → Update `docs/QUICK_REFERENCE.md` common patterns section
++  • Breaking changes → Update `docs/AI_DEVELOPMENT_GUIDE.md` critical rules section
++
++### Code Quality
+ - **MANDATORY**: Never remove existing features without explicit user approval
++- **MANDATORY**: Use the PROJECT_OVERVIEW to assert what is classed as an existing features
+ - **MANDATORY**: Use TypeScript (.ts) files for all new code instead of JavaScript (.js)
+-
+-### Documentation & Versioning
+-- **MANDATORY**: Add changelog entry for every change following semantic versioning
+-- **MANDATORY**: Update version numbers (MAJOR.MINOR.PATCH) based on change type
+-
+-### UK Localisation Standards
++- **MANDATORY**: Follow DRY, KISS, and SOLID principles
++
++### Documentation & Change Tracking
++- **MANDATORY**: Add CHANGELOG entry for every chat prompt using format: `DD/MM/YYYY HH:MM GMT/BST - [Prompt text]`
++- **MANDATORY**: Update README sections based on change type:
++  • New features/functionality → Update "Getting Started", "What It Does", and "Reports Generated" sections
++  • CLI changes → Update "Getting Started" section with new commands/options
++  • Configuration changes → Update "Configuration" section with new settings
++  • Architecture changes → Update "Architecture" section and "System Requirements"
++  • Setup/installation changes → Update "Installation & Setup" section
++  • Performance improvements → Update relevant sections with new metrics/capabilities
++  • Always verify README accuracy after any functional changes
++
++### UK Standards
+ - **MANDATORY**: Use UK spelling (colour, behaviour, organisation, etc.)
+ - **MANDATORY**: Use UK timezone and date formats (DD/MM/YYYY, GMT/BST)
+ 
+ ### Accessibility Compliance
+-- **CRITICAL**: All documentation and PDF reports must comply with WCAG 2.1 AAA standards
+-- **CRITICAL**: Ensure all brand colours meet WCAG 2.1 AAA contrast requirements (7:1 normal text, 4.5:1 large text)
+-
+-## HIGH PRIORITY (Should Follow)
+-Important rules that should be followed but may have exceptions:
+-
+-### TypeScript & Type Safety
+-- Provide proper TypeScript types for all functions, parameters, and return values
+-- Use TypeScript interfaces and types to define data structures clearly
+-- Leverage TypeScript's type safety features to prevent runtime errors
+-- Add proper type annotations for better code documentation and IDE support
+-
+-### Testing & Quality Assurance
+-- **MANDATORY**: Review and update unit tests after every change for comprehensive coverage
+-- Write or update unit tests for new/modified functionality
+-- Ensure all existing Playwright tests pass after changes
+-- Test accessibility testing workflows with real websites
+-
+-### Error Handling & Resilience
+-- Use the ErrorHandlerService for consistent error handling across all components
+-- Implement retry logic with exponential backoff for network requests
+-- Handle timeout scenarios gracefully in accessibility testing
+-- Provide meaningful error messages for CLI users
+-
+-## MEDIUM PRIORITY (Follow When Possible)
+-Best practices that should be implemented when practical:
+-
+-### Code Structure & Architecture
+-- Follow DRY, KISS, and SOLID principles
+-- Write readable, maintainable, and well-structured code
+-- Use meaningful variable and function names
+-- Keep functions small and focused on a single responsibility
+-- Remove unused imports, variables, and dead code
+-
+-### Service Architecture Standards
+-- Follow the singleton pattern for service classes
+-- Use dependency injection patterns appropriately
+-- Maintain consistent service interfaces and error handling
+-- Use the established ServiceResult pattern for consistent return types
+-
+-### Performance & Resource Management
+-- Consider memory usage in large-scale website crawling
+-- Implement proper browser resource cleanup in Playwright tests
+-- Use appropriate concurrency limits for parallel page testing
+-- Optimize accessibility analysis for performance
+-
+-## BRAND GUIDELINES (Visual Identity)
+-Brand consistency requirements:
+-
+-### Colour Standards
+-- Primary brand colours: Purple/Blue (#1e214d), Magenta (#db0064), Yellow (#fcc700)
+-- Secondary colours: Dark Purple (#1b1532), Orange (#ff8a00), Light Blue (#ebf7fc)
+-- Supporting colours: Green (#22b094), Blue (#00bcff)
+-- **CRITICAL**: All brand colours must maintain WCAG 2.1 AAA contrast ratios
+-
+-### Typography
+-- Use Poppins Bold for main titles and headers
+-- Use Red Hat Display for smaller titles and body copy
+-- Apply brand typography consistently across documentation and reports
+-
+-### Brand Application
+-- Maintain consistent CLI colour schemes using brand colours
+-- Apply brand colours to PDF reports with AAA accessibility compliance
+-- Use supporting colours for status indicators with semantic meaning
+-
+-## CONFIGURATION & DEPENDENCIES
+-Essential configuration requirements:
+-
+-### Tool Configuration
+-- Use ConfigurationService for all configuration needs
+-- Ensure configuration changes are properly validated
+-- Use environment variables appropriately for sensitive data
+-
+-### File Operations
+-- Use FileOperationsService for all file system operations
+-- Ensure proper file path handling across different operating systems
+-- Implement proper cleanup of temporary files and old reports
+-
+-### Security Requirements
+-- Never expose sensitive information in logs or reports
+-- Validate all URLs before crawling to prevent security issues
+-- Implement proper sandboxing for browser automation
+-- Use secure defaults for Chrome/Chromium launch configurations
+-
+-## AUTOMATED ENFORCEMENT
+-Scripts and tools to enforce rules:
+-
+-### Required Scripts
+-- `npm run lint:fix` - Fix ESLint issues
+-- `npm run format` - Apply Prettier formatting
+-- `npm run typecheck` - Check TypeScript types
+-- `npm run code:fix` - Run all code quality checks and fixes
+-
+-### Git Hooks
+-- Pre-commit hook runs linting and formatting
+-- Changelog validation on commits
+-- Version bump validation
+-
+-## IMPLEMENTATION CHECKLIST
+-Before every code change:
+-- [ ] Analyze impact on existing accessibility testing workflows
+-- [ ] Consider effects on service dependencies and initialisation
+-- [ ] Plan for proper testing of web crawling scenarios
+-- [ ] Ensure changes align with service architecture patterns
+-- [ ] Verify brand colour usage maintains WCAG 2.1 AAA compliance
+-
+-After every code change:
+-- [ ] Run `npm run code:fix` to ensure all linting/formatting is resolved
+-- [ ] Verify all Playwright tests pass with different websites
+-- [ ] Check that accessibility analysis results remain accurate
+-- [ ] Validate that error handling works correctly
+-- [ ] Confirm proper resource cleanup in browser automation
+-- [ ] Test CLI interactions and user feedback with brand colours
+-- [ ] Ensure accessibility reports are generated correctly with brand guidelines
+-- [ ] Update changelog with appropriate semantic versioning
+-- [ ] Review and update unit tests for comprehensive coverage
+-
+-## RULE COMPLIANCE MONITORING
+-To ensure rules are followed:
+-
+-1. **Automated Enforcement:**
+-   - Pre-commit hooks automatically run linting and formatting
+-   - IDE integration shows linting errors in real-time
+-   - Git hooks prevent commits with linting errors
+-   - Regular automated code quality checks
+-
+-2. **Quality Standards:**
+-   - All code must pass TypeScript compilation
+-   - ESLint and Prettier must show zero errors
+-   - All new code requires proper TypeScript types
+-   - Unused imports and variables must be removed
+-
+-3. **Documentation Standards:**
+-   - All generated content must meet AAA accessibility standards
+-   - Service interfaces must be properly documented
+-   - Changelog must be maintained with semantic versioning
+-   - README must reflect current setup instructions
+-
+-The rules are comprehensive and are enforced through automated tooling and development processes.
+\ No newline at end of file
++- **MANDATORY**: All documentation and PDF reports must comply with WCAG 2.1 AA standards
++- **MANDATORY**: Ensure all brand colours meet WCAG 2.1 AA contrast requirements (7:1 normal text, 4.5:1 large text)
++
++## CRITICAL DEVELOPMENT RULES
++
++### Pre-Change Requirements
++- **MANDATORY**: Before ANY code changes, read `docs/AI_DEVELOPMENT_GUIDE.md` completely
++- **MANDATORY**: Check `docs/DEPENDENCY_MAP.md` for affected files and dependencies
++- **MANDATORY**: Review `docs/ARCHITECTURE_DIAGRAM.md` for data flow impact
++- **MANDATORY**: Consult `docs/QUICK_REFERENCE.md` for existing patterns
++
++### Singleton Service Pattern
++- **MANDATORY**: ALWAYS use `getInstance()` for services:
++  ```typescript
++  // ✅ CORRECT
++  const errorHandler = ErrorHandlerService.getInstance();
++  const configService = ConfigurationService.getInstance();
++  
++  // ❌ NEVER DO THIS
++  const errorHandler = new ErrorHandlerService();
++  ```
++
++### Import Patterns
++- **MANDATORY**: Use `@/` alias for imports from `src/`:
++  ```typescript
++  // ✅ CORRECT
++  import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++  
++  // ❌ INCORRECT
++  import { ErrorHandlerService } from '../services/error-handler-service';
++  ```
++
++### Error Handling
++- **MANDATORY**: ALWAYS use ErrorHandlerService for error handling:
++  ```typescript
++  const errorHandler = ErrorHandlerService.getInstance();
++  
++  try {
++    // Your code
++  } catch (error) {
++    return errorHandler.handleError(error, 'Context message');
++  }
++  ```
++
++### Configuration
++- **MANDATORY**: ALWAYS use ConfigurationService for settings:
++  ```typescript
++  const configService = ConfigurationService.getInstance();
++  const setting = configService.get('settingName', defaultValue);
++  ```
++
++## POST-CHANGE REQUIREMENTS
++
++### Documentation Updates
++After making changes, **MANDATORY** to update:
++
++1. **For New Services**:
++   - Add to `docs/DEPENDENCY_MAP.md` service dependencies section
++   - Update `docs/ARCHITECTURE_DIAGRAM.md` service layer diagram
++   - Add pattern to `docs/QUICK_REFERENCE.md` common patterns section
++
++2. **For New Types**:
++   - Add to `docs/DEPENDENCY_MAP.md` core dependencies section
++   - Update `docs/QUICK_REFERENCE.md` type definition patterns
++
++3. **For New Imports**:
++   - Update `docs/DEPENDENCY_MAP.md` import patterns section
++   - Verify consistency in `docs/QUICK_REFERENCE.md`
++
++4. **For Architecture Changes**:
++   - Update `docs/ARCHITECTURE_DIAGRAM.md` relevant sections
++   - Update `docs/DEPENDENCY_MAP.md` dependency relationships
++   - Update `docs/AI_DEVELOPMENT_GUIDE.md` if patterns change
++
++5. **For Breaking Changes**:
++   - Update `docs/AI_DEVELOPMENT_GUIDE.md` critical rules section
++   - Update `docs/QUICK_REFERENCE.md` common issues section
++   - Update `docs/DEPENDENCY_MAP.md` breaking change prevention rules
++
++### Validation Checklist
++Before completing any changes, verify:
++- [ ] All reference files are updated
++- [ ] TypeScript compilation passes (`npm run typecheck`)
++- [ ] CLI functionality works (`npm run cli`)
++- [ ] No Singleton pattern violations
++- [ ] All imports use correct patterns
++- [ ] Error handling follows established patterns
++- [ ] Configuration uses ConfigurationService
++- [ ] CHANGELOG.md is updated
++
++## EMERGENCY STOP CONDITIONS
++If any of these occur, STOP and ask for clarification:
++- TypeScript compilation errors
++- Import resolution failures
++- Singleton pattern violations
++- Missing error handling
++- Hardcoded configuration values
++- Breaking existing functionality without approval
++
++## REFERENCE FILE LOCATIONS
++- `docs/AI_DEVELOPMENT_GUIDE.md` - AI-specific development guidelines
++- `docs/DEPENDENCY_MAP.md` - Complete dependency relationships
++- `docs/ARCHITECTURE_DIAGRAM.md` - Visual system architecture
++- `docs/QUICK_REFERENCE.md` - Fast reference for common operations
++- `docs/PROJECT_OVERVIEW.md` - High-level project understanding
++- `README.md` - User-facing documentation
++- `CHANGELOG.md` - Change tracking
++
++## CRITICAL FILES (NEVER BREAK)
++1. `src/core/types/common.ts` - All shared types and interfaces
++2. `src/utils/services/error-handler-service.ts` - Central error handling
++3. `src/utils/services/configuration-service.ts` - Configuration management
++4. `src/cli/accessibility-test-cli.ts` - Main CLI entry point
++
++Remember: This codebase has complex interdependencies. When in doubt, be conservative and follow existing patterns exactly.
+\ No newline at end of file
+
+
+commit bbad15626414058efad9b6d884bce9b85b4df9df
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Thu Jul 24 08:51:47 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Thu Jul 24 08:51:47 2025 +0100
+
+    Setting standard checks
+
+diff --git a/.cursorrules b/.cursorrules
+index d52f2f0..962f46d 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -1,157 +1,70 @@
+ # Cursor AI Rules for Accessibility Testing Application
+ 
+-## MANDATORY RULES (Must Follow)
+-All rules below are mandatory and must be enforced on every change:
+-
+-### Documentation & Reference Files
+-- **MANDATORY**: Before making ANY changes, read and reference these files:
+-  • `docs/AI_DEVELOPMENT_GUIDE.md` - AI-specific development guidelines and critical rules
+-  • `docs/DEPENDENCY_MAP.md` - Complete dependency relationships and import patterns
+-  • `docs/ARCHITECTURE_DIAGRAM.md` - Visual system architecture and data flow
+-  • `docs/QUICK_REFERENCE.md` - Fast reference for common operations
+-  • `docs/PROJECT_OVERVIEW.md` - High-level project understanding
+-- **MANDATORY**: After making changes, update relevant reference files:
+-  • New services → Update `docs/DEPENDENCY_MAP.md` service dependencies section
+-  • New types → Update `docs/DEPENDENCY_MAP.md` core dependencies section
+-  • New imports → Update `docs/DEPENDENCY_MAP.md` import patterns section
+-  • Architecture changes → Update `docs/ARCHITECTURE_DIAGRAM.md` relevant sections
+-  • New patterns → Update `docs/QUICK_REFERENCE.md` common patterns section
+-  • Breaking changes → Update `docs/AI_DEVELOPMENT_GUIDE.md` critical rules section
+-
+-### Code Quality
+-- **MANDATORY**: Never remove existing features without explicit user approval
+-- **MANDATORY**: Use the PROJECT_OVERVIEW to assert what is classed as an existing features
+-- **MANDATORY**: Use TypeScript (.ts) files for all new code instead of JavaScript (.js)
+-- **MANDATORY**: Follow DRY, KISS, and SOLID principles
+-
+-### Documentation & Change Tracking
+-- **MANDATORY**: Add CHANGELOG entry for every chat prompt using format: `DD/MM/YYYY HH:MM GMT/BST - [Prompt text]`
+-- **MANDATORY**: Update README sections based on change type:
+-  • New features/functionality → Update "Getting Started", "What It Does", and "Reports Generated" sections
+-  • CLI changes → Update "Getting Started" section with new commands/options
+-  • Configuration changes → Update "Configuration" section with new settings
+-  • Architecture changes → Update "Architecture" section and "System Requirements"
+-  • Setup/installation changes → Update "Installation & Setup" section
+-  • Performance improvements → Update relevant sections with new metrics/capabilities
+-  • Always verify README accuracy after any functional changes
+-
+-### UK Standards
+-- **MANDATORY**: Use UK spelling (colour, behaviour, organisation, etc.)
+-- **MANDATORY**: Use UK timezone and date formats (DD/MM/YYYY, GMT/BST)
+-
+-### Accessibility Compliance
+-- **MANDATORY**: All documentation and PDF reports must comply with WCAG 2.1 AA standards
+-- **MANDATORY**: Ensure all brand colours meet WCAG 2.1 AA contrast requirements (7:1 normal text, 4.5:1 large text)
+-
+-## CRITICAL DEVELOPMENT RULES
+-
+-### Pre-Change Requirements
+-- **MANDATORY**: Before ANY code changes, read `docs/AI_DEVELOPMENT_GUIDE.md` completely
+-- **MANDATORY**: Check `docs/DEPENDENCY_MAP.md` for affected files and dependencies
+-- **MANDATORY**: Review `docs/ARCHITECTURE_DIAGRAM.md` for data flow impact
+-- **MANDATORY**: Consult `docs/QUICK_REFERENCE.md` for existing patterns
+-
+-### Singleton Service Pattern
+-- **MANDATORY**: ALWAYS use `getInstance()` for services:
+-  ```typescript
+-  // ✅ CORRECT
+-  const errorHandler = ErrorHandlerService.getInstance();
+-  const configService = ConfigurationService.getInstance();
+-  
+-  // ❌ NEVER DO THIS
+-  const errorHandler = new ErrorHandlerService();
+-  ```
+-
+-### Import Patterns
+-- **MANDATORY**: Use `@/` alias for imports from `src/`:
+-  ```typescript
+-  // ✅ CORRECT
+-  import { ErrorHandlerService } from '@/utils/services/error-handler-service';
+-  
+-  // ❌ INCORRECT
+-  import { ErrorHandlerService } from '../services/error-handler-service';
+-  ```
+-
+-### Error Handling
+-- **MANDATORY**: ALWAYS use ErrorHandlerService for error handling:
+-  ```typescript
+-  const errorHandler = ErrorHandlerService.getInstance();
+-  
+-  try {
+-    // Your code
+-  } catch (error) {
+-    return errorHandler.handleError(error, 'Context message');
+-  }
+-  ```
+-
+-### Configuration
+-- **MANDATORY**: ALWAYS use ConfigurationService for settings:
+-  ```typescript
+-  const configService = ConfigurationService.getInstance();
+-  const setting = configService.get('settingName', defaultValue);
+-  ```
+-
+-## POST-CHANGE REQUIREMENTS
+-
+-### Documentation Updates
+-After making changes, **MANDATORY** to update:
+-
+-1. **For New Services**:
+-   - Add to `docs/DEPENDENCY_MAP.md` service dependencies section
+-   - Update `docs/ARCHITECTURE_DIAGRAM.md` service layer diagram
+-   - Add pattern to `docs/QUICK_REFERENCE.md` common patterns section
+-
+-2. **For New Types**:
+-   - Add to `docs/DEPENDENCY_MAP.md` core dependencies section
+-   - Update `docs/QUICK_REFERENCE.md` type definition patterns
+-
+-3. **For New Imports**:
+-   - Update `docs/DEPENDENCY_MAP.md` import patterns section
+-   - Verify consistency in `docs/QUICK_REFERENCE.md`
+-
+-4. **For Architecture Changes**:
+-   - Update `docs/ARCHITECTURE_DIAGRAM.md` relevant sections
+-   - Update `docs/DEPENDENCY_MAP.md` dependency relationships
+-   - Update `docs/AI_DEVELOPMENT_GUIDE.md` if patterns change
+-
+-5. **For Breaking Changes**:
+-   - Update `docs/AI_DEVELOPMENT_GUIDE.md` critical rules section
+-   - Update `docs/QUICK_REFERENCE.md` common issues section
+-   - Update `docs/DEPENDENCY_MAP.md` breaking change prevention rules
+-
+-### Validation Checklist
+-Before completing any changes, verify:
+-- [ ] All reference files are updated
+-- [ ] TypeScript compilation passes (`npm run typecheck`)
+-- [ ] CLI functionality works (`npm run cli`)
+-- [ ] No Singleton pattern violations
+-- [ ] All imports use correct patterns
+-- [ ] Error handling follows established patterns
+-- [ ] Configuration uses ConfigurationService
+-- [ ] CHANGELOG.md is updated
+-
+-## EMERGENCY STOP CONDITIONS
+-If any of these occur, STOP and ask for clarification:
++> **Note**: This file contains essential rules only. For detailed patterns, examples, and comprehensive guidelines, see the reference documentation below.
++
++## 🚨 **CRITICAL RULES** (MUST FOLLOW)
++
++### **1. Documentation First**
++- **BEFORE making ANY changes**: Read `docs/AI_DEVELOPMENT_GUIDE.md` completely
++- **AFTER making changes**: Update relevant documentation files
++- **Reference files**: `docs/DEPENDENCY_MAP.md`, `docs/ARCHITECTURE_DIAGRAM.md`, `docs/QUICK_REFERENCE.md`, `docs/PROJECT_OVERVIEW.md`, `docs/LOCAL_MONGODB_SETUP.md`
++
++### **2. Code Patterns** (See `docs/AI_DEVELOPMENT_GUIDE.md` for details)
++```typescript
++// ✅ CORRECT - Import patterns
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++
++// ✅ CORRECT - Service patterns  
++const errorHandler = ErrorHandlerService.getInstance();
++
++// ✅ CORRECT - Error handling
++try {
++  // Your code
++} catch (error) {
++  return errorHandler.handleError(error, 'Context message');
++}
++```
++
++### **3. UK Standards**
++- Use UK spelling (colour, behaviour, organisation)
++- Use UK timezone and date formats (DD/MM/YYYY, GMT/BST)
++
++### **4. Documentation Updates**
++- Add CHANGELOG entry for every change: `DD/MM/YYYY HH:MM GMT/BST - [Description]`
++- Update README.md based on change type
++- Update relevant docs/*.md files
++
++### **5. Quality Gates**
++- TypeScript compilation must pass (`npm run typecheck`)
++- Tests must pass (`npm test`)
++- **Accessibility tests must pass** (See `docs/ACCESSIBILITY_TESTING_RULES.md`)
++- No breaking existing functionality without approval
++
++## 📚 **Reference Documentation**
++
++**For detailed rules and patterns, see:**
++- `docs/AI_DEVELOPMENT_GUIDE.md` - Complete development guidelines and critical rules
++- `docs/DEPENDENCY_MAP.md` - Import patterns, dependencies, and service relationships
++- `docs/QUICK_REFERENCE.md` - Common operations, troubleshooting, and test patterns
++- `docs/PROJECT_OVERVIEW.md` - System architecture, features, and API documentation
++- `docs/ARCHITECTURE_DIAGRAM.md` - Visual system architecture and data flow
++- `docs/LOCAL_MONGODB_SETUP.md` - Local development setup and MongoDB configuration
++- `docs/ACCESSIBILITY_TESTING_RULES.md` - **Web UI accessibility testing requirements and validation**
++
++## 🚨 **Emergency Stop Conditions**
+ - TypeScript compilation errors
+-- Import resolution failures
++- Import resolution failures  
+ - Singleton pattern violations
+ - Missing error handling
+-- Hardcoded configuration values
++- **Accessibility test failures** (WCAG 2.1 AA violations)
+ - Breaking existing functionality without approval
+ 
+-## REFERENCE FILE LOCATIONS
+-- `docs/AI_DEVELOPMENT_GUIDE.md` - AI-specific development guidelines
+-- `docs/DEPENDENCY_MAP.md` - Complete dependency relationships
+-- `docs/ARCHITECTURE_DIAGRAM.md` - Visual system architecture
+-- `docs/QUICK_REFERENCE.md` - Fast reference for common operations
+-- `docs/PROJECT_OVERVIEW.md` - High-level project understanding
+-- `README.md` - User-facing documentation
+-- `CHANGELOG.md` - Change tracking
+-
+-## CRITICAL FILES (NEVER BREAK)
+-1. `src/core/types/common.ts` - All shared types and interfaces
+-2. `src/utils/services/error-handler-service.ts` - Central error handling
+-3. `src/utils/services/configuration-service.ts` - Configuration management
+-4. `src/cli/accessibility-test-cli.ts` - Main CLI entry point
+-
+-Remember: This codebase has complex interdependencies. When in doubt, be conservative and follow existing patterns exactly.
+\ No newline at end of file
++## 📋 **Validation Checklist**
++- [ ] Documentation updated
++- [ ] TypeScript compilation passes
++- [ ] Tests pass
++- [ ] **Accessibility tests pass** (E2E and component tests)
++- [ ] No singleton violations
++- [ ] All imports use `@/` alias
++- [ ] Error handling follows patterns
++- [ ] CHANGELOG.md updated
+\ No newline at end of file
+
+
+commit d4b74fe3cafd1a6f4c36d8363eb66dfdad410e67
+Author:     Brad <bradley.reaney@nimbleapproach.com>
+AuthorDate: Fri Jul 25 12:03:54 2025 +0100
+Commit:     Brad <bradley.reaney@nimbleapproach.com>
+CommitDate: Fri Jul 25 12:03:54 2025 +0100
+
+    Fixing some of the report issues.
+
+diff --git a/.cursorrules b/.cursorrules
+index 962f46d..863940b 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -32,7 +32,7 @@ try {
+ ### **4. Documentation Updates**
+ - Add CHANGELOG entry for every change: `DD/MM/YYYY HH:MM GMT/BST - [Description]`
+ - Update README.md based on change type
+-- Update relevant docs/*.md files
++- Update docs/*.md files
+ 
+ ### **5. Quality Gates**
+ - TypeScript compilation must pass (`npm run typecheck`)
+
+

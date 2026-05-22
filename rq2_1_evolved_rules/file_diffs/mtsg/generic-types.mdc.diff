@@ -1,0 +1,182 @@
+commit b25381cf0f81b9c8f1d876f27a383dcd22886ec5
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 14:08:20 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 14:08:20 2025 +0700
+
+    docs: add reusable pattern for Go enumerated string types
+    
+    - Document flexible template for defining enumerated string types in Go
+    - Include naming conventions, comments, and usage guidelines
+    - Allow minor mistakes or variations when generating code with this pattern
+    - Enable consistent and maintainable enum definitions across the codebase
+
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+new file mode 100644
+index 0000000..b16fcc5
+--- /dev/null
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -0,0 +1,27 @@
++## Generic Data Types 
++
++This rule describe meta information of generic data type generator
++
++### Enumerated String
++
++It's represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this (Please make it fault tolerant. It should be a little bit flexible. U know, I am a little bit clumsy): 
++
++```
++UserStatus is Enumerated string of "active" and "inactive"
++```
++
++It can be representation of code :  
++
++```go
++// UserStatus represents the status of a user account.
++// Valid values are UserStatusActive and UserStatusInactive.
++type UserStatus string
++
++const (
++    // UserStatusActive indicates the user account is active.
++    UserStatusActive UserStatus = "active"
++
++    // UserStatusInactive indicates the user account is inactive.
++    UserStatusInactive UserStatus = "inactive"
++) 
++```
+
+
+commit f723a4fb13f393e3ba3647f991bfb9439026f230
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 14:27:21 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 14:27:21 2025 +0700
+
+    docs: expand and clarify generic types pattern guide
+    
+    - Add Identity type pattern for UUID-based strong typing (e.g., TenantID)
+    - Clarify usage of Enumerated String pattern with comments and naming conventions
+    - Emphasize fault tolerance and flexibility in code generation
+    - Provide practical examples for both patterns
+    - Improve guidance for future generic type definitions in Go
+
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+index b16fcc5..f87f82a 100644
+--- a/internal/domain/.cursor/rules/generic-types.mdc
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -1,16 +1,35 @@
+ ## Generic Data Types 
+ 
+-This rule describe meta information of generic data type generator
++This rule describe meta information of generic data type generator. This also act as guide of pattern definition to generate code in go. All of pattern described here should be fault tolerant. Which means it should be ok if definition make small mistake, as long as it understandable.
++
++### Identity
++
++It represent new type defintion of ``uuid.UUID`` from library ``github.com/google/uuid``. For example, when it written something like this : 
++
++```
++Identity of Tenant
++```
++
++It represent as code :  
++
++```go
++
++import "github.com/google/uuid"
++
++type TenantID uuid.UUID
++
++```
++
+ 
+ ### Enumerated String
+ 
+-It's represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this (Please make it fault tolerant. It should be a little bit flexible. U know, I am a little bit clumsy): 
++It represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this : 
+ 
+ ```
+ UserStatus is Enumerated string of "active" and "inactive"
+ ```
+ 
+-It can be representation of code :  
++It represent as code :  
+ 
+ ```go
+ // UserStatus represents the status of a user account.
+
+
+commit e65ec781e7f1a86b357a2ea4e6b8e514db6cf15b
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 14:43:08 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 14:43:08 2025 +0700
+
+    docs: enhance enumerated string pattern with default value support
+    
+    - Update generic-types.mdc to allow specifying a default value for enumerated string types
+    - Add example showing how to define and use a default constant
+    - Improve guidance for safer initialization and validation of enums
+    - Clarify usage and code generation pattern for future enum types
+
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+index f87f82a..4872c14 100644
+--- a/internal/domain/.cursor/rules/generic-types.mdc
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -23,24 +23,22 @@ type TenantID uuid.UUID
+ 
+ ### Enumerated String
+ 
+-It represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this : 
++It's represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. You can also specify a default value. For example, when it written : 
+ 
+ ```
+-UserStatus is Enumerated string of "active" and "inactive"
++UserStatus is Enumerated string of "active", "inactive", default "inactive"
+ ```
+ 
+-It represent as code :  
++It can be representation of code :  
+ 
+ ```go
+-// UserStatus represents the status of a user account.
+-// Valid values are UserStatusActive and UserStatusInactive.
+ type UserStatus string
+ 
+ const (
+-    // UserStatusActive indicates the user account is active.
+-    UserStatusActive UserStatus = "active"
+-
+-    // UserStatusInactive indicates the user account is inactive.
++    UserStatusActive   UserStatus = "active"
+     UserStatusInactive UserStatus = "inactive"
+-) 
++    UserStatusDefault  UserStatus = UserStatusInactive // Default value
++)
+ ```
++
++// The default constant can be used for initialization, zero-value checks, or validation helpers. 
+\ No newline at end of file
+
+
+commit 0fefbb7159860b4316d7af8821bd63aee55c1df8
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Sat Jul 12 12:25:48 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Sat Jul 12 12:25:48 2025 +0700
+
+    refactor: tidify the domain cursor rules
+
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+index 4872c14..8699c66 100644
+--- a/internal/domain/.cursor/rules/generic-types.mdc
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -41,4 +41,4 @@ const (
+ )
+ ```
+ 
+-// The default constant can be used for initialization, zero-value checks, or validation helpers. 
+\ No newline at end of file
++The default constant can be used for initialization, zero-value checks, or validation helpers. 
+\ No newline at end of file
+
+

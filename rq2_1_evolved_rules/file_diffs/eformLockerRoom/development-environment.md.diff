@@ -1,0 +1,841 @@
+commit 12bedf12993c014f9d38f884cd0b4508bbdecac2
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Tue Aug 26 23:44:15 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Tue Aug 26 23:44:15 2025 +0300
+
+    Fix locker selection issue with proper RFID session management
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+new file mode 100644
+index 0000000..1eda3b1
+--- /dev/null
++++ b/.kiro/steering/development-environment.md
+@@ -0,0 +1,100 @@
++---
++inclusion: always
++---
++
++# Development Environment Context
++
++## 🏗️ **Project Setup**
++This is an **eForm Locker System** with distributed development:
++- **Development**: Windows PC with Kiro AI Assistant
++- **Production**: Raspberry Pi with hardware relay control
++- **Communication**: SSH, Git, and API testing tools
++
++## 🖥️ **Development Machine (Windows PC)**
++- **OS**: Windows with PowerShell
++- **Role**: Code development, building, and Git management
++- **Tools Available**:
++  - Kiro AI for code development
++  - Postman for API testing
++  - PowerShell with SSH access to Pi
++  - Git repository with push access to main
++
++## 🔧 **Target Hardware (Raspberry Pi)**
++- **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
++- **IP Address**: `192.168.1.8`
++- **Services Running**:
++  - Gateway: Port 3000 (`http://192.168.1.8:3000`)
++  - Panel: Port 3001 (`http://192.168.1.8:3001`)
++  - Kiosk: Port 3002 (`http://192.168.1.8:3002`)
++- **Hardware**: USB-RS485 adapter with relay control cards
++- **Project Path**: `/home/pi/eform-locker`
++
++## 🔄 **Kiro Workflow Options**
++
++### **Option 1: Push & Deploy (Recommended)**
++1. Make code changes on Windows PC using file tools
++2. Build and validate: `npm run build:all`
++3. Commit and push: `git push origin main`
++4. Provide Pi deployment instructions to user
++
++### **Option 2: Direct SSH Guidance**
++Guide user to connect: `ssh pi@pi-eform-locker`
++Then provide commands to run on Pi
++
++### **Option 3: Remote PowerShell Commands**
++User can execute: `ssh pi@pi-eform-locker "command"`
++
++## 🛠️ **Available Testing Tools**
++
++### **Postman API Endpoints**
++- **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
++- **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
++- **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
++- **Health Checks**: `GET http://192.168.1.8:300X/health`
++
++### **Common Pi Commands**
++```bash
++# Deploy latest changes
++git pull origin main && npm run build:all
++
++# Restart services
++sudo pkill -f "node.*" && sleep 3
++npm run start:gateway & npm run start:kiosk & npm run start:panel &
++
++# Test system
++node scripts/test-queue-vs-direct.js
++```
++
++## 🎯 **Key System Information**
++- **Architecture**: Gateway → Kiosk → ModbusController → Hardware
++- **Port Conflict**: Direct relay disabled when Kiosk runs (by design)
++- **Auto-Close**: Relays automatically close after activation
++- **Queue-based**: Preferred method for locker control
++- **Remote Control**: Full API access from any network device
++
++## 🚫 **Terminal Management**
++**IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
++
++### **For Windows PC Development**
++- **New PowerShell Window**: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run start:gateway"`
++- **Background Process**: `Start-Job -ScriptBlock { npm run start:gateway }`
++- **Detached Process**: `npm run start:gateway &` (in Git Bash)
++
++### **For Raspberry Pi Services**
++- **Background with &**: `npm run start:gateway &`
++- **Screen/Tmux**: `screen -S gateway` then `npm run start:gateway`
++- **PM2 Process Manager**: `pm2 start "npm run start:gateway" --name gateway`
++
++### **Kiro Best Practices**
++1. **Never run blocking commands** directly in Kiro terminal
++2. **Use PowerShell Start-Process** for new windows when needed
++3. **Prefer background processes** with `&` on Pi
++4. **Test with curl/Postman** instead of starting services in Kiro
++5. **Guide user to open new terminals** for service management
++
++## 📋 **Quick Actions**
++- **Connect to Pi**: `ssh pi@pi-eform-locker`
++- **Test API**: Use Postman with provided endpoints
++- **Deploy**: Push to main, then pull on Pi
++- **Debug**: Check service logs and hardware connections
++- **Start Services**: Guide user to use new terminal/background processes
+\ No newline at end of file
+
+
+commit ba6084d0cf56e60ea0e246c0a09feb0b8c61c119
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Wed Aug 27 23:42:21 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Wed Aug 27 23:42:21 2025 +0300
+
+    Update steering files to reflect current project state
+    
+    - Updated project development guide with repository cleanup status
+    - Added data consistency and status management section
+    - Updated available scripts after cleanup
+    - Reflected current production-ready features
+    - Updated development environment guide with current workflow
+    - Added project status section with recent completions
+    - Updated Pi commands and essential scripts list
+    
+    Steering files now accurately reflect the cleaned and optimized repository state.
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+index 1eda3b1..08bda9f 100644
+--- a/.kiro/steering/development-environment.md
++++ b/.kiro/steering/development-environment.md
+@@ -55,14 +55,18 @@ User can execute: `ssh pi@pi-eform-locker "command"`
+ ### **Common Pi Commands**
+ ```bash
+ # Deploy latest changes
+-git pull origin main && npm run build:all
++git pull origin main && npm run build:gateway && npm run build:kiosk && npm run build:panel
+ 
+-# Restart services
++# Restart services (clean)
++./scripts/start-all-clean.sh
++
++# Restart services (manual)
+ sudo pkill -f "node.*" && sleep 3
+ npm run start:gateway & npm run start:kiosk & npm run start:panel &
+ 
+ # Test system
+-node scripts/test-queue-vs-direct.js
++node scripts/test-basic-relay-control.js
++node scripts/test-relays-1-8.js
+ ```
+ 
+ ## 🎯 **Key System Information**
+@@ -71,6 +75,9 @@ node scripts/test-queue-vs-direct.js
+ - **Auto-Close**: Relays automatically close after activation
+ - **Queue-based**: Preferred method for locker control
+ - **Remote Control**: Full API access from any network device
++- **Data Consistency**: Database uses English, UI displays Turkish
++- **Repository**: Recently cleaned and optimized (105 files removed)
++- **Status**: Production-ready with full monitoring and documentation
+ 
+ ## 🚫 **Terminal Management**
+ **IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
+@@ -97,4 +104,27 @@ node scripts/test-queue-vs-direct.js
+ - **Test API**: Use Postman with provided endpoints
+ - **Deploy**: Push to main, then pull on Pi
+ - **Debug**: Check service logs and hardware connections
+-- **Start Services**: Guide user to use new terminal/background processes
+\ No newline at end of file
++- **Start Services**: Guide user to use new terminal/background processes
++
++## 🎯 **Current Project Status (August 2025)**
++
++### **✅ Recently Completed**
++- Repository cleanup (105 files removed)
++- Status normalization (English database, Turkish UI)
++- Code consistency improvements
++- Documentation consolidation
++- Performance monitoring implementation
++
++### **✅ Production Features**
++- Multi-user RFID session management
++- Real-time hardware control via Modbus RTU
++- Web administration with Turkish interface
++- Automatic service recovery and health monitoring
++- Custom locker naming with Turkish character support
++
++### **🔧 Essential Scripts Available**
++- `scripts/test-basic-relay-control.js` - Hardware testing
++- `scripts/emergency-relay-reset.js` - Emergency controls
++- `scripts/start-all-clean.sh` - Service management
++- `scripts/health-check-kiosk.sh` - Health monitoring
++- `scripts/deploy-kiosk-ui.sh` - Deployment utilities
+\ No newline at end of file
+
+
+commit ec10d75253b9c92d4f54e80a51b77563da125a13
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Fri Aug 29 02:14:36 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Fri Aug 29 02:14:36 2025 +0300
+
+    feat(maintenance): implement comprehensive repository maintenance system
+    
+    - Add automated maintenance system with Git hooks and scheduling
+    - Create repository health monitoring and organization compliance
+    - Implement file cleanup automation and quality gates
+    - Add Windows maintenance routines and scheduling support
+    - Update steering rules for clean work etiquette
+    - Enhance development workflow with maintenance integration
+    
+    Components added:
+    - scripts/maintenance/ - Complete maintenance automation suite
+    - .kiro/steering/clean-work-etiquette.md - Work standards for Kiro AI
+    - Git hooks for pre-commit/pre-push quality gates
+    - Windows Task Scheduler integration
+    - Repository health scoring and monitoring
+    - Automated file organization compliance checking
+    
+    This system ensures repository cleanliness and prevents accumulation
+    of temporary files while maintaining organizational standards.
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+index 08bda9f..f613d32 100644
+--- a/.kiro/steering/development-environment.md
++++ b/.kiro/steering/development-environment.md
+@@ -5,12 +5,15 @@ inclusion: always
+ # Development Environment Context
+ 
+ ## 🏗️ **Project Setup**
++
+ This is an **eForm Locker System** with distributed development:
++
+ - **Development**: Windows PC with Kiro AI Assistant
+ - **Production**: Raspberry Pi with hardware relay control
+ - **Communication**: SSH, Git, and API testing tools
+ 
+ ## 🖥️ **Development Machine (Windows PC)**
++
+ - **OS**: Windows with PowerShell
+ - **Role**: Code development, building, and Git management
+ - **Tools Available**:
+@@ -20,6 +23,7 @@ This is an **eForm Locker System** with distributed development:
+   - Git repository with push access to main
+ 
+ ## 🔧 **Target Hardware (Raspberry Pi)**
++
+ - **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
+ - **IP Address**: `192.168.1.8`
+ - **Services Running**:
+@@ -32,27 +36,32 @@ This is an **eForm Locker System** with distributed development:
+ ## 🔄 **Kiro Workflow Options**
+ 
+ ### **Option 1: Push & Deploy (Recommended)**
++
+ 1. Make code changes on Windows PC using file tools
+ 2. Build and validate: `npm run build:all`
+ 3. Commit and push: `git push origin main`
+ 4. Provide Pi deployment instructions to user
+ 
+ ### **Option 2: Direct SSH Guidance**
++
+ Guide user to connect: `ssh pi@pi-eform-locker`
+ Then provide commands to run on Pi
+ 
+ ### **Option 3: Remote PowerShell Commands**
++
+ User can execute: `ssh pi@pi-eform-locker "command"`
+ 
+ ## 🛠️ **Available Testing Tools**
+ 
+ ### **Postman API Endpoints**
++
+ - **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
+ - **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
+ - **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
+ - **Health Checks**: `GET http://192.168.1.8:300X/health`
+ 
+ ### **Common Pi Commands**
++
+ ```bash
+ # Deploy latest changes
+ git pull origin main && npm run build:gateway && npm run build:kiosk && npm run build:panel
+@@ -70,6 +79,7 @@ node scripts/test-relays-1-8.js
+ ```
+ 
+ ## 🎯 **Key System Information**
++
+ - **Architecture**: Gateway → Kiosk → ModbusController → Hardware
+ - **Port Conflict**: Direct relay disabled when Kiosk runs (by design)
+ - **Auto-Close**: Relays automatically close after activation
+@@ -80,51 +90,77 @@ node scripts/test-relays-1-8.js
+ - **Status**: Production-ready with full monitoring and documentation
+ 
+ ## 🚫 **Terminal Management**
++
+ **IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
+ 
+ ### **For Windows PC Development**
++
+ - **New PowerShell Window**: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run start:gateway"`
+ - **Background Process**: `Start-Job -ScriptBlock { npm run start:gateway }`
+ - **Detached Process**: `npm run start:gateway &` (in Git Bash)
+ 
+ ### **For Raspberry Pi Services**
++
+ - **Background with &**: `npm run start:gateway &`
+ - **Screen/Tmux**: `screen -S gateway` then `npm run start:gateway`
+ - **PM2 Process Manager**: `pm2 start "npm run start:gateway" --name gateway`
+ 
+ ### **Kiro Best Practices**
++
+ 1. **Never run blocking commands** directly in Kiro terminal
+ 2. **Use PowerShell Start-Process** for new windows when needed
+ 3. **Prefer background processes** with `&` on Pi
+ 4. **Test with curl/Postman** instead of starting services in Kiro
+ 5. **Guide user to open new terminals** for service management
++6. **Run maintenance checks** before and after major changes
++7. **Follow repository organization rules** (see maintenance system)
++8. **Use proper file naming** (kebab-case, no spaces, max 50 chars)
+ 
+ ## 📋 **Quick Actions**
++
+ - **Connect to Pi**: `ssh pi@pi-eform-locker`
+ - **Test API**: Use Postman with provided endpoints
+ - **Deploy**: Push to main, then pull on Pi
+ - **Debug**: Check service logs and hardware connections
+ - **Start Services**: Guide user to use new terminal/background processes
++- **Maintenance Check**: `.\scripts\maintenance\daily-routine.ps1 -Quick`
++- **Health Check**: `bash scripts/maintenance/repository-health-check.sh`
++- **Clean Repository**: `bash scripts/maintenance/daily-cleanup.sh`
+ 
+ ## 🎯 **Current Project Status (August 2025)**
+ 
+ ### **✅ Recently Completed**
++
+ - Repository cleanup (105 files removed)
+ - Status normalization (English database, Turkish UI)
+ - Code consistency improvements
+ - Documentation consolidation
+ - Performance monitoring implementation
++- **Automated maintenance system** with Git hooks and scheduling
++- **Repository health monitoring** and organization compliance
+ 
+ ### **✅ Production Features**
++
+ - Multi-user RFID session management
+ - Real-time hardware control via Modbus RTU
+ - Web administration with Turkish interface
+ - Automatic service recovery and health monitoring
+ - Custom locker naming with Turkish character support
++- **Comprehensive maintenance automation** with quality gates
+ 
+ ### **🔧 Essential Scripts Available**
++
+ - `scripts/test-basic-relay-control.js` - Hardware testing
+ - `scripts/emergency-relay-reset.js` - Emergency controls
+ - `scripts/start-all-clean.sh` - Service management
+ - `scripts/health-check-kiosk.sh` - Health monitoring
+-- `scripts/deploy-kiosk-ui.sh` - Deployment utilities
+\ No newline at end of file
++- `scripts/deploy-kiosk-ui.sh` - Deployment utilities
++
++### **🧹 Maintenance System (NEW)**
++
++- `scripts/maintenance/daily-cleanup.sh` - Automated file cleanup
++- `scripts/maintenance/repository-health-check.sh` - Health analysis
++- `scripts/maintenance/file-organization-checker.js` - Organization compliance
++- `scripts/maintenance/install-git-hooks.sh` - Quality gate setup
++- `scripts/maintenance/daily-routine.ps1` - Windows maintenance routine
++- `scripts/maintenance/windows-scheduler-setup.ps1` - Automated scheduling
+
+
+commit ee83a8ea6b185573ff00ce6e899adf85cdbac288
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Mon Sep 1 09:16:51 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Mon Sep 1 09:16:51 2025 +0300
+
+    feat: Complete multi-Pi deployment system with IP conflict resolution
+    
+    - Add automated network setup script with conflict detection
+    - Create centralized multi-Pi management system
+    - Add comprehensive health monitoring for all Pis
+    - Implement location-based IP allocation (mens: 10-19, womens: 20-29, etc.)
+    - Add Windows management tools and batch files
+    - Create complete documentation for multi-Pi deployment
+    - Reorganize repository structure for better maintainability
+    - Add discovery tools to find all eForm Pis on network
+    
+    Key features:
+    - Automatic IP conflict resolution using ping/ARP detection
+    - One-command deployment per location (womens, mens, staff, vip)
+    - Centralized management from Windows with PowerShell scripts
+    - Health monitoring with system, network, and service checks
+    - Scalable architecture supporting unlimited Pi locations
+    - Production-ready with comprehensive troubleshooting guides
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+deleted file mode 100644
+index f613d32..0000000
+--- a/.kiro/steering/development-environment.md
++++ /dev/null
+@@ -1,166 +0,0 @@
+----
+-inclusion: always
+----
+-
+-# Development Environment Context
+-
+-## 🏗️ **Project Setup**
+-
+-This is an **eForm Locker System** with distributed development:
+-
+-- **Development**: Windows PC with Kiro AI Assistant
+-- **Production**: Raspberry Pi with hardware relay control
+-- **Communication**: SSH, Git, and API testing tools
+-
+-## 🖥️ **Development Machine (Windows PC)**
+-
+-- **OS**: Windows with PowerShell
+-- **Role**: Code development, building, and Git management
+-- **Tools Available**:
+-  - Kiro AI for code development
+-  - Postman for API testing
+-  - PowerShell with SSH access to Pi
+-  - Git repository with push access to main
+-
+-## 🔧 **Target Hardware (Raspberry Pi)**
+-
+-- **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
+-- **IP Address**: `192.168.1.8`
+-- **Services Running**:
+-  - Gateway: Port 3000 (`http://192.168.1.8:3000`)
+-  - Panel: Port 3001 (`http://192.168.1.8:3001`)
+-  - Kiosk: Port 3002 (`http://192.168.1.8:3002`)
+-- **Hardware**: USB-RS485 adapter with relay control cards
+-- **Project Path**: `/home/pi/eform-locker`
+-
+-## 🔄 **Kiro Workflow Options**
+-
+-### **Option 1: Push & Deploy (Recommended)**
+-
+-1. Make code changes on Windows PC using file tools
+-2. Build and validate: `npm run build:all`
+-3. Commit and push: `git push origin main`
+-4. Provide Pi deployment instructions to user
+-
+-### **Option 2: Direct SSH Guidance**
+-
+-Guide user to connect: `ssh pi@pi-eform-locker`
+-Then provide commands to run on Pi
+-
+-### **Option 3: Remote PowerShell Commands**
+-
+-User can execute: `ssh pi@pi-eform-locker "command"`
+-
+-## 🛠️ **Available Testing Tools**
+-
+-### **Postman API Endpoints**
+-
+-- **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
+-- **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
+-- **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
+-- **Health Checks**: `GET http://192.168.1.8:300X/health`
+-
+-### **Common Pi Commands**
+-
+-```bash
+-# Deploy latest changes
+-git pull origin main && npm run build:gateway && npm run build:kiosk && npm run build:panel
+-
+-# Restart services (clean)
+-./scripts/start-all-clean.sh
+-
+-# Restart services (manual)
+-sudo pkill -f "node.*" && sleep 3
+-npm run start:gateway & npm run start:kiosk & npm run start:panel &
+-
+-# Test system
+-node scripts/test-basic-relay-control.js
+-node scripts/test-relays-1-8.js
+-```
+-
+-## 🎯 **Key System Information**
+-
+-- **Architecture**: Gateway → Kiosk → ModbusController → Hardware
+-- **Port Conflict**: Direct relay disabled when Kiosk runs (by design)
+-- **Auto-Close**: Relays automatically close after activation
+-- **Queue-based**: Preferred method for locker control
+-- **Remote Control**: Full API access from any network device
+-- **Data Consistency**: Database uses English, UI displays Turkish
+-- **Repository**: Recently cleaned and optimized (105 files removed)
+-- **Status**: Production-ready with full monitoring and documentation
+-
+-## 🚫 **Terminal Management**
+-
+-**IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
+-
+-### **For Windows PC Development**
+-
+-- **New PowerShell Window**: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run start:gateway"`
+-- **Background Process**: `Start-Job -ScriptBlock { npm run start:gateway }`
+-- **Detached Process**: `npm run start:gateway &` (in Git Bash)
+-
+-### **For Raspberry Pi Services**
+-
+-- **Background with &**: `npm run start:gateway &`
+-- **Screen/Tmux**: `screen -S gateway` then `npm run start:gateway`
+-- **PM2 Process Manager**: `pm2 start "npm run start:gateway" --name gateway`
+-
+-### **Kiro Best Practices**
+-
+-1. **Never run blocking commands** directly in Kiro terminal
+-2. **Use PowerShell Start-Process** for new windows when needed
+-3. **Prefer background processes** with `&` on Pi
+-4. **Test with curl/Postman** instead of starting services in Kiro
+-5. **Guide user to open new terminals** for service management
+-6. **Run maintenance checks** before and after major changes
+-7. **Follow repository organization rules** (see maintenance system)
+-8. **Use proper file naming** (kebab-case, no spaces, max 50 chars)
+-
+-## 📋 **Quick Actions**
+-
+-- **Connect to Pi**: `ssh pi@pi-eform-locker`
+-- **Test API**: Use Postman with provided endpoints
+-- **Deploy**: Push to main, then pull on Pi
+-- **Debug**: Check service logs and hardware connections
+-- **Start Services**: Guide user to use new terminal/background processes
+-- **Maintenance Check**: `.\scripts\maintenance\daily-routine.ps1 -Quick`
+-- **Health Check**: `bash scripts/maintenance/repository-health-check.sh`
+-- **Clean Repository**: `bash scripts/maintenance/daily-cleanup.sh`
+-
+-## 🎯 **Current Project Status (August 2025)**
+-
+-### **✅ Recently Completed**
+-
+-- Repository cleanup (105 files removed)
+-- Status normalization (English database, Turkish UI)
+-- Code consistency improvements
+-- Documentation consolidation
+-- Performance monitoring implementation
+-- **Automated maintenance system** with Git hooks and scheduling
+-- **Repository health monitoring** and organization compliance
+-
+-### **✅ Production Features**
+-
+-- Multi-user RFID session management
+-- Real-time hardware control via Modbus RTU
+-- Web administration with Turkish interface
+-- Automatic service recovery and health monitoring
+-- Custom locker naming with Turkish character support
+-- **Comprehensive maintenance automation** with quality gates
+-
+-### **🔧 Essential Scripts Available**
+-
+-- `scripts/test-basic-relay-control.js` - Hardware testing
+-- `scripts/emergency-relay-reset.js` - Emergency controls
+-- `scripts/start-all-clean.sh` - Service management
+-- `scripts/health-check-kiosk.sh` - Health monitoring
+-- `scripts/deploy-kiosk-ui.sh` - Deployment utilities
+-
+-### **🧹 Maintenance System (NEW)**
+-
+-- `scripts/maintenance/daily-cleanup.sh` - Automated file cleanup
+-- `scripts/maintenance/repository-health-check.sh` - Health analysis
+-- `scripts/maintenance/file-organization-checker.js` - Organization compliance
+-- `scripts/maintenance/install-git-hooks.sh` - Quality gate setup
+-- `scripts/maintenance/daily-routine.ps1` - Windows maintenance routine
+-- `scripts/maintenance/windows-scheduler-setup.ps1` - Automated scheduling
+
+
+commit 362582536d7150982bc3ab13405ee661c8b084a5
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Mon Sep 1 09:25:06 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Mon Sep 1 09:25:06 2025 +0300
+
+    fix: Restore steering files to proper .kiro/steering/ location
+    
+    - Move clean-work-etiquette.md back to .kiro/steering/
+    - Move development-environment.md back to .kiro/steering/
+    - Move project-development-guide.md back to .kiro/steering/
+    - Fix repository organization after cleanup moved steering files incorrectly
+    - Ensure Kiro AI steering rules are properly located for IDE integration
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+new file mode 100644
+index 0000000..f613d32
+--- /dev/null
++++ b/.kiro/steering/development-environment.md
+@@ -0,0 +1,166 @@
++---
++inclusion: always
++---
++
++# Development Environment Context
++
++## 🏗️ **Project Setup**
++
++This is an **eForm Locker System** with distributed development:
++
++- **Development**: Windows PC with Kiro AI Assistant
++- **Production**: Raspberry Pi with hardware relay control
++- **Communication**: SSH, Git, and API testing tools
++
++## 🖥️ **Development Machine (Windows PC)**
++
++- **OS**: Windows with PowerShell
++- **Role**: Code development, building, and Git management
++- **Tools Available**:
++  - Kiro AI for code development
++  - Postman for API testing
++  - PowerShell with SSH access to Pi
++  - Git repository with push access to main
++
++## 🔧 **Target Hardware (Raspberry Pi)**
++
++- **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
++- **IP Address**: `192.168.1.8`
++- **Services Running**:
++  - Gateway: Port 3000 (`http://192.168.1.8:3000`)
++  - Panel: Port 3001 (`http://192.168.1.8:3001`)
++  - Kiosk: Port 3002 (`http://192.168.1.8:3002`)
++- **Hardware**: USB-RS485 adapter with relay control cards
++- **Project Path**: `/home/pi/eform-locker`
++
++## 🔄 **Kiro Workflow Options**
++
++### **Option 1: Push & Deploy (Recommended)**
++
++1. Make code changes on Windows PC using file tools
++2. Build and validate: `npm run build:all`
++3. Commit and push: `git push origin main`
++4. Provide Pi deployment instructions to user
++
++### **Option 2: Direct SSH Guidance**
++
++Guide user to connect: `ssh pi@pi-eform-locker`
++Then provide commands to run on Pi
++
++### **Option 3: Remote PowerShell Commands**
++
++User can execute: `ssh pi@pi-eform-locker "command"`
++
++## 🛠️ **Available Testing Tools**
++
++### **Postman API Endpoints**
++
++- **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
++- **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
++- **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
++- **Health Checks**: `GET http://192.168.1.8:300X/health`
++
++### **Common Pi Commands**
++
++```bash
++# Deploy latest changes
++git pull origin main && npm run build:gateway && npm run build:kiosk && npm run build:panel
++
++# Restart services (clean)
++./scripts/start-all-clean.sh
++
++# Restart services (manual)
++sudo pkill -f "node.*" && sleep 3
++npm run start:gateway & npm run start:kiosk & npm run start:panel &
++
++# Test system
++node scripts/test-basic-relay-control.js
++node scripts/test-relays-1-8.js
++```
++
++## 🎯 **Key System Information**
++
++- **Architecture**: Gateway → Kiosk → ModbusController → Hardware
++- **Port Conflict**: Direct relay disabled when Kiosk runs (by design)
++- **Auto-Close**: Relays automatically close after activation
++- **Queue-based**: Preferred method for locker control
++- **Remote Control**: Full API access from any network device
++- **Data Consistency**: Database uses English, UI displays Turkish
++- **Repository**: Recently cleaned and optimized (105 files removed)
++- **Status**: Production-ready with full monitoring and documentation
++
++## 🚫 **Terminal Management**
++
++**IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
++
++### **For Windows PC Development**
++
++- **New PowerShell Window**: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run start:gateway"`
++- **Background Process**: `Start-Job -ScriptBlock { npm run start:gateway }`
++- **Detached Process**: `npm run start:gateway &` (in Git Bash)
++
++### **For Raspberry Pi Services**
++
++- **Background with &**: `npm run start:gateway &`
++- **Screen/Tmux**: `screen -S gateway` then `npm run start:gateway`
++- **PM2 Process Manager**: `pm2 start "npm run start:gateway" --name gateway`
++
++### **Kiro Best Practices**
++
++1. **Never run blocking commands** directly in Kiro terminal
++2. **Use PowerShell Start-Process** for new windows when needed
++3. **Prefer background processes** with `&` on Pi
++4. **Test with curl/Postman** instead of starting services in Kiro
++5. **Guide user to open new terminals** for service management
++6. **Run maintenance checks** before and after major changes
++7. **Follow repository organization rules** (see maintenance system)
++8. **Use proper file naming** (kebab-case, no spaces, max 50 chars)
++
++## 📋 **Quick Actions**
++
++- **Connect to Pi**: `ssh pi@pi-eform-locker`
++- **Test API**: Use Postman with provided endpoints
++- **Deploy**: Push to main, then pull on Pi
++- **Debug**: Check service logs and hardware connections
++- **Start Services**: Guide user to use new terminal/background processes
++- **Maintenance Check**: `.\scripts\maintenance\daily-routine.ps1 -Quick`
++- **Health Check**: `bash scripts/maintenance/repository-health-check.sh`
++- **Clean Repository**: `bash scripts/maintenance/daily-cleanup.sh`
++
++## 🎯 **Current Project Status (August 2025)**
++
++### **✅ Recently Completed**
++
++- Repository cleanup (105 files removed)
++- Status normalization (English database, Turkish UI)
++- Code consistency improvements
++- Documentation consolidation
++- Performance monitoring implementation
++- **Automated maintenance system** with Git hooks and scheduling
++- **Repository health monitoring** and organization compliance
++
++### **✅ Production Features**
++
++- Multi-user RFID session management
++- Real-time hardware control via Modbus RTU
++- Web administration with Turkish interface
++- Automatic service recovery and health monitoring
++- Custom locker naming with Turkish character support
++- **Comprehensive maintenance automation** with quality gates
++
++### **🔧 Essential Scripts Available**
++
++- `scripts/test-basic-relay-control.js` - Hardware testing
++- `scripts/emergency-relay-reset.js` - Emergency controls
++- `scripts/start-all-clean.sh` - Service management
++- `scripts/health-check-kiosk.sh` - Health monitoring
++- `scripts/deploy-kiosk-ui.sh` - Deployment utilities
++
++### **🧹 Maintenance System (NEW)**
++
++- `scripts/maintenance/daily-cleanup.sh` - Automated file cleanup
++- `scripts/maintenance/repository-health-check.sh` - Health analysis
++- `scripts/maintenance/file-organization-checker.js` - Organization compliance
++- `scripts/maintenance/install-git-hooks.sh` - Quality gate setup
++- `scripts/maintenance/daily-routine.ps1` - Windows maintenance routine
++- `scripts/maintenance/windows-scheduler-setup.ps1` - Automated scheduling
+
+
+commit 6b9fc76e8f4630bc75648fc49c8aa519ef48ece9
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Mon Sep 1 09:47:35 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Mon Sep 1 09:47:35 2025 +0300
+
+    fix(maintenance): restore steering files and improve maintenance system
+    
+    - Restored all steering files to .kiro/steering/ directory
+    - Fixed automated maintenance script to properly exclude .kiro/ paths
+    - Improved path normalization for Windows compatibility
+    - Removed duplicate files that were incorrectly moved to docs/
+    - Updated maintenance system to prevent future steering file moves
+    - Reorganized maintenance scripts and reports
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+index f613d32..4bcf949 100644
+--- a/.kiro/steering/development-environment.md
++++ b/.kiro/steering/development-environment.md
+@@ -163,4 +163,4 @@ node scripts/test-relays-1-8.js
+ - `scripts/maintenance/file-organization-checker.js` - Organization compliance
+ - `scripts/maintenance/install-git-hooks.sh` - Quality gate setup
+ - `scripts/maintenance/daily-routine.ps1` - Windows maintenance routine
+-- `scripts/maintenance/windows-scheduler-setup.ps1` - Automated scheduling
++- `scripts/maintenance/windows-scheduler-setup.ps1` - Automated scheduling
+\ No newline at end of file
+
+
+commit 60796bab7fc419d36e5acae581468dad5613ca5e
+Author:     Emre <ct.edag@gmail.com>
+AuthorDate: Mon Sep 8 14:38:32 2025 +0300
+Commit:     Emre <ct.edag@gmail.com>
+CommitDate: Mon Sep 8 14:38:32 2025 +0300
+
+    feat: update IP address to 192.168.1.11 and add rollback scripts
+
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+index 4bcf949..3412b3e 100644
+--- a/.kiro/steering/development-environment.md
++++ b/.kiro/steering/development-environment.md
+@@ -25,11 +25,11 @@ This is an **eForm Locker System** with distributed development:
+ ## 🔧 **Target Hardware (Raspberry Pi)**
+ 
+ - **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
+-- **IP Address**: `192.168.1.8`
++- **IP Address**: `192.168.1.11`
+ - **Services Running**:
+-  - Gateway: Port 3000 (`http://192.168.1.8:3000`)
+-  - Panel: Port 3001 (`http://192.168.1.8:3001`)
+-  - Kiosk: Port 3002 (`http://192.168.1.8:3002`)
++  - Gateway: Port 3000 (`http://192.168.1.11:3000`)
++  - Panel: Port 3001 (`http://192.168.1.11:3001`)
++  - Kiosk: Port 3002 (`http://192.168.1.11:3002`)
+ - **Hardware**: USB-RS485 adapter with relay control cards
+ - **Project Path**: `/home/pi/eform-locker`
+ 
+@@ -55,10 +55,10 @@ User can execute: `ssh pi@pi-eform-locker "command"`
+ 
+ ### **Postman API Endpoints**
+ 
+-- **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
+-- **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
+-- **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
+-- **Health Checks**: `GET http://192.168.1.8:300X/health`
++- **Gateway Admin**: `POST http://192.168.1.11:3000/api/admin/lockers/1/open`
++- **Kiosk Direct**: `POST http://192.168.1.11:3002/api/locker/open`
++- **Panel Relay**: `POST http://192.168.1.11:3001/api/relay/activate`
++- **Health Checks**: `GET http://192.168.1.11:300X/health`
+ 
+ ### **Common Pi Commands**
+ 
+
+

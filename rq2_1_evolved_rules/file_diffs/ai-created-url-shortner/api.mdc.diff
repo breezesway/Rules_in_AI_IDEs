@@ -1,0 +1,122 @@
+commit 1973a532faff812ca2fbd770b25733c7595ab4fc
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Mon Jun 30 11:02:08 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Mon Jun 30 11:02:08 2025 -0500
+
+    api endpoint rules
+
+diff --git a/.cursor/rules/api.mdc b/.cursor/rules/api.mdc
+new file mode 100644
+index 0000000..fd1b9c0
+--- /dev/null
++++ b/.cursor/rules/api.mdc
+@@ -0,0 +1,21 @@
++---
++description: 
++globs: server/api/**/*.ts
++alwaysApply: false
++---
++* All API endpoints follow the OpenAPI specification.
++* Document all endpoints with at the top of the files (after imports) like this:
++
++```typescript
++defineRouteMeta({
++  openAPI: {
++    tags: ["test"],
++    description: "Test route description",
++    parameters: [{ in: "query", name: "test", required: true }],
++  },
++});
++
++export default defineEventHandler(async () => {
++ // The endpoint logic here
++});
++```
+
+
+commit a745f79a03742e9eddb397e1de9a1308de3cdc01
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 16:01:36 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 16:01:36 2025 -0500
+
+    feat: hygen templates for components and API endpoints
+
+diff --git a/.cursor/rules/api.mdc b/.cursor/rules/api.mdc
+index fd1b9c0..797e37b 100644
+--- a/.cursor/rules/api.mdc
++++ b/.cursor/rules/api.mdc
+@@ -4,18 +4,8 @@ globs: server/api/**/*.ts
+ alwaysApply: false
+ ---
+ * All API endpoints follow the OpenAPI specification.
+-* Document all endpoints with at the top of the files (after imports) like this:
+-
+-```typescript
+-defineRouteMeta({
+-  openAPI: {
+-    tags: ["test"],
+-    description: "Test route description",
+-    parameters: [{ in: "query", name: "test", required: true }],
+-  },
+-});
+-
+-export default defineEventHandler(async () => {
+- // The endpoint logic here
+-});
+-```
++* When creating new resources (like users, posts, etc) use the following command to bootsrap all CRUD API endpoints: `npx hygen resource new --name [singular-resource-name-here]`
++* When creating one-off API endpoints (not full resources) bootstrap the API file with the command: `npx hygen api new --path [path-relative to server/api] --method [get, post, put, delete]`
++* If you need to create an API endpoint that supports streaming:
++  *  Don't use one of the hygen commands
++  *  DO use the Nuxt MCP for reference
+
+
+commit e397a1ce703148e5807d019c924bbd009fdb3f6f
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 17:00:56 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 17:00:56 2025 -0500
+
+    fix: read files after hygen
+
+diff --git a/.cursor/rules/api.mdc b/.cursor/rules/api.mdc
+index 797e37b..0c1b10d 100644
+--- a/.cursor/rules/api.mdc
++++ b/.cursor/rules/api.mdc
+@@ -6,6 +6,7 @@ alwaysApply: false
+ * All API endpoints follow the OpenAPI specification.
+ * When creating new resources (like users, posts, etc) use the following command to bootsrap all CRUD API endpoints: `npx hygen resource new --name [singular-resource-name-here]`
+ * When creating one-off API endpoints (not full resources) bootstrap the API file with the command: `npx hygen api new --path [path-relative to server/api] --method [get, post, put, delete]`
++* ALWAYS read the created files after running the hygen command.
+ * If you need to create an API endpoint that supports streaming:
+   *  Don't use one of the hygen commands
+   *  DO use the Nuxt MCP for reference
+
+
+commit ef835dc31d7d59e8424e9ed6506e3384052d4513
+Author:     Daniel Kelly <me@danielkelly.io>
+AuthorDate: Tue Jul 1 20:39:50 2025 -0500
+Commit:     Daniel Kelly <me@danielkelly.io>
+CommitDate: Tue Jul 1 20:39:50 2025 -0500
+
+    feat: more api rules
+
+diff --git a/.cursor/rules/api.mdc b/.cursor/rules/api.mdc
+index 0c1b10d..6ca79b1 100644
+--- a/.cursor/rules/api.mdc
++++ b/.cursor/rules/api.mdc
+@@ -5,8 +5,10 @@ alwaysApply: false
+ ---
+ * All API endpoints follow the OpenAPI specification.
+ * When creating new resources (like users, posts, etc) use the following command to bootsrap all CRUD API endpoints: `npx hygen resource new --name [singular-resource-name-here]`
++* ALWAYS read the created files for more direction (feel free to delete any that end up not being used)
+ * When creating one-off API endpoints (not full resources) bootstrap the API file with the command: `npx hygen api new --path [path-relative to server/api] --method [get, post, put, delete]`
+ * ALWAYS read the created files after running the hygen command.
+ * If you need to create an API endpoint that supports streaming:
+   *  Don't use one of the hygen commands
+   *  DO use the Nuxt MCP for reference
++  *  Do define the return response with the `sendStream` function
+
+

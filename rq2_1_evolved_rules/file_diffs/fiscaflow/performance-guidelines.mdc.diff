@@ -1,0 +1,168 @@
+commit c5ac8747dd98877e42fff764e5429faf0ff64ddc
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Mon Jun 23 07:35:12 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Mon Jun 23 07:35:12 2025 +0300
+
+    chore: cursor rules
+
+diff --git a/.cursor/rules/development/performance-guidelines.mdc b/.cursor/rules/development/performance-guidelines.mdc
+new file mode 100644
+index 0000000..9fef8fa
+--- /dev/null
++++ b/.cursor/rules/development/performance-guidelines.mdc
+@@ -0,0 +1,117 @@
++---
++description:
++globs:
++alwaysApply: false
++---
++# Performance Guidelines
++
++Rule for maintaining high performance standards and optimizing application performance.
++
++<rule>
++name: performance_guidelines
++description: Enforce performance best practices and optimization guidelines
++filters:
++  - type: file_extension
++    pattern: "\\.(js|ts|jsx|tsx|vue|svelte|py|java|cs)$"
++  - type: content
++    pattern: "(useEffect|useMemo|useCallback|React\\.memo|lazy|suspense)"
++  - type: event
++    pattern: "file_save"
++
++actions:
++  - type: suggest
++    message: |
++      Performance Guidelines Checklist:
++      
++      1. **Bundle Size**: Minimize bundle size with code splitting and tree shaking
++      2. **Lazy Loading**: Implement lazy loading for routes and components
++      3. **Memoization**: Use React.memo, useMemo, and useCallback appropriately
++      4. **Database Queries**: Optimize database queries and use indexing
++      5. **Caching**: Implement caching strategies (Redis, CDN, browser cache)
++      6. **Image Optimization**: Compress and lazy load images
++      7. **Memory Management**: Avoid memory leaks and unnecessary re-renders
++      8. **Network Requests**: Minimize API calls and implement request batching
++      9. **Monitoring**: Use performance monitoring tools (Lighthouse, WebPageTest)
++      10. **Progressive Enhancement**: Ensure core functionality works without JavaScript
++
++examples:
++  - input: |
++      // Bad: Unnecessary re-renders
++      function UserList({ users }) {
++        const sortedUsers = users.sort((a, b) => a.name.localeCompare(b.name));
++        return (
++          <ul>
++            {sortedUsers.map(user => (
++              <li key={user.id}>{user.name}</li>
++            ))}
++          </ul>
++        );
++      }
++    output: |
++      // Good: Memoized sorting
++      function UserList({ users }) {
++        const sortedUsers = useMemo(() => 
++          users.sort((a, b) => a.name.localeCompare(b.name)),
++          [users]
++        );
++        
++        return (
++          <ul>
++            {sortedUsers.map(user => (
++              <li key={user.id}>{user.name}</li>
++            ))}
++          </ul>
++        );
++      }
++
++  - input: |
++      // Bad: Inefficient database query
++      const users = await db.query('SELECT * FROM users');
++      const activeUsers = users.filter(user => user.status === 'active');
++    output: |
++      // Good: Optimized database query
++      const activeUsers = await db.query(
++        'SELECT * FROM users WHERE status = ?',
++        ['active']
++      );
++
++  - input: |
++      // Bad: No code splitting
++      import HeavyComponent from './HeavyComponent';
++      
++      function App() {
++        return <HeavyComponent />;
++      }
++    output: |
++      // Good: Lazy loading with code splitting
++      const HeavyComponent = lazy(() => import('./HeavyComponent'));
++      
++      function App() {
++        return (
++          <Suspense fallback={<div>Loading...</div>}>
++            <HeavyComponent />
++          </Suspense>
++        );
++      }
++
++  - input: |
++      // Bad: Memory leak potential
++      useEffect(() => {
++        const interval = setInterval(() => {
++          console.log('tick');
++        }, 1000);
++      }, []);
++    output: |
++      // Good: Proper cleanup
++      useEffect(() => {
++        const interval = setInterval(() => {
++          console.log('tick');
++        }, 1000);
++        
++        return () => clearInterval(interval);
++      }, []);
++
++metadata:
++  priority: high
++  version: 1.0
++</rule>
+
+
+commit 97e585430c9e72905d3e27226f9c1a2dbe5c7a25
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Tue Jun 24 09:00:28 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Tue Jun 24 09:00:28 2025 +0300
+
+    feat(rules): add comprehensive Go-specific Cursor rules
+    
+    - Add 7 Go-specific rules covering all aspects of Go development
+    - go-code-organization: Package structure and naming conventions
+    - go-error-handling: Error handling patterns and wrapping
+    - go-concurrency: Goroutines, channels, and context usage
+    - go-performance: Memory management and optimization
+    - go-testing: Unit and integration testing best practices
+    - go-api-design: RESTful API design and middleware
+    - go-database: Database operations and connection management
+    - Update Prompt.md with new instruction documentation
+
+diff --git a/.cursor/rules/development/performance-guidelines.mdc b/.cursor/rules/development/performance-guidelines.mdc
+index 9fef8fa..7cef62e 100644
+--- a/.cursor/rules/development/performance-guidelines.mdc
++++ b/.cursor/rules/development/performance-guidelines.mdc
+@@ -1,7 +1,7 @@
+ ---
+-description:
+-globs:
+-alwaysApply: false
++description: 
++globs: 
++alwaysApply: true
+ ---
+ # Performance Guidelines
+ 
+
+

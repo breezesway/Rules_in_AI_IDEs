@@ -1,0 +1,290 @@
+[
+  {
+    "id": "R55_38",
+    "content": "This is a distributed eForm Locker System with hardware relay control.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_39",
+    "content": "Services Architecture: Gateway (Port 3000): Main API coordinator, handles admin requests",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_40",
+    "content": "Services Architecture: Kiosk (Port 3002): Hardware control service, manages Modbus communication",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_41",
+    "content": "Services Architecture: Panel (Port 3001): Admin web interface, direct relay control",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_42",
+    "content": "Services Architecture: Agent (Optional): Background task processing and automation",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_43",
+    "content": "Target: Raspberry Pi 4 with USB-RS485 adapter",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_44",
+    "content": "Relays: Waveshare relay control cards via Modbus RTU",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_45",
+    "content": "RFID: Sycreader USB RFID reader (HID keyboard mode)",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_46",
+    "content": "Serial Port: /dev/ttyUSB0 (9600 baud, 8N1)",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_47",
+    "content": "Protocol: Modbus RTU with custom CRC16 calculation",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_48",
+    "content": "Current Repository Structure: eform-locker-system/\n├── app/                    # 4 core services (Gateway, Kiosk, Panel, Agent)\n├── shared/                 # Common utilities and types\n├── scripts/                # Essential operational scripts\n│   ├── deployment/         # Deployment automation\n│   ├── testing/           # Test execution scripts\n│   ├── maintenance/       # Repository maintenance system (NEW)\n│   └── emergency/         # Emergency procedures\n├── docs/                   # Essential documentation\n├── tests/                  # Integration and unit tests\n├── migrations/             # Database migrations\n└── config/                 # Configuration files",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Development Workflow & Project Management",
+    "second_level": "Directory Structure"
+  },
+  {
+    "id": "R55_49",
+    "content": "Only ONE service can use '/dev/ttyUSB0' at a time to avoid port conflicts.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Development Workflow & Project Management",
+    "second_level": "Environment Configuration"
+  },
+  {
+    "id": "R55_50",
+    "content": "If API returns success but no relay activation: \n1. Check if using Waveshare commands (broken) vs basic ON/OFF (working)\n2. Verify CRC calculation method\n3. Test with working script: `node scripts/test-basic-relay-control.js`",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_51",
+    "content": "If service fails to start or crashes, check logs for errors by running 'tail -20 logs/kiosk.log'.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_52",
+    "content": "If build failures occur due to TypeScript or build errors, perform a clean build by running 'rm -rf app/*/dist' and 'npm run build:all'.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_53",
+    "content": "Add debug logging to service code using 'console.log(`🔧 Debug: ${JSON.stringify(data)}`);' and 'console.log(`📡 Command: ${buffer.toString(\"hex\").toUpperCase()}`);'.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_54",
+    "content": "To monitor serial communication, install 'minicom' and then run 'sudo minicom -D /dev/ttyUSB0 -b 9600' (stop services first!).",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_55",
+    "content": "To check hardware connections, list USB devices using 'lsusb'.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_56",
+    "content": "To check hardware connections, check serial ports using 'ls -la /dev/ttyUSB*'. test port permissions using 'sudo chmod 666 /dev/ttyUSB0'.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Error & Exception Handling"
+  },
+  {
+    "id": "R55_57",
+    "content": "Panel Service (Port 3001): POST /api/relay/activate - Direct relay control.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_58",
+    "content": "Panel Service (Port 3001): GET /api/relay/status - Relay service status.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_59",
+    "content": "Panel service requires authentication for web pages",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Quality Assurance",
+    "second_level": "Security Practices"
+  },
+  {
+    "id": "R55_60",
+    "content": "API endpoints may bypass auth for testing",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Quality Assurance",
+    "second_level": "Security Practices"
+  },
+  {
+    "id": "R55_61",
+    "content": "Default credentials in environment or config files",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Quality Assurance",
+    "second_level": "Security Practices"
+  },
+  {
+    "id": "R55_62",
+    "content": "`serialport` - Direct serial communication ✅",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_63",
+    "content": "`fastify` - Web server framework ✅",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_64",
+    "content": "`sqlite3` - Database operations ✅",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_65",
+    "content": "`modbus-serial` - Doesn't work with this hardware ❌",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_66",
+    "content": "`node-modbus` - CRC calculation issues ❌",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "Technology Stack Selections"
+  },
+  {
+    "id": "R55_67",
+    "content": "Use queue-based locker control (Kiosk service) for reliability",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Performance Optimization"
+  },
+  {
+    "id": "R55_68",
+    "content": "Avoid direct relay control when Kiosk service is running",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Performance Optimization"
+  },
+  {
+    "id": "R55_69",
+    "content": "Keep relay pulse duration around 500ms for best results",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Performance Optimization"
+  },
+  {
+    "id": "R55_70",
+    "content": "Always turn relay OFF after activation to prevent stuck relays",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Code Implementation",
+    "second_level": "Performance Optimization"
+  },
+  {
+    "id": "R55_71",
+    "content": "Architecture: Database (English) → API (English) → UI Display (Turkish)",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  },
+  {
+    "id": "R55_72",
+    "content": "When in doubt, use the working test scripts to verify hardware functionality before debugging software issues!",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Quality Assurance",
+    "second_level": "Testing Strategy"
+  },
+  {
+    "id": "R55_73",
+    "content": "The system is now production-ready with full multi-user RFID support and clean, consistent data architecture.",
+    "project": "mredag_eformLockerRoom",
+    "file": "project-development-guide.md",
+    "first_level": "Architecture & Design",
+    "second_level": "System Architecture"
+  }
+]

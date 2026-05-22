@@ -1,0 +1,102 @@
+commit 07051a8dbbed3ae0bc19c2520d874ad141ce5930
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 11 17:35:02 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 11 17:35:02 2025 +0700
+
+    docs: refactor user datatypes rule to be conceptual and domain-focused
+    
+    - Remove detailed Go code examples for Email, Password, and Ciphertext types
+    - Focus on type purpose, constraints, and relationships for clarity
+    - Add guidance to reference generator/template rules for technical implementation
+    - Improve maintainability and accessibility for both technical and non-technical stakeholders
+
+diff --git a/internal/domain/user/.cursor/rules/datatypes.mdc b/internal/domain/user/.cursor/rules/datatypes.mdc
+new file mode 100644
+index 0000000..6cb6296
+--- /dev/null
++++ b/internal/domain/user/.cursor/rules/datatypes.mdc
+@@ -0,0 +1,23 @@
++# Data Types
++
++This rule describes the required data types in the user domain and their behavior. All types are defined as custom types for stronger type safety and extensibility.
++
++## Email
++Definition: Used as one of the user identifiers. No need to do validation here; validation will be handled elsewhere.
++- Type: string (custom type recommended, e.g., `type Email string`)
++
++## Password
++Definition: User password. Should be at least 8 characters long, contain 1 UPPERCASE letter, 1 lowercase letter, 1 number, and 1 special character. Validation logic is handled elsewhere.
++- Type: string (custom type recommended, e.g., `type Password string`)
++
++## Ciphertext
++Definition: Hashed version of password. Constructed from Password using a secure hash algorithm (e.g., bcrypt with at least 10 rounds). Must provide a method to check if a Password matches the hash.
++- Type: string (custom type recommended, e.g., `type Ciphertext string`)
++- Construction: From Password, using a secure hash algorithm
++- Validation: Must provide a method to check if a Password matches the hash
++
++---
++
++This rule is extensible for future user-related types (e.g., password reset tokens, email verification, etc.).
++
++Note: For technical implementation details or code templates, see generator/template rules such as generic-types.mdc.
+\ No newline at end of file
+
+
+commit 33e458740b5f94877bd1765b4a72ef9559d4707b
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Thu Jul 17 17:21:40 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Thu Jul 17 17:21:40 2025 +0700
+
+    feat: add password validation logic and expand unit tests for user datatypes
+    
+    - Implement Password.Validate method to enforce password policy (min length, upper/lowercase, number, special char)
+    - Add comprehensive table-driven unit tests for Password.Validate covering valid and invalid scenarios
+    - Ensure existing tests for NewCiphertext and Matches remain robust and table-driven
+    - Maintain use of testify/suite for organized and consistent test structure
+    - Improve security and reliability of user credential handling
+
+diff --git a/internal/domain/user/.cursor/rules/datatypes.mdc b/internal/domain/user/.cursor/rules/datatypes.mdc
+index 6cb6296..e3855d7 100644
+--- a/internal/domain/user/.cursor/rules/datatypes.mdc
++++ b/internal/domain/user/.cursor/rules/datatypes.mdc
+@@ -7,8 +7,9 @@ Definition: Used as one of the user identifiers. No need to do validation here;
+ - Type: string (custom type recommended, e.g., `type Email string`)
+ 
+ ## Password
+-Definition: User password. Should be at least 8 characters long, contain 1 UPPERCASE letter, 1 lowercase letter, 1 number, and 1 special character. Validation logic is handled elsewhere.
++Definition: User password. Should be at least 8 characters long, contain 1 UPPERCASE letter, 1 lowercase letter, 1 number, and 1 special character.
+ - Type: string (custom type recommended, e.g., `type Password string`)
++- Has validate method with boolean result to make sure it is complied the password specificaton. Otherwise, return Ffalse
+ 
+ ## Ciphertext
+ Definition: Hashed version of password. Constructed from Password using a secure hash algorithm (e.g., bcrypt with at least 10 rounds). Must provide a method to check if a Password matches the hash.
+
+
+commit e13077a9b7611de08578c84e156848d73e60fd79
+Author:     Harun <harun@digitalsekuriti.id>
+AuthorDate: Fri Jul 25 15:57:49 2025 +0700
+Commit:     Harun <harun@digitalsekuriti.id>
+CommitDate: Fri Jul 25 15:57:49 2025 +0700
+
+    fix(authentication): typo Ciphertext to CipherText
+
+diff --git a/internal/domain/user/.cursor/rules/datatypes.mdc b/internal/domain/user/.cursor/rules/datatypes.mdc
+index e3855d7..a52aabc 100644
+--- a/internal/domain/user/.cursor/rules/datatypes.mdc
++++ b/internal/domain/user/.cursor/rules/datatypes.mdc
+@@ -11,9 +11,9 @@ Definition: User password. Should be at least 8 characters long, contain 1 UPPER
+ - Type: string (custom type recommended, e.g., `type Password string`)
+ - Has validate method with boolean result to make sure it is complied the password specificaton. Otherwise, return Ffalse
+ 
+-## Ciphertext
++## CipherText
+ Definition: Hashed version of password. Constructed from Password using a secure hash algorithm (e.g., bcrypt with at least 10 rounds). Must provide a method to check if a Password matches the hash.
+-- Type: string (custom type recommended, e.g., `type Ciphertext string`)
++- Type: string (custom type recommended, e.g., `type CipherText string`)
+ - Construction: From Password, using a secure hash algorithm
+ - Validation: Must provide a method to check if a Password matches the hash
+ 
+
+

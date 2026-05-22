@@ -1,0 +1,213 @@
+commit 1ec41bf3feaed49206adf2d68138ca2c6ed02aa1
+Author:     Santos Flores <santosflores@gmail.com>
+AuthorDate: Thu Aug 28 19:10:34 2025 -0700
+Commit:     Santos Flores <santosflores@gmail.com>
+CommitDate: Thu Aug 28 19:10:34 2025 -0700
+
+    Implement new rules for Dart development, task list generation, task processing, and PRD creation. These guidelines provide detailed instructions for Dart coding practices, generating task lists from PRDs, managing task lists, and creating comprehensive PRDs for junior developers. Each rule is structured to enhance clarity and maintainability in the development process.
+
+diff --git a/.cursor/rules/process-task-list.mdc b/.cursor/rules/process-task-list.mdc
+new file mode 100644
+index 0000000..50e0977
+--- /dev/null
++++ b/.cursor/rules/process-task-list.mdc
+@@ -0,0 +1,58 @@
++---
++description: These rules instruct the agent what steps to follow when request to implement a task.
++alwaysApply: false
++---
++# Task List Management
++
++Guidelines for managing task lists in markdown files to track progress on completing a PRD
++
++## Task Implementation
++
++- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
++- **Completion protocol:**
++
++  1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.
++  2. If **all** subtasks underneath a parent task are now `[x]`, follow this sequence:
++
++  - **First**: Run the full test suite (`pytest`, `npm test`, `bin/rails test`, etc.)
++  - **Only if all tests pass**: Stage changes (`git add .`)
++  - **Clean up**: Remove any temporary files and temporary code before committing
++  - **Commit**: Use a descriptive commit message that:
++
++    - Uses conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
++    - Summarizes what was accomplished in the parent task
++    - Lists key changes and additions
++    - References the task number and PRD context
++    - **Formats the message as a single-line command using `-m` flags**, e.g.:
++
++      ```sh
++      git commit -m "feat: add payment validation logic" -m "- Validates card type and expiry" -m "- Adds unit tests for edge cases" -m "Related to T123 in PRD"
++      ```
++
++  3. Once all the subtasks are marked completed and changes have been committed, mark the **parent task** as completed.
++
++- Stop after each sub‑task and wait for the user's go‑ahead.
++
++## Task List Maintenance
++
++1. **Update the task list as you work:**
++
++   - Mark tasks and subtasks as completed (`[x]`) per the protocol above.
++   - Add new tasks as they emerge.
++
++2. **Maintain the "Relevant Files" section:**
++   - List every file created or modified.
++   - Give each file a one‑line description of its purpose.
++
++## AI Instructions
++
++When working with task lists, the AI must:
++
++1. Regularly update the task list file after finishing any significant work.
++2. Follow the completion protocol:
++   - Mark each finished **sub‑task** `[x]`.
++   - Mark the **parent task** `[x]` once **all** its subtasks are `[x]`.
++3. Add newly discovered tasks.
++4. Keep "Relevant Files" accurate and up to date.
++5. Before starting work, check which sub‑task is next.
++6. After implementing a sub‑task, update the file and then pause for user approval.
+
+
+commit 775e725d49c3640c5dd9eba5ca7041e193fca99f
+Author:     Santos Flores <santosflores@gmail.com>
+AuthorDate: Fri Aug 29 06:35:23 2025 -0700
+Commit:     Santos Flores <santosflores@gmail.com>
+CommitDate: Fri Aug 29 06:35:23 2025 -0700
+
+    Refactor task management rules for clarity and protocol adherence
+    
+    - Updated task management guidelines to emphasize single sub-task execution and user confirmation before proceeding.
+    - Revised completion protocols for sub-tasks and parent tasks to ensure clear communication and accurate task tracking.
+    - Introduced new sections for forbidden actions and required responses to enhance task management integrity.
+    
+    This update aims to improve the overall task management process and user interaction.
+
+diff --git a/.cursor/rules/process-task-list.mdc b/.cursor/rules/process-task-list.mdc
+index 50e0977..617712b 100644
+--- a/.cursor/rules/process-task-list.mdc
++++ b/.cursor/rules/process-task-list.mdc
+@@ -1,58 +1,48 @@
+----
+-description: These rules instruct the agent what steps to follow when request to implement a task.
+-alwaysApply: false
+----
+-# Task List Management
++# Task Management Protocol
+ 
+-Guidelines for managing task lists in markdown files to track progress on completing a PRD
++## CRITICAL: One Sub-Task at a Time
+ 
+-## Task Implementation
++- NEVER start the next sub-task without explicit user permission
++- After completing ANY sub-task, IMMEDIATELY stop and ask: "Task X.Y complete. May I proceed with X.Z?"
++- Wait for user confirmation ("y", "yes", or explicit instruction) before continuing
++- If user says anything other than clear approval, stop and await further direction
+ 
+-- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
+-- **Completion protocol:**
++## Sub-Task Completion Protocol
+ 
+-  1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.
+-  2. If **all** subtasks underneath a parent task are now `[x]`, follow this sequence:
++1. Mark completed sub-task as `[x]` in task file
++2. Update "Relevant Files" section with any changes
++3. Ask user for permission to continue
++4. STOP and wait for response
+ 
+-  - **First**: Run the full test suite (`pytest`, `npm test`, `bin/rails test`, etc.)
+-  - **Only if all tests pass**: Stage changes (`git add .`)
+-  - **Clean up**: Remove any temporary files and temporary code before committing
+-  - **Commit**: Use a descriptive commit message that:
++## Parent Task Completion Protocol
+ 
+-    - Uses conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
+-    - Summarizes what was accomplished in the parent task
+-    - Lists key changes and additions
+-    - References the task number and PRD context
+-    - **Formats the message as a single-line command using `-m` flags**, e.g.:
++When ALL sub-tasks under a parent are complete:
+ 
+-      ```sh
+-      git commit -m "feat: add payment validation logic" -m "- Validates card type and expiry" -m "- Adds unit tests for edge cases" -m "Related to T123 in PRD"
+-      ```
++1. Run full test suite if available
++2. Stage changes: `git add .`
++3. Clean up temporary files
++4. Commit with conventional format:
+ 
+-  3. Once all the subtasks are marked completed and changes have been committed, mark the **parent task** as completed.
++   ```sh
++   git commit -m "feat: [parent task summary]" -m "- [key changes]" -m "- [additions]" -m "Related to [task#]"
++   ```
+ 
+-- Stop after each sub‑task and wait for the user's go‑ahead.
++5. Mark parent task as `[x]`
+ 
+-## Task List Maintenance
++## Forbidden Actions
+ 
+-1. **Update the task list as you work:**
++- NEVER work on multiple sub-tasks in sequence without permission
++- NEVER assume user wants to continue to next task
++- NEVER batch multiple sub-tasks together
++- NEVER proceed if user gives unclear or ambiguous response
+ 
+-   - Mark tasks and subtasks as completed (`[x]`) per the protocol above.
+-   - Add new tasks as they emerge.
++## Required Responses
+ 
+-2. **Maintain the "Relevant Files" section:**
+-   - List every file created or modified.
+-   - Give each file a one‑line description of its purpose.
++Always end sub-task completion with:
++"✅ Task X.Y completed: [brief description]
+ 
+-## AI Instructions
++May I proceed with Task X.Z: [next task description]?"
+ 
+-When working with task lists, the AI must:
++## Emergency Stop
+ 
+-1. Regularly update the task list file after finishing any significant work.
+-2. Follow the completion protocol:
+-   - Mark each finished **sub‑task** `[x]`.
+-   - Mark the **parent task** `[x]` once **all** its subtasks are `[x]`.
+-3. Add newly discovered tasks.
+-4. Keep "Relevant Files" accurate and up to date.
+-5. Before starting work, check which sub‑task is next.
+-6. After implementing a sub‑task, update the file and then pause for user approval.
++If user says "stop", "wait", "pause", or shows any hesitation, immediately halt all work and await clarification.
+
+
+commit 3d1c2aec58629e67c5fe2e044b92a784753b9c8c
+Author:     Santos Flores <santosflores@gmail.com>
+AuthorDate: Fri Aug 29 11:25:00 2025 -0700
+Commit:     Santos Flores <santosflores@gmail.com>
+CommitDate: Fri Aug 29 11:25:00 2025 -0700
+
+    Enhance task processing rules with detailed descriptions
+    
+    - Added a description for the task processing rule to clarify its purpose and application.
+    - Set the rule to not always apply, allowing for more flexible task management.
+    
+    This update aims to improve understanding and usability of task processing guidelines.
+
+diff --git a/.cursor/rules/process-task-list.mdc b/.cursor/rules/process-task-list.mdc
+index 617712b..0b53b65 100644
+--- a/.cursor/rules/process-task-list.mdc
++++ b/.cursor/rules/process-task-list.mdc
+@@ -1,3 +1,8 @@
++---
++description: This rule indicates the agent how to process a list of tasks
++alwaysApply: false
++---
++
+ # Task Management Protocol
+ 
+ ## CRITICAL: One Sub-Task at a Time
+
+

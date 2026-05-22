@@ -1,0 +1,107 @@
+commit 10eea47790676affe408d039aa91f4961e5f6415
+Author:     NickBwalley <nickbwalley@gmail.com>
+AuthorDate: Tue Aug 19 22:02:35 2025 +0300
+Commit:     NickBwalley <nickbwalley@gmail.com>
+CommitDate: Tue Aug 19 22:02:35 2025 +0300
+
+    added supabase custom cursor rules & imported full authentication logic using pnpm dlx for supabase authentication
+
+diff --git a/.cursor/rules/create-migration.mdc b/.cursor/rules/create-migration.mdc
+new file mode 100644
+index 0000000..57c9f13
+--- /dev/null
++++ b/.cursor/rules/create-migration.mdc
+@@ -0,0 +1,50 @@
++---
++# Specify the following for Cursor rules
++description: Guidelines for writing Postgres migrations
++alwaysApply: false
++---
++
++# Database: Create migration
++
++You are a Postgres Expert who loves creating secure database schemas.
++
++This project uses the migrations provided by the Supabase CLI.
++
++## Creating a migration file
++
++Given the context of the user's message, create a database migration file inside the folder `supabase/migrations/`.
++
++The file MUST following this naming convention:
++
++The file MUST be named in the format `YYYYMMDDHHmmss_short_description.sql` with proper casing for months, minutes, and seconds in UTC time:
++
++1. `YYYY` - Four digits for the year (e.g., `2024`).
++2. `MM` - Two digits for the month (01 to 12).
++3. `DD` - Two digits for the day of the month (01 to 31).
++4. `HH` - Two digits for the hour in 24-hour format (00 to 23).
++5. `mm` - Two digits for the minute (00 to 59).
++6. `ss` - Two digits for the second (00 to 59).
++7. Add an appropriate description for the migration.
++
++For example:
++
++```
++20240906123045_create_profiles.sql
++```
++
++## SQL Guidelines
++
++Write Postgres-compatible SQL code for Supabase migration files that:
++
++- Includes a header comment with metadata about the migration, such as the purpose, affected tables/columns, and any special considerations.
++- Includes thorough comments explaining the purpose and expected behavior of each migration step.
++- Write all SQL in lowercase.
++- Add copious comments for any destructive SQL commands, including truncating, dropping, or column alterations.
++- When creating a new table, you MUST enable Row Level Security (RLS) even if the table is intended for public access.
++- When creating RLS Policies
++  - Ensure the policies cover all relevant access scenarios (e.g. select, insert, update, delete) based on the table's purpose and data sensitivity.
++  - If the table is intended for public access the policy can simply return `true`.
++  - RLS Policies should be granular: one policy for `select`, one for `insert` etc) and for each supabase role (`anon` and `authenticated`). DO NOT combine Policies even if the functionality is the same for both roles.
++  - Include comments explaining the rationale and intended behavior of each security policy
++
++The generated SQL code should be production-ready, well-documented, and aligned with Supabase's best practices.
+
+
+commit e39951cc928e77602be68bee0fee58926dcf2fe9
+Author:     NickBwalley <nickbwalley@gmail.com>
+AuthorDate: Thu Aug 21 13:54:19 2025 +0300
+Commit:     NickBwalley <nickbwalley@gmail.com>
+CommitDate: Thu Aug 21 13:54:19 2025 +0300
+
+    Integrated AI-SDK to my blogflow application
+
+diff --git a/.cursor/rules/create-migration.mdc b/.cursor/rules/create-migration.mdc
+index 57c9f13..c9b39e9 100644
+--- a/.cursor/rules/create-migration.mdc
++++ b/.cursor/rules/create-migration.mdc
+@@ -16,20 +16,22 @@ Given the context of the user's message, create a database migration file inside
+ 
+ The file MUST following this naming convention:
+ 
+-The file MUST be named in the format `YYYYMMDDHHmmss_short_description.sql` with proper casing for months, minutes, and seconds in UTC time:
++The file MUST be named in the format `YYYYMMDDHHmmss_short_description.sql` with proper casing for months, minutes, and seconds in EAT (East Africa Time - Africa/Nairobi) time:
+ 
+-1. `YYYY` - Four digits for the year (e.g., `2024`).
++1. `YYYY` - Four digits for the year (e.g., `2025`).
+ 2. `MM` - Two digits for the month (01 to 12).
+ 3. `DD` - Two digits for the day of the month (01 to 31).
+-4. `HH` - Two digits for the hour in 24-hour format (00 to 23).
++4. `HH` - Two digits for the hour in 24-hour format (00 to 23) in EAT timezone.
+ 5. `mm` - Two digits for the minute (00 to 59).
+ 6. `ss` - Two digits for the second (00 to 59).
+ 7. Add an appropriate description for the migration.
+ 
++**IMPORTANT**: Always use EAT (East Africa Time - UTC+3) for migration timestamps, not UTC.
++
+ For example:
+ 
+ ```
+-20240906123045_create_profiles.sql
++20250120083000_create_profiles.sql
+ ```
+ 
+ ## SQL Guidelines
+
+

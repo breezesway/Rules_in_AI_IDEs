@@ -1,0 +1,251 @@
+commit 4707c7cafc1adc8d7419cf3ece1488bc7d9ea71d
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Mon Jun 23 17:59:26 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Mon Jun 23 17:59:26 2025 +0300
+
+    feat(project): initialize FiscaFlow personal finance tracker project
+    
+    - Add comprehensive project specifications in specs/ folder
+    - Create Prompt.md for tracking all development prompts
+    - Set up Cursor rules for instruction compliance
+    - Define monolith architecture with Go and OpenTelemetry
+    - Establish conventional commit standards
+
+diff --git a/.cursor/rules/instruction-compliance.mdc b/.cursor/rules/instruction-compliance.mdc
+new file mode 100644
+index 0000000..1990b3c
+--- /dev/null
++++ b/.cursor/rules/instruction-compliance.mdc
+@@ -0,0 +1,71 @@
++---
++description: 
++globs: 
++alwaysApply: true
++---
++# Instruction Compliance Rule
++
++<rule>
++name: instruction_compliance
++description: Ensure all user instructions are followed and prompts are documented in Prompt.md
++filters:
++  - type: event
++    pattern: "user_message"
++  - type: file_change
++    pattern: "*"
++  - type: file_creation
++    pattern: "Prompt.md"
++
++actions:
++  - type: execute
++    command: |
++      # Check if Prompt.md exists and update it with new instructions
++      if [ -f "Prompt.md" ]; then
++        echo "Prompt.md exists - instructions should be documented here"
++      else
++        echo "Prompt.md should be created to document all prompts"
++      fi
++
++  - type: suggest
++    message: |
++      INSTRUCTION COMPLIANCE CHECKLIST:
++      
++      1. ✅ Document all user prompts in Prompt.md
++      2. ✅ Follow user instructions precisely
++      3. ✅ Track progress and decisions
++      4. ✅ Update Prompt.md with each new instruction
++      5. ✅ Maintain conversation timeline
++      6. ✅ Record key decisions and rationale
++      
++      When receiving new instructions:
++      - Add them to Prompt.md under "Conversation Timeline"
++      - Include context, outcome, and any decisions made
++      - Update "Pending Tasks" and "Current State" sections
++      - Ensure all technical decisions are recorded
++
++examples:
++  - input: |
++      User: "Create a new API endpoint for user registration"
++    output: |
++      ✅ Add to Prompt.md:
++      #### **Prompt X: User Registration API**
++      **User**: "Create a new API endpoint for user registration"
++      **Context**: User wants user registration functionality
++      **Outcome**: Created POST /api/v1/users/register endpoint
++      **Implementation**: [details of what was built]
++
++  - input: |
++      User: "Update the database schema"
++    output: |
++      ✅ Add to Prompt.md:
++      #### **Prompt X: Database Schema Update**
++      **User**: "Update the database schema"
++      **Context**: Database changes needed
++      **Outcome**: Updated schema with new tables/columns
++      **Changes**: [specific changes made]
++
++metadata:
++  priority: high
++  version: 1.0
++  tags: ["compliance", "documentation", "prompts"]
++</rule>
+
+
+commit e31ed46dc0b120347bd2db9c80f3cee714f53241
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Mon Jun 23 18:17:30 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Mon Jun 23 18:17:30 2025 +0300
+
+    refactor(rules): update instruction compliance and conventional commit rules for better enforcement
+
+diff --git a/.cursor/rules/instruction-compliance.mdc b/.cursor/rules/instruction-compliance.mdc
+index 1990b3c..8228ef4 100644
+--- a/.cursor/rules/instruction-compliance.mdc
++++ b/.cursor/rules/instruction-compliance.mdc
+@@ -36,12 +36,30 @@ actions:
+       4. ✅ Update Prompt.md with each new instruction
+       5. ✅ Maintain conversation timeline
+       6. ✅ Record key decisions and rationale
++      7. ✅ Follow conventional commit rule for all changes
++      8. ✅ Commit changes immediately after file modifications
++      
++      MANDATORY ACTIONS:
+       
+       When receiving new instructions:
+       - Add them to Prompt.md under "Conversation Timeline"
+       - Include context, outcome, and any decisions made
+       - Update "Pending Tasks" and "Current State" sections
+       - Ensure all technical decisions are recorded
++      
++      When making file changes:
++      - Stage changes immediately: git add .
++      - Commit using conventional format: git commit -m "type(scope): description"
++      - Update Prompt.md with the outcome
++      
++      CONVENTIONAL COMMIT FORMAT:
++      - feat: new feature
++      - fix: bug fix
++      - docs: documentation
++      - style: formatting
++      - refactor: code restructuring
++      - test: testing
++      - chore: maintenance
+ 
+ examples:
+   - input: |
+@@ -53,6 +71,10 @@ examples:
+       **Context**: User wants user registration functionality
+       **Outcome**: Created POST /api/v1/users/register endpoint
+       **Implementation**: [details of what was built]
++      
++      ✅ Commit changes:
++      git add .
++      git commit -m "feat(api): add user registration endpoint"
+ 
+   - input: |
+       User: "Update the database schema"
+@@ -63,9 +85,26 @@ examples:
+       **Context**: Database changes needed
+       **Outcome**: Updated schema with new tables/columns
+       **Changes**: [specific changes made]
++      
++      ✅ Commit changes:
++      git add .
++      git commit -m "feat(database): update schema with new tables"
++
++  - input: |
++      User: "Create git ignore and Basic Readme"
++    output: |
++      ✅ Add to Prompt.md:
++      #### **Prompt X: Git Ignore and Basic Readme**
++      **User**: "Create git ignore and Basic Readme"
++      **Context**: User wants .gitignore and README.md files
++      **Outcome**: Created .gitignore and README.md
++      
++      ✅ Commit changes:
++      git add .gitignore README.md Prompt.md
++      git commit -m "docs(root): add .gitignore and basic README"
+ 
+ metadata:
+-  priority: high
+-  version: 1.0
+-  tags: ["compliance", "documentation", "prompts"]
++  priority: critical
++  version: 1.1
++  tags: ["compliance", "documentation", "prompts", "conventional-commits"]
+ </rule>
+
+
+commit 4f78ece6c0de224ca8ecbdf90ce9ac0ec86bbe76
+Author:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+AuthorDate: Tue Jun 24 11:53:28 2025 +0300
+Commit:     Oluwadamiloju Yusuf <yusufdamiloju@gmail.com>
+CommitDate: Tue Jun 24 11:53:28 2025 +0300
+
+    test(integration): fix DeviceInfo handling for UserSession in test repository (marshal/unmarshal as JSON string)
+
+diff --git a/.cursor/rules/instruction-compliance.mdc b/.cursor/rules/instruction-compliance.mdc
+index 8228ef4..1f89504 100644
+--- a/.cursor/rules/instruction-compliance.mdc
++++ b/.cursor/rules/instruction-compliance.mdc
+@@ -37,7 +37,8 @@ actions:
+       5. ✅ Maintain conversation timeline
+       6. ✅ Record key decisions and rationale
+       7. ✅ Follow conventional commit rule for all changes
+-      8. ✅ Commit changes immediately after file modifications
++      8. ✅ Run tests before committing: make test
++      9. ✅ Commit changes immediately after file modifications
+       
+       MANDATORY ACTIONS:
+       
+@@ -48,10 +49,17 @@ actions:
+       - Ensure all technical decisions are recorded
+       
+       When making file changes:
++      - Run tests first: make test
+       - Stage changes immediately: git add .
+       - Commit using conventional format: git commit -m "type(scope): description"
+       - Update Prompt.md with the outcome
+       
++      TEST REQUIREMENTS:
++      - Unit tests must pass: make test-unit
++      - Integration tests must pass: make test-integration
++      - All tests must pass: make test
++      - If tests fail, fix the issues before committing
++      
+       CONVENTIONAL COMMIT FORMAT:
+       - feat: new feature
+       - fix: bug fix
+@@ -72,7 +80,8 @@ examples:
+       **Outcome**: Created POST /api/v1/users/register endpoint
+       **Implementation**: [details of what was built]
+       
+-      ✅ Commit changes:
++      ✅ Run tests and commit changes:
++      make test
+       git add .
+       git commit -m "feat(api): add user registration endpoint"
+ 
+@@ -86,7 +95,8 @@ examples:
+       **Outcome**: Updated schema with new tables/columns
+       **Changes**: [specific changes made]
+       
+-      ✅ Commit changes:
++      ✅ Run tests and commit changes:
++      make test
+       git add .
+       git commit -m "feat(database): update schema with new tables"
+ 
+@@ -99,7 +109,8 @@ examples:
+       **Context**: User wants .gitignore and README.md files
+       **Outcome**: Created .gitignore and README.md
+       
+-      ✅ Commit changes:
++      ✅ Run tests and commit changes:
++      make test
+       git add .gitignore README.md Prompt.md
+       git commit -m "docs(root): add .gitignore and basic README"
+ 
+
+

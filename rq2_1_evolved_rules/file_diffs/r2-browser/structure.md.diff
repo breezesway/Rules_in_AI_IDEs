@@ -1,0 +1,131 @@
+commit 56df7ea1e4586862654905af4defce61435511b0
+Author:     Curtis L Bray <curtislbray@MacBookPro.localdomain>
+AuthorDate: Tue Jul 15 16:05:17 2025 -0700
+Commit:     Curtis Bray <curtis@brayfamily.com>
+CommitDate: Fri Jul 18 06:48:56 2025 -0700
+
+    Initial commit: R2 File Explorer project setup
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+new file mode 100644
+index 0000000..986d9ca
+--- /dev/null
++++ b/.kiro/steering/structure.md
+@@ -0,0 +1,57 @@
++# Project Structure
++
++## Root Directory Organization
++
++```
++r2-file-explorer/
++├── .kiro/                     # Kiro configuration and specs
++│   ├── specs/                 # Feature specifications
++│   ├── steering/              # AI assistant guidance rules
++│   └── settings/              # Tool configurations
++├── frontend/                  # React application
++│   ├── src/
++│   │   ├── components/        # React components
++│   │   ├── services/          # API client and utilities
++│   │   ├── hooks/             # Custom React hooks
++│   │   ├── types/             # TypeScript type definitions
++│   │   └── utils/             # Helper functions
++│   ├── public/                # Static assets
++│   └── package.json           # Frontend dependencies
++├── worker/                    # Cloudflare Worker (Rust)
++│   ├── src/
++│   │   ├── lib.rs             # Main Worker entry point
++│   │   ├── handlers/          # Request handlers
++│   │   ├── services/          # Business logic services
++│   │   ├── models/            # Data structures
++│   │   └── utils/             # Helper functions
++│   ├── Cargo.toml             # Rust dependencies
++│   └── wrangler.toml          # Worker configuration
++└── README.md                  # Project documentation
++```
++
++## Frontend Component Architecture
++
++- **App Component**: Main container with routing and global state
++- **FileExplorer**: Primary interface with toolbar and file list
++- **FileList**: Grid/list view of files and folders
++- **Toolbar**: Navigation, upload, and view controls
++- **UploadZone**: Drag-and-drop file upload interface
++- **ContextMenu**: Right-click operations menu
++- **AuthForm**: Credential input and validation
++
++## Backend Service Architecture
++
++- **Router**: Request routing and middleware
++- **AuthHandler**: Authentication and session management
++- **FileHandler**: File operation endpoints
++- **R2Service**: Direct R2 bucket operations
++- **S3Service**: S3-compatible API client (fallback)
++- **AuthService**: JWT and session management
++
++## Key Conventions
++
++- **TypeScript**: Strict typing throughout frontend
++- **Error Handling**: Consistent error types and user-friendly messages
++- **API Design**: RESTful endpoints with consistent response formats
++- **Security**: No credential persistence, JWT-based sessions
++- **Performance**: Streaming uploads, virtual scrolling, caching
+\ No newline at end of file
+
+
+commit 948f423dde0dbf1577a376109b89ca1f17ab8673
+Author:     Curtis L Bray <curtislbray@Curtiss-MacBook-Pro-M1.local>
+AuthorDate: Tue Jul 15 17:31:14 2025 -0700
+Commit:     Curtis Bray <curtis@brayfamily.com>
+CommitDate: Fri Jul 18 06:48:59 2025 -0700
+
+    Update R2 File Explorer implementation tasks specification
+    
+    - Updated project structure to use TypeScript/JavaScript instead of Rust
+    - Modified wrangler.toml configuration for TypeScript worker
+    - Added new worker source files and package configuration
+    - Cleaned up Rust build artifacts
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 986d9ca..26c7f32 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -17,14 +17,15 @@ r2-file-explorer/
+ │   │   └── utils/             # Helper functions
+ │   ├── public/                # Static assets
+ │   └── package.json           # Frontend dependencies
+-├── worker/                    # Cloudflare Worker (Rust)
++├── worker/                    # Cloudflare Worker (JavaScript/TypeScript)
+ │   ├── src/
+-│   │   ├── lib.rs             # Main Worker entry point
++│   │   ├── index.ts           # Main Worker entry point
+ │   │   ├── handlers/          # Request handlers
+ │   │   ├── services/          # Business logic services
+-│   │   ├── models/            # Data structures
++│   │   ├── models/            # Data structures and types
+ │   │   └── utils/             # Helper functions
+-│   ├── Cargo.toml             # Rust dependencies
++│   ├── package.json           # Worker dependencies
++│   ├── tsconfig.json          # TypeScript configuration
+ │   └── wrangler.toml          # Worker configuration
+ └── README.md                  # Project documentation
+ ```
+@@ -41,12 +42,12 @@ r2-file-explorer/
+ 
+ ## Backend Service Architecture
+ 
+-- **Router**: Request routing and middleware
+-- **AuthHandler**: Authentication and session management
+-- **FileHandler**: File operation endpoints
++- **Hono App**: Main application with routing and middleware
++- **AuthHandler**: Authentication and session management with Hono JWT middleware
++- **FileHandler**: File operation endpoints using Hono routes
+ - **R2Service**: Direct R2 bucket operations
+-- **S3Service**: S3-compatible API client (fallback)
+-- **AuthService**: JWT and session management
++- **AuthService**: JWT and session management with KV storage
++- **Middleware**: CORS, authentication, error handling, and logging
+ 
+ ## Key Conventions
+ 
+
+

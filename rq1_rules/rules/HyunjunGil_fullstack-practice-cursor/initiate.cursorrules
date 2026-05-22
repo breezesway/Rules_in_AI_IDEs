@@ -1,0 +1,485 @@
+# Full-Stack Todo Application with Email Verification Development Rules
+
+You are an expert full-stack developer specializing in secure web application development. Your role is to build a complete Todo application with comprehensive authentication, email verification, and authorization features following industry best practices.
+
+## Project Overview
+- **Application Type**: Full-stack Todo application with email verification system
+- **Backend**: Spring Boot with Spring Security and JavaMailSender
+- **Frontend**: React with comprehensive authentication flows
+- **Database**: H2 (in-memory for development)
+- **Authentication**: JWT-based stateless authentication with email verification
+- **Email Service**: SMTP email sending for verification codes
+- **Security**: Industry-standard security practices with email verification
+
+## Technology Stack
+
+### Backend (Spring Boot)
+- **Framework**: Spring Boot 3.x
+- **Language**: Java 17+
+- **Dependencies**: 
+  - Spring Web (REST API)
+  - Spring Data JPA (Database operations)
+  - Spring Security (Authentication & Authorization)
+  - Spring Boot Validation (Input validation)
+  - Spring Boot Mail (Email sending)
+  - H2 Database (In-memory database)
+  - Spring Boot DevTools (Development productivity)
+  - JWT Library (io.jsonwebtoken:jjwt-api, jjwt-impl, jjwt-jackson)
+  - BCrypt (Password hashing - included in Spring Security)
+- **Build Tool**: Gradle
+
+### Frontend (React)
+- **Framework**: React 18+
+- **Language**: JavaScript/TypeScript
+- **HTTP Client**: Axios with interceptors for JWT
+- **Routing**: React Router v6 for protected routes
+- **State Management**: Context API for authentication state
+- **Storage**: localStorage/sessionStorage for JWT tokens
+- **Styling**: CSS modules or styled-components
+- **UI Components**: Form validation and email verification flows
+
+## Email Verification Requirements
+
+### Email Verification Features
+1. **Registration with Email Verification**: Users must verify email before account activation
+2. **Verification Code Generation**: Generate 6-digit numeric verification codes
+3. **Email Sending**: Send verification codes via SMTP
+4. **Code Validation**: Verify submitted codes with expiration (10 minutes)
+5. **Resend Functionality**: Allow users to request new verification codes
+6. **Account Status Management**: Track email verification status
+7. **Email Templates**: Professional HTML email templates
+
+### Email Verification Flow
+1. User registers with email and password
+2. System generates 6-digit verification code
+3. Verification code sent to user's email
+4. User enters verification code in frontend
+5. System validates code and activates account
+6. User can now login with verified account
+
+## Data Models
+
+### User Entity (Updated)
+```java
+User Entity:
+- id (Long, auto-generated)
+- username (String, unique, required, 3-50 chars)
+- email (String, unique, required, valid email format)
+- password (String, required, BCrypt hashed, min 8 chars)
+- firstName (String, optional, max 50 chars)
+- lastName (String, optional, max 50 chars)
+- emailVerified (Boolean, default false)
+- enabled (Boolean, default false) // Only true after email verification
+- roles (Set<Role>, many-to-many relationship)
+- createdAt (LocalDateTime, auto-generated)
+- updatedAt (LocalDateTime, auto-updated)
+```
+
+### EmailVerification Entity
+```java
+EmailVerification Entity:
+- id (Long, auto-generated)
+- email (String, required, indexed)
+- verificationCode (String, required, 6 digits)
+- expiryTime (LocalDateTime, required, 10 minutes from creation)
+- verified (Boolean, default false)
+- attempts (Integer, default 0, max 5 attempts)
+- createdAt (LocalDateTime, auto-generated)
+```
+
+### Role Entity
+```java
+Role Entity:
+- id (Long, auto-generated)
+- name (String, unique, required) // ROLE_USER, ROLE_ADMIN
+- description (String, optional)
+```
+
+### Todo Entity
+```java
+Todo Entity:
+- id (Long, auto-generated)
+- title (String, required, max 100 chars)
+- description (String, optional, max 500 chars)
+- completed (Boolean, default false)
+- user (User, many-to-one relationship, required)
+- createdAt (LocalDateTime, auto-generated)
+- updatedAt (LocalDateTime, auto-updated)
+```
+
+## API Endpoints
+
+### Authentication Endpoints
+```
+POST   /api/auth/register           - User registration (sends verification email)
+POST   /api/auth/verify-email       - Verify email with code
+POST   /api/auth/resend-verification - Resend verification code
+POST   /api/auth/login              - User login (only for verified users)
+POST   /api/auth/logout             - User logout
+POST   /api/auth/refresh            - Refresh JWT token
+GET    /api/auth/me                 - Get current user info
+PUT    /api/auth/profile            - Update user profile
+POST   /api/auth/change-password    - Change user password
+POST   /api/auth/forgot-password    - Send password reset email
+POST   /api/auth/reset-password     - Reset password with code
+```
+
+### Todo Endpoints (Protected - Email Verified Users Only)
+```
+GET    /api/todos          - Get current user's todos
+GET    /api/todos/{id}     - Get specific todo (owner only)
+POST   /api/todos          - Create new todo for current user
+PUT    /api/todos/{id}     - Update todo (owner only)
+DELETE /api/todos/{id}     - Delete todo (owner only)
+PATCH  /api/todos/{id}/toggle - Toggle completion status (owner only)
+```
+
+## Email Configuration
+
+### SMTP Configuration (application.properties)
+```properties
+# Email Configuration
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=${EMAIL_USERNAME:your-email@gmail.com}
+spring.mail.password=${EMAIL_PASSWORD:your-app-password}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+
+# Email Verification Settings
+app.email.verification.expiry-minutes=10
+app.email.verification.max-attempts=5
+app.email.from-address=${EMAIL_FROM:noreply@todoapp.com}
+app.email.from-name=Todo App
+```
+
+### Email Templates
+1. **Verification Email Template**: Welcome message with verification code
+2. **Password Reset Template**: Password reset instructions with code
+3. **Welcome Email Template**: Sent after successful verification
+
+## File Structure
+
+### Backend Structure
+```
+src/main/java/com/example/todoapp/
+├── TodoApplication.java
+├── config/
+│   ├── SecurityConfig.java
+│   ├── JwtConfig.java
+│   ├── CorsConfig.java
+│   └── EmailConfig.java
+├── controller/
+│   ├── AuthController.java
+│   └── TodoController.java
+├── service/
+│   ├── AuthService.java
+│   ├── UserService.java
+│   ├── TodoService.java
+│   ├── JwtService.java
+│   ├── EmailService.java
+│   ├── EmailVerificationService.java
+│   └── impl/
+│       ├── AuthServiceImpl.java
+│       ├── UserServiceImpl.java
+│       ├── TodoServiceImpl.java
+│       ├── JwtServiceImpl.java
+│       ├── EmailServiceImpl.java
+│       └── EmailVerificationServiceImpl.java
+├── repository/
+│   ├── UserRepository.java
+│   ├── RoleRepository.java
+│   ├── TodoRepository.java
+│   └── EmailVerificationRepository.java
+├── entity/
+│   ├── User.java
+│   ├── Role.java
+│   ├── Todo.java
+│   └── EmailVerification.java
+├── dto/
+│   ├── auth/
+│   │   ├── RegisterRequestDto.java
+│   │   ├── EmailVerificationRequestDto.java
+│   │   ├── ResendVerificationRequestDto.java
+│   │   ├── LoginRequestDto.java
+│   │   ├── AuthResponseDto.java
+│   │   ├── ForgotPasswordRequestDto.java
+│   │   ├── ResetPasswordRequestDto.java
+│   │   └── UserProfileDto.java
+│   ├── todo/
+│   │   ├── TodoRequestDto.java
+│   │   └── TodoResponseDto.java
+│   └── common/
+│       ├── ApiResponseDto.java
+│       └── ErrorResponseDto.java
+├── security/
+│   ├── JwtAuthenticationFilter.java
+│   ├── JwtAuthenticationEntryPoint.java
+│   ├── CustomUserDetailsService.java
+│   └── UserPrincipal.java
+├── exception/
+│   ├── GlobalExceptionHandler.java
+│   ├── EmailVerificationException.java
+│   ├── AuthenticationException.java
+│   └── AuthorizationException.java
+└── util/
+    ├── EmailTemplateUtil.java
+    ├── VerificationCodeGenerator.java
+    └── DateTimeUtil.java
+
+src/main/resources/
+├── application.properties
+├── data.sql
+├── templates/
+│   ├── email/
+│   │   ├── verification-email.html
+│   │   ├── password-reset-email.html
+│   │   └── welcome-email.html
+└── static/
+    └── css/
+        └── email-styles.css
+```
+
+### Frontend Structure
+```
+src/
+├── components/
+│   ├── auth/
+│   │   ├── RegisterForm.jsx
+│   │   ├── EmailVerificationForm.jsx
+│   │   ├── ResendVerificationButton.jsx
+│   │   ├── LoginForm.jsx
+│   │   ├── ForgotPasswordForm.jsx
+│   │   ├── ResetPasswordForm.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   └── UserProfile.jsx
+│   ├── todo/
+│   │   ├── TodoList.jsx
+│   │   ├── TodoItem.jsx
+│   │   └── TodoForm.jsx
+│   ├── layout/
+│   │   ├── Header.jsx
+│   │   ├── Navigation.jsx
+│   │   └── Layout.jsx
+│   └── common/
+│       ├── Loading.jsx
+│       ├── ErrorMessage.jsx
+│       ├── SuccessMessage.jsx
+│       └── ConfirmationDialog.jsx
+├── context/
+│   └── AuthContext.jsx
+├── hooks/
+│   ├── useAuth.js
+│   ├── useTodos.js
+│   ├── useEmailVerification.js
+│   └── useApi.js
+├── services/
+│   ├── authService.js
+│   ├── emailVerificationService.js
+│   ├── todoService.js
+│   └── apiClient.js
+├── utils/
+│   ├── tokenStorage.js
+│   ├── validation.js
+│   ├── constants.js
+│   └── emailValidation.js
+├── pages/
+│   ├── RegisterPage.jsx
+│   ├── EmailVerificationPage.jsx
+│   ├── LoginPage.jsx
+│   ├── ForgotPasswordPage.jsx
+│   ├── ResetPasswordPage.jsx
+│   ├── TodoPage.jsx
+│   ├── ProfilePage.jsx
+│   └── HomePage.jsx
+└── styles/
+    ├── auth/
+    ├── todo/
+    └── common/
+```
+
+## Implementation Guidelines
+
+### Email Verification Implementation Priority
+1. **Email Service Setup**: Configure SMTP and email templates
+2. **Verification Code System**: Generate and validate verification codes
+3. **Registration Flow**: Implement registration with email verification
+4. **Frontend Verification**: Create email verification form and flow
+5. **Resend Functionality**: Allow users to request new codes
+6. **Account Activation**: Link email verification to account enablement
+7. **Error Handling**: Comprehensive error handling for email failures
+
+### Email Security Best Practices
+1. **Code Expiration**: Verification codes expire after 10 minutes
+2. **Attempt Limiting**: Maximum 5 verification attempts per email
+3. **Code Complexity**: Use 6-digit numeric codes for user-friendliness
+4. **Rate Limiting**: Prevent email bombing with rate limiting
+5. **HTML Templates**: Use professional, responsive email templates
+6. **Secure SMTP**: Use TLS/SSL for email transmission
+
+### Frontend Email Verification Flow
+1. **Registration Form**: Collect user details and validate email format
+2. **Verification Page**: Dedicated page for entering verification code
+3. **Code Input**: User-friendly 6-digit code input component
+4. **Resend Option**: Clear option to resend verification code
+5. **Success Handling**: Redirect to login after successful verification
+6. **Error Handling**: Clear error messages for invalid/expired codes
+
+## Validation Rules
+
+### Registration Validation
+```java
+@NotBlank(message = "Username is required")
+@Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
+private String username;
+
+@NotBlank(message = "Email is required")
+@Email(message = "Please provide a valid email address")
+@Size(max = 100, message = "Email must not exceed 100 characters")
+private String email;
+
+@NotBlank(message = "Password is required")
+@Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]", 
+         message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character")
+private String password;
+```
+
+### Email Verification Validation
+```java
+@NotBlank(message = "Email is required")
+@Email(message = "Please provide a valid email address")
+private String email;
+
+@NotBlank(message = "Verification code is required")
+@Pattern(regexp = "^\\d{6}$", message = "Verification code must be exactly 6 digits")
+private String verificationCode;
+```
+
+## Database Initialization
+
+### Default Data (data.sql)
+```sql
+-- Create default roles
+INSERT INTO roles (name, description) VALUES 
+('ROLE_USER', 'Standard user role'),
+('ROLE_ADMIN', 'Administrator role');
+
+-- Create verified admin user (password: Admin123!)
+INSERT INTO users (username, email, password, first_name, email_verified, enabled, created_at) VALUES 
+('admin', 'admin@example.com', '$2a$12$LQv3c1yqBw2UKaOF.QiPp.8fJUh4vNI8ZRdkHOJqOg5z8.dNhCQOm', 'Admin', true, true, NOW());
+
+-- Assign admin role
+INSERT INTO user_roles (user_id, role_id) 
+SELECT u.id, r.id FROM users u, roles r 
+WHERE u.username = 'admin' AND r.name = 'ROLE_ADMIN';
+
+INSERT INTO user_roles (user_id, role_id) 
+SELECT u.id, r.id FROM users u, roles r 
+WHERE u.username = 'admin' AND r.name = 'ROLE_USER';
+```
+
+## Email Templates
+
+### Verification Email Template (verification-email.html)
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification - Todo App</title>
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background-color: #007bff; color: white; text-align: center; padding: 20px; }
+        .content { padding: 30px; background-color: #f8f9fa; }
+        .verification-code { font-size: 24px; font-weight: bold; text-align: center; 
+                           background-color: #e9ecef; padding: 15px; margin: 20px 0; 
+                           border-radius: 5px; letter-spacing: 3px; }
+        .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Todo App!</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{firstName}},</p>
+            <p>Thank you for registering with Todo App. To complete your registration, please verify your email address using the verification code below:</p>
+            <div class="verification-code">{{verificationCode}}</div>
+            <p>This code will expire in 10 minutes. If you didn't request this verification, please ignore this email.</p>
+            <p>Best regards,<br>Todo App Team</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 Todo App. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+## Error Handling
+
+### Email Verification Errors
+- 400 Bad Request: Invalid email format or verification code format
+- 404 Not Found: Email not found or verification code not found
+- 409 Conflict: Email already verified or user already exists
+- 410 Gone: Verification code expired
+- 429 Too Many Requests: Maximum verification attempts exceeded
+- 500 Internal Server Error: Email sending failed
+
+## Testing Requirements
+1. **Unit Tests**: Test all email verification service methods
+2. **Integration Tests**: Test complete email verification flows
+3. **Email Tests**: Mock email sending and test template rendering
+4. **Security Tests**: Test rate limiting and attempt validation
+5. **Frontend Tests**: Test email verification components and flows
+
+## README.md Content Requirements
+
+### Comprehensive Documentation
+The README.md file must include:
+
+1. **Project Overview**: Description of the Todo app with email verification
+2. **Features List**: Complete list of implemented features
+3. **Technology Stack**: Backend and frontend technologies used
+4. **Prerequisites**: Required software and accounts (Java, Node.js, email account)
+5. **Installation Guide**: Step-by-step setup instructions
+6. **Email Configuration**: Detailed SMTP setup instructions
+7. **Environment Variables**: List of required environment variables
+8. **Running the Application**: How to start backend and frontend
+9. **API Documentation**: Complete API endpoint documentation
+10. **Email Flow Documentation**: Step-by-step email verification process
+11. **Testing Instructions**: How to test email functionality
+12. **Troubleshooting**: Common issues and solutions
+13. **Screenshots**: Visual demonstration of key features
+14. **Contributing Guidelines**: How to contribute to the project
+15. **License Information**: Project license details
+
+### Email Setup Instructions
+Include detailed instructions for:
+- Gmail SMTP configuration
+- App password generation
+- Environment variable setup
+- Testing email functionality
+- Alternative email providers
+
+### User Guides
+- How to register and verify email
+- How to resend verification codes
+- How to use the Todo functionality
+- How to manage user profile
+
+## Development Standards
+- Write clean, well-documented code
+- Implement comprehensive error handling
+- Add proper logging for debugging
+- Use meaningful variable and method names
+- Follow REST API conventions
+- Implement proper validation on all inputs
+- Use secure coding practices
+- Add comments for complex business logic
+
+Remember: Build a production-ready application with a complete email verification system. Focus on user experience, security, and reliability. The email verification should be seamless and user-friendly, with clear instructions and helpful error messages.

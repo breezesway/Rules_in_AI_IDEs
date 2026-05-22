@@ -1,0 +1,818 @@
+commit f324ab8a8f75e59325009e0e481095f1f8d2b631
+Author:     Santos Flores <santosflores@gmail.com>
+AuthorDate: Thu Aug 28 20:06:16 2025 -0700
+Commit:     Santos Flores <santosflores@gmail.com>
+CommitDate: Thu Aug 28 20:06:16 2025 -0700
+
+    Add Angular and TypeScript Developer Guidelines
+    
+    - Introduced new rules for Angular and TypeScript development, emphasizing best practices for maintainability, performance, and accessibility.
+    - Included guidelines on TypeScript features, Angular component architecture, state management, and template usage.
+    - Aimed at enhancing code quality and developer efficiency in Angular applications.
+
+diff --git a/.cursor/rules/angular-developer.mdc b/.cursor/rules/angular-developer.mdc
+new file mode 100644
+index 0000000..44f6fe7
+--- /dev/null
++++ b/.cursor/rules/angular-developer.mdc
+@@ -0,0 +1,168 @@
++---
++description: This rule indicates the agent how to behave when writing Angular code
++alwaysApply: false
++---
++
++# Angular Developer
++
++You are a developer that adheres to modern Angular best practices, emphasizing maintainability, performance, accessibility, and scalability.
++
++## TypeScript Best Practices
++
++- **Strict Type Checking:** Always enable and adhere to strict type checking. This helps catch errors early and improves code quality.
++- **Prefer Type Inference:** Allow TypeScript to infer types when they are obvious from the context. This reduces verbosity while maintaining type safety.
++
++  - **Bad:**
++
++    ```typescript
++    let name: string = "Angular";
++    ```
++
++  - **Good:**
++
++    ```typescript
++    let name = "Angular";
++    ```
++
++- **Avoid `any`:** Do not use the `any` type unless absolutely necessary as it bypasses type checking. Prefer `unknown` when a type is uncertain and you need to handle it safely.
++
++## Angular Best Practices
++
++- **Standalone Components:** Always use standalone components, directives, and pipes. Avoid using `NgModules` for new features or refactoring existing ones.
++- **Implicit Standalone:** When creating standalone components, you do not need to explicitly set `standalone: true` inside the `@Component`, `@Directive` and `@Pipe` decorators, as it is implied by default.
++
++  - **Bad:**
++
++    ```typescript
++    @Component({
++      standalone: true,
++      // ...
++    })
++    export class MyComponent {}
++    ```
++
++  - **Good:**
++
++    ```typescript
++    @Component({
++      // `standalone: true` is implied
++      // ...
++    })
++    export class MyComponent {}
++    ```
++
++- **Signals for State Management:** Utilize Angular Signals for reactive state management within components and services.
++- **Lazy Loading:** Implement lazy loading for feature routes to improve initial load times of your application.
++- **NgOptimizedImage:** Use `NgOptimizedImage` for all static images to automatically optimize image loading and performance.
++- **Host bindings:** Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead.
++
++## Components
++
++- **Single Responsibility:** Keep components small, focused, and responsible for a single piece of functionality.
++- **`input()` and `output()` Functions:** Prefer `input()` and `output()` functions over the `@Input()` and `@Output()` decorators for defining component inputs and outputs.
++
++  - **Old Decorator Syntax:**
++
++    ```typescript
++    @Input() userId!: string;
++    @Output() userSelected = new EventEmitter<string>();
++    ```
++
++  - **New Function Syntax:**
++
++    ```typescript
++    import { input, output } from "@angular/core";
++
++    // ...
++    userId = input<string>("");
++    userSelected = output<string>();
++    ```
++
++- **`computed()` for Derived State:** Use the `computed()` function from `@angular/core` for derived state based on signals.
++- **`ChangeDetectionStrategy.OnPush`:** Always set `changeDetection: ChangeDetectionStrategy.OnPush` in the `@Component` decorator for performance benefits by reducing unnecessary change detection cycles.
++- **Inline Templates:** Prefer inline templates (template: `...`) for small components to keep related code together. For larger templates, use external HTML files.
++- **Reactive Forms:** Prefer Reactive forms over Template-driven forms for complex forms, validation, and dynamic controls due to their explicit, immutable, and synchronous nature.
++- **No `ngClass` / `NgClass`:** Do not use the `ngClass` directive. Instead, use native `class` bindings for conditional styling.
++
++  - **Bad:**
++
++    ```html
++    <section [ngClass]="{'active': isActive}"></section>
++    ```
++
++  - **Good:**
++
++    ```html
++    <section [class.active]="isActive"></section>
++    <section [class]="{'active': isActive}"></section>
++    <section [class]="myClasses"></section>
++    ```
++
++- **No `ngStyle` / `NgStyle`:** Do not use the `ngStyle` directive. Instead, use native `style` bindings for conditional inline styles.
++
++  - **Bad:**
++
++    ```html
++    <section [ngStyle]="{'font-size': fontSize + 'px'}"></section>
++    ```
++
++  - **Good:**
++
++    ```html
++    <section [style.font-size.px]="fontSize"></section>
++    <section [style]="myStyles"></section>
++    ```
++
++## State Management
++
++- **Signals for Local State:** Use signals for managing local component state.
++- **`computed()` for Derived State:** Leverage `computed()` for any state that can be derived from other signals.
++- **Pure and Predictable Transformations:** Ensure state transformations are pure functions (no side effects) and predictable.
++- **Signal value updates:** Do NOT use `mutate` on signals, use `update` or `set` instead.
++
++## Templates
++
++- **Simple Templates:** Keep templates as simple as possible, avoiding complex logic directly in the template. Delegate complex logic to the component's TypeScript code.
++- **Native Control Flow:** Use the new built-in control flow syntax (`@if`, `@for`, `@switch`) instead of the older structural directives (`*ngIf`, `*ngFor`, `*ngSwitch`).
++
++  - **Old Syntax:**
++
++    ```html
++    <section *ngIf="isVisible">Content</section>
++    <section *ngFor="let item of items">{{ item }}</section>
++    ```
++
++  - **New Syntax:**
++
++    ```html
++    @if (isVisible) {
++    <section>Content</section>
++    } @for (item of items; track item.id) {
++    <section>{{ item }}</section>
++    }
++    ```
++
++- **Async Pipe:** Use the `async` pipe to handle observables in templates. This automatically subscribes and unsubscribes, preventing memory leaks.
++
++## Services
++
++- **Single Responsibility:** Design services around a single, well-defined responsibility.
++- **`providedIn: 'root'`:** Use the `providedIn: 'root'` option when declaring injectable services to ensure they are singletons and tree-shakable.
++- **`inject()` Function:** Prefer the `inject()` function over constructor injection when injecting dependencies, especially within `provide` functions, `computed` properties, or outside of constructor context.
++
++  - **Old Constructor Injection:**
++
++    ```typescript
++    constructor(private myService: MyService) {}
++    ```
++
++  - **New `inject()` Function:**
++
++    ```typescript
++    import { inject } from "@angular/core";
++
++    export class MyComponent {
++      private myService = inject(MyService);
++      // ...
++    }
++    ```
+
+
+commit 922751455220ea1124f29dadccca341f5460a6b0
+Author:     Santos Flores <santosflores@gmail.com>
+AuthorDate: Fri Aug 29 11:22:58 2025 -0700
+Commit:     Santos Flores <santosflores@gmail.com>
+CommitDate: Fri Aug 29 11:22:58 2025 -0700
+
+    Enhance Angular Developer Guidelines with Modern Best Practices
+    
+    - Updated the Angular Developer rules to reflect current best practices, emphasizing maintainability, performance, and accessibility.
+    - Introduced critical sections on deprecated patterns to avoid, including old decorators and structural directives.
+    - Expanded guidelines on TypeScript best practices, Angular architecture, and state management with signals.
+    - Improved clarity and structure of task generation rules for creating actionable task lists from PRDs.
+    
+    This update aims to ensure adherence to modern Angular standards and improve developer efficiency.
+
+diff --git a/.cursor/rules/angular-developer.mdc b/.cursor/rules/angular-developer.mdc
+index 44f6fe7..27465f8 100644
+--- a/.cursor/rules/angular-developer.mdc
++++ b/.cursor/rules/angular-developer.mdc
+@@ -5,164 +5,474 @@ alwaysApply: false
+ 
+ # Angular Developer
+ 
+-You are a developer that adheres to modern Angular best practices, emphasizing maintainability, performance, accessibility, and scalability.
++You are an expert Angular developer who writes maintainable, performant, and scalable applications following modern Angular best practices. You prioritize type safety, performance optimization, accessibility, and clean architecture.
+ 
+-## TypeScript Best Practices
+-
+-- **Strict Type Checking:** Always enable and adhere to strict type checking. This helps catch errors early and improves code quality.
+-- **Prefer Type Inference:** Allow TypeScript to infer types when they are obvious from the context. This reduces verbosity while maintaining type safety.
+-
+-  - **Bad:**
+-
+-    ```typescript
+-    let name: string = "Angular";
+-    ```
+-
+-  - **Good:**
+-
+-    ```typescript
+-    let name = "Angular";
+-    ```
+-
+-- **Avoid `any`:** Do not use the `any` type unless absolutely necessary as it bypasses type checking. Prefer `unknown` when a type is uncertain and you need to handle it safely.
+-
+-## Angular Best Practices
+-
+-- **Standalone Components:** Always use standalone components, directives, and pipes. Avoid using `NgModules` for new features or refactoring existing ones.
+-- **Implicit Standalone:** When creating standalone components, you do not need to explicitly set `standalone: true` inside the `@Component`, `@Directive` and `@Pipe` decorators, as it is implied by default.
+-
+-  - **Bad:**
+-
+-    ```typescript
+-    @Component({
+-      standalone: true,
+-      // ...
+-    })
+-    export class MyComponent {}
+-    ```
+-
+-  - **Good:**
++## 🚨 CRITICAL: Deprecated Patterns to AVOID
+ 
+-    ```typescript
+-    @Component({
+-      // `standalone: true` is implied
+-      // ...
+-    })
+-    export class MyComponent {}
+-    ```
++**NEVER use these deprecated patterns as they will cause issues or break functionality:**
+ 
+-- **Signals for State Management:** Utilize Angular Signals for reactive state management within components and services.
+-- **Lazy Loading:** Implement lazy loading for feature routes to improve initial load times of your application.
+-- **NgOptimizedImage:** Use `NgOptimizedImage` for all static images to automatically optimize image loading and performance.
+-- **Host bindings:** Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead.
++### ❌ NEVER USE - Deprecated Decorators
+ 
+-## Components
++```typescript
++// ❌ DEPRECATED - Will break in future Angular versions
++@Input() userId!: string;
++@Output() userSelected = new EventEmitter<string>();
++@HostBinding('class.active') isActive = false;
++@HostListener('click') onClick() {}
++```
+ 
+-- **Single Responsibility:** Keep components small, focused, and responsible for a single piece of functionality.
+-- **`input()` and `output()` Functions:** Prefer `input()` and `output()` functions over the `@Input()` and `@Output()` decorators for defining component inputs and outputs.
++### ❌ NEVER USE - Old Structural Directives
+ 
+-  - **Old Decorator Syntax:**
++```html
++<!-- ❌ DEPRECATED - Use native control flow instead -->
++<div *ngIf="isVisible">Content</div>
++<div *ngFor="let item of items">{{ item }}</div>
++<div *ngSwitch="value">
++  <div *ngSwitchCase="'case1'">Case 1</div>
++</div>
++```
+ 
+-    ```typescript
+-    @Input() userId!: string;
+-    @Output() userSelected = new EventEmitter<string>();
+-    ```
++### ❌ NEVER USE - NgClass and NgStyle
+ 
+-  - **New Function Syntax:**
++```html
++<!-- ❌ DEPRECATED - Use native bindings instead -->
++<div [ngClass]="{'active': isActive}"></div>
++<div [ngStyle]="{'font-size': fontSize + 'px'}"></div>
++```
+ 
+-    ```typescript
+-    import { input, output } from "@angular/core";
++### ❌ NEVER USE - Constructor Injection (when inject() is available)
+ 
+-    // ...
+-    userId = input<string>("");
+-    userSelected = output<string>();
+-    ```
++```typescript
++// ❌ DEPRECATED - Use inject() function instead
++constructor(private myService: MyService) {}
++```
+ 
+-- **`computed()` for Derived State:** Use the `computed()` function from `@angular/core` for derived state based on signals.
+-- **`ChangeDetectionStrategy.OnPush`:** Always set `changeDetection: ChangeDetectionStrategy.OnPush` in the `@Component` decorator for performance benefits by reducing unnecessary change detection cycles.
+-- **Inline Templates:** Prefer inline templates (template: `...`) for small components to keep related code together. For larger templates, use external HTML files.
+-- **Reactive Forms:** Prefer Reactive forms over Template-driven forms for complex forms, validation, and dynamic controls due to their explicit, immutable, and synchronous nature.
+-- **No `ngClass` / `NgClass`:** Do not use the `ngClass` directive. Instead, use native `class` bindings for conditional styling.
++## ✅ ALWAYS USE - Modern Angular Patterns
+ 
+-  - **Bad:**
++### ✅ Modern Input/Output Functions
+ 
+-    ```html
+-    <section [ngClass]="{'active': isActive}"></section>
+-    ```
++```typescript
++import { input, output } from "@angular/core";
+ 
+-  - **Good:**
++export class MyComponent {
++  // ✅ Modern input function
++  userId = input<string>("");
++  isVisible = input<boolean>(false);
+ 
+-    ```html
+-    <section [class.active]="isActive"></section>
+-    <section [class]="{'active': isActive}"></section>
+-    <section [class]="myClasses"></section>
+-    ```
++  // ✅ Modern output function
++  userSelected = output<string>();
++  itemClicked = output<Item>();
++}
++```
+ 
+-- **No `ngStyle` / `NgStyle`:** Do not use the `ngStyle` directive. Instead, use native `style` bindings for conditional inline styles.
++### ✅ Native Control Flow
+ 
+-  - **Bad:**
++```html
++<!-- ✅ Modern control flow -->
++@if (isVisible) {
++<div>Content</div>
++} @for (item of items; track item.id) {
++<div>{{ item.name }}</div>
++} @switch (value) { @case ('case1') {
++<div>Case 1</div>
++} @default {
++<div>Default case</div>
++} }
++```
+ 
+-    ```html
+-    <section [ngStyle]="{'font-size': fontSize + 'px'}"></section>
+-    ```
++### ✅ Native Class and Style Bindings
+ 
+-  - **Good:**
++```html
++<!-- ✅ Modern class bindings -->
++<div [class.active]="isActive"></div>
++<div [class]="{'active': isActive, 'disabled': isDisabled}"></div>
+ 
+-    ```html
+-    <section [style.font-size.px]="fontSize"></section>
+-    <section [style]="myStyles"></section>
+-    ```
++<!-- ✅ Modern style bindings -->
++<div [style.font-size.px]="fontSize"></div>
++<div [style]="{'font-size': fontSize + 'px', 'color': textColor}"></div>
++```
+ 
+-## State Management
++### ✅ Inject Function
+ 
+-- **Signals for Local State:** Use signals for managing local component state.
+-- **`computed()` for Derived State:** Leverage `computed()` for any state that can be derived from other signals.
+-- **Pure and Predictable Transformations:** Ensure state transformations are pure functions (no side effects) and predictable.
+-- **Signal value updates:** Do NOT use `mutate` on signals, use `update` or `set` instead.
++```typescript
++import { inject } from "@angular/core";
+ 
+-## Templates
++export class MyComponent {
++  // ✅ Modern dependency injection
++  private myService = inject(MyService);
++  private router = inject(Router);
++}
++```
+ 
+-- **Simple Templates:** Keep templates as simple as possible, avoiding complex logic directly in the template. Delegate complex logic to the component's TypeScript code.
+-- **Native Control Flow:** Use the new built-in control flow syntax (`@if`, `@for`, `@switch`) instead of the older structural directives (`*ngIf`, `*ngFor`, `*ngSwitch`).
+-
+-  - **Old Syntax:**
+-
+-    ```html
+-    <section *ngIf="isVisible">Content</section>
+-    <section *ngFor="let item of items">{{ item }}</section>
+-    ```
+-
+-  - **New Syntax:**
+-
+-    ```html
+-    @if (isVisible) {
+-    <section>Content</section>
+-    } @for (item of items; track item.id) {
+-    <section>{{ item }}</section>
+-    }
+-    ```
+-
+-- **Async Pipe:** Use the `async` pipe to handle observables in templates. This automatically subscribes and unsubscribes, preventing memory leaks.
+-
+-## Services
+-
+-- **Single Responsibility:** Design services around a single, well-defined responsibility.
+-- **`providedIn: 'root'`:** Use the `providedIn: 'root'` option when declaring injectable services to ensure they are singletons and tree-shakable.
+-- **`inject()` Function:** Prefer the `inject()` function over constructor injection when injecting dependencies, especially within `provide` functions, `computed` properties, or outside of constructor context.
+-
+-  - **Old Constructor Injection:**
+-
+-    ```typescript
+-    constructor(private myService: MyService) {}
+-    ```
+-
+-  - **New `inject()` Function:**
++## TypeScript Best Practices
+ 
+-    ```typescript
+-    import { inject } from "@angular/core";
++### Strict Type Safety
++
++- **Enable Strict Mode:** Always use strict TypeScript configuration
++- **Type Inference:** Let TypeScript infer types when obvious
++- **Avoid `any`:** Use `unknown` for uncertain types, then narrow with type guards
+ 
+-    export class MyComponent {
+-      private myService = inject(MyService);
+-      // ...
++```typescript
++// ✅ Good - Type inference
++const name = "Angular"; // TypeScript infers string
++
++// ✅ Good - Unknown with type guard
++function processData(data: unknown) {
++  if (typeof data === "string") {
++    return data.toUpperCase();
++  }
++  return "";
++}
++
++// ❌ Bad - Avoid any
++const data: any = getData();
++```
++
++## Angular Architecture Best Practices
++
++### Standalone Components
++
++- **Always use standalone components** for new features
++- **No explicit `standalone: true`** - it's the default
++- **Avoid NgModules** for new code
++
++```typescript
++// ✅ Good - Standalone component
++@Component({
++  selector: "app-user-card",
++  template: `<div>{{ user.name }}</div>`,
++  imports: [CommonModule],
++})
++export class UserCardComponent {
++  user = input<User>();
++}
++```
++
++### Component Design
++
++- **Single Responsibility:** Each component has one clear purpose
++- **Small and Focused:** Keep components under 200 lines when possible
++- **OnPush Change Detection:** Always use for performance
++
++```typescript
++// ✅ Good - Single responsibility, OnPush
++@Component({
++  selector: "app-user-list",
++  template: `...`,
++  changeDetection: ChangeDetectionStrategy.OnPush,
++})
++export class UserListComponent {
++  users = input<User[]>([]);
++  userSelected = output<User>();
++}
++```
++
++## State Management with Signals
++
++### Local Component State
++
++```typescript
++import { signal, computed } from "@angular/core";
++
++export class UserComponent {
++  // ✅ Signal for state
++  private users = signal<User[]>([]);
++
++  // ✅ Computed for derived state
++  activeUsers = computed(() => this.users().filter((user) => user.isActive));
++
++  // ✅ Update signal values
++  addUser(user: User) {
++    this.users.update((users) => [...users, user]);
++  }
++
++  // ❌ NEVER use mutate
++  // this.users.mutate(users => users.push(user));
++}
++```
++
++### Service State Management
++
++```typescript
++@Injectable({ providedIn: "root" })
++export class UserService {
++  private users = signal<User[]>([]);
++
++  // ✅ Expose as readonly signal
++  readonly users = this.users.asReadonly();
++
++  // ✅ Update methods
++  addUser(user: User) {
++    this.users.update((users) => [...users, user]);
++  }
++}
++```
++
++## Template Best Practices
++
++### Keep Templates Simple
++
++```html
++<!-- ✅ Good - Simple template -->
++@if (user()) {
++<div class="user-card">
++  <h3>{{ user().name }}</h3>
++  <p>{{ user().email }}</p>
++  <button (click)="editUser()">Edit</button>
++</div>
++}
++
++<!-- ❌ Bad - Complex logic in template -->
++<div class="user-card" *ngIf="user && user.isActive && !user.isDeleted">
++  <h3>{{ user.name | uppercase }}</h3>
++  <p>{{ user.email | lowercase }}</p>
++  <button *ngIf="canEdit" (click)="editUser()">Edit</button>
++</div>
++```
++
++### Async Pipe Usage
++
++```html
++<!-- ✅ Good - Async pipe with proper error handling -->
++@if (users$ | async; as users) { @for (user of users; track user.id) {
++<div>{{ user.name }}</div>
++} } @else {
++<div>Loading...</div>
++}
++```
++
++## Services and Dependency Injection
++
++### Service Design
++
++```typescript
++// ✅ Good - Single responsibility service
++@Injectable({ providedIn: "root" })
++export class UserService {
++  private users = signal<User[]>([]);
++  readonly users = this.users.asReadonly();
++
++  addUser(user: User) {
++    this.users.update((users) => [...users, user]);
++  }
++
++  getUserById(id: string) {
++    return this.users().find((user) => user.id === id);
++  }
++}
++```
++
++### Modern Injection
++
++```typescript
++// ✅ Good - Use inject() function
++export class UserComponent {
++  private userService = inject(UserService);
++  private router = inject(Router);
++
++  // Use in computed
++  users = computed(() => this.userService.users());
++}
++```
++
++## Forms Best Practices
++
++### Reactive Forms
++
++```typescript
++// ✅ Good - Reactive forms with proper typing
++export class UserFormComponent {
++  userForm = new FormGroup({
++    name: new FormControl("", { nonNullable: true }),
++    email: new FormControl("", {
++      nonNullable: true,
++      validators: [Validators.email],
++    }),
++    age: new FormControl<number | null>(null),
++  });
++
++  onSubmit() {
++    if (this.userForm.valid) {
++      console.log(this.userForm.value);
+     }
+-    ```
++  }
++}
++```
++
++## Performance Optimization
++
++### OnPush Change Detection
++
++```typescript
++// ✅ Always use OnPush for better performance
++@Component({
++  selector: "app-user-list",
++  template: `...`,
++  changeDetection: ChangeDetectionStrategy.OnPush,
++})
++export class UserListComponent {}
++```
++
++### Lazy Loading
++
++```typescript
++// ✅ Lazy load feature modules
++const routes: Routes = [
++  {
++    path: "users",
++    loadComponent: () =>
++      import("./users/users.component").then((m) => m.UsersComponent),
++  },
++];
++```
++
++### NgOptimizedImage
++
++```html
++<!-- ✅ Use NgOptimizedImage for static images -->
++<img
++  ngSrc="assets/user-avatar.jpg"
++  width="100"
++  height="100"
++  alt="User avatar"
++/>
++```
++
++## Accessibility (A11y)
++
++### Semantic HTML
++
++```html
++<!-- ✅ Good - Semantic HTML -->
++<button type="button" (click)="submit()" aria-label="Submit form">
++  Submit
++</button>
++
++<!-- ✅ Good - Proper ARIA attributes -->
++<div role="tablist">
++  <button role="tab" [attr.aria-selected]="isSelected">Tab 1</button>
++</div>
++```
++
++### Keyboard Navigation
++
++```typescript
++// ✅ Handle keyboard events
++@HostListener('keydown.enter')
++onEnter() {
++  this.submit();
++}
++```
++
++## Testing Best Practices
++
++### Component Testing
++
++```typescript
++// ✅ Good - Component test structure
++describe("UserComponent", () => {
++  let component: UserComponent;
++  let fixture: ComponentFixture<UserComponent>;
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [UserComponent],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(UserComponent);
++    component = fixture.componentInstance;
++  });
++
++  it("should create", () => {
++    expect(component).toBeTruthy();
++  });
++});
++```
++
++## Common Pitfalls and Solutions
++
++### ❌ Pitfall: Memory Leaks with Observables
++
++```typescript
++// ❌ Bad - Potential memory leak
++export class BadComponent {
++  ngOnInit() {
++    this.dataService.getData().subscribe((data) => {
++      this.data = data;
++    });
++  }
++}
++
++// ✅ Good - Proper cleanup
++export class GoodComponent implements OnDestroy {
++  private destroy$ = new Subject<void>();
++
++  ngOnInit() {
++    this.dataService
++      .getData()
++      .pipe(takeUntil(this.destroy$))
++      .subscribe((data) => {
++        this.data = data;
++      });
++  }
++
++  ngOnDestroy() {
++    this.destroy$.next();
++    this.destroy$.complete();
++  }
++}
++```
++
++### ❌ Pitfall: Mutating Signal Values
++
++```typescript
++// ❌ Bad - Mutating signal
++this.users.mutate((users) => users.push(newUser));
++
++// ✅ Good - Immutable update
++this.users.update((users) => [...users, newUser]);
++```
++
++## Verification Steps
++
++Before completing any Angular code, verify:
++
++1. **✅ No deprecated patterns used** - Check for @Input/@Output decorators, *ngIf/*ngFor, ngClass/ngStyle
++2. **✅ Modern patterns implemented** - Verify use of input()/output() functions, native control flow, inject()
++3. **✅ Type safety maintained** - No `any` types, proper interfaces defined
++4. **✅ Performance optimized** - OnPush change detection, lazy loading where appropriate
++5. **✅ Accessibility included** - Semantic HTML, ARIA attributes, keyboard navigation
++6. **✅ Testing covered** - Unit tests for components, services, and utilities
++7. **✅ Error handling** - Proper error boundaries and user feedback
++8. **✅ Code organization** - Single responsibility, small focused components
++
++## File Organization
++
++### Recommended Structure
++
++```sh
++src/
++├── app/
++│   ├── components/
++│   │   ├── user-card/
++│   │   │   ├── user-card.component.ts
++│   │   │   ├── user-card.component.spec.ts
++│   │   │   └── user-card.component.html
++│   ├── services/
++│   │   ├── user.service.ts
++│   │   └── user.service.spec.ts
++│   ├── models/
++│   │   └── user.model.ts
++│   └── utils/
++│       └── helpers.ts
++```
++
++### Naming Conventions
++
++- **Components:** `kebab-case.component.ts`
++- **Services:** `kebab-case.service.ts`
++- **Models:** `kebab-case.model.ts`
++- **Constants:** `UPPER_SNAKE_CASE.ts`
++- **Enums:** `PascalCase.enum.ts`
++
++Remember: Always prioritize maintainability, performance, and accessibility in your Angular code. Follow these patterns consistently to ensure high-quality, scalable applications.
+
+

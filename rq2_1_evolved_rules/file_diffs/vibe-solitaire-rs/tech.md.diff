@@ -1,0 +1,152 @@
+commit 24b2782431075cdced8cf947db3c9f37344e743d
+Author:     Hassan Syed <h.a.syed@gmail.com>
+AuthorDate: Thu Jul 17 11:14:45 2025 +0100
+Commit:     Hassan Syed <h.a.syed@gmail.com>
+CommitDate: Thu Jul 17 11:14:45 2025 +0100
+
+    refactor a bit, add steering docs
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+new file mode 100644
+index 0000000..4896cbc
+--- /dev/null
++++ b/.kiro/steering/tech.md
+@@ -0,0 +1,51 @@
++# Technology Stack
++
++## Core Technologies
++- **Language**: Rust (2024 edition)
++- **UI Framework**: GPUI (from Zed Industries)
++- **Build System**: Cargo
++- **Random Number Generation**: `rand` crate (v0.8)
++
++## Dependencies
++```toml
++[dependencies]
++gpui = { git = "https://github.com/zed-industries/zed" }
++rand = "0.8"
++```
++
++## Common Commands
++
++### Development
++```bash
++# Build the project
++cargo build
++
++# Run the application
++cargo run
++
++# Run tests
++cargo test
++
++# Run tests with output
++cargo test -- --nocapture
++
++# Check for compilation errors
++cargo check
++
++# Format code
++cargo fmt
++
++# Run clippy linter
++cargo clippy
++```
++
++### Testing
++- Use `cargo test` for running unit tests
++- Tests are embedded in source files using `#[cfg(test)]` modules
++- Use `println!` in tests for debug output (run with `--nocapture`)
++
++## Code Style
++- Follow standard Rust formatting with `cargo fmt`
++- Use `cargo clippy` for linting
++- Comprehensive unit tests for all game logic
++- Clear documentation comments for public APIs
+\ No newline at end of file
+
+
+commit e4fa03dd41d39c8511a5342ab68e285b22606664
+Author:     Hassan Syed <h.a.syed@gmail.com>
+AuthorDate: Thu Jul 17 11:15:05 2025 +0100
+Commit:     Hassan Syed <h.a.syed@gmail.com>
+CommitDate: Thu Jul 17 11:15:05 2025 +0100
+
+    ffs
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 4896cbc..bbc30b1 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -45,6 +45,7 @@ cargo clippy
+ - Use `println!` in tests for debug output (run with `--nocapture`)
+ 
+ ## Code Style
++- impl should follow struct strictly -- DO NOT seperate struct declaration and impl.
+ - Follow standard Rust formatting with `cargo fmt`
+ - Use `cargo clippy` for linting
+ - Comprehensive unit tests for all game logic
+
+
+commit 76a095c601ee3cc5e13334bc62012e466f371a4f
+Author:     Hassan Syed <h.a.syed@gmail.com>
+AuthorDate: Thu Jul 17 18:11:59 2025 +0100
+Commit:     Hassan Syed <h.a.syed@gmail.com>
+CommitDate: Thu Jul 17 18:11:59 2025 +0100
+
+    step 6: hover pile and deal cards (the code is getting gnarly).
+
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index bbc30b1..3ebcf3d 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -49,4 +49,44 @@ cargo clippy
+ - Follow standard Rust formatting with `cargo fmt`
+ - Use `cargo clippy` for linting
+ - Comprehensive unit tests for all game logic
+-- Clear documentation comments for public APIs
+\ No newline at end of file
++- Clear documentation comments for public APIs
++
++## GPUI Framework Notes
++
++note: this is added to aid agents in targetting gpui which they are not too familiar with. 
++
++### Event Handling Patterns
++- **Correct Pattern**: Use `cx.listener()` for event handlers that need to update app state
++  ```rust
++  .on_mouse_down(gpui::MouseButton::Left, cx.listener(|app, _event, _window, cx| {
++      app.handle_action(SomeAction, cx);
++  }))
++  ```
++- **Closure Signature**: `cx.listener()` expects 4 parameters: `(app, event, window, context)`
++- **Avoid**: Direct closures in event handlers - they can't access app state
++- **Avoid**: `cx.handle()`, `cx.view()`, `cx.weak_handle()` - these methods don't exist
++
++### UI Component Patterns
++- **Interactive Elements**: Must import `InteractiveElement` trait for `.hover()`, `.cursor_pointer()`
++- **Hover States**: Use `.hover(|style| style.property(value))` for visual feedback
++- **Mouse Events**: Use `.on_mouse_down(MouseButton::Left, handler)` for click handling
++
++### Context and State Management
++- **State Updates**: Use `cx.notify()` to trigger re-renders after state changes
++- **Method Parameters**: Event handlers receive `&mut Context<Self>`, not `&mut Window`
++- **Component Communication**: Pass context through method parameters when needed
++
++### Common Pitfalls to Avoid
++- Don't try to capture `cx` in closures - use `cx.listener()` instead
++- Don't use `update()` on focus handles - use proper listener pattern
++- Don't forget to import required traits (`InteractiveElement`, etc.)
++- Event handler closures must match expected parameter counts exactly
++
++### Imports Needed for Interactive UI
++```rust
++use gpui::{
++    InteractiveElement, // For .hover(), .cursor_pointer()
++    MouseButton,        // For mouse event handling
++    // ... other imports
++};
++```
+\ No newline at end of file
+
+

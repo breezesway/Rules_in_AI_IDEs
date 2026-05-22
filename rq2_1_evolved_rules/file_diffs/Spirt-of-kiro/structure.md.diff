@@ -1,0 +1,282 @@
+commit 1c70419bc5a414a74bd7acb7b1295bc96ed2fe8d
+Author:     Nathan Peck <nathan.peck1@gmail.com>
+AuthorDate: Sat May 10 10:39:10 2025 +1200
+Commit:     Nathan Peck <nathan.peck1@gmail.com>
+CommitDate: Sat May 10 10:39:10 2025 +1200
+
+    initial commit for open source
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+new file mode 100644
+index 0000000..7a1e5ab
+--- /dev/null
++++ b/.kiro/steering/structure.md
+@@ -0,0 +1,56 @@
++# Project Structure
++
++AI Scrapyard follows a client-server architecture with clear separation of concerns.
++
++## Root Directory
++- `launch.ts` - Main entry point that starts both client and server
++- `docker-compose.yml` - Docker configuration for local development
++- `package.json` - Root package with scripts to launch the application
++
++## Client (`/client`)
++The client is a Vue.js 3 application built with TypeScript and Vite.
++
++### Key Directories
++- `/client/src/assets` - Static assets including images, CSS, and game sprites
++- `/client/src/components` - Vue components for game UI elements
++- `/client/src/systems` - Core game systems:
++  - `physics-system.ts` - Handles physics calculations and collision detection
++  - `socket-system.ts` - Manages WebSocket communication with server
++  - `game-object-system.ts` - Manages game objects and their state
++  - `item-system.ts` - Handles inventory items and their properties
++- `/client/src/stores` - Pinia store for global state management
++- `/client/src/utils` - Utility functions and helpers
++- `/client/src/views` - Vue router views/pages
++
++### Architecture Patterns
++- **Composition API** - Used throughout Vue components
++- **System-based architecture** - Game logic is separated into systems
++- **Reactive state management** - Using Pinia and Vue's reactivity system
++- **Event-driven communication** - WebSocket events drive game state changes
++
++## Server (`/server`)
++The server is a Bun-based WebSocket server written in TypeScript.
++
++### Key Directories
++- `/server/handlers` - Request handlers for different message types
++- `/server/llm` - AI integration for item generation
++- `/server/state` - Server-side state management
++- `/server/utils` - Utility functions
++- `/server/__tests__` - Server tests
++
++### Architecture Patterns
++- **Message-based communication** - WebSocket messages with type and payload
++- **Handler pattern** - Separate handlers for different message types
++- **AWS service integration** - DynamoDB for persistence, S3 for storage, Bedrock for AI
++
++## Infrastructure (`/iac`)
++Contains AWS CloudFormation templates and deployment scripts.
++
++- `/iac/distribution.yml` - CloudFront distribution configuration
++- `/iac/images-s3.yml` - S3 bucket configuration for AI-generated images
++
++## Docker Configuration
++- `/docker` - Docker-related files and local development resources
++- `/client/Dockerfile` - Client container configuration
++- `/server/Dockerfile` - Server container configuration
++- `/iac/Dockerfile` - Infrastructure deployment container
+\ No newline at end of file
+
+
+commit fabc6e407c4f54ba4da6b185312254beab68ad89
+Author:     Nathan Peck <nathan.peck1@gmail.com>
+AuthorDate: Sun May 18 15:22:05 2025 +1200
+Commit:     Nathan Peck <nathan.peck1@gmail.com>
+CommitDate: Sun May 18 15:22:05 2025 +1200
+
+    Start of plumbing the inventory to the chest placeholder
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 7a1e5ab..467644f 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -28,6 +28,11 @@ The client is a Vue.js 3 application built with TypeScript and Vite.
+ - **Reactive state management** - Using Pinia and Vue's reactivity system
+ - **Event-driven communication** - WebSocket events drive game state changes
+ 
++`/client/src/stores/game.ts` - Is the client's Pinia store through which all game methods
++and reactive variables are exposed. All of the systems in the game utilize these
++reactive variables and expose methods into this store. Components utilize the same reactive
++variables, and call methods from this store.
++
+ ## Server (`/server`)
+ The server is a Bun-based WebSocket server written in TypeScript.
+ 
+
+
+commit a26da1a134f11113e2071bbbbbac14832c8860e3
+Author:     Nathan Peck <nathan.peck1@gmail.com>
+AuthorDate: Sat Jun 7 12:57:14 2025 +1200
+Commit:     Nathan Peck <nathan.peck1@gmail.com>
+CommitDate: Sat Jun 7 12:57:14 2025 +1200
+
+    Preparing references to the game title
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 467644f..0ed2d7a 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -1,6 +1,6 @@
+ # Project Structure
+ 
+-AI Scrapyard follows a client-server architecture with clear separation of concerns.
++PlaceholderTitle follows a client-server architecture with clear separation of concerns.
+ 
+ ## Root Directory
+ - `launch.ts` - Main entry point that starts both client and server
+
+
+commit 83780ce7ec74603c2ead8ee6c0a92d534214f5d6
+Author:     Nathan Peck <nathan.peck1@gmail.com>
+AuthorDate: Wed Jun 11 09:36:46 2025 +1200
+Commit:     Nathan Peck <nathan.peck1@gmail.com>
+CommitDate: Wed Jun 11 09:36:46 2025 +1200
+
+    Naming changes across the app for placeholder title
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+deleted file mode 100644
+index 0ed2d7a..0000000
+--- a/.kiro/steering/structure.md
++++ /dev/null
+@@ -1,61 +0,0 @@
+-# Project Structure
+-
+-PlaceholderTitle follows a client-server architecture with clear separation of concerns.
+-
+-## Root Directory
+-- `launch.ts` - Main entry point that starts both client and server
+-- `docker-compose.yml` - Docker configuration for local development
+-- `package.json` - Root package with scripts to launch the application
+-
+-## Client (`/client`)
+-The client is a Vue.js 3 application built with TypeScript and Vite.
+-
+-### Key Directories
+-- `/client/src/assets` - Static assets including images, CSS, and game sprites
+-- `/client/src/components` - Vue components for game UI elements
+-- `/client/src/systems` - Core game systems:
+-  - `physics-system.ts` - Handles physics calculations and collision detection
+-  - `socket-system.ts` - Manages WebSocket communication with server
+-  - `game-object-system.ts` - Manages game objects and their state
+-  - `item-system.ts` - Handles inventory items and their properties
+-- `/client/src/stores` - Pinia store for global state management
+-- `/client/src/utils` - Utility functions and helpers
+-- `/client/src/views` - Vue router views/pages
+-
+-### Architecture Patterns
+-- **Composition API** - Used throughout Vue components
+-- **System-based architecture** - Game logic is separated into systems
+-- **Reactive state management** - Using Pinia and Vue's reactivity system
+-- **Event-driven communication** - WebSocket events drive game state changes
+-
+-`/client/src/stores/game.ts` - Is the client's Pinia store through which all game methods
+-and reactive variables are exposed. All of the systems in the game utilize these
+-reactive variables and expose methods into this store. Components utilize the same reactive
+-variables, and call methods from this store.
+-
+-## Server (`/server`)
+-The server is a Bun-based WebSocket server written in TypeScript.
+-
+-### Key Directories
+-- `/server/handlers` - Request handlers for different message types
+-- `/server/llm` - AI integration for item generation
+-- `/server/state` - Server-side state management
+-- `/server/utils` - Utility functions
+-- `/server/__tests__` - Server tests
+-
+-### Architecture Patterns
+-- **Message-based communication** - WebSocket messages with type and payload
+-- **Handler pattern** - Separate handlers for different message types
+-- **AWS service integration** - DynamoDB for persistence, S3 for storage, Bedrock for AI
+-
+-## Infrastructure (`/iac`)
+-Contains AWS CloudFormation templates and deployment scripts.
+-
+-- `/iac/distribution.yml` - CloudFront distribution configuration
+-- `/iac/images-s3.yml` - S3 bucket configuration for AI-generated images
+-
+-## Docker Configuration
+-- `/docker` - Docker-related files and local development resources
+-- `/client/Dockerfile` - Client container configuration
+-- `/server/Dockerfile` - Server container configuration
+-- `/iac/Dockerfile` - Infrastructure deployment container
+\ No newline at end of file
+
+
+commit 4929512e9b5796f6a55c6412cf9e76f9c850eeae
+Author:     Nathan Peck <nathan.peck1@gmail.com>
+AuthorDate: Thu Jul 3 09:50:16 2025 +1200
+Commit:     Nathan Peck <nathan.peck1@gmail.com>
+CommitDate: Thu Jul 3 09:50:16 2025 +1200
+
+    Adding the right steering files to main
+
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+new file mode 100644
+index 0000000..bb338e7
+--- /dev/null
++++ b/.kiro/steering/structure.md
+@@ -0,0 +1,66 @@
++# Project Structure
++
++## Root Level Organization
++```
++├── client/           # Vue.js frontend application
++├── server/           # Bun WebSocket server
++├── item-images/      # Separate service for AI image generation
++├── docs/             # Project documentation
++├── scripts/          # Deployment and setup scripts
++├── docker/           # Docker configuration and data
++└── launch.ts         # Development launcher script
++```
++
++## Client Structure (`client/`)
++- **src/components/**: Vue components for game UI elements (GameGrid, PlayerCharacter, etc.)
++- **src/systems/**: Game logic systems (physics, inventory, socket communication)
++- **src/stores/**: Pinia state management (game.ts)
++- **src/views/**: Page-level Vue components (GameView, SignInView)
++- **src/utils/**: Utility functions (physics, items, world initialization)
++- **src/assets/**: Static assets (images, CSS, game sprites)
++- **iac/**: Infrastructure as Code for client deployment
++
++## Server Structure (`server/`)
++- **handlers/**: WebSocket message handlers (pull-item, sell-item, etc.)
++- **llm/**: AI integration (model.ts, prompts.ts, word-lists/)
++- **state/**: Data persistence layer (item-store.ts, user-store.ts)
++- **utils/**: Server utilities (password hashing, message formatting)
++- **iac/**: Infrastructure as Code for server deployment
++- **__tests__/**: Unit tests with Bun test framework
++
++## Item Images Service (`item-images/`)
++- **handlers/**: HTTP request handlers for image generation
++- **lib/**: Core image generation logic
++- **state/**: Vector database and Redis client integration
++- **iac/**: Infrastructure as Code for image service deployment
++
++## Key Architectural Patterns
++
++### Frontend Systems Architecture
++The client uses a system-based architecture where independent systems communicate via events:
++- **Socket System**: Manages WebSocket communication
++- **Physics System**: Handles collision detection and movement
++- **Game Object System**: Tracks on-screen objects
++- **Item/Inventory Systems**: Manage game items and storage
++
++### Message-Driven Communication
++- WebSocket messages follow consistent naming patterns (kebab-case)
++- Server handlers are organized by message type
++- Event-driven frontend updates maintain reactive state
++
++### Infrastructure as Code
++Each service has its own `iac/` directory containing:
++- CloudFormation YAML templates
++- Deployment scripts
++- Environment-specific configurations
++
++### Testing Structure
++- Server tests in `__tests__/` directories alongside source code
++- Client tests use Vitest with Vue Test Utils
++- Test configuration in respective package.json files
++
++## File Naming Conventions
++- **kebab-case**: For file names, component names, and message types
++- **camelCase**: For JavaScript/TypeScript variables and functions
++- **PascalCase**: For Vue components and TypeScript interfaces
++- **.ts/.js extensions**: TypeScript preferred, JavaScript for legacy word lists
+\ No newline at end of file
+
+

@@ -1,0 +1,55 @@
+---
+description: 
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+# 使用 TypeScript
+1. **類型定義**
+   - 為所有函數參數和返回值定義類型
+   - 優先使用 `type` 定義物件結構
+   - （Interface）定義複雜數據結構，使用 PascalCase 命名，需加入前綴 `I`（例如：`IUserData`）
+   - Avoid enums; use maps instead.
+
+2. **嚴格模式**
+   - 所有檔案必須使用 `.tsx` 或 `.ts` 副檔名
+   - 使用型別守衛（type guards）確保型別安全
+   - 啟用 TypeScript 的嚴格模式 (`strict: true`)
+   - 避免使用 `any` 類型，除非第三方 package 沒有提供
+   - 使用 `unknown` 代替 `any` 作為未知類型
+
+3. **類型斷言**
+   - 只在確定類型的情況下使用類型斷言
+   - 優先使用 `as` 語法而非尖括號語法
+   - 例如：`(error as Error).message` 而非 `(<Error>error).message`
+
+## 錯誤處理
+```ts
+// ✅ 自定義錯誤類型
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public code: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+// ✅ Result 模式
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+function parseJson<T>(json: string): Result<T, string> {
+  try {
+    const data = JSON.parse(json);
+    return { success: true, data };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Parse error' 
+    };
+  }
+}
+```
