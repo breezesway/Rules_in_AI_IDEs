@@ -41,6 +41,15 @@ Data and analysis for RQ2.3 (rule compliance).
 
 - **`LLM_filter/`**: Sampled data and code for manual verification, along with scripts and results for LLM-based filtering.
 
+### `survey/`
+
+Scripts, data, and charts for the online survey study.
+
+- **`collect_email/`**: Scripts for collecting contributor email addresses from GitHub.
+- **`email/`**: Scripts for sending survey invitation emails.
+- **`survey_results/`**: The final collected survey responses—99 responses in English and Chinese.
+- **`education_professional_duration/`**, **`role_domain_ide/`**: Scripts for generating survey-related charts.
+
 ## 3. GitHub Project Snapshots
 
 Due to their large size, snapshots of the selected GitHub project repositories are not included directly in this repository. They are hosted on Zenodo instead:

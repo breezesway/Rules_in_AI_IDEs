@@ -5,7 +5,7 @@ import pandas as pd
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-RESULTS_DIR = BASE_DIR / "results"
+RESULTS_DIR = BASE_DIR / "survey_results"
 ENGLISH_XLSX = RESULTS_DIR / "Survey on AI IDE Rules_English.xlsx"
 CHINESE_XLSX = RESULTS_DIR / "Survey on AI IDE Rules_Chinese.xlsx"
 OUTPUT_CSV = Path(__file__).resolve().parent / "education_experience_counts.csv"
