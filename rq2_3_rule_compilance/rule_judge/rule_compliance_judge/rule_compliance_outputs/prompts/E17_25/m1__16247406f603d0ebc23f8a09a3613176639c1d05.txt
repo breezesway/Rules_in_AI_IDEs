@@ -1,0 +1,105 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - In table-driven tests, use "test" instead of "tt" for the test case variable
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically test files (e.g., *_test.go in Go or similar test files in other languages).
+- Suggested Logic: Scan test files for table-driven test patterns (typically loops iterating over a collection of test cases, such as 'for ... range' in Go). Use Abstract Syntax Tree (AST) parsing to identify the variable name assigned to the individual test case within these loops. Flag instances where the variable is named 'tt' and verify if it is named 'test'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: Winner test fails
+- Changed Files List: 
+game/tictactoe.go	+4	-0	after_lines=48
+game/tictactoe_test.go	+44	-0	after_lines=169
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── go.sum
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: game/tictactoe.go ---
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+index 1d0ad2c..88795ae 100644
+--- a/game/tictactoe.go
++++ b/game/tictactoe.go
+@@ -42,3 +42,7 @@ func (g *Game) Text() string {
+ func (g *Game) Board() [9]string {
+ 	return g.board
+ }
++
++func (g *Game) Winner() string {
++	return ""
++}
+
+--- FILE: game/tictactoe_test.go ---
+diff --git a/game/tictactoe_test.go b/game/tictactoe_test.go
+index 22258c9..4a65cb5 100644
+--- a/game/tictactoe_test.go
++++ b/game/tictactoe_test.go
+@@ -123,3 +123,47 @@ func TestMakeMove(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestWinner(t *testing.T) {
++	tests := []struct {
++		name       string
++		setupMoves []int
++		wantWinner string
++	}{
++		{
++			name:       "no winner on empty board",
++			setupMoves: []int{},
++			wantWinner: "",
++		},
++		{
++			name:       "X wins top row",
++			setupMoves: []int{0, 3, 1, 4, 2},
++			wantWinner: "X",
++		},
++		{
++			name:       "O wins diagonal",
++			setupMoves: []int{1, 0, 3, 4, 7, 8},
++			wantWinner: "O",
++		},
++		{
++			name:       "no winner in ongoing game",
++			setupMoves: []int{0, 1, 2, 3},
++			wantWinner: "",
++		},
++		{
++			name:       "X wins vertical",
++			setupMoves: []int{1, 0, 4, 3, 7},
++			wantWinner: "X",
++		},
++	}
++
++	for _, test := range tests {
++		t.Run(test.name, func(t *testing.T) {
++			game := NewGame()
++			for _, move := range test.setupMoves {
++				_ = game.MakeMove(move)
++			}
++			assert.Equal(t, test.wantWinner, game.Winner())
++		})
++	}
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

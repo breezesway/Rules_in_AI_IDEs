@@ -1,0 +1,205 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - One assertion per test case
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Test source code files (e.g., files ending in .test.js, .spec.ts, _test.py, or files within a tests/ directory).
+- Suggested Logic: Identify test function/method blocks using AST parsing (e.g., looking for 'test' or 'it' function calls in Jest, or methods annotated with @Test in JUnit). Within the scope of each identified test function, count the occurrences of assertion statements or library calls (e.g., 'expect', 'assert', 'assertEquals'). If the count per test function is greater than one, it is a violation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Move game to its own package; improve makefile
+- Changed Files List: 
+.gitignore	+1	-0	after_lines=17
+Makefile	+17	-4	after_lines=21
+game/tictactoe.go	+21	-0	after_lines=21
+game/tictactoe_test.go	+10	-0	after_lines=10
+go.mod	+1	-1	after_lines=3
+main.go	+6	-19	after_lines=26
+main_test.go	+0	-10	after_lines=0
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index 384d94f..865c28d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -14,3 +14,4 @@
+ # WASM files
+ *.wasm
+ 
++tmp
+
+--- FILE: Makefile ---
+diff --git a/Makefile b/Makefile
+index f6fe5fb..c976481 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,21 @@
++GOFILES := $(shell find . -name '*.go')
++WASMFILE := web/static/main.wasm
++WASMEXEC := web/static/wasm_exec.js
+ 
++$(WASMFILE): $(GOFILES)
++	GOOS=js GOARCH=wasm go build -o $(WASMFILE)
+ 
+-web/static/main.wasm: *.go
+-	GOOS=js GOARCH=wasm go build -o web/static/main.wasm
++.PHONY: test
++test:
++	go test -v ./...
+ 
+-run: web/static/main.wasm
+-	cd web/static && python3 -m http.server 8080
++$(WASMEXEC):
++	cp "$(shell go env GOROOT)/lib/wasm/wasm_exec.js" $(WASMEXEC)
++
++.PHONY: serve
++serve:
++	cd web/static && python -m http.server 8080
++
++.PHONY: setup
++setup: $(WASMEXEC) $(WASMFILE)
+
+--- FILE: game/tictactoe.go ---
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+new file mode 100644
+index 0000000..c41e1df
+--- /dev/null
++++ b/game/tictactoe.go
+@@ -0,0 +1,21 @@
++package game
++
++type Game struct {
++	board []string
++	text  string
++}
++
++func (g *Game) Board() interface{} {
++	return g.board
++}
++
++func NewGame() *Game {
++	return &Game{
++		board: make([]string, 9),
++		text:  "hello",
++	}
++}
++
++func (g *Game) Text() string {
++	return g.text
++}
+
+--- FILE: game/tictactoe_test.go ---
+diff --git a/game/tictactoe_test.go b/game/tictactoe_test.go
+new file mode 100644
+index 0000000..997b252
+--- /dev/null
++++ b/game/tictactoe_test.go
+@@ -0,0 +1,10 @@
++package game
++
++import "testing"
++
++func TestText(t *testing.T) {
++	game := NewGame()
++	if game.Text() != "hello" {
++		t.Errorf("Expected text to be 'hello', got %q", game.Text())
++	}
++}
+
+--- FILE: go.mod ---
+diff --git a/go.mod b/go.mod
+index 6a21fed..ab58809 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,3 +1,3 @@
+-module hello
++module tictactoe
+ 
+ go 1.24.0
+
+--- FILE: main.go ---
+diff --git a/main.go b/main.go
+index 890672f..b1fc431 100644
+--- a/main.go
++++ b/main.go
+@@ -2,33 +2,20 @@
+ 
+ package main
+ 
+-import "syscall/js"
+-
+-type Game struct {
+-	Board []string
+-	text  string
+-}
+-
+-func NewGame() *Game {
+-	return &Game{
+-		Board: make([]string, 9),
+-		text:  "hello",
+-	}
+-}
+-
+-func (g *Game) Text() string {
+-	return g.text
+-}
++import (
++	"syscall/js"
++	"tictactoe/game"
++)
+ 
+ func main() {
+ 	c := make(chan struct{}, 0)
+ 
+-	game := NewGame()
++	game := game.NewGame()
+ 
+ 	// Register our game in JavaScript
+ 	js.Global().Set("tictactoeGame", js.ValueOf(map[string]interface{}{
+ 		"newGame": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+-			return game.Board
++			return game.Board()
+ 		}),
+ 		"text": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+ 			return game.Text()
+
+--- FILE: main_test.go ---
+diff --git a/main_test.go b/main_test.go
+deleted file mode 100644
+index 7a5f5a3..0000000
+--- a/main_test.go
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package main
+-
+-import "testing"
+-
+-func TestText(t *testing.T) {
+-	game := NewGame()
+-	if game.Text() != "hello" {
+-		t.Errorf("Expected text to be 'hello', got %q", game.Text())
+-	}
+-}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

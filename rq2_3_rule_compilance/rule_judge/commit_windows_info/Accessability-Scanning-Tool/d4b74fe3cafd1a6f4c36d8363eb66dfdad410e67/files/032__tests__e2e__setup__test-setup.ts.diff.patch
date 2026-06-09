@@ -1,0 +1,34 @@
+diff --git a/tests/e2e/setup/test-setup.ts b/tests/e2e/setup/test-setup.ts
+index 61df0e4..beaa2e2 100644
+--- a/tests/e2e/setup/test-setup.ts
++++ b/tests/e2e/setup/test-setup.ts
+@@ -298,6 +298,29 @@ export async function cleanupTest(page: any) {
+     } catch (error) {
+         // Ignore errors
+     }
++
++    // Clean up test database data
++    try {
++        // Import the cleanup service dynamically to avoid circular dependencies
++        const { DatabaseCleanupService } = await import('@/utils/services/database-cleanup-service');
++        const cleanupService = DatabaseCleanupService.getInstance();
++
++        // Perform test data cleanup
++        const result = await cleanupService.performCleanup({
++            testData: true,
++            orphanedReports: true,
++            expiredReports: false, // Don't clean up expired reports in tests
++            dryRun: false
++        });
++
++        if (result.success) {
++            console.log(`E2E test database cleanup completed: ${result.recordsCleaned || 0} records cleaned`);
++        } else {
++            console.warn('E2E test database cleanup failed:', result.message);
++        }
++    } catch (error) {
++        console.warn('E2E test database cleanup error:', error);
++    }
+ }
+ 
+ // Export common expectations

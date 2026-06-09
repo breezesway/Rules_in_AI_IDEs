@@ -1,0 +1,43 @@
+diff --git a/src/utils/orchestration/parallel-analyzer.ts b/src/utils/orchestration/parallel-analyzer.ts
+index 717c638..4b82b99 100644
+--- a/src/utils/orchestration/parallel-analyzer.ts
++++ b/src/utils/orchestration/parallel-analyzer.ts
+@@ -184,16 +184,21 @@ export class ParallelAnalyzer {
+     // Process pages with concurrency control
+     const pagePromises = batch.map(async (page, _index) => {
+       return new Promise<void>(resolve => {
++        let timeoutId: NodeJS.Timeout | undefined;
+         const runWhenReady = () => {
+           const availableSlot = semaphore.findIndex(slot => slot === null);
+           if (availableSlot !== -1) {
++            // Clear any pending timeout
++            if (timeoutId) {
++              clearTimeout(timeoutId);
++            }
+             semaphore[availableSlot] = page.url;
+             processPage(page).finally(() => {
+               semaphore[availableSlot] = null;
+               resolve();
+             });
+           } else {
+-            setTimeout(runWhenReady, 100);
++            timeoutId = setTimeout(runWhenReady, 100);
+           }
+         };
+         runWhenReady();
+@@ -593,6 +598,15 @@ export class ParallelAnalyzer {
+ 
+   async cleanup(): Promise<void> {
+     this.errorHandler.logInfo('Cleaning up parallel analyzer');
++
++    // Clear any pending timeouts
++    if (typeof jest !== 'undefined') {
++      jest.clearAllTimers();
++    }
++
++    // Reset semaphore
++    this.semaphore = [];
++
+     await this.browserManager.cleanupAll();
+   }
+ 

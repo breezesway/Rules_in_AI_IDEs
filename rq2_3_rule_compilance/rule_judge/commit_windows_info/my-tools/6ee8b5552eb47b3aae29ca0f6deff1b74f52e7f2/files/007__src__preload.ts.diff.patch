@@ -1,0 +1,33 @@
+diff --git a/src/preload.ts b/src/preload.ts
+index e64d4de..a22f1f7 100644
+--- a/src/preload.ts
++++ b/src/preload.ts
+@@ -16,7 +16,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
+     currentFile: string;
+     progress: number;
+   }) => void) => {
+-    const listener = (_event: any, progress: any) => callback(progress);
++    const listener = (_event: unknown, progress: {
++      current: number;
++      total: number;
++      currentFile: string;
++      progress: number;
++    }) => callback(progress);
+     ipcRenderer.on('merge-progress', listener);
+     
+     // 返回清理函数
+@@ -35,4 +40,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   selectPdfFiles: () => ipcRenderer.invoke('select-pdf-files'),
+   
+   openFileLocation: (filePath: string) => ipcRenderer.invoke('open-file-location', filePath),
++  
++  // 历史记录相关API
++  getOperationHistory: () => ipcRenderer.invoke('get-operation-history'),
++  clearOperationHistory: () => ipcRenderer.invoke('clear-operation-history'),
++  deleteHistoryRecord: (id: string) => ipcRenderer.invoke('delete-history-record', id),
++  
++  // 配置相关API
++  getAppConfig: () => ipcRenderer.invoke('get-app-config'),
++  updateAppConfig: (config: Record<string, unknown>) => ipcRenderer.invoke('update-app-config', config),
++  resetAppConfig: () => ipcRenderer.invoke('reset-app-config'),
+ });

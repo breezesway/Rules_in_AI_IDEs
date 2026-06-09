@@ -1,0 +1,710 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/technology-stack.md
+- Change Type: modified
+- Target Rule Content:
+- **jest**: For unit testing
++ **Vitest**: For unit testing (Vite's native test runner)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json, vitest.config.ts, jest.config.js) and test source code files.
+- Suggested Logic: 1. Verify 'vitest' is present in package.json dependencies/devDependencies and 'jest' is absent. 2. Check for the existence of a Vitest configuration file (e.g., vitest.config.ts/js) and ensure Jest configuration files are removed. 3. Scan test files to ensure imports are from 'vitest' instead of 'jest'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: added swagger to view and test backend endpoints
+- Changed Files List: 
+backend/src/routes/bug-routes.ts	+311	-19	after_lines=367
+backend/src/routes/project-routes.ts	+160	-15	after_lines=192
+backend/src/utils/swagger.ts	+1	-1	after_lines=155
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── bug-tracker
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── coding-standards.md
+│       ├── implementation-guidelines.md
+│       ├── project-decisions.md
+│       ├── project-guidelines.md
+│       └── technology-stack.md
+├── Interview assignment - interviewer .docx
+├── backend
+│   ├── .env.example
+│   ├── .eslintrc.js
+│   ├── .prettierrc
+│   ├── jest.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   ├── app.ts
+│   │   ├── controllers
+│   │   │   ├── bug-controller.ts
+│   │   │   └── project-controller.ts
+│   │   ├── database
+│   │   │   ├── connection.ts
+│   │   │   ├── migrate.ts
+│   │   │   ├── migrations
+│   │   │   │   ├── 001_create_projects_table.sql
+│   │   │   │   └── 002_create_bugs_table.sql
+│   │   │   ├── seed.ts
+│   │   │   └── utils.ts
+│   │   ├── index.ts
+│   │   ├── middleware
+│   │   │   ├── error-handler.ts
+│   │   │   ├── request-logger.ts
+│   │   │   └── validation.ts
+│   │   ├── models
+│   │   │   ├── api-response.ts
+│   │   │   ├── bug.ts
+│   │   │   └── project.ts
+│   │   ├── routes
+│   │   │   ├── bug-routes.ts
+│   │   │   └── project-routes.ts
+│   │   ├── services
+│   │   │   ├── bug-service.ts
+│   │   │   └── project-service.ts
+│   │   ├── test
+│   │   │   ├── jest.setup.ts
+│   │   │   └── setup.ts
+│   │   ├── utils
+│   │   │   ├── errors.ts
+│   │   │   ├── response.ts
+│   │   │   └── swagger.ts
+│   │   └── validators
+│   │       ├── bug-validators.ts
+│   │       └── project-validators.ts
+│   ├── tests
+│   │   ├── app.test.ts
+│   │   ├── bugs.test.ts
+│   │   └── projects.test.ts
+│   └── tsconfig.json
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── test
+│   │   │   └── setup.ts
+│   │   └── vite-env.d.ts
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── instructions.md
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: backend/src/routes/bug-routes.ts ---
+diff --git a/backend/src/routes/bug-routes.ts b/backend/src/routes/bug-routes.ts
+index f499977..ac1242b 100644
+--- a/backend/src/routes/bug-routes.ts
++++ b/backend/src/routes/bug-routes.ts
+@@ -12,10 +12,69 @@ import {
+ const router = Router();
+ 
+ /**
+- * @route   GET /api/projects/:projectId/bugs/statistics
+- * @desc    Get bug statistics for a project
+- * @access  Public
+- * @note    This route must come before /:bugId to avoid conflicts
++ * @swagger
++ * /projects/{projectId}/bugs/statistics:
++ *   get:
++ *     summary: Get bug statistics for a project
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *     responses:
++ *       200:
++ *         description: Bug statistics
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   type: object
++ *                   properties:
++ *                     totalBugs:
++ *                       type: integer
++ *                       example: 10
++ *                     byStatus:
++ *                       type: object
++ *                       properties:
++ *                         open:
++ *                           type: integer
++ *                           example: 3
++ *                         in_progress:
++ *                           type: integer
++ *                           example: 2
++ *                         resolved:
++ *                           type: integer
++ *                           example: 3
++ *                         closed:
++ *                           type: integer
++ *                           example: 2
++ *                     bySeverity:
++ *                       type: object
++ *                       properties:
++ *                         low:
++ *                           type: integer
++ *                           example: 2
++ *                         medium:
++ *                           type: integer
++ *                           example: 3
++ *                         high:
++ *                           type: integer
++ *                           example: 3
++ *                         critical:
++ *                           type: integer
++ *                           example: 2
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.get('/:projectId/bugs/statistics', 
+   validate(validateProjectParam), 
+@@ -23,9 +82,61 @@ router.get('/:projectId/bugs/statistics',
+ );
+ 
+ /**
+- * @route   GET /api/projects/:projectId/bugs
+- * @desc    Get all bugs for a project with optional filtering and sorting
+- * @access  Public
++ * @swagger
++ * /projects/{projectId}/bugs:
++ *   get:
++ *     summary: Get all bugs for a project with optional filtering and sorting
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *       - in: query
++ *         name: status
++ *         schema:
++ *           type: string
++ *           enum: [open, in_progress, resolved, closed]
++ *         description: Filter bugs by status
++ *       - in: query
++ *         name: severity
++ *         schema:
++ *           type: string
++ *           enum: [low, medium, high, critical]
++ *         description: Filter bugs by severity
++ *       - in: query
++ *         name: sort
++ *         schema:
++ *           type: string
++ *           enum: [created_at, severity, status]
++ *         description: Sort field
++ *       - in: query
++ *         name: order
++ *         schema:
++ *           type: string
++ *           enum: [asc, desc]
++ *         description: Sort order
++ *     responses:
++ *       200:
++ *         description: List of bugs
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   type: array
++ *                   items:
++ *                     $ref: '#/components/schemas/Bug'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.get('/:projectId/bugs', 
+   validate(validateBugFilters), 
+@@ -33,9 +144,41 @@ router.get('/:projectId/bugs',
+ );
+ 
+ /**
+- * @route   GET /api/projects/:projectId/bugs/:bugId
+- * @desc    Get bug by ID
+- * @access  Public
++ * @swagger
++ * /projects/{projectId}/bugs/{bugId}:
++ *   get:
++ *     summary: Get bug by ID
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *       - in: path
++ *         name: bugId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Bug ID
++ *     responses:
++ *       200:
++ *         description: Bug details
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Bug'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.get('/:projectId/bugs/:bugId', 
+   validate(validateBugParams), 
+@@ -43,9 +186,66 @@ router.get('/:projectId/bugs/:bugId',
+ );
+ 
+ /**
+- * @route   POST /api/projects/:projectId/bugs
+- * @desc    Create new bug
+- * @access  Public
++ * @swagger
++ * /projects/{projectId}/bugs:
++ *   post:
++ *     summary: Create a new bug
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *     requestBody:
++ *       required: true
++ *       content:
++ *         application/json:
++ *           schema:
++ *             type: object
++ *             required:
++ *               - title
++ *               - severity
++ *               - status
++ *             properties:
++ *               title:
++ *                 type: string
++ *                 description: Bug title
++ *                 example: "Login button not working"
++ *               description:
++ *                 type: string
++ *                 description: Bug description
++ *                 example: "The login button on the homepage doesn't respond when clicked"
++ *               severity:
++ *                 type: string
++ *                 enum: [low, medium, high, critical]
++ *                 description: Bug severity
++ *                 example: "high"
++ *               status:
++ *                 type: string
++ *                 enum: [open, in_progress, resolved, closed]
++ *                 description: Bug status
++ *                 example: "open"
++ *     responses:
++ *       201:
++ *         description: Bug created successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Bug'
++ *       400:
++ *         $ref: '#/components/responses/BadRequest'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.post('/:projectId/bugs', 
+   validate(validateCreateBug), 
+@@ -53,9 +253,68 @@ router.post('/:projectId/bugs',
+ );
+ 
+ /**
+- * @route   PUT /api/projects/:projectId/bugs/:bugId
+- * @desc    Update bug
+- * @access  Public
++ * @swagger
++ * /projects/{projectId}/bugs/{bugId}:
++ *   put:
++ *     summary: Update a bug
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *       - in: path
++ *         name: bugId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Bug ID
++ *     requestBody:
++ *       required: true
++ *       content:
++ *         application/json:
++ *           schema:
++ *             type: object
++ *             properties:
++ *               title:
++ *                 type: string
++ *                 description: Bug title
++ *                 example: "Updated bug title"
++ *               description:
++ *                 type: string
++ *                 description: Bug description
++ *                 example: "Updated bug description"
++ *               severity:
++ *                 type: string
++ *                 enum: [low, medium, high, critical]
++ *                 description: Bug severity
++ *                 example: "medium"
++ *               status:
++ *                 type: string
++ *                 enum: [open, in_progress, resolved, closed]
++ *                 description: Bug status
++ *                 example: "in_progress"
++ *     responses:
++ *       200:
++ *         description: Bug updated successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Bug'
++ *       400:
++ *         $ref: '#/components/responses/BadRequest'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.put('/:projectId/bugs/:bugId', 
+   validate(validateUpdateBug), 
+@@ -63,9 +322,42 @@ router.put('/:projectId/bugs/:bugId',
+ );
+ 
+ /**
+- * @route   DELETE /api/projects/:projectId/bugs/:bugId
+- * @desc    Delete bug
+- * @access  Public
++ * @swagger
++ * /projects/{projectId}/bugs/{bugId}:
++ *   delete:
++ *     summary: Delete a bug
++ *     tags: [Bugs]
++ *     parameters:
++ *       - in: path
++ *         name: projectId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *       - in: path
++ *         name: bugId
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Bug ID
++ *     responses:
++ *       200:
++ *         description: Bug deleted successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 message:
++ *                   type: string
++ *                   example: "Bug deleted successfully"
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.delete('/:projectId/bugs/:bugId', 
+   validate(validateBugParams),
+
+--- FILE: backend/src/routes/project-routes.ts ---
+diff --git a/backend/src/routes/project-routes.ts b/backend/src/routes/project-routes.ts
+index 0545b19..fb44633 100644
+--- a/backend/src/routes/project-routes.ts
++++ b/backend/src/routes/project-routes.ts
+@@ -10,37 +10,182 @@ import {
+ const router = Router();
+ 
+ /**
+- * @route   GET /api/projects
+- * @desc    Get all projects with bug counts
+- * @access  Public
++ * @swagger
++ * /projects:
++ *   get:
++ *     summary: Get all projects with bug counts
++ *     tags: [Projects]
++ *     responses:
++ *       200:
++ *         description: List of projects
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   type: array
++ *                   items:
++ *                     $ref: '#/components/schemas/Project'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.get('/', projectController.getAllProjects);
+ 
+ /**
+- * @route   GET /api/projects/:id
+- * @desc    Get project by ID
+- * @access  Public
++ * @swagger
++ * /projects/{id}:
++ *   get:
++ *     summary: Get project by ID
++ *     tags: [Projects]
++ *     parameters:
++ *       - in: path
++ *         name: id
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *     responses:
++ *       200:
++ *         description: Project details
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Project'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.get('/:id', validate(validateProjectId), projectController.getProjectById);
+ 
+ /**
+- * @route   POST /api/projects
+- * @desc    Create new project
+- * @access  Public
++ * @swagger
++ * /projects:
++ *   post:
++ *     summary: Create a new project
++ *     tags: [Projects]
++ *     requestBody:
++ *       required: true
++ *       content:
++ *         application/json:
++ *           schema:
++ *             type: object
++ *             required:
++ *               - name
++ *             properties:
++ *               name:
++ *                 type: string
++ *                 description: Project name
++ *                 example: "New Project"
++ *     responses:
++ *       201:
++ *         description: Project created successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Project'
++ *       400:
++ *         $ref: '#/components/responses/BadRequest'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.post('/', validate(validateCreateProject), projectController.createProject);
+ 
+ /**
+- * @route   PUT /api/projects/:id
+- * @desc    Update project
+- * @access  Public
++ * @swagger
++ * /projects/{id}:
++ *   put:
++ *     summary: Update a project
++ *     tags: [Projects]
++ *     parameters:
++ *       - in: path
++ *         name: id
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *     requestBody:
++ *       required: true
++ *       content:
++ *         application/json:
++ *           schema:
++ *             type: object
++ *             required:
++ *               - name
++ *             properties:
++ *               name:
++ *                 type: string
++ *                 description: Project name
++ *                 example: "Updated Project"
++ *     responses:
++ *       200:
++ *         description: Project updated successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 data:
++ *                   $ref: '#/components/schemas/Project'
++ *       400:
++ *         $ref: '#/components/responses/BadRequest'
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.put('/:id', validate(validateUpdateProject), projectController.updateProject);
+ 
+ /**
+- * @route   DELETE /api/projects/:id
+- * @desc    Delete project
+- * @access  Public
++ * @swagger
++ * /projects/{id}:
++ *   delete:
++ *     summary: Delete a project
++ *     tags: [Projects]
++ *     parameters:
++ *       - in: path
++ *         name: id
++ *         required: true
++ *         schema:
++ *           type: integer
++ *         description: Project ID
++ *     responses:
++ *       200:
++ *         description: Project deleted successfully
++ *         content:
++ *           application/json:
++ *             schema:
++ *               type: object
++ *               properties:
++ *                 success:
++ *                   type: boolean
++ *                   example: true
++ *                 message:
++ *                   type: string
++ *                   example: "Project deleted successfully"
++ *       404:
++ *         $ref: '#/components/responses/NotFound'
++ *       500:
++ *         $ref: '#/components/responses/ServerError'
+  */
+ router.delete('/:id', validate(validateProjectId), projectController.deleteProject);
+
+--- FILE: backend/src/utils/swagger.ts ---
+diff --git a/backend/src/utils/swagger.ts b/backend/src/utils/swagger.ts
+index 09ef447..6f8d72e 100644
+--- a/backend/src/utils/swagger.ts
++++ b/backend/src/utils/swagger.ts
+@@ -136,7 +136,7 @@ const options: swaggerJsdoc.Options = {
+       },
+     },
+   },
+-  apis: ['./src/routes/*.ts', './src/controllers/*.ts'],
++  apis: ['./dist/routes/*.js', './dist/controllers/*.js', './src/routes/*.ts', './src/controllers/*.ts'],
+ };
+ 
+ const specs = swaggerJsdoc(options);
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

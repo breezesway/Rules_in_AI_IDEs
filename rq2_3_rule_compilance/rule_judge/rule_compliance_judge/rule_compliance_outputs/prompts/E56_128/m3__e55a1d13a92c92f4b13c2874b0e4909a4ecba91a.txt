@@ -1,0 +1,179 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- Core Stack: Python 3.12+, Notion SDK, Google Gemini AI, YouTube Data API
++ Python 3.12+ with notion-client, google-genai>=0.1.0, python-dotenv, pytest
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency management files (e.g., requirements.txt, pyproject.toml, setup.py, Pipfile) and Python version configuration files (e.g., .python-version).
+- Suggested Logic: 1. Search for the Python version specification in configuration files (e.g., 'python_version', 'requires-python') and verify it is >= 3.12.
+2. Scan dependency lists to ensure 'notion-client', 'python-dotenv', and 'pytest' are included.
+3. Specifically check that 'google-genai' is present and its version constraint is set to >= 0.1.0.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: fix: Improve table parsing logic
+
+This commit improves the table parsing logic in the markdown to Notion converter to handle more flexible table formats.
+
+The table detection and separator validation regex has been updated to correctly parse tables with variable spacing and dashes in the separator line.
+
+A new unit test with a real-world table example has been added to ensure the fix is working correctly and to prevent future regressions.
+- Changed Files List: 
+src/youtube_notion/utils/markdown_converter.py	+2	-2	after_lines=472
+tests/unit/test_markdown_converter.py	+16	-0	after_lines=643
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   └── markdown_converter.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       └── test_video_processor.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/youtube_notion/utils/markdown_converter.py ---
+diff --git a/src/youtube_notion/utils/markdown_converter.py b/src/youtube_notion/utils/markdown_converter.py
+index 40b7a2a..da2c3db 100644
+--- a/src/youtube_notion/utils/markdown_converter.py
++++ b/src/youtube_notion/utils/markdown_converter.py
+@@ -291,7 +291,7 @@ def markdown_to_notion_blocks(markdown_text):
+                 "numbered_list_item": { "rich_text": parse_rich_text(numbered_text) }
+             })
+         # Handle tables
+-        elif stripped_line.startswith('|') and i + 1 < len(lines) and lines[i+1].strip().startswith('|--'):
++        elif stripped_line.startswith('|') and i + 1 < len(lines) and re.match(r'[|:\-\s]+', lines[i+1].strip()):
+             table_lines = [stripped_line]
+             j = i + 1
+             while j < len(lines) and lines[j].strip().startswith('|'):
+@@ -332,7 +332,7 @@ def _parse_table_block(table_lines):
+ 
+     # Validate separator line
+     separator_cells = [cell.strip() for cell in separator_line.split('|') if cell.strip()]
+-    if len(separator_cells) != num_columns or not all(re.match(r'--+', cell) for cell in separator_cells):
++    if len(separator_cells) != num_columns or not all(re.match(r':?--+:?', cell) for cell in separator_cells):
+         return None
+ 
+     # Create table block
+
+--- FILE: tests/unit/test_markdown_converter.py ---
+diff --git a/tests/unit/test_markdown_converter.py b/tests/unit/test_markdown_converter.py
+index 014d56d..00e97bb 100644
+--- a/tests/unit/test_markdown_converter.py
++++ b/tests/unit/test_markdown_converter.py
+@@ -622,6 +622,22 @@ This is a paragraph."""
+         self.assertEqual(len(rich_text), 1)
+         self.assertEqual(rich_text[0]['text']['content'], '**This should not be bold**\n*This should not be italic*\n[This should not be a link](https://example.com)')
+ 
++    def test_user_table_example(self):
++        """Test parsing the user's specific table example."""
++        markdown = """| Question                                 | When to Use an Agent (Complex) | When to Use a Workflow (Simpler)      |
++| ---------------------------------------- | ------------------------------ | ------------------------------------- |
++| **Is the task complex enough?**          | Yes (Path to goal is unclear)  | No (Clear, step-by-step process)      |
++| **Is the task valuable enough?**         | Yes (High value, e.g., >$1/run) | No (Low value, e.g., <$0.1/run)       |
++| **Are all parts of the task doable?**    | Yes (Necessary tools exist)    | No (Required tools are unavailable)   |
++| **What is the cost of error?**           | Low (Errors are cheap/reversible) | High (Errors are costly/irreversible) |"""
++        result = markdown_to_notion_blocks(markdown)
++        self.assertEqual(len(result), 1)
++        self.assertEqual(result[0]['type'], 'table')
++        table = result[0]['table']
++        self.assertEqual(table['table_width'], 3)
++        self.assertEqual(table['has_column_header'], True)
++        self.assertEqual(len(table['children']), 5)
++
+ 
+ if __name__ == '__main__':
+     unittest.main()
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

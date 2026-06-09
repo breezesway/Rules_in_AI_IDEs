@@ -1,0 +1,44 @@
+diff --git a/server/api/health.get.test.ts b/server/api/health.get.test.ts
+new file mode 100644
+index 0000000..85e99e1
+--- /dev/null
++++ b/server/api/health.get.test.ts
+@@ -0,0 +1,38 @@
++// @vitest-environment nuxt
++import { describe, it, expect } from "vitest";
++import packageJson from "../../package.json";
++
++
++describe("GET /api/health", () => {
++  it("should return a healthy status response", async () => {
++    const response = await $vitestFetch("/api/health");
++    
++    expect(response.status).toBe("healthy");
++  });
++
++  it("should accept and return optional data parameter", async () => {
++    const testData = "test-health-data";
++    const response = await $vitestFetch("/api/health", {
++    
++      query: {
++        data: testData,
++      },
++    });
++    
++    expect(response.data).toBe(testData);
++  });
++
++  it("should return correct response structure", async () => {
++    const response = await $vitestFetch("/api/health");
++    
++    const expectedKeys = ["status", "timestamp", "version"];
++    expectedKeys.forEach(key => {
++      expect(response).toHaveProperty(key);
++    });
++  });
++
++  it("should always return version from package.json", async () => {
++    const response = await $vitestFetch("/api/health");
++    expect(response.version).toBe(packageJson.version);
++  });
++});

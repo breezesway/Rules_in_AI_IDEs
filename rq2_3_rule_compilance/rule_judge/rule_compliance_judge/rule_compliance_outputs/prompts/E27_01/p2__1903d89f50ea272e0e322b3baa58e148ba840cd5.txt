@@ -1,0 +1,183 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Language Features
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Formatting: Prettier with single quotes, 2-space tabs
++ - Formatting: Prettier with single quotes, 2-space tabs, don't use "any" as ts type
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Prettier configuration files (e.g., .prettierrc, package.json) and TypeScript source code files (.ts, .tsx).
+- Suggested Logic: 1. Inspect Prettier configuration files to verify that 'singleQuote' is set to true and 'tabWidth' is set to 2. 2. Scan TypeScript source files using a static analysis tool or AST parser to identify any instances where 'any' is used as a type annotation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: feat: add hook to avoid using "any" as type
+- Changed Files List: 
+.kiro/hooks/fix-any-types.kiro.hook	+17	-0	after_lines=17
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .husky
+│   └── pre-commit
+├── .kiro
+│   ├── hooks
+│   │   └── fix-any-types.kiro.hook
+│   ├── specs
+│   │   └── kirapilot-app
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── extensions.json
+├── FORMATTING_SETUP.md
+├── PROJECT_STRUCTURE.md
+├── README.md
+├── TESTING.md
+├── TEST_SOLUTION.md
+├── eslint.config.js
+├── hero.ts
+├── index.html
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── tauri.svg
+│   └── vite.svg
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── TitleBar.tsx
+│   │   ├── common
+│   │   │   ├── DatePicker.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── PrioritySelector.tsx
+│   │   │   ├── RichTextEditor.tsx
+│   │   │   ├── TagInput.tsx
+│   │   │   └── index.ts
+│   │   ├── planning
+│   │   │   ├── DayView.tsx
+│   │   │   ├── Planner.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── TaskColumn.tsx
+│   │   │   ├── TaskModal.tsx
+│   │   │   ├── TimeHistoryModal.tsx
+│   │   │   ├── WeekView.tsx
+│   │   │   └── WeeklyPlan.tsx
+│   │   └── timer
+│   │       ├── SessionHistory.tsx
+│   │       └── index.ts
+│   ├── contexts
+│   │   └── TimerContext.tsx
+│   ├── hooks
+│   │   ├── useDatabase.ts
+│   │   └── useSimpleTimer.ts
+│   ├── main.tsx
+│   ├── services
+│   │   ├── database
+│   │   │   ├── DatabaseProvider.tsx
+│   │   │   ├── README.md
+│   │   │   ├── __mocks__
+│   │   │   │   └── mockDatabase.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mockDatabase.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── FocusRepository.ts
+│   │   │   │   ├── PatternRepository.ts
+│   │   │   │   ├── README.md
+│   │   │   │   ├── TaskRepository.ts
+│   │   │   │   ├── TimeTrackingRepository.ts
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── TaskRepository.test.ts
+│   │   │   │   └── index.ts
+│   │   │   └── utils.ts
+│   │   └── notifications
+│   │       └── TimerNotifications.ts
+│   ├── setupTests.ts
+│   ├── types
+│   │   ├── README.md
+│   │   ├── index.ts
+│   │   └── validation.ts
+│   ├── utils
+│   │   ├── __tests__
+│   │   │   ├── migration.test.ts
+│   │   │   └── validation.test.ts
+│   │   ├── clearOldData.ts
+│   │   ├── debugDatabase.ts
+│   │   ├── index.ts
+│   │   ├── migration.ts
+│   │   ├── resetDatabase.ts
+│   │   └── transformations.ts
+│   └── vite-env.d.ts
+├── src-tauri
+│   ├── .gitignore
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── build.rs
+│   ├── capabilities
+│   │   └── default.json
+│   ├── icons
+│   │   ├── 128x128.png
+│   │   ├── 128x128@2x.png
+│   │   ├── 32x32.png
+│   │   ├── Square107x107Logo.png
+│   │   ├── Square142x142Logo.png
+│   │   ├── Square150x150Logo.png
+│   │   ├── Square284x284Logo.png
+│   │   ├── Square30x30Logo.png
+│   │   ├── Square310x310Logo.png
+│   │   ├── Square44x44Logo.png
+│   │   ├── Square71x71Logo.png
+│   │   ├── Square89x89Logo.png
+│   │   ├── StoreLogo.png
+│   │   ├── icon.icns
+│   │   ├── icon.ico
+│   │   └── icon.png
+│   ├── src
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   └── tauri.conf.json
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/hooks/fix-any-types.kiro.hook ---
+diff --git a/.kiro/hooks/fix-any-types.kiro.hook b/.kiro/hooks/fix-any-types.kiro.hook
+new file mode 100644
+index 0000000..32dff77
+--- /dev/null
++++ b/.kiro/hooks/fix-any-types.kiro.hook
+@@ -0,0 +1,17 @@
++{
++  "enabled": true,
++  "name": "Fix Any Types",
++  "description": "Automatically detects and fixes usage of \"any\" type in TypeScript files by replacing with specific, appropriate types",
++  "version": "1",
++  "when": {
++    "type": "fileEdited",
++    "patterns": [
++      "**/*.ts",
++      "**/*.tsx"
++    ]
++  },
++  "then": {
++    "type": "askAgent",
++    "prompt": "I need you to analyze this TypeScript file and check if it contains any usage of the \"any\" type. If it does, please replace all instances of \"any\" with specific, appropriate types based on the context and usage. Consider the following:\n\n1. Look for variable declarations, function parameters, return types, and type annotations using \"any\"\n2. Analyze the context to determine the most appropriate specific type\n3. For function parameters, infer types from usage within the function\n4. For return types, analyze what the function actually returns\n5. For object properties, determine the expected structure\n6. Use union types when multiple types are possible\n7. Use generic types when appropriate for reusability\n8. Prefer interfaces or type aliases for complex object structures\n\nPlease provide the corrected code with all \"any\" types replaced with specific types, maintaining the same functionality while improving type safety."
++  }
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

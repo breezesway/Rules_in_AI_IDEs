@@ -1,0 +1,110 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-- Router: Request routing and middleware
++- Hono App: Main application with routing and middleware
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (e.g., package.json, deno.json) and source code files (entry points like app.ts or main.ts).
+- Suggested Logic: Check if the 'hono' package is defined in the project's dependencies. Additionally, scan the source code for the import of the 'Hono' class and the instantiation of the main application object using 'new Hono()'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Configure wrangler.toml to use Rust entry point
+
+- Update main entry point from pkg/r2_file_explorer_worker.js to src/lib.rs
+- Aligns with Rust-based Worker implementation approach
+- Prepares for backend development using worker-rs framework
+- Changed Files List: 
+worker/src/index.js	+9	-0	after_lines=9
+worker/wrangler.toml	+1	-1	after_lines=78
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── Cargo.lock
+    ├── Cargo.toml
+    ├── SETUP.md
+    ├── src
+    │   ├── index.js
+    │   ├── lib.rs
+    │   └── utils.rs
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/src/index.js ---
+diff --git a/worker/src/index.js b/worker/src/index.js
+new file mode 100644
+index 0000000..c1f858d
+--- /dev/null
++++ b/worker/src/index.js
+@@ -0,0 +1,9 @@
++// ES Module wrapper for Rust WebAssembly Worker
++import { fetch as wasmFetch } from '../pkg/r2_file_explorer_worker.js';
++
++export default {
++  async fetch(request, env, ctx) {
++    // Call the Rust fetch function directly
++    return await wasmFetch(request, env, ctx);
++  }
++};
+\ No newline at end of file
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index aaf0d21..3aecd05 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -1,5 +1,5 @@
+ name = "r2-file-explorer-api"
+-main = "pkg/r2_file_explorer_worker.js"
++main = "src/index.js"
+ compatibility_date = "2024-01-01"
+ 
+ # Development R2 bucket binding for file storage
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

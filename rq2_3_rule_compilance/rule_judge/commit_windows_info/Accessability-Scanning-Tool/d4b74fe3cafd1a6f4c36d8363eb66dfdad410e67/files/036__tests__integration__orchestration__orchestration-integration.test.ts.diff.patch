@@ -1,0 +1,338 @@
+diff --git a/tests/integration/orchestration/orchestration-integration.test.ts b/tests/integration/orchestration/orchestration-integration.test.ts
+index ad9aa9f..668e054 100644
+--- a/tests/integration/orchestration/orchestration-integration.test.ts
++++ b/tests/integration/orchestration/orchestration-integration.test.ts
+@@ -29,6 +29,9 @@ describe('Orchestration Layer Integration Tests', () => {
+     let configService: ConfigurationService;
+ 
+     beforeEach(() => {
++        // Setup test environment and database cleanup
++        (global as any).testUtils.database.setupTestEnvironment();
++
+         // Setup mocks
+         mockBrowserManager = {
+             initialize: jest.fn().mockResolvedValue(undefined),
+@@ -39,13 +42,58 @@ describe('Orchestration Layer Integration Tests', () => {
+         } as any;
+ 
+         mockParallelAnalyzer = {
+-            analyzePages: jest.fn().mockResolvedValue([]),
++            analyzePages: jest.fn().mockResolvedValue([
++                {
++                    url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
++                    violations: [],
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
++                }
++            ]),
+             getInstance: jest.fn().mockReturnThis(),
+         } as any;
+ 
+         mockDatabaseService = {
+-            storeReport: jest.fn().mockResolvedValue({ success: true }),
+-            getReport: jest.fn().mockResolvedValue({ success: true, data: {} }),
++            storeReport: jest.fn().mockResolvedValue({ success: true, data: 'report-id' }),
++            getReport: jest.fn().mockResolvedValue({
++                success: true,
++                data: {
++                    url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    testSuite: 'axe',
++                    summary: {
++                        totalViolations: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0,
++                        wcagAAViolations: 0,
++                        wcagAAAViolations: 0
++                    },
++                    violations: [],
++                    pageAnalysis: {
++                        title: 'Test Page',
++                        headingStructure: [],
++                        landmarks: { main: false, nav: false, footer: false },
++                        skipLink: { exists: false, isVisible: false, targetExists: false },
++                        images: [],
++                        links: [],
++                        forms: [],
++                        keyboardNavigation: []
++                    }
++                }
++            }),
+             getInstance: jest.fn().mockReturnThis(),
+         } as any;
+ 
+@@ -62,7 +110,10 @@ describe('Orchestration Layer Integration Tests', () => {
+         dataTransformer = new DataTransformer();
+     });
+ 
+-    afterEach(() => {
++    afterEach(async () => {
++        // Clean up test data and verify cleanup
++        await (global as any).testUtils.database.cleanupTestData();
++        await (global as any).testUtils.database.verifyCleanup();
+         jest.clearAllMocks();
+     });
+ 
+@@ -117,8 +168,22 @@ describe('Orchestration Layer Integration Tests', () => {
+ 
+         test('should perform accessibility analysis with batching', async () => {
+             const pages = [
+-                { url: 'https://example.com', title: 'Home', depth: 0 },
+-                { url: 'https://example.com/about', title: 'About', depth: 1 },
++                {
++                    url: 'https://example.com',
++                    title: 'Home',
++                    depth: 0,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 1000
++                },
++                {
++                    url: 'https://example.com/about',
++                    title: 'About',
++                    depth: 1,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 800
++                },
+             ];
+ 
+             const result = await workflowOrchestrator.performAccessibilityAnalysis(pages, {
+@@ -133,8 +198,20 @@ describe('Orchestration Layer Integration Tests', () => {
+             const analysisResults = [
+                 {
+                     url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
+                     violations: [],
+-                    metadata: { title: 'Test Page' },
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
+                 },
+             ];
+ 
+@@ -147,8 +224,20 @@ describe('Orchestration Layer Integration Tests', () => {
+             const analysisResults = [
+                 {
+                     url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
+                     violations: [],
+-                    metadata: { title: 'Test Page' },
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
+                 },
+             ];
+ 
+@@ -257,8 +346,22 @@ describe('Orchestration Layer Integration Tests', () => {
+ 
+         test('should perform accessibility analysis', async () => {
+             const pages = [
+-                { url: 'https://example.com', title: 'Home', depth: 0 },
+-                { url: 'https://example.com/about', title: 'About', depth: 1 },
++                {
++                    url: 'https://example.com',
++                    title: 'Home',
++                    depth: 0,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 1000
++                },
++                {
++                    url: 'https://example.com/about',
++                    title: 'About',
++                    depth: 1,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 800
++                },
+             ];
+ 
+             const result = await analysisOrchestrator.performAccessibilityAnalysis(pages, {
+@@ -271,7 +374,14 @@ describe('Orchestration Layer Integration Tests', () => {
+ 
+         test('should handle analysis validation', async () => {
+             const pages = [
+-                { url: 'https://example.com', title: 'Home', depth: 0 },
++                {
++                    url: 'https://example.com',
++                    title: 'Home',
++                    depth: 0,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 1000
++                },
+             ];
+ 
+             const result = await analysisOrchestrator.performAccessibilityAnalysis(pages, {
+@@ -302,8 +412,20 @@ describe('Orchestration Layer Integration Tests', () => {
+             const analysisResults = [
+                 {
+                     url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
+                     violations: [],
+-                    metadata: { title: 'Test Page' },
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
+                 },
+             ];
+ 
+@@ -316,8 +438,20 @@ describe('Orchestration Layer Integration Tests', () => {
+             const analysisResults = [
+                 {
+                     url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
+                     violations: [],
+-                    metadata: { title: 'Test Page' },
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
+                 },
+             ];
+ 
+@@ -340,20 +474,77 @@ describe('Orchestration Layer Integration Tests', () => {
+ 
+         test('should calculate workflow metrics', () => {
+             const crawlResults = [
+-                { url: 'https://example.com', title: 'Home', depth: 0 },
+-                { url: 'https://example.com/about', title: 'About', depth: 1 },
++                {
++                    url: 'https://example.com',
++                    title: 'Home',
++                    depth: 0,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 1000
++                },
++                {
++                    url: 'https://example.com/about',
++                    title: 'About',
++                    depth: 1,
++                    foundOn: 'https://example.com',
++                    status: 200,
++                    loadTime: 800
++                },
+             ];
+ 
+             const analysisResults = [
+                 {
+                     url: 'https://example.com',
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
+                     violations: [],
+-                    metadata: { title: 'Home' },
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 0,
++                        totalPasses: 10,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
+                 },
+                 {
+                     url: 'https://example.com/about',
+-                    violations: [{ id: 'test-violation', description: 'Test violation' }],
+-                    metadata: { title: 'About' },
++                    timestamp: new Date().toISOString(),
++                    tool: 'axe',
++                    violations: [
++                        {
++                            id: 'test-violation',
++                            impact: 'minor' as const,
++                            description: 'Test violation',
++                            help: 'Test help',
++                            helpUrl: 'https://example.com/help',
++                            wcagTags: ['wcag2aa'],
++                            wcagLevel: 'AA' as const,
++                            occurrences: 1,
++                            tools: ['axe'],
++                            elements: [],
++                            scenarioRelevance: [],
++                            remediation: {
++                                priority: 'Low' as const,
++                                effort: 'Low' as const,
++                                suggestions: []
++                            }
++                        }
++                    ],
++                    passes: [],
++                    warnings: [],
++                    summary: {
++                        totalViolations: 1,
++                        totalPasses: 9,
++                        totalWarnings: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 1
++                    }
+                 },
+             ];
+ 
+@@ -372,9 +563,9 @@ describe('Orchestration Layer Integration Tests', () => {
+         test('should calculate crawl metrics', () => {
+             const startTime = Date.now() - 1000; // 1 second ago
+             const crawlResults = [
+-                { url: 'https://example.com', title: 'Home', depth: 0, foundOn: '', status: 200, loadTime: 100 },
+-                { url: 'https://example.com/about', title: 'About', depth: 1, foundOn: '', status: 200, loadTime: 150 },
+-                { url: 'https://example.com/contact', title: 'Contact', depth: 1, foundOn: '', status: 200, loadTime: 120 },
++                { url: 'https://example.com', title: 'Home', depth: 0, foundOn: 'https://example.com', status: 200, loadTime: 100 },
++                { url: 'https://example.com/about', title: 'About', depth: 1, foundOn: 'https://example.com', status: 200, loadTime: 150 },
++                { url: 'https://example.com/contact', title: 'Contact', depth: 1, foundOn: 'https://example.com', status: 200, loadTime: 120 },
+             ];
+ 
+             const metrics = metricsCalculator.calculateCrawlMetrics(crawlResults, startTime);

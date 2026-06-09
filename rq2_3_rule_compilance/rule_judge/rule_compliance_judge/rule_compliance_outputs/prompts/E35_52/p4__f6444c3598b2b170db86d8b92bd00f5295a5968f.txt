@@ -1,0 +1,466 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .cursor/rules/develop.mdc
+- Change Type: added
+- Target Rule Content:
+│   ├── theme-selector.tsx           # 主题选择器组件
+│   ├── operation-history.tsx       # 操作历史组件
+│   └── app-settings.tsx            # 应用设置组件
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code filenames.
+- Suggested Logic: Verify the existence of the specific files 'theme-selector.tsx', 'operation-history.tsx', and 'app-settings.tsx' in the project directory based on the provided tree structure.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: feat: 优化按文件大小压缩功能并统一交互体验
+
+✨ 功能优化：
+- 修复按文件大小压缩功能的逻辑问题，解决压缩后文件大小不变的Bug
+- 实现智能迭代算法，精确控制输出文件大小（±10%容差）
+- 针对JPEG、PNG、WebP不同格式优化压缩参数
+- 添加临时文件管理和收敛检测机制
+
+🎯 交互体验统一：
+- PDF合并完成后自动关闭弹框，与图片压缩保持一致
+- 简化成功处理逻辑，移除复杂的状态管理
+- 提供统一的操作流程和用户反馈
+
+🔧 技术改进：
+- 添加sizeCompressionCompleted标记避免结果被覆盖
+- 优化迭代算法，最多5次迭代智能逼近目标大小
+- 完善错误处理和资源清理机制
+- 更新项目文档记录所有优化内容
+- Changed Files List: 
+product.md	+109	-7	after_lines=639
+src/components/pdf-merger.tsx	+3	-10	after_lines=435
+src/main.ts	+127	-11	after_lines=1028
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── project.mdc
+├── .eslintrc.json
+├── .gitignore
+├── .npmrc
+├── README.md
+├── forge.config.ts
+├── forge.env.d.ts
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.js
+├── product.md
+├── src
+│   ├── App.tsx
+│   ├── components
+│   │   ├── app-settings.tsx
+│   │   ├── image-compressor.tsx
+│   │   ├── operation-history.tsx
+│   │   └── pdf-merger.tsx
+│   ├── hooks
+│   │   └── use-dropzone.ts
+│   ├── index.css
+│   ├── lib
+│   │   └── utils.ts
+│   ├── main.ts
+│   ├── preload.ts
+│   ├── renderer.ts
+│   ├── types
+│   │   └── electron.d.ts
+│   └── ui
+│       ├── button.tsx
+│       ├── feature-card.tsx
+│       ├── modal.tsx
+│       └── save-location-selector.tsx
+├── tailwind.config.js
+├── tsconfig.json
+├── vite.main.config.ts
+├── vite.preload.config.ts
+└── vite.renderer.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: product.md ---
+diff --git a/product.md b/product.md
+index 3d6bcef..8c50da5 100644
+--- a/product.md
++++ b/product.md
+@@ -218,8 +218,10 @@
+ - **文件选择方式统一**：沿用 PDF 合并的成功经验
+   - **原因**：Electron 原生对话框比浏览器文件选择更可靠
+   - **实现**：`dialog.showOpenDialog` 支持图片格式过滤
+-- **压缩算法选择**：优先实现按质量等级压缩
+-  - **原因**：用户最常用的压缩方式，技术实现相对简单
++- **压缩算法优化**：从简单质量压缩到智能迭代压缩
++  - **按质量等级压缩**：用户最常用的压缩方式，支持10%-100%质量调节
++  - **按文件大小压缩**：智能迭代算法，精确逼近目标文件大小
++  - **按图片尺寸压缩**：保持原始比例的尺寸调整
+ 
+ ### 关键技术实现
+ - **Sharp 动态加载**：
+@@ -238,13 +240,20 @@
+     }
+   });
+   ```
++- **智能按文件大小压缩算法**：
++  - **格式特性优化**：针对JPEG、PNG、WebP不同格式的压缩特性调整初始质量估算
++  - **迭代逼近算法**：最多5次迭代，10%容差范围内精确控制文件大小
++  - **质量自适应调整**：根据实际压缩效果动态调整质量参数
++  - **临时文件管理**：使用临时文件测试压缩效果，自动清理
+ - **多格式支持**：JPEG、PNG、WebP 的质量压缩适配
+ - **文件处理流程**：
+-  1. 文件选择 → 2. 格式检测 → 3. 质量压缩 → 4. 格式转换 → 5. 保存文件
++  1. 文件选择 → 2. 格式检测 → 3. 智能压缩 → 4. 格式转换 → 5. 保存文件
+ 
+ ### 压缩功能特性
+-- **按质量等级压缩**：10%-100% 可调节质量滑块
+-- **格式转换支持**：保持原格式或转换为 JPG/PNG/WebP
++- **按质量等级压缩**：10%-100% 可调节质量滑块，高质量时智能防止文件变大
++- **按文件大小压缩**：精确控制输出文件大小，智能迭代逼近目标大小
++- **按图片尺寸压缩**：调整图片宽度和高度，保持原始比例
++- **格式转换支持**：保持原格式或转换为 JPG/PNG/WebP，针对不同格式优化压缩参数
+ - **文件名后缀自定义**：默认添加 "_compressed" 后缀
+ - **重名文件处理**：集成应用配置，支持自动编号或询问覆盖
+ - **批量处理**：支持多文件同时压缩
+@@ -340,6 +349,62 @@
+   - 统一配置加载失败的处理逻辑
+   - 提供优雅的降级方案
+ 
++## 按文件大小压缩功能深度优化（2024-12-29）
++
++### 优化目标
++- **精确控制**：将输出文件大小控制在目标大小的±10%范围内
++- **格式适配**：针对JPEG、PNG、WebP不同格式的压缩特性优化算法
++- **性能平衡**：在压缩精度和处理速度之间找到最佳平衡点
++
++### 算法设计
++- **智能初始估算**：
++  - JPEG格式：压缩效率高，使用 `compressionRatio * 120` 估算
++  - PNG格式：压缩效率较低，使用 `compressionRatio * 100` 估算  
++  - WebP格式：压缩效率最高，使用 `compressionRatio * 130` 估算
++- **迭代优化策略**：
++  - 最多5次迭代，避免过度处理
++  - 10%容差范围，平衡精度和性能
++  - 动态质量调整，根据实际效果智能修正
++- **临时文件管理**：
++  - 使用临时文件测试压缩效果
++  - 自动清理临时文件，避免磁盘空间浪费
++  - 达到目标时直接重命名，提高效率
++
++### 技术实现细节
++```typescript
++// 格式特性优化的质量估算
++if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++  estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
++} else if (outputFormat === 'png') {
++  estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
++} else if (outputFormat === 'webp') {
++  estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
++}
++
++// 迭代优化逻辑
++while (attempts < maxAttempts) {
++  // 生成测试文件并检查大小
++  const sizeRatio = testSize / targetSizeBytes;
++  if (sizeRatio >= (1 - tolerance) && sizeRatio <= (1 + tolerance)) {
++    // 达到目标大小，直接使用
++    break;
++  }
++  // 智能调整质量参数...
++}
++```
++
++### 性能优化
++- **早期终止**：达到目标大小时立即停止迭代
++- **收敛检测**：连续两次压缩结果相近时停止迭代
++- **资源清理**：及时清理临时文件，避免资源泄漏
++- **错误恢复**：单次迭代失败不影响整体流程
++
++### 用户体验提升
++- **更精确的文件大小控制**：输出文件大小更接近用户设定的目标
++- **更好的格式适配**：不同图片格式都能获得最佳的压缩效果
++- **更快的处理速度**：智能算法减少不必要的迭代次数
++- **更稳定的结果**：减少压缩失败和异常情况
++
+ ## 重要Bug修复记录
+ 
+ ### 图片压缩质量问题修复（2024-12-29）
+@@ -387,6 +452,41 @@
+ - **影响范围**：图片压缩工具和PDF合并工具都进行了相同修复
+ - **用户体验改进**：设置修改后立即生效，无需重启应用
+ 
++### 交互体验统一优化（2024-12-29）
++- **问题描述**：PDF合并和图片压缩两个工具的操作完成后交互行为不一致
++  - PDF合并：成功后只重置表单，弹框保持打开状态
++  - 图片压缩：成功后自动关闭弹框
++- **优化目标**：统一两个工具的交互体验，提供一致的用户操作流程
++- **修复方案**：
++  - 修改PDF合并组件的成功处理逻辑
++  - 移除文件状态更新和延迟重置的复杂逻辑
++  - 成功后立即重置表单并关闭弹框，与图片压缩保持一致
++- **技术实现**：
++  ```typescript
++  // 修复前：复杂的状态管理
++  if (result?.success) {
++    setFiles(prev => prev.map(f => 
++      f.status === 'ready' ? { ...f, status: 'done' as const } : f
++    ));
++    setProgress(100);
++    toast.success('PDF合并完成！');
++    setTimeout(() => {
++      resetForm();
++    }, 500);
++  }
++
++  // 修复后：简洁统一的处理
++  if (result?.success) {
++    toast.success('PDF合并完成！');
++    resetForm();
++    onClose(); // 自动关闭弹框
++  }
++  ```
++- **用户体验改进**：
++  - 操作完成后自动返回主界面，减少用户操作步骤
++  - 两个工具的操作流程完全一致，降低学习成本
++  - 简化界面状态管理，提高应用响应速度
++
+ # 应用级功能
+ 
+ ## 操作历史记录
+@@ -453,14 +553,16 @@
+ ### 图片压缩工具
+ - [x] **文件选择**：Electron 原生对话框，支持图片格式过滤
+ - [x] **按质量压缩**：10%-100% 可调节质量滑块，包含高质量文件大小保护机制
+-- [x] **按文件大小压缩**：智能估算质量级别，达到目标文件大小
++- [x] **按文件大小压缩**：智能迭代算法，精确逼近目标文件大小（±10%容差）
+ - [x] **按图片尺寸压缩**：调整图片宽度和高度，保持原始比例
+-- [x] **格式转换**：支持 JPEG、PNG、WebP 格式转换，正确处理各格式压缩参数
++- [x] **格式转换**：支持 JPEG、PNG、WebP 格式转换，针对不同格式优化压缩参数
+ - [x] **批量处理**：支持多文件同时压缩
+ - [x] **输出设置**：自定义文件名后缀，保存位置使用应用级别配置
+ - [x] **错误容错**：单文件失败不影响其他文件
+ - [x] **原生模块集成**：Sharp 库动态加载和 Vite 配置优化
+ - [x] **智能质量控制**：高质量设置时防止文件变大，自动调整压缩参数
++- [x] **格式特性优化**：针对JPEG、PNG、WebP不同压缩特性的算法优化
++- [x] **迭代压缩算法**：最多5次迭代，智能收敛检测，临时文件管理
+ 
+ ### 应用级功能
+ - [x] **操作历史**：完整的历史记录管理系统
+
+--- FILE: src/components/pdf-merger.tsx ---
+diff --git a/src/components/pdf-merger.tsx b/src/components/pdf-merger.tsx
+index 3a744f5..078696e 100644
+--- a/src/components/pdf-merger.tsx
++++ b/src/components/pdf-merger.tsx
+@@ -203,22 +203,15 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+       cleanupProgress?.();
+ 
+       if (result?.success) {
+-        // 更新文件状态为完成
+-        setFiles(prev => prev.map(f => 
+-          f.status === 'ready' ? { ...f, status: 'done' as const } : f
+-        ));
+-        setProgress(100);
+-
+         // 显示成功 Toast
+         toast.success('PDF合并完成！', {
+           description: `${outputFileName} 已成功保存`,
+           duration: 5000
+         });
+ 
+-        // 立即重置表单
+-        setTimeout(() => {
+-          resetForm();
+-        }, 500); // 稍微延迟一点让用户看到完成状态
++        // 重置表单并关闭弹框
++        resetForm();
++        onClose();
+       } else {
+         throw new Error(result?.error || '合并失败');
+       }
+
+--- FILE: src/main.ts ---
+diff --git a/src/main.ts b/src/main.ts
+index 9b6017c..5c5979d 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -699,6 +699,7 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+          
+          // 创建sharp实例
+          let sharpInstance = sharp.default(filePath);
++         let sizeCompressionCompleted = false; // 标记是否已完成按大小压缩
+          
+          // 根据压缩方法处理图片
+          if (settings.method === 'quality') {
+@@ -718,7 +719,7 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+              sharpInstance = sharpInstance.webp({ quality });
+            }
+          } else if (settings.method === 'size') {
+-           // 按文件大小压缩 - 通过调整质量来达到目标大小
++           // 按文件大小压缩 - 智能迭代逼近目标大小
+            const targetSizeKB = settings.targetSize || 500;
+            const targetSizeBytes = targetSizeKB * 1024;
+            
+@@ -726,7 +727,7 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+            const originalStats = await fs.stat(filePath);
+            const originalSize = originalStats.size;
+            
+-           // 如果原始文件已经小于目标大小，使用较高质量
++           // 如果原始文件已经小于目标大小，使用较高质量保持品质
+            if (originalSize <= targetSizeBytes) {
+              if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+                sharpInstance = sharpInstance.jpeg({ quality: 85 });
+@@ -736,17 +737,132 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+                sharpInstance = sharpInstance.webp({ quality: 85 });
+              }
+            } else {
+-                           // 估算需要的质量级别
+-              const compressionRatio = targetSizeBytes / originalSize;
+-              const estimatedQuality = Math.max(10, Math.min(90, Math.round(compressionRatio * 100)));
++             // 智能质量估算和迭代优化
++             const bestQuality = 70;
++             let attempts = 0;
++             const maxAttempts = 5;
++             const tolerance = 0.1; // 10%的容差范围
++             
++             // 初始质量估算：基于文件大小比例和格式特性
++             const compressionRatio = targetSizeBytes / originalSize;
++             let estimatedQuality: number;
+              
+              if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+-               sharpInstance = sharpInstance.jpeg({ quality: estimatedQuality });
++               // JPEG压缩效率较高，可以使用稍高的质量
++               estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
+              } else if (outputFormat === 'png') {
+-               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - estimatedQuality) / 10)));
+-               sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++               // PNG压缩效率较低，需要更激进的压缩
++               estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
+              } else if (outputFormat === 'webp') {
+-               sharpInstance = sharpInstance.webp({ quality: estimatedQuality });
++               // WebP压缩效率很高，可以使用较高质量
++               estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
++             } else {
++               estimatedQuality = Math.max(15, Math.min(85, Math.round(compressionRatio * 110)));
++             }
++             
++             // 迭代优化质量设置
++             let currentQuality = estimatedQuality;
++             let lastSize = 0;
++             
++             while (attempts < maxAttempts) {
++               const tempPath = finalOutputPath + `.tmp${attempts}`;
++               let testInstance = sharp.default(filePath);
++               
++               // 应用当前质量设置
++               if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++                 testInstance = testInstance.jpeg({ quality: currentQuality });
++               } else if (outputFormat === 'png') {
++                 const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - currentQuality) / 10)));
++                 testInstance = testInstance.png({ compressionLevel, progressive: true });
++               } else if (outputFormat === 'webp') {
++                 testInstance = testInstance.webp({ quality: currentQuality });
++               }
++               
++               try {
++                 // 生成测试文件并检查大小
++                 await testInstance.toFile(tempPath);
++                 const testStats = await fs.stat(tempPath);
++                 const testSize = testStats.size;
++                 
++                 console.log(`迭代 ${attempts + 1}: 质量=${currentQuality}, 大小=${Math.round(testSize/1024)}KB, 目标=${targetSizeKB}KB`);
++                 
++                 // 检查是否在容差范围内
++                 const sizeRatio = testSize / targetSizeBytes;
++                 if (sizeRatio >= (1 - tolerance) && sizeRatio <= (1 + tolerance)) {
++                   // 达到目标大小，使用当前设置
++                   console.log(`成功达到目标大小！质量=${currentQuality}, 实际大小=${Math.round(testSize/1024)}KB`);
++                   await fs.rename(tempPath, finalOutputPath);
++                   
++                   // 清理其他临时文件
++                   for (let i = 0; i < attempts; i++) {
++                     try {
++                       await fs.unlink(finalOutputPath + `.tmp${i}`);
++                     } catch {
++                       // 忽略清理错误
++                     }
++                   }
++                   
++                   sizeCompressionCompleted = true;
++                   break;
++                 }
++                 
++                 // 调整质量设置
++                 if (testSize > targetSizeBytes) {
++                   // 文件太大，降低质量
++                   const reduction = Math.max(5, Math.round((testSize - targetSizeBytes) / targetSizeBytes * 20));
++                   currentQuality = Math.max(10, currentQuality - reduction);
++                 } else {
++                   // 文件太小，可以适当提高质量（但不超过目标）
++                   const increase = Math.min(5, Math.round((targetSizeBytes - testSize) / targetSizeBytes * 10));
++                   currentQuality = Math.min(95, currentQuality + increase);
++                 }
++                 
++                 // 如果质量调整幅度很小且连续两次大小相近，停止迭代
++                 if (Math.abs(testSize - lastSize) < targetSizeBytes * 0.05) {
++                   console.log(`收敛停止：质量=${currentQuality}, 大小=${Math.round(testSize/1024)}KB`);
++                   await fs.rename(tempPath, finalOutputPath);
++                   
++                   // 清理临时文件
++                   for (let i = 0; i < attempts; i++) {
++                     try {
++                       await fs.unlink(finalOutputPath + `.tmp${i}`);
++                     } catch {
++                       // 忽略清理错误
++                     }
++                   }
++                   sizeCompressionCompleted = true;
++                   break;
++                 }
++                 
++                 lastSize = testSize;
++                 
++                 // 清理当前临时文件
++                 await fs.unlink(tempPath);
++                 
++               } catch (testError) {
++                 console.error(`测试质量 ${currentQuality} 时出错:`, testError);
++                 // 清理临时文件
++                 try {
++                   await fs.unlink(tempPath);
++                 } catch {
++                   // 忽略清理错误
++                 }
++               }
++               
++               attempts++;
++             }
++             
++             // 如果迭代没有成功生成最终文件，使用最后的最佳质量
++             if (!sizeCompressionCompleted) {
++               console.log(`迭代未完成，使用最佳质量=${bestQuality}生成最终文件`);
++               if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++                 sharpInstance = sharpInstance.jpeg({ quality: bestQuality });
++               } else if (outputFormat === 'png') {
++                 const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - bestQuality) / 10)));
++                 sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++               } else if (outputFormat === 'webp') {
++                 sharpInstance = sharpInstance.webp({ quality: bestQuality });
++               }
+              }
+            }
+          } else if (settings.method === 'dimension') {
+@@ -801,8 +917,8 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+              // 压缩后文件更小，重命名临时文件为最终文件
+              await fs.rename(tempPath, finalOutputPath);
+            }
+-         } else {
+-           // 正常保存
++         } else if (settings.method !== 'size' || !sizeCompressionCompleted) {
++           // 正常保存（但跳过已完成的按大小压缩）
+            await sharpInstance.toFile(finalOutputPath);
+          }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

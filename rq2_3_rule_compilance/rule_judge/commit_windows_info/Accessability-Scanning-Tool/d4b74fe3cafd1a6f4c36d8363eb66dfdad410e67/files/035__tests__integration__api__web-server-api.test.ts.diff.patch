@@ -1,0 +1,534 @@
+diff --git a/tests/integration/api/web-server-api.test.ts b/tests/integration/api/web-server-api.test.ts
+index 44029eb..b379ccc 100644
+--- a/tests/integration/api/web-server-api.test.ts
++++ b/tests/integration/api/web-server-api.test.ts
+@@ -14,8 +14,9 @@ describe('Web Server API Integration Tests', () => {
+ 
+     beforeAll(async () => {
+         // Set up test environment variables for MongoDB database service
++        process.env['NODE_ENV'] = 'test';
+         process.env['MONGODB_URL'] = 'mongodb://localhost:27017';
+-        process.env['MONGODB_DB_NAME'] = 'test_db';
++        process.env['MONGODB_DB_NAME'] = 'test_accessibility_db';
+ 
+         errorHandler = ErrorHandlerService.getInstance();
+         configService = ConfigurationService.getInstance();
+@@ -39,351 +40,291 @@ describe('Web Server API Integration Tests', () => {
+         if (server['server']) {
+             server['server'].close();
+         }
++
++        // Final database cleanup
++        await (global as any).testUtils.database.cleanupTestData();
++    });
++
++    beforeEach(async () => {
++        // Set up test database environment
++        (global as any).testUtils.database.setupTestEnvironment();
++
++        // Clean up any existing test data before each test
++        await (global as any).testUtils.database.cleanupTestData();
++    });
++
++    afterEach(async () => {
++        // Clean up test data after each test
++        await (global as any).testUtils.database.cleanupTestData();
++
++        // Verify cleanup was successful
++        await (global as any).testUtils.database.verifyCleanup();
+     });
+ 
+-    describe('Health Check Endpoint', () => {
+-        test('GET /api/health should return healthy status', async () => {
++    describe('Health Check Endpoints', () => {
++        test('GET / should return health status', async () => {
+             const response = await request(app)
+-                .get('/api/health')
++                .get('/')
+                 .expect(200);
+ 
+-            expect(response.body).toEqual({
+-                status: 'healthy',
+-                timestamp: expect.any(String),
+-                version: '2.1.1'
+-            });
+-
+-            // Verify timestamp is valid ISO string
+-            expect(new Date(response.body.timestamp).toISOString()).toBe(response.body.timestamp);
++            expect(response.body.success).toBe(true);
++            expect(response.body.message).toContain('Accessibility Testing Tool');
+         });
+ 
+-        test('GET /api/health should handle concurrent requests', async () => {
+-            const requests = Array(5).fill(null).map(() =>
+-                request(app).get('/api/health')
+-            );
+-
+-            const responses = await Promise.all(requests);
++        test('GET /health should return service health', async () => {
++            const response = await request(app)
++                .get('/health')
++                .expect(200);
+ 
+-            responses.forEach((response: any) => {
+-                expect(response.status).toBe(200);
+-                expect(response.body.status).toBe('healthy');
+-            });
++            expect(response.body.success).toBe(true);
++            expect(response.body.data).toBeDefined();
++            expect(response.body.data.status).toBe('healthy');
++            expect(response.body.data.timestamp).toBeDefined();
+         });
+     });
+ 
+-    describe('Full Site Scan Endpoint', () => {
+-        test('POST /api/scan/full-site should start scan with valid URL', async () => {
++    describe('CORS Configuration', () => {
++        test('should handle preflight requests', async () => {
+             const response = await request(app)
+-                .post('/api/scan/full-site')
+-                .send({
+-                    url: 'https://example.com',
+-                    options: {
+-                        maxPages: 10,
+-                        maxDepth: 2
+-                    }
+-                })
++                .options('/api/scan/full-site')
++                .set('Origin', 'http://localhost:3000')
++                .set('Access-Control-Request-Method', 'POST')
++                .set('Access-Control-Request-Headers', 'Content-Type')
++                .expect(204);
++
++            expect(response.headers['access-control-allow-origin']).toBe('*');
++            expect(response.headers['access-control-allow-methods']).toContain('POST');
++            expect(response.headers['access-control-allow-headers']).toContain('Content-Type');
++        });
++
++        test('should allow cross-origin requests', async () => {
++            const response = await request(app)
++                .get('/health')
++                .set('Origin', 'http://localhost:3000')
+                 .expect(200);
+ 
+-            expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('scanId');
+-            expect(response.body.data.message).toContain('Full site scan started');
++            expect(response.headers['access-control-allow-origin']).toBe('*');
+         });
++    });
++
++    describe('Full Site Scan Endpoints', () => {
++        test('POST /api/scan/full-site should handle scan requests', async () => {
++            const scanData = {
++                siteUrl: 'https://example.com',
++                maxPages: 5,
++                wcagLevel: 'AA',
++                includeScreenshots: false
++            };
+ 
+-        test('POST /api/scan/full-site should reject invalid URL', async () => {
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+-                .send({
+-                    url: 'invalid-url'
+-                })
+-                .expect(400);
++                .send(scanData)
++                .expect(200);
+ 
+-            expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('Invalid URL format');
++            expect(response.body.success).toBe(true);
++            expect(response.body.data).toBeDefined();
++            expect(response.body.data.scanId).toBeDefined();
++            expect(response.body.data.status).toBe('initiated');
++            expect(response.body.metadata).toBeDefined();
++            expect(response.body.metadata.timestamp).toBeDefined();
+         });
+ 
+-        test('POST /api/scan/full-site should reject missing URL', async () => {
++        test('POST /api/scan/full-site should validate required fields', async () => {
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+                 .send({})
+                 .expect(400);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('URL is required');
++            expect(response.body.error).toContain('siteUrl is required');
+         });
+ 
+-        test('POST /api/scan/full-site should handle malformed JSON', async () => {
++        test('POST /api/scan/full-site should handle invalid URLs', async () => {
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+-                .set('Content-Type', 'application/json')
+-                .send('invalid json')
++                .send({ siteUrl: 'invalid-url' })
+                 .expect(400);
+ 
+-            // Just check that we got a 400 status and some response body
+-            expect(response.status).toBe(400);
+-            expect(response.body).toBeDefined();
++            expect(response.body.success).toBe(false);
++            expect(response.body.error).toContain('Invalid URL format');
+         });
+ 
+-        test('POST /api/scan/full-site should accept custom options', async () => {
+-            const customOptions = {
+-                maxPages: 5,
+-                maxDepth: 3,
+-                maxConcurrency: 2,
+-                enablePerformanceMonitoring: true,
+-                retryFailedPages: false,
+-                generateReports: true
+-            };
+-
++        test('POST /api/scan/full-site should handle scan with default options', async () => {
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+-                .send({
+-                    url: 'https://example.com',
+-                    options: customOptions
+-                })
+-                .expect(200);
++                .send({ siteUrl: 'https://example.com' })
++                .expect(200); // Should still work with default options
+ 
+             expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('scanId');
+         });
+     });
+ 
+-    describe('Single Page Scan Endpoint', () => {
+-        test('POST /api/scan/single-page should start scan with valid URL', async () => {
++    describe('Single Page Scan Endpoints', () => {
++        test('POST /api/scan/single-page should handle scan requests', async () => {
++            const scanData = {
++                pageUrl: 'https://example.com',
++                wcagLevel: 'AA',
++                includeScreenshots: false
++            };
++
+             const response = await request(app)
+                 .post('/api/scan/single-page')
+-                .send({
+-                    url: 'https://example.com'
+-                })
++                .send(scanData)
+                 .expect(200);
+ 
+             expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('scanId');
+-            expect(response.body.data.message).toContain('Single page scan started');
++            expect(response.body.data).toBeDefined();
++            expect(response.body.data.scanId).toBeDefined();
++            expect(response.body.data.status).toBe('initiated');
+         });
+ 
+-        test('POST /api/scan/single-page should reject invalid URL', async () => {
++        test('POST /api/scan/single-page should validate required fields', async () => {
+             const response = await request(app)
+                 .post('/api/scan/single-page')
+-                .send({
+-                    url: 'not-a-url'
+-                })
++                .send({})
+                 .expect(400);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('Invalid URL format');
++            expect(response.body.error).toContain('pageUrl is required');
+         });
+ 
+-        test('POST /api/scan/single-page should reject missing URL', async () => {
++        test('POST /api/scan/single-page should handle invalid URLs', async () => {
+             const response = await request(app)
+                 .post('/api/scan/single-page')
+-                .send({})
++                .send({ pageUrl: 'invalid-url' })
+                 .expect(400);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('URL is required');
++            expect(response.body.error).toContain('Invalid URL format');
+         });
+     });
+ 
+-    describe('Scan Status Endpoint', () => {
+-        test('GET /api/scan/status should return all active scans when no scanId provided', async () => {
++    describe('Report Generation Endpoints', () => {
++        test('POST /api/reports/generate-pdf should handle PDF generation', async () => {
+             const response = await request(app)
+-                .get('/api/scan/status')
+-                .expect(200);
+-
+-            expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('activeScans');
+-            expect(response.body.data).toHaveProperty('scans');
+-            expect(Array.isArray(response.body.data.scans)).toBe(true);
+-        });
+-
+-        test('GET /api/scan/status should return specific scan when scanId provided', async () => {
+-            // First create a scan
+-            const scanResponse = await request(app)
+-                .post('/api/scan/single-page')
+-                .send({ url: 'https://example.com' });
+-
+-            const scanId = scanResponse.body.data.scanId;
+-
+-            // Then check its status
+-            const response = await request(app)
+-                .get(`/api/scan/status?scanId=${scanId}`)
+-                .expect(200);
+-
+-            expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('url');
+-            expect(response.body.data).toHaveProperty('startTime');
+-            expect(response.body.data).toHaveProperty('status');
+-            expect(response.body.data).toHaveProperty('type');
+-        });
+-
+-        test('GET /api/scan/status should return 404 for non-existent scanId', async () => {
+-            const response = await request(app)
+-                .get('/api/scan/status?scanId=non-existent-scan')
+-                .expect(404);
++                .post('/api/reports/generate-pdf')
++                .send({ scanId: 'test-scan-id' })
++                .expect(500);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('Scan not found');
++            expect(response.body.error).toContain('Failed to retrieve report from database');
+         });
+     });
+ 
+-    describe('Report Generation Endpoint', () => {
+-        beforeEach(() => {
+-            // Create test reports directory using test utilities
+-            const reportsDir = (global as any).testUtils.createTestReportsDir();
+-            const historyDir = path.join(reportsDir, 'history');
+-
+-            if (!fs.existsSync(historyDir)) {
+-                fs.mkdirSync(historyDir, { recursive: true });
+-            }
+-        });
+-
+-        afterEach(() => {
+-            // Clean up test reports using test utilities
+-            (global as any).testUtils.cleanupTestReportsDir();
+-        });
+-
+-        test('POST /api/reports/regenerate should return reports when they exist', async () => {
+-            // Create a test report file using test utilities
+-            const reportsDir = (global as any).testUtils.createTestReportsDir();
+-            const testReport = {
+-                url: 'https://example.com',
+-                timestamp: new Date().toISOString(),
+-                violations: []
++    describe('Report Search Endpoints', () => {
++        test('POST /api/reports/search should handle search requests', async () => {
++            const searchData = {
++                siteUrl: 'https://example.com',
++                reportType: 'site-wide',
++                dateFrom: '2024-01-01',
++                dateTo: '2024-12-31',
++                wcagLevel: 'AA',
++                minViolations: 0,
++                maxViolations: 100,
++                minCompliancePercentage: 50
+             };
+ 
+-            (global as any).testUtils.createTestFile(
+-                path.join(reportsDir, 'accessibility-report-example.json'),
+-                JSON.stringify(testReport)
+-            );
+-
+             const response = await request(app)
+-                .post('/api/reports/regenerate')
+-                .expect(500); // MongoDB service will fail to initialize with test credentials
++                .post('/api/reports/search')
++                .send(searchData)
++                .expect(500);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toContain('Failed to initialize database service');
++            expect(response.body.error).toContain('Failed to search reports in database');
+         });
+ 
+-        test('POST /api/reports/regenerate should return 500 when database service fails', async () => {
++        test('POST /api/reports/search should handle empty search criteria', async () => {
+             const response = await request(app)
+-                .post('/api/reports/regenerate')
++                .post('/api/reports/search')
++                .send({})
+                 .expect(500);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toContain('Failed to retrieve reports from database');
++            expect(response.body.error).toContain('Failed to search reports in database');
+         });
+ 
+-        test('POST /api/reports/regenerate should handle malformed report files', async () => {
+-            // Create a malformed report file using test utilities
+-            const reportsDir = (global as any).testUtils.createTestReportsDir();
+-            (global as any).testUtils.createTestFile(
+-                path.join(reportsDir, 'accessibility-report-malformed.json'),
+-                'invalid json content'
+-            );
++        test('POST /api/reports/search should validate date format', async () => {
++            const searchData = {
++                dateFrom: 'invalid-date',
++                dateTo: '2024-12-31'
++            };
+ 
+             const response = await request(app)
+-                .post('/api/reports/regenerate')
+-                .expect(500); // MongoDB service will fail to initialize with test credentials
++                .post('/api/reports/search')
++                .send(searchData)
++                .expect(400);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toContain('Failed to retrieve reports from database');
++            expect(response.body.error).toContain('Invalid dateFrom format');
+         });
+     });
+ 
+-    describe('Error Handling and Edge Cases', () => {
+-        test('should handle server errors gracefully', async () => {
+-            // Test with a URL that might cause server errors
++    describe('Database Management Endpoints', () => {
++        test('GET /api/database/statistics should retrieve database statistics', async () => {
+             const response = await request(app)
+-                .post('/api/scan/full-site')
+-                .send({
+-                    url: 'https://invalid-domain-that-does-not-exist-12345.com'
+-                })
+-                .expect(200); // Should still return 200 as scan is started in background
++                .get('/api/database/statistics')
++                .expect(500);
+ 
+-            expect(response.body.success).toBe(true);
+-            expect(response.body.data).toHaveProperty('scanId');
++            expect(response.body.success).toBe(false);
++            expect(response.body.error).toContain('Failed to retrieve database statistics');
+         });
+ 
+-        test('should handle large request bodies', async () => {
+-            const largeOptions = {
+-                excludePatterns: Array(1000).fill('pattern'),
+-                customRules: Array(500).fill({ rule: 'test' })
++        test('POST /api/database/cleanup should perform database cleanup', async () => {
++            const cleanupData = {
++                testData: true,
++                orphanedReports: true,
++                expiredReports: false,
++                dryRun: true
+             };
+ 
+             const response = await request(app)
+-                .post('/api/scan/full-site')
+-                .send({
+-                    url: 'https://example.com',
+-                    options: largeOptions
+-                })
++                .post('/api/database/cleanup')
++                .send(cleanupData)
+                 .expect(200);
+ 
+             expect(response.body.success).toBe(true);
+-        });
+-
+-        test('should handle concurrent scan requests', async () => {
+-            const requests = Array(3).fill(null).map(() =>
+-                request(app)
+-                    .post('/api/scan/single-page')
+-                    .send({ url: 'https://example.com' })
+-            );
+-
+-            const responses = await Promise.all(requests);
+-
+-            responses.forEach((response: any) => {
+-                expect(response.status).toBe(200);
+-                expect(response.body.success).toBe(true);
+-                expect(response.body.data).toHaveProperty('scanId');
+-            });
+-
+-            // Verify all scans are tracked
+-            const statusResponse = await request(app)
+-                .get('/api/scan/status')
+-                .expect(200);
+-
+-            expect(statusResponse.body.data.activeScans).toBeGreaterThanOrEqual(3);
++            expect(response.body.message).toContain('Database cleanup completed successfully');
++            expect(response.body.data).toBeDefined();
++            expect(response.body.data.recordsCleaned).toBeDefined();
+         });
+     });
+ 
+-    describe('CORS and Headers', () => {
+-        test('should handle CORS preflight requests', async () => {
+-            const response = await request(app)
+-                .options('/api/scan/full-site')
+-                .set('Origin', 'http://localhost:3000')
+-                .set('Access-Control-Request-Method', 'POST')
+-                .set('Access-Control-Request-Headers', 'Content-Type')
+-                .expect(204); // CORS preflight requests typically return 204 No Content
+ 
+-            expect(response.headers['access-control-allow-origin']).toBe('*');
+-        });
+ 
+-        test('should include proper headers in responses', async () => {
++    describe('Error Handling', () => {
++        test('should handle 404 for unknown endpoints', async () => {
+             const response = await request(app)
+-                .get('/api/health')
+-                .expect(200);
++                .get('/api/unknown-endpoint')
++                .expect(404);
+ 
+-            expect(response.headers['content-type']).toContain('application/json');
++            expect(response.body.success).toBe(false);
++            expect(response.body.error).toContain('Endpoint not found');
+         });
+-    });
+ 
+-    describe('Request Validation', () => {
+-        test('should validate Content-Type header', async () => {
++        test('should handle malformed JSON', async () => {
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+-                .set('Content-Type', 'text/plain')
+-                .send('{"url": "https://example.com"}')
++                .set('Content-Type', 'application/json')
++                .send('invalid json')
+                 .expect(400);
+ 
+-            expect(response.body).toHaveProperty('error');
++            expect(response.body.success).toBe(false);
++            expect(response.body.error).toContain('Invalid JSON');
+         });
+ 
+-        test('should handle empty request body', async () => {
++        test('should handle large payloads', async () => {
++            const largeData = {
++                siteUrl: 'https://example.com',
++                data: 'x'.repeat(1000000) // 1MB payload
++            };
++
+             const response = await request(app)
+                 .post('/api/scan/full-site')
+-                .send()
+-                .expect(400);
++                .send(largeData)
++                .expect(413);
+ 
+             expect(response.body.success).toBe(false);
+-            expect(response.body.error).toBe('URL is required');
++            expect(response.body.error).toContain('Payload too large');
+         });
+     });
+ }); 
+\ No newline at end of file

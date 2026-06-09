@@ -1,0 +1,139 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursor/rules/architecture.mdc
+- Change Type: added
+- Target Rule Content:
+使用 ts-jest 5.x 提供 TypeScript 支持
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, jest.config.js, or jest.config.ts
+- Suggested Logic: 1. Parse 'package.json' to verify 'ts-jest' is listed in 'devDependencies' or 'dependencies' with a version range compatible with 5.x (e.g., '^5.0.0'). 
+2. Check Jest configuration files (jest.config.js/ts or the 'jest' key in package.json) to ensure 'ts-jest' is configured as a transformer or preset for TypeScript files.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: rules: updated .gitignore and added C4 model description for Promptyoo-1
+
+- Modified .gitignore to allow tracking of specific files in the .cursor directory while excluding others.
+- Introduced a new C4 model description document detailing the architecture of the Promptyoo-1 application, including context, containers, and components layers.
+- Changed Files List: 
+.cursor/rules/c4-model-desc.mdc	+78	-0	after_lines=78
+.gitignore	+2	-1	after_lines=101
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── architecture.mdc
+│       ├── c4-model-desc.mdc
+│       └── requirements.mdc
+├── .gitignore
+└── book
+    └── cobbled-user-interface.png
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/c4-model-desc.mdc ---
+diff --git a/.cursor/rules/c4-model-desc.mdc b/.cursor/rules/c4-model-desc.mdc
+new file mode 100644
+index 0000000..85e9af2
+--- /dev/null
++++ b/.cursor/rules/c4-model-desc.mdc
+@@ -0,0 +1,78 @@
++---
++description: 
++globs: 
++alwaysApply: false
++---
++# Promptyoo-1 C4 模型架构描述
++
++## Context 层
++
++系统边界：Promptyoo-1 提示词优化应用
++- 最终用户：需要优化AI提示词的个人用户
++- 外部系统：DeepSeek AI API（提供提示词优化服务）
++- 用户动作：提交原始提示词、接收优化后的提示词
++- 系统价值：将初始提示词按RABPOC模式进行专业优化，提高提示词效果
++
++## Containers 层
++
++系统分为两个主要容器：
++
++1. 前端应用（Frontend）
++   - 基于React 18.x + Vite 5.x + TypeScript 5.x + Tailwind CSS 4.x
++   - 提供用户界面，接收原始提示词输入
++   - 展示优化结果，支持流式响应
++   - 通过API与后端通信
++
++2. 后端服务（Backend）
++   - 基于Node.js 20.x + Express 5.x + TypeScript 5.x
++   - 接收前端请求，代理与DeepSeek API的通信
++   - 处理API Key安全问题
++   - 提供RESTful API接口供前端使用
++
++## Components 层
++
++### 前端组件（Frontend Components）
++
++1. 页面组件（Pages）
++   - PromptOptimizePage：主页面，整合提示词输入和结果展示功能
++
++2. 功能组件（Components）
++   - PromptInputForm：提示词输入表单，包含文本区域和提交按钮
++   - OptimizedResultDisplay：优化结果展示组件，支持流式文本显示
++   - LoadingIndicator：加载状态指示器
++
++3. 服务层（Services）
++   - ApiService：封装与后端API的通信逻辑
++   - StreamingService：处理流式响应数据
++
++4. 钩子（Hooks）
++   - usePromptOptimization：管理提示词优化状态和逻辑的自定义Hook
++   - useStreamingResponse：处理流式响应的自定义Hook
++
++5. 状态管理（State）
++   - PromptContext：提示词相关全局状态管理
++
++### 后端组件（Backend Components）
++
++1. 路由层（Routes）
++   - PromptRoutes：定义提示词优化API路由
++
++2. 控制器层（Controllers）
++   - PromptController：处理提示词优化请求的控制逻辑
++
++3. 服务层（Services）
++   - DeepSeekService：封装与DeepSeek API的通信逻辑
++   - PromptService：实现提示词处理业务逻辑
++
++4. 中间件（Middleware）
++   - ErrorHandlerMiddleware：统一错误处理
++   - RateLimiterMiddleware：API请求速率限制
++   - CorsMiddleware：跨域资源共享配置
++
++5. 工具类（Utils）
++   - PromptFormatter：提示词格式化工具
++   - ResponseStreamer：流式响应处理工具
++
++6. 配置（Config）
++   - Environment：环境变量配置
++   - ApiConfig：API配置参数
+
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index cb1fc34..27bd6c5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -22,8 +22,9 @@ frontend/.vite/
+ !**/.env.example
+ 
+ # Cursor
+-.cursor/
++.cursor/*
+ !.cursor/rules/
++!.cursor/rules/*
+ 
+ # VSCode
+ .vscode/*
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

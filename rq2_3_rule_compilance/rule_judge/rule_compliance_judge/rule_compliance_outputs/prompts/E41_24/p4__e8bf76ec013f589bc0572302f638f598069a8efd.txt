@@ -1,0 +1,212 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+Export types from dedicated index files
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (specifically TypeScript/JavaScript files) and directory structures (existence of index.ts/index.js files).
+- Suggested Logic: 1. Identify files that define and export types (e.g., searching for 'export type' or 'export interface'). 
+2. Check if the directory containing these files includes an 'index.ts' or 'index.js' file. 
+3. Verify that the 'index' file contains export statements (e.g., 'export * from ...' or 'export { TypeName } from ...') that re-export the types defined in the sibling files.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: Configure environment-specific analytics dataset for development
+
+- Update analytics dataset name from 'r2_file_explorer_analytics' to 'r2_file_explorer_analytics_dev'
+- Add clarifying comment for development Analytics Engine binding
+- Aligns with multi-environment setup documented in SETUP.md
+- Changed Files List: 
+worker/SETUP.md	+53	-17	after_lines=171
+worker/wrangler.toml	+4	-4	after_lines=86
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/SETUP.md ---
+diff --git a/worker/SETUP.md b/worker/SETUP.md
+index d20a722..191c5f8 100644
+--- a/worker/SETUP.md
++++ b/worker/SETUP.md
+@@ -20,17 +20,42 @@ npm install -g wrangler
+ 
+ ### 2. Configure Cloudflare Resources
+ 
+-Before running the worker locally, you need to create the required Cloudflare resources:
+-
+-1. **R2 Buckets**: Create environment-specific buckets:
+-   - `file-explorer-storage-dev` (development)
+-   - `file-explorer-storage-staging` (staging)
+-   - `file-explorer-storage-prod` (production)
+-2. **KV Namespaces**: Create environment-specific KV namespaces:
+-   - `file-explorer-sessions-dev` (development)
+-   - `file-explorer-sessions-staging` (staging)
+-   - `file-explorer-sessions-prod` (production)
+-3. **Update wrangler.toml**: Replace the placeholder IDs with your actual resource IDs
++Before running the worker locally, you need to create the required Cloudflare resources for each environment:
++
++#### Development Environment
++1. **R2 Bucket**: `file-explorer-storage-dev`
++2. **KV Namespace**: `file-explorer-sessions-dev` (with preview: `file-explorer-sessions-dev-preview`)
++3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_dev`
++
++#### Staging Environment
++1. **R2 Bucket**: `file-explorer-storage-staging`
++2. **KV Namespace**: `file-explorer-sessions-staging` (with preview: `file-explorer-sessions-staging-preview`)
++3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_staging`
++
++#### Production Environment
++1. **R2 Bucket**: `file-explorer-storage-prod`
++2. **KV Namespace**: `file-explorer-sessions-prod` (with preview: `file-explorer-sessions-prod-preview`)
++3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_prod`
++
++#### Resource Creation Commands
++```bash
++# Development resources
++wrangler r2 bucket create file-explorer-storage-dev
++wrangler kv:namespace create "file-explorer-sessions-dev"
++wrangler kv:namespace create "file-explorer-sessions-dev" --preview
++
++# Staging resources
++wrangler r2 bucket create file-explorer-storage-staging
++wrangler kv:namespace create "file-explorer-sessions-staging"
++wrangler kv:namespace create "file-explorer-sessions-staging" --preview
++
++# Production resources
++wrangler r2 bucket create file-explorer-storage-prod
++wrangler kv:namespace create "file-explorer-sessions-prod"
++wrangler kv:namespace create "file-explorer-sessions-prod" --preview
++```
++
++**Important**: Update the KV namespace IDs in `wrangler.toml` with the actual IDs returned by the creation commands.
+ 
+ ### 3. Environment Variables
+ 
+@@ -83,16 +108,27 @@ open http://localhost:8787
+ 
+ ## Deployment
+ 
+-### Development/Staging
+-```bash
+-wrangler publish --env staging
+-```
++### Environment-Specific Deployments
+ 
+-### Production
+ ```bash
+-wrangler publish --env production
++# Deploy to staging environment
++wrangler deploy --env staging
++
++# Deploy to production environment
++wrangler deploy --env production
++
++# Deploy to development (default environment)
++wrangler deploy
+ ```
+ 
++### Environment Summary
++
++| Environment | Worker Name | R2 Bucket | KV Namespace | Analytics Dataset | JWT Expiry | Max File Size |
++|-------------|-------------|-----------|--------------|-------------------|------------|---------------|
++| **Development** | `r2-file-explorer-api` | `file-explorer-storage-dev` | `file-explorer-sessions-dev` | `r2_file_explorer_analytics_dev` | 24 hours | 50MB |
++| **Staging** | `r2-file-explorer-api-staging` | `file-explorer-storage-staging` | `file-explorer-sessions-staging` | `r2_file_explorer_analytics_staging` | 12 hours | 100MB |
++| **Production** | `r2-file-explorer-api-prod` | `file-explorer-storage-prod` | `file-explorer-sessions-prod` | `r2_file_explorer_analytics_prod` | 8 hours | 200MB |
++
+ ## Development Commands
+ 
+ ```bash
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 7fb5a54..7a06f87 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -18,10 +18,10 @@ binding = "KV_SESSIONS"
+ id = "file-explorer-sessions-dev"
+ preview_id = "file-explorer-sessions-dev-preview"
+ 
+-# Analytics Engine binding for observability
++# Development Analytics Engine binding for observability
+ [[analytics_engine_datasets]]
+ binding = "ANALYTICS"
+-dataset = "r2_file_explorer_analytics"
++dataset = "r2_file_explorer_analytics_dev"
+ 
+ # Development environment variables
+ [vars]
+@@ -49,7 +49,7 @@ preview_id = "file-explorer-sessions-staging-preview"
+ # Staging Analytics Engine binding
+ [[env.staging.analytics_engine_datasets]]
+ binding = "ANALYTICS"
+-dataset = "r2_file_explorer_analytics"
++dataset = "r2_file_explorer_analytics_staging"
+ 
+ [env.staging.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_STAGING_SECRET"
+@@ -76,7 +76,7 @@ preview_id = "file-explorer-sessions-prod-preview"
+ # Production Analytics Engine binding
+ [[env.production.analytics_engine_datasets]]
+ binding = "ANALYTICS"
+-dataset = "r2_file_explorer_analytics"
++dataset = "r2_file_explorer_analytics_prod"
+ 
+ [env.production.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_PRODUCTION_SECRET"
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

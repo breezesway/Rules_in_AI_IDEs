@@ -1,0 +1,431 @@
+---
+description:  技术实现和代码规范
+globs: 
+alwaysApply: true
+---
+# Electron 工具集开发规范
+
+你是个 electron 开发专家，你掌握了以下技巧和规范：
+
+## 🏗️ 组件架构规范
+
+### 组件定义规则
+- **一个 tsx 文件中不能包含多个组件定义** - 每个文件只能导出一个主要组件
+- **一个 tsx 组件中，不能包含两个组件** - 避免在单个文件中定义多个 React 组件
+- **组件命名采用 PascalCase** - 如 `PdfMerger`、`ImageCompressor`
+
+### 目录结构规范
+```
+src/
+├── App.tsx                          # 主应用组件
+├── ui/                              # 通用UI组件目录
+│   ├── button.tsx                   # 按钮组件
+│   ├── modal.tsx                    # 模态框组件
+│   ├── theme-selector.tsx           # 主题选择器组件
+│   └── feature-card.tsx             # 功能卡片组件
+├── components/                      # 功能组件目录
+│   ├── pdf-merger.tsx              # PDF合并工具组件
+│   ├── image-compressor.tsx        # 图片压缩工具组件
+│   ├── operation-history.tsx       # 操作历史组件
+│   └── app-settings.tsx            # 应用设置组件
+├── hooks/                           # 自定义Hooks
+│   ├── use-dropzone.ts             # 拖拽相关hook（注意是.ts扩展名）
+│   └── use-theme.ts                # 主题管理hook
+├── lib/                             # 工具函数库
+│   └── utils.ts                     # 通用工具函数
+├── main/                            # 主进程代码目录
+│   └── utils/                       # 主进程工具函数
+│       ├── types.ts                 # 类型定义
+│       ├── config-manager.ts        # 配置管理
+│       ├── history-manager.ts       # 历史记录管理
+│       ├── file-utils.ts           # 文件操作工具
+│       ├── dialog-utils.ts         # 对话框工具
+│       ├── pdf-utils.ts            # PDF处理工具
+│       ├── image-utils.ts          # 图片处理工具
+│       ├── ipc-handlers.ts         # IPC处理器
+│       └── index.ts                # 统一导出
+└── types/                           # 类型定义
+    └── electron.d.ts               # Electron相关类型
+```
+
+## 📁 文件组织原则
+
+### UI组件分类
+- **通用UI组件** → 放置在 `src/ui/` 目录下
+  - 可复用的基础组件（Button、Modal、Card等）
+  - 不包含业务逻辑的纯UI组件
+- **功能组件** → 放置在 `src/components/` 目录下
+  - 包含具体业务逻辑的组件
+  - 一个 electron 工具对应 components 下的一个组件
+
+### 文件扩展名规范
+- **组件文件** → 使用 `.tsx` 扩展名
+- **Hook文件** → 使用 `.ts` 扩展名（因为不包含JSX）
+- **工具函数** → 使用 `.ts` 扩展名
+- **类型定义** → 使用 `.d.ts` 或 `.ts` 扩展名
+
+## 🎨 主题系统技术规范
+
+### 主题管理架构
+- **集中管理** - 主题状态通过自定义Hook `useTheme` 统一管理
+- **类型安全** - 使用 `ThemeMode` 类型定义：`'light' | 'dark' | 'system'`
+- **配置持久化** - 主题偏好保存到应用配置文件，重启后保持
+- **实时切换** - 主题切换立即生效，无需重启应用
+
+### useTheme Hook 设计规范
+```typescript
+// ✅ 正确的Hook设计
+export function useTheme() {
+  const [theme, setTheme] = useState<ThemeMode>('system');
+  const [isDark, setIsDark] = useState(false);
+
+  // 初始化主题
+  useEffect(() => {
+    initializeTheme();
+  }, []); // 只在组件挂载时执行
+
+  // 监听系统主题变化
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent) => {
+        setIsDark(e.matches);
+        applyTheme(e.matches ? 'dark' : 'light');
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [theme]); // 只依赖theme变化
+
+  return { theme, isDark, changeTheme };
+}
+```
+
+### 深色模式CSS规范
+- **Tailwind CSS Dark Mode** - 使用 `dark:` 前缀为所有UI元素提供深色模式样式
+- **完整覆盖** - 每个有颜色的CSS类都必须提供对应的深色模式样式
+- **层次分明** - 使用不同灰度层次区分信息重要性
+
+#### 标准颜色映射
+```css
+/* 文本颜色层次 */
+text-gray-900 dark:text-gray-100     /* 主要文本 (#111827 → #F9FAFB) */
+text-gray-700 dark:text-gray-300     /* 次要文本 → #D1D5DB */
+text-gray-600 dark:text-gray-400     /* 辅助文本 → #9CA3AF */
+text-gray-500 dark:text-gray-500     /* 禁用/占位文本 */
+
+/* 背景颜色层次 */
+bg-white dark:bg-gray-900           /* 主背景 (#FFFFFF → #111827) */
+bg-gray-50 dark:bg-gray-800         /* 次级背景 → #1F2937 */
+bg-gray-100 dark:bg-gray-700        /* 三级背景 → #374151 */
+
+/* 边框颜色 */
+border-gray-200 dark:border-gray-700 /* 主要边框 */
+border-gray-300 dark:border-gray-600 /* 次要边框 */
+
+/* 交互状态 */
+hover:bg-gray-50 dark:hover:bg-gray-800     /* 悬停状态 */
+focus:ring-gray-900 dark:focus:ring-gray-100 /* 焦点状态 */
+```
+
+#### 特殊元素样式规范
+```css
+/* 开关按钮 */
+bg-gray-200 dark:bg-gray-600                    /* 未选中背景 */
+peer-checked:bg-white dark:peer-checked:bg-white /* 选中背景（白底设计） */
+peer-checked:after:bg-gray-900                   /* 选中滑块（深色） */
+
+/* 状态指示 */
+bg-green-50 dark:bg-green-900/10    /* 成功状态背景（半透明） */
+bg-red-50 dark:bg-red-900/10        /* 错误状态背景（半透明） */
+border-green-200 dark:border-green-800 /* 成功状态边框 */
+border-red-200 dark:border-red-800     /* 错误状态边框 */
+
+/* 进度条和滑块 */
+bg-gray-200 dark:bg-gray-600        /* 滑块轨道背景 */
+bg-gray-900 dark:bg-gray-100        /* 进度填充 */
+```
+
+### 组件深色模式适配检查清单
+- [ ] 所有文本颜色提供深色模式样式
+- [ ] 所有背景颜色提供深色模式样式
+- [ ] 所有边框颜色提供深色模式样式
+- [ ] 所有交互状态（hover、focus、active）提供深色模式样式
+- [ ] 所有图标颜色提供深色模式样式
+- [ ] 所有状态指示（成功、错误、警告）提供深色模式样式
+- [ ] 开关、滑块等表单控件提供深色模式样式
+- [ ] 模态框、弹窗等覆盖层提供深色模式样式
+
+### 主题切换最佳实践
+```typescript
+// ✅ 正确的主题切换处理
+const handleThemeChange = async (newTheme: ThemeMode) => {
+  if (changingTheme) return; // 防止重复点击
+  
+  setChangingTheme(true);
+  try {
+    // 立即应用主题
+    await changeTheme(newTheme);
+    
+    // 更新本地配置状态
+    updateConfig('theme', newTheme);
+    
+    // 显示成功提示
+    const themeNames = {
+      light: '浅色',
+      dark: '深色', 
+      system: '跟随系统'
+    };
+    toast.success(`已切换到${themeNames[newTheme]}模式`);
+  } catch (error) {
+    console.error('切换主题失败:', error);
+    toast.error('主题切换失败，请重试');
+  } finally {
+    setChangingTheme(false);
+  }
+};
+```
+
+### 主题系统实现要点
+- **技术架构**：
+  - 使用自定义Hook（useTheme）统一管理主题状态
+  - Tailwind CSS的dark:前缀实现深色模式样式
+  - 主进程配置管理器持久化主题偏好
+- **常见问题及解决方案**：
+  - **无限循环问题**：useEffect依赖数组要精确，避免不必要的重新渲染
+  - **配置缓存问题**：组件打开时重新获取配置，确保设置立即生效
+  - **样式不完整**：所有有颜色的CSS类都必须提供dark:前缀样式
+  - **开关不明显**：使用白底设计，在深色模式下更加突出
+  - **状态指示协调性**：使用半透明背景，避免过于突兀的颜色对比
+- **质量保证**：
+  - 所有组件必须完整测试浅色和深色模式
+  - 确保文本对比度符合可访问性标准
+  - 验证所有交互状态在两种模式下都清晰可见
+
+## 🔧 代码质量要求
+
+### Lint规范
+- **代码不能有任何 lint 问题** - 所有警告和错误都必须修复
+- **移除未使用的变量和函数** - 保持代码简洁
+- **正确的导入路径** - 确保所有导入路径正确无误
+
+### 导入路径规范
+- **相对路径导入** - 优先使用相对路径
+- **UI组件导入** - `import { Component } from '../ui/component'`
+- **工具函数导入** - `import { utils } from '../lib/utils'`
+
+## 🛠️ 开发最佳实践
+
+### 组件设计原则
+1. **单一职责** - 每个组件只负责一个功能
+2. **可复用性** - UI组件应该具有良好的可复用性
+3. **类型安全** - 所有组件都应该有完整的TypeScript类型定义
+4. **错误处理** - 组件应该有适当的错误处理机制
+5. **主题兼容** - 所有组件必须完整支持深色模式
+
+### 工具组件开发
+- **一个工具一个组件** - 每个Electron工具功能对应一个独立组件
+- **模态框封装** - 工具组件通常使用Modal进行封装
+- **状态管理** - 使用React hooks进行状态管理
+- **用户反馈** - 使用Toast等方式提供操作反馈
+- **主题适配** - 确保所有UI元素在深色模式下正常显示
+
+## 🏗️ 主进程架构规范
+
+### 模块化设计原则
+- **按功能分离** - 不同功能的代码放在不同文件中
+- **按层次分离** - 数据层（Manager）、业务层（Utils）、接口层（IPC）分离
+- **统一接口** - 通过 index.ts 提供一致的导入体验
+
+### 函数设计规范
+- **函数长度** - 单个函数不超过20行（不含注释和空行）
+- **单一职责** - 每个函数只做一件事
+- **参数控制** - 函数参数不超过5个，复杂参数使用对象传递
+- **错误处理** - 每个函数都有适当的错误处理机制
+
+### 类型安全规范
+- **集中定义** - 所有类型定义集中在 types.ts 中
+- **导出规范** - 使用 export interface 而非 export type
+- **类型复用** - 避免重复定义相似的类型
+
+## 🔌 原生模块集成规范
+
+### 动态导入模式
+- **动态导入原生模块** - 使用 `await import()` 而非静态导入
+  ```typescript
+  // ✅ 正确的动态导入
+  const sharp = await import('sharp');
+  const sharpInstance = sharp.default(filePath);
+  
+  // ❌ 错误的静态导入
+  import sharp from 'sharp'; // 会导致打包问题
+  ```
+
+### Vite 配置优化
+- **外部依赖配置** - 将原生模块配置为外部依赖
+  ```typescript
+  // vite.main.config.ts
+  export default defineConfig({
+    build: {
+      rollupOptions: {
+        external: ['sharp', 'pdf-lib'] // 原生模块外部化
+      }
+    }
+  });
+  ```
+
+### 依赖管理策略
+- **依赖安装策略** - 原生模块建议安装为 devDependencies
+- **错误处理** - 原生模块加载失败时提供友好的错误提示
+
+## ⚙️ 构建配置最佳实践
+
+### Vite 配置文件
+- **主进程配置** - `vite.main.config.ts` 处理主进程相关配置
+- **渲染进程配置** - `vite.renderer.config.ts` 处理渲染进程相关配置
+- **预加载脚本配置** - `vite.preload.config.ts` 处理预加载脚本配置
+- **外部依赖管理** - 合理配置 `rollupOptions.external` 避免打包问题
+
+### 开发命令规范
+- **开发启动** - `pnpm start` - 启动开发服务器和 Electron 应用
+- **代码检查** - `pnpm lint` - 运行 ESLint 检查代码质量
+- **项目构建** - `pnpm package` - 构建可分发的应用程序
+- **依赖管理** - 使用 `pnpm` 作为包管理器，确保依赖版本一致性
+
+## 🔄 应用配置管理规范
+
+### 集中配置管理
+- **统一管理** - 核心设置统一在应用级别管理，避免工具间重复配置
+- **实时同步** - 工具组件每次打开时重新获取最新配置，确保设置立即生效
+- **正确的依赖管理** - useEffect 依赖数组要准确，避免缓存导致的配置不更新问题
+
+### 配置初始化模式
+```typescript
+// ✅ 正确的配置获取方式
+React.useEffect(() => {
+  if (isOpen) {
+    getAppConfig().then(config => {
+      // 应用配置，包括清理旧设置
+    });
+  }
+}, [isOpen]); // 只依赖 isOpen
+
+// ❌ 错误的配置获取方式
+React.useEffect(() => {
+  if (isOpen && !currentConfig) { // 条件错误
+    // 获取配置...
+  }
+}, [isOpen, currentConfig]); // 依赖项导致缓存问题
+```
+
+## 📸 图片处理技术规范
+
+### 格式特定参数
+- **JPEG/WebP** - 使用 `quality` 参数控制压缩质量
+- **PNG** - 使用 `compressionLevel` 参数，不支持 quality
+- **智能质量保护** - 高质量设置时检查输出文件大小，防止文件变大
+
+### 压缩算法实现
+- **临时文件机制** - 使用临时文件验证压缩效果，确保满足预期
+- **迭代优化** - 按文件大小压缩时使用迭代算法，最多5次，10%容差
+- **格式优化** - 针对不同格式的压缩特性优化初始质量估算
+
+## 🐛 代码质量和调试规范
+
+### 对象结构完整性
+```typescript
+// ✅ 正确的对象结构
+console.log('调试信息:', {
+  field1: value1,
+  field2: value2,
+  field3: value3  // 最后一个字段不需要逗号，但可以加上
+});
+
+// ❌ 错误的对象结构
+console.log('调试信息:', {
+  field1: value1,
+  field2: value2
+});
+field3: value3,  // 字段在对象外部，语法错误
+```
+
+### 代码格式规范
+- **代码格式一致性** - 保持缩进、空行、注释的一致性
+- **变量声明位置** - 变量声明应在使用前的合适位置，避免作用域混乱
+- **调试日志规范** - 调试日志应包含足够的上下文信息，便于问题定位
+- **语法验证优先** - 在功能开发前确保基础语法正确，避免阻塞性错误
+
+## 🔧 代码重构指导
+
+### 重构触发条件
+当发现以下情况时，应该进行重构：
+- 单个文件包含多个组件定义
+- UI组件放置在错误的目录中
+- 存在未使用的代码
+- 导入路径不正确
+- 有lint警告或错误
+- 原生模块使用静态导入
+- 缺少构建配置优化
+- 代码格式不规范，影响可读性
+- 对象结构不完整，导致语法错误
+- 存在重复的功能时，需要提取公共函数或组件
+- 组件缺少深色模式适配
+
+### 重构最佳实践
+1. **渐进式重构** - 按模块逐步迁移，每次只移动一个功能模块
+2. **保持接口一致** - 重构过程中保持对外接口不变
+3. **实时测试** - 每次迁移后立即运行测试验证
+4. **类型安全** - 充分利用 TypeScript 在编译时发现问题
+
+## 📋 开发检查清单
+
+### 基础代码质量
+- [ ] 每个tsx文件只包含一个组件定义
+- [ ] UI组件正确放置在 `src/ui/` 目录
+- [ ] 功能组件正确放置在 `src/components/` 目录
+- [ ] 所有导入路径正确
+- [ ] 没有未使用的变量和函数
+- [ ] 通过lint检查（`pnpm lint`）
+- [ ] 对象字面量语法正确，字段位置准确
+- [ ] 代码格式一致，缩进和空行规范
+- [ ] 调试日志结构完整，信息充分
+
+### 主题系统检查
+- [ ] 所有组件完整支持深色模式
+- [ ] 所有颜色相关CSS类提供dark:前缀样式
+- [ ] 主题切换功能正常工作
+- [ ] 主题偏好正确持久化
+- [ ] 系统主题跟随功能正常
+- [ ] 开关按钮等表单控件在深色模式下清晰可见
+- [ ] 状态指示在深色模式下对比度足够
+- [ ] 空状态界面在深色模式下协调美观
+
+### 构建和部署
+- [ ] 项目能够正常启动（`pnpm start`）
+- [ ] 项目能够正常构建（`pnpm package`）
+- [ ] 原生模块正确配置为外部依赖
+- [ ] 动态导入替代静态导入（针对原生模块）
+- [ ] Vite 配置文件正确设置
+
+### 功能完整性
+- [ ] IPC 通信正确实现
+- [ ] 错误处理机制完善
+- [ ] 用户反馈（Toast/通知）正常工作
+- [ ] 文件操作（选择/保存）功能正常
+- [ ] 应用配置实时同步正常
+- [ ] 图片压缩质量控制机制有效
+
+### 主进程架构
+- [ ] 函数长度控制在20行以内
+- [ ] 模块化设计合理，职责清晰
+- [ ] 类型定义集中管理
+- [ ] IPC处理器按功能分组
+- [ ] 配置和历史管理器正确初始化
+
+### 技术架构
+- [ ] 原生模块动态导入正确实现
+- [ ] Vite 外部依赖配置正确
+- [ ] 错误处理机制完善
+- [ ] 性能优化措施到位
+- [ ] 代码重构符合最佳实践

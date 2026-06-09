@@ -1,0 +1,23 @@
+diff --git a/src/extension.ts b/src/extension.ts
+index bec0bab..b42c63c 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -146,6 +146,18 @@ export async function activate(context: vscode.ExtensionContext) {
+               messageDisposable.dispose();
+               graphPanel = undefined; 
+             });
++          }),
++          vscode.commands.registerCommand("constellation.showImpact", async (payload: { sourceFile: string; affectedFiles: string[] }) => {
++            // Ensure graph panel exists and is visible
++            await vscode.commands.executeCommand('constellation.openGraphView');
++            
++            // Send impact data to webview
++            if (graphPanel) {
++              graphPanel.webview.postMessage({
++                type: 'graph/impact',
++                payload
++              });
++            }
+           })
+         );
+       } catch (err: any) {

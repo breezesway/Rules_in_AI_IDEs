@@ -1,0 +1,79 @@
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index af7b7da..ecd6a5f 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -6,6 +6,7 @@
+ 
+ ## Architecture & Patterns
+ - **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
++- **Injectable-first approach** - Prefer `@injectable` annotations over direct `getIt` calls
+ - **Screen-based modular architecture** - each screen is a self-contained module
+ - **ViewModel Factory pattern** - Factories registered with DI create ViewModels with explicit dependencies
+ - **RouteProvider pattern** - Each screen module provides its own route configuration
+@@ -20,8 +21,8 @@
+ - `go_router: ^16.0.0` - Declarative routing
+ 
+ ### State Management & DI
+-- `injectable: ^2.5.0` - Code generation for dependency injection
+-- `get_it: ^8.0.3` - Service locator for dependency injection
++- `injectable: ^2.5.0` - Code generation for dependency injection (preferred approach)
++- `get_it: ^8.0.3` - Service locator for dependency injection (underlying container)
+ 
+ ### GraphQL & API
+ - `ferry: ^0.16.2-dev.4` - GraphQL client for Flutter
+@@ -43,6 +44,55 @@
+ - `mockito: ^5.4.4` - Mocking for tests
+ - `flutter_test` - Testing framework
+ 
++## Dependency Injection Guidelines
++
++### Injectable-First Approach
++**Prefer `@injectable` annotations over direct `getIt` calls** for better maintainability and testability.
++
++#### ✅ Preferred Pattern
++```dart
++@injectable
++class MyService {
++  final ApiClient _apiClient;
++  MyService(this._apiClient);
++}
++
++@injectable 
++class MyViewModel {
++  final MyService _service;
++  MyViewModel(this._service);
++}
++```
++
++#### ❌ Avoid Direct getIt
++```dart
++class MyService {
++  late final ApiClient _apiClient;
++  
++  MyService() {
++    _apiClient = getIt<ApiClient>(); // Avoid this
++  }
++}
++```
++
++#### Direct getIt Usage Exceptions
++Direct `getIt` calls are **only** acceptable in these specific locations:
++
++**Application Bootstrapping:**
++- `lib/main.dart` - Root application setup and initial dependency resolution
++
++**Integration Test Setup:**
++- `test/integration/*` - Test harness configuration and mock dependency setup
++
++**Generated Code:**
++- `*.g.dart` files - Code generation outputs (exempt from this rule)
++- `*.config.dart` files - Generated DI configuration files
++
++**Current Exception Locations in Codebase:**
++- `lib/main.dart:13-14` - `AuthService` and `RouteCollectionService` resolution for app bootstrap
++
++All other code locations should use `@injectable`, `@lazySingleton`, or `@singleton` annotations for dependency management.
++
+ ## Build System & Code Generation
+ 
+ ### GraphQL Code Generation

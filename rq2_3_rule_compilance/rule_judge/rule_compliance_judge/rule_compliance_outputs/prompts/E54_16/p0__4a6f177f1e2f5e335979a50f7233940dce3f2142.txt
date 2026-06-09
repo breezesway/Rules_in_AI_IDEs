@@ -1,0 +1,216 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Version Control
+- Rule File Path: .cursor/rules/github-workflow-rules.mdc
+- Change Type: added
+- Target Rule Content:
+- feature/\: 新機能開発用
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Git history and branch metadata (specifically branch names/refs).
+- Suggested Logic: Extract the names of all branches from the Git repository metadata. Verify that branches follow the specified naming convention (starting with 'feature/') for development tasks.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: docs: コミットルールとGitHubワークフローのドキュメントを追加
+
+- コミットメッセージ形式，ブランチ命名規則，開発フローを明確化
+- セマンティックバージョニングとCI/CDパイプラインの説明を追加
+- Changed Files List: 
+.cursor/rules/commit-rules.mdc	+71	-1	after_lines=71
+.cursor/rules/github-workflow-rules.mdc	+62	-1	after_lines=62
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── commit-rules.mdc
+│       ├── github-workflow-rules.mdc
+│       └── roulette-app-rules.mdc
+├── .github
+│   ├── ISSUE_TEMPLATE
+│   │   ├── bug_report.md
+│   │   └── feature_request.md
+│   ├── pull_request_template.md
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── README.md
+├── app
+│   ├── components
+│   │   └── Roulette.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── pages
+│       └── index.tsx
+├── eslint.config.mjs
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── tailwind.config.js
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/commit-rules.mdc ---
+diff --git a/.cursor/rules/commit-rules.mdc b/.cursor/rules/commit-rules.mdc
+index 0519ecb..b191c8e 100644
+--- a/.cursor/rules/commit-rules.mdc
++++ b/.cursor/rules/commit-rules.mdc
+@@ -1 +1,71 @@
+- 
+\ No newline at end of file
++---
++description: 
++globs: 
++alwaysApply: false
++---
++ ---
++description: コミットルールと開発フロー
++globs: "*"
++alwaysApply: true
++---
++
++# コミットルール
++
++## コミットメッセージ形式
++
++コミットメッセージは以下の形式に従ってください：
++
++```
++<type>(<scope>): <subject>
++
++<body>
++
++<footer>
++```
++
++### Type
++
++- **feat**: 新機能
++- **fix**: バグ修正
++- **docs**: ドキュメント関連
++- **style**: コードスタイルの変更（インデント，セミコロン等）
++- **refactor**: リファクタリング
++- **test**: テスト関連
++- **chore**: ビルドプロセスやツール，ライブラリ更新など
++
++### Scope（任意）
++
++変更の範囲を示します（例：ui，api，auth など）
++
++### Subject
++
++変更内容を簡潔に表現します（命令形で記述）：
++- 最大50文字以内
++- 先頭は小文字
++- 末尾にピリオドなし
++
++### Body（任意）
++
++変更の詳細と理由を記述します：
++- 何が変わったか
++- なぜその変更が必要だったか
++- 72文字で改行
++
++### Footer（任意）
++
++- Breaking Changes
++- 関連Issue（例：`Fixes #123`，`Closes #456`）
++
++## ブランチ命名規則
++
++- `feature/<機能名>`: 新機能開発
++- `fix/<問題名>`: バグ修正
++- `docs/<ドキュメント名>`: ドキュメント更新
++- `refactor/<リファクタリング対象>`: リファクタリング
++- `test/<テスト対象>`: テスト追加・修正
++
++## プルリクエスト
++
++- 各PRはひとつの機能・修正に集中する
++- 説明は具体的に変更内容を記述する
++- レビュアーを設定する 
+\ No newline at end of file
+
+--- FILE: .cursor/rules/github-workflow-rules.mdc ---
+diff --git a/.cursor/rules/github-workflow-rules.mdc b/.cursor/rules/github-workflow-rules.mdc
+index 0519ecb..84e0f1b 100644
+--- a/.cursor/rules/github-workflow-rules.mdc
++++ b/.cursor/rules/github-workflow-rules.mdc
+@@ -1 +1,62 @@
+- 
+\ No newline at end of file
++---
++description: 
++globs: 
++alwaysApply: false
++---
++ ---
++description: GitHubワークフローとリリース管理
++globs: "*"
++alwaysApply: true
++---
++
++# GitHubワークフローとリリース管理
++
++## ブランチ戦略
++
++- **main**: 本番環境へのデプロイに使用される安定ブランチ
++- **develop**: 開発環境のベースブランチ，すべての開発はここからブランチを作成
++- **feature/\***: 新機能開発用
++- **fix/\***: バグ修正用
++- **release/\***: リリース準備用
++
++## 開発フロー
++
++1. **機能開発**:
++   - `develop`から`feature/<機能名>`ブランチを作成
++   - 開発完了後，`develop`へプルリクエスト
++   - コードレビュー後にマージ
++
++2. **バグ修正**:
++   - `develop`から`fix/<バグ名>`ブランチを作成
++   - 修正後，`develop`へプルリクエスト
++   - コードレビュー後にマージ
++
++3. **リリース準備**:
++   - `develop`から`release/v<バージョン>`ブランチを作成
++   - QAテスト実施
++   - バグ修正があれば`release`ブランチ上で対応
++   - 準備完了後，`main`へプルリクエスト
++
++4. **リリース**:
++   - `main`へのマージ時にタグ付け（`v1.0.0`形式）
++   - リリースノート作成
++   - `main`の変更を`develop`へ反映
++
++## バージョニング
++
++[セマンティックバージョニング](https://semver.org/lang/ja/)に従います：
++
++- **MAJOR**: 互換性のない変更
++- **MINOR**: 後方互換性のある機能追加
++- **PATCH**: 後方互換性のあるバグ修正
++
++## CI/CDパイプライン
++
++- プルリクエスト作成時: ビルド，テスト，Lint
++- `main`へのマージ時: ビルド，テスト，デプロイ
++
++## Issue管理
++
++- バグ報告，機能リクエスト，タスク管理はIssueで行う
++- テンプレートを活用し，詳細な情報を記載
++- 関連するPRはIssue番号を参照する
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

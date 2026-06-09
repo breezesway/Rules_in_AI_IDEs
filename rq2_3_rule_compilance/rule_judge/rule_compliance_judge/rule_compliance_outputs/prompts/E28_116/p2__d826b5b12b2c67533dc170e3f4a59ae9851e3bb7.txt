@@ -1,0 +1,284 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - dependency-cruiser: ^16.8.0 (Codebase dependency analysis)
+- - cytoscape: ^3.30.4 (Interactive graph visualization)
++ - dependency-cruiser: ^17.0.1 (Codebase dependency analysis)
++ - cytoscape: ^3.27.0 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Verify that the dependency 'dependency-cruiser' is set to version '^17.0.1' and 'cytoscape' is set to version '^3.27.0' within the project's package manifest files.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: feat: Enhance graph view with impact payload handling and role-based styling
+- Changed Files List: 
+src/extension.ts	+27	-7	after_lines=217
+webview-ui/src/components/GraphCanvas.tsx	+19	-2	after_lines=216
+webview-ui/src/services/graph-styles.service.ts	+29	-1	after_lines=197
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 02-cytoscape-graph-visualization
+│   │   │   ├── cytoscape-graph-initial-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 03-graph-view-layout
+│   │   │   ├── design.md
+│   │   │   ├── graph-view-layout-prd.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── impact-analysis-phase-1
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── IMPACT_ANALYSIS_DEMO.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── impact-analysis-phase-1-prd.md
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── impact-analysis.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── test-impact-flow.mjs
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   ├── GraphCanvas.tsx
+    │   │   ├── GraphDashboard.tsx
+    │   │   └── GraphToolbar.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   ├── extension-config.service.ts
+    │   │   ├── file-type.service.ts
+    │   │   ├── graph-styles.service.ts
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index 5cd83ad..d5f5e79 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -175,14 +175,34 @@ export async function activate(context: vscode.ExtensionContext) {
+             // Ensure graph panel exists and is visible
+             await vscode.commands.executeCommand('constellation.openGraphView');
+             
+-            // If ready, send immediately; otherwise, it will send on graph/ready
+-            if (graphPanel && graphWebviewReady && pendingImpactPayload) {
+-              graphPanel.webview.postMessage({
+-                type: 'graph/impact',
+-                payload: pendingImpactPayload
+-              });
+-              pendingImpactPayload = null;
++            // Helper to attempt immediate send
++            const trySend = () => {
++              if (graphPanel && graphWebviewReady && pendingImpactPayload) {
++                console.log('[Constellation] Sending impact payload to webview', {
++                  count: pendingImpactPayload.affectedFiles?.length ?? 0,
++                  source: pendingImpactPayload.sourceFile
++                });
++                graphPanel.webview.postMessage({
++                  type: 'graph/impact',
++                  payload: pendingImpactPayload
++                });
++                pendingImpactPayload = null;
++                return true;
++              }
++              return false;
++            };
++
++            // Try right away
++            if (trySend()) return;
++
++            // Fallback: retry a few times in case the ready signal just hasn't propagated yet
++            const retries = [100, 250, 500, 1000];
++            for (const delay of retries) {
++              await new Promise((r) => setTimeout(r, delay));
++              if (trySend()) return;
+             }
++            // If still not sent, leave payload queued — it will be delivered on the next graph/ready
++            console.warn('[Constellation] Impact payload not sent yet; queued awaiting graph/ready');
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: webview-ui/src/components/GraphCanvas.tsx ---
+diff --git a/webview-ui/src/components/GraphCanvas.tsx b/webview-ui/src/components/GraphCanvas.tsx
+index a8a9841..afcb907 100644
+--- a/webview-ui/src/components/GraphCanvas.tsx
++++ b/webview-ui/src/components/GraphCanvas.tsx
+@@ -67,10 +67,25 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
+         }
+       }
+ 
++      // Compute direct children for role styling
++      const directChildren = new Set<string>()
++      if (impactSourceId) {
++        for (const e of data.edges) {
++          if (e.source === impactSourceId) {
++            directChildren.add(e.target)
++          }
++        }
++      }
++
+       // Transform data for Cytoscape with file type detection
+       const elements = [
+         ...data.nodes.map(node => {
+           const ext = getFileExt(node.path)
++          const role = impactSourceId
++            ? (node.id === impactSourceId
++                ? 'source'
++                : (directChildren.has(node.id) ? 'direct-child' : 'indirect-child'))
++            : 'normal'
+           return {
+             data: {
+               id: node.id,
+@@ -78,7 +93,8 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
+               path: node.path,
+               language: node.language,
+               ext: ext, // Add file extension for styling
+-              isSource: impactSourceId === node.id // Mark epicenter node for highlighting
++              isSource: impactSourceId === node.id, // Mark epicenter node for highlighting
++              role
+             }
+           }
+         }),
+@@ -87,7 +103,8 @@ export function GraphCanvas({ data, isRendering, onRenderingChange, impactSource
+             id: edge.id,
+             source: edge.source,
+             target: edge.target,
+-            kind: edge.kind
++            kind: edge.kind,
++            fromSource: impactSourceId ? edge.source === impactSourceId : false
+           }
+         }))
+       ]
+
+--- FILE: webview-ui/src/services/graph-styles.service.ts ---
+diff --git a/webview-ui/src/services/graph-styles.service.ts b/webview-ui/src/services/graph-styles.service.ts
+index 0cffce0..6f02cdc 100644
+--- a/webview-ui/src/services/graph-styles.service.ts
++++ b/webview-ui/src/services/graph-styles.service.ts
+@@ -95,7 +95,20 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
+         'line-color': '#666666',
+         'width': isLargeGraph ? 1 : 2,
+         'opacity': isLargeGraph ? 0.4 : 0.6,
+-        'curve-style': 'bezier'
++        'curve-style': 'bezier',
++        'target-arrow-shape': 'triangle',
++        'target-arrow-color': '#666666',
++        'arrow-scale': 1.0
++      }
++    },
++    // Edges directly from the source node
++    {
++      selector: 'edge[fromSource = true]',
++      style: {
++        'line-color': '#FF8C00',
++        'target-arrow-color': '#FF8C00',
++        'width': isLargeGraph ? 2 : 3,
++        'opacity': 0.9
+       }
+     },
+     // Selected node style
+@@ -122,6 +135,21 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
+         'shadow-offset-x': 0,
+         'shadow-offset-y': 0,
+       }
++    },
++    // Direct children of the source node
++    {
++      selector: 'node[role = "direct-child"]',
++      style: {
++        'border-width': 2,
++        'border-color': '#FFD700',
++      }
++    },
++    // Indirect children (descendants) of the source node
++    {
++      selector: 'node[role = "indirect-child"]',
++      style: {
++        'opacity': isLargeGraph ? 0.9 : 1
++      }
+     }
+   ];
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

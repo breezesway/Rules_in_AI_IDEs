@@ -1,0 +1,1028 @@
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import started from 'electron-squirrel-startup';
+import { PDFDocument } from 'pdf-lib';
+
+// 声明 Vite 环境变量
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+// 历史记录类型定义
+interface HistoryRecord {
+  id: string;
+  type: 'pdf-merge' | 'image-compress';
+  timestamp: number;
+  files: {
+    name: string;
+    size: number;
+    path: string;
+  }[];
+  output: {
+    name: string;
+    path: string;
+    size?: number;
+  };
+  settings: Record<string, unknown>;
+  duration?: number;
+  success: boolean;
+  error?: string;
+}
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) {
+  app.quit();
+}
+
+// 历史记录管理
+class HistoryManager {
+  private historyFilePath: string;
+  private maxRecords = 100; // 最多保存100条记录
+
+  constructor() {
+    // 获取用户数据目录
+    const userDataPath = app.getPath('userData');
+    this.historyFilePath = path.join(userDataPath, 'operation-history.json');
+  }
+
+  async getHistory(): Promise<HistoryRecord[]> {
+    try {
+      const data = await fs.readFile(this.historyFilePath, 'utf-8');
+      const history = JSON.parse(data) as HistoryRecord[];
+      // 按时间倒序排列
+      return history.sort((a, b) => b.timestamp - a.timestamp);
+    } catch (error) {
+      // 文件不存在或解析失败，返回空数组
+      return [];
+    }
+  }
+
+  async addRecord(record: Omit<HistoryRecord, 'id' | 'timestamp'>): Promise<void> {
+    try {
+      const history = await this.getHistory();
+      
+      const newRecord: HistoryRecord = {
+        ...record,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        timestamp: Date.now()
+      };
+
+      // 添加新记录到开头
+      history.unshift(newRecord);
+
+      // 限制记录数量
+      if (history.length > this.maxRecords) {
+        history.splice(this.maxRecords);
+      }
+
+      // 确保目录存在
+      await fs.mkdir(path.dirname(this.historyFilePath), { recursive: true });
+
+      // 保存到文件
+      await fs.writeFile(this.historyFilePath, JSON.stringify(history, null, 2));
+    } catch (error) {
+      console.error('保存历史记录失败:', error);
+    }
+  }
+
+  async clearHistory(): Promise<void> {
+    try {
+      await fs.unlink(this.historyFilePath);
+    } catch (error) {
+      // 文件可能不存在，忽略错误
+    }
+  }
+
+  async deleteRecord(id: string): Promise<void> {
+    try {
+      const history = await this.getHistory();
+      const filteredHistory = history.filter(record => record.id !== id);
+      await fs.writeFile(this.historyFilePath, JSON.stringify(filteredHistory, null, 2));
+    } catch (error) {
+      console.error('删除历史记录失败:', error);
+    }
+  }
+}
+
+const historyManager = new HistoryManager();
+
+// 应用配置管理
+interface AppConfig {
+  autoNumberDuplicateFiles: boolean;
+  defaultSaveLocation: string;
+}
+
+class ConfigManager {
+  private configFilePath: string;
+  private defaultConfig: AppConfig = {
+    autoNumberDuplicateFiles: true,
+    defaultSaveLocation: ''
+  };
+
+  constructor() {
+    const userDataPath = app.getPath('userData');
+    this.configFilePath = path.join(userDataPath, 'app-config.json');
+    // 设置默认保存位置为下载目录
+    this.defaultConfig.defaultSaveLocation = app.getPath('downloads');
+  }
+
+  async getConfig(): Promise<AppConfig> {
+    try {
+      const data = await fs.readFile(this.configFilePath, 'utf-8');
+      const config = JSON.parse(data) as AppConfig;
+      // 合并默认配置，确保所有字段都存在
+      return { ...this.defaultConfig, ...config };
+    } catch (error) {
+      // 文件不存在或解析失败，返回默认配置
+      return this.defaultConfig;
+    }
+  }
+
+  async updateConfig(config: Partial<AppConfig>): Promise<void> {
+    try {
+      const currentConfig = await this.getConfig();
+      const newConfig = { ...currentConfig, ...config };
+      
+      // 确保目录存在
+      await fs.mkdir(path.dirname(this.configFilePath), { recursive: true });
+      
+      // 保存配置
+      await fs.writeFile(this.configFilePath, JSON.stringify(newConfig, null, 2));
+    } catch (error) {
+      console.error('保存配置失败:', error);
+      throw error;
+    }
+  }
+
+  async resetConfig(): Promise<void> {
+    try {
+      await fs.writeFile(this.configFilePath, JSON.stringify(this.defaultConfig, null, 2));
+    } catch (error) {
+      console.error('重置配置失败:', error);
+      throw error;
+    }
+  }
+}
+
+const configManager = new ConfigManager();
+
+
+
+const createWindow = () => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+
+  // Open the DevTools (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
+
+
+};
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow);
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+// PDF合并功能
+ipcMain.handle('merge-pdfs', async (event, options: {
+  filePaths: string[];
+  outputPath: string;
+  outputFileName: string;
+}) => {
+  const startTime = Date.now();
+  const { filePaths, outputPath, outputFileName } = options;
+  
+  try {
+    
+    // 创建新的PDF文档
+    const mergedPdf = await PDFDocument.create();
+    
+    // 逐个读取并合并PDF文件
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
+      
+      // 发送进度更新
+      event.sender.send('merge-progress', {
+        current: i + 1,
+        total: filePaths.length,
+        currentFile: path.basename(filePath),
+        progress: Math.round(((i + 1) / filePaths.length) * 100)
+      });
+      
+      try {
+        // 读取PDF文件
+        const pdfBytes = await fs.readFile(filePath);
+        const pdf = await PDFDocument.load(pdfBytes);
+        
+        // 获取所有页面
+        const pageIndices = pdf.getPageIndices();
+        
+        // 复制页面到合并的PDF
+        const pages = await mergedPdf.copyPages(pdf, pageIndices);
+        pages.forEach((page) => mergedPdf.addPage(page));
+        
+      } catch (fileError) {
+        console.error(`处理文件 ${filePath} 时出错:`, fileError);
+        throw new Error(`文件 ${path.basename(filePath)} 可能已损坏或不是有效的PDF文件`);
+      }
+    }
+    
+    // 生成合并后的PDF字节
+    const pdfBytes = await mergedPdf.save();
+    
+    // 确保输出目录存在
+    await fs.mkdir(outputPath, { recursive: true });
+    
+    // 构建完整的输出文件路径
+    const fullOutputPath = path.join(outputPath, outputFileName);
+    
+    // 检查文件是否已存在并处理重名
+    const config = await configManager.getConfig();
+    let finalOutputPath = fullOutputPath;
+    let finalOutputFileName = outputFileName;
+
+    if (config.autoNumberDuplicateFiles) {
+      // 自动添加数字序号
+      let counter = 1;
+      const nameWithoutExt = path.parse(outputFileName).name;
+      const ext = path.parse(outputFileName).ext;
+      
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        try {
+          await fs.access(finalOutputPath);
+          // 文件存在，生成新的文件名
+          finalOutputFileName = `${nameWithoutExt}(${counter})${ext}`;
+          finalOutputPath = path.join(outputPath, finalOutputFileName);
+          counter++;
+        } catch {
+          // 文件不存在，使用当前路径
+          break;
+        }
+      }
+    } else {
+      // 传统方式：询问用户是否覆盖
+      try {
+        await fs.access(fullOutputPath);
+        // 文件存在，询问用户是否覆盖
+        const result = await dialog.showMessageBox({
+          type: 'question',
+          buttons: ['覆盖', '取消'],
+          defaultId: 0,
+          message: '文件已存在',
+          detail: `文件 "${outputFileName}" 已存在，是否要覆盖？`
+        });
+        
+        if (result.response !== 0) {
+          throw new Error('用户取消了操作');
+        }
+      } catch (error) {
+        // 文件不存在，继续
+      }
+    }
+    
+    // 写入合并后的PDF文件
+    await fs.writeFile(finalOutputPath, pdfBytes);
+
+    // 获取输出文件大小
+    const outputStats = await fs.stat(finalOutputPath);
+    const duration = Date.now() - startTime;
+
+    // 添加成功的历史记录
+    await historyManager.addRecord({
+      type: 'pdf-merge',
+      files: await Promise.all(filePaths.map(async (filePath) => {
+        const stats = await fs.stat(filePath);
+        return {
+          name: path.basename(filePath),
+          size: stats.size,
+          path: filePath
+        };
+      })),
+      output: {
+        name: finalOutputFileName,
+        path: finalOutputPath,
+        size: outputStats.size
+      },
+      settings: {
+        outputPath,
+        fileCount: filePaths.length
+      },
+      duration,
+      success: true
+    });
+
+    return {
+      success: true,
+      outputPath: finalOutputPath,
+      message: `PDF文件已成功合并为 "${finalOutputFileName}"`
+    };
+    
+  } catch (error) {
+    console.error('PDF合并错误:', error);
+    
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : '合并PDF时发生未知错误';
+
+    // 添加失败的历史记录
+    try {
+      await historyManager.addRecord({
+        type: 'pdf-merge',
+        files: await Promise.all(filePaths.map(async (filePath) => {
+          try {
+            const stats = await fs.stat(filePath);
+            return {
+              name: path.basename(filePath),
+              size: stats.size,
+              path: filePath
+            };
+          } catch {
+            return {
+              name: path.basename(filePath),
+              size: 0,
+              path: filePath
+            };
+          }
+        })),
+        output: {
+          name: outputFileName,
+          path: path.join(outputPath, outputFileName)
+        },
+        settings: {
+          outputPath,
+          fileCount: filePaths.length
+        },
+        duration,
+        success: false,
+        error: errorMessage
+      });
+    } catch (historyError) {
+      console.error('保存失败历史记录时出错:', historyError);
+    }
+
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+});
+
+// 选择保存位置
+ipcMain.handle('select-save-path', async () => {
+  const result = await dialog.showSaveDialog({
+    title: '选择保存位置',
+    defaultPath: 'merged-document.pdf',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ]
+  });
+  
+  if (result.canceled) {
+    return null;
+  }
+  
+  return {
+    filePath: result.filePath,
+    directory: path.dirname(result.filePath || ''),
+    fileName: path.basename(result.filePath || '')
+  };
+});
+
+// 获取默认下载目录
+ipcMain.handle('get-downloads-path', async () => {
+  return app.getPath('downloads');
+});
+
+// 选择PDF文件
+ipcMain.handle('select-pdf-files', async () => {
+  const result = await dialog.showOpenDialog({
+    title: '选择PDF文件',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ],
+    properties: ['openFile', 'multiSelections']
+  });
+  
+  if (result.canceled || !result.filePaths.length) {
+    return null;
+  }
+  
+  // 返回文件信息
+  const fileInfos = await Promise.all(
+    result.filePaths.map(async (filePath) => {
+      try {
+        const stats = await fs.stat(filePath);
+        return {
+          path: filePath,
+          name: path.basename(filePath),
+          size: stats.size,
+        };
+      } catch (error) {
+        console.error(`获取文件信息失败: ${filePath}`, error);
+        return null;
+      }
+    })
+  );
+  
+  return fileInfos.filter(info => info !== null);
+});
+
+
+
+// 打开文件位置
+ipcMain.handle('open-file-location', async (event, filePath: string) => {
+  try {
+    shell.showItemInFolder(filePath);
+  } catch (error) {
+    console.error('打开文件位置失败:', error);
+  }
+});
+
+// 历史记录相关IPC处理
+ipcMain.handle('get-operation-history', async () => {
+  try {
+    return await historyManager.getHistory();
+  } catch (error) {
+    console.error('获取历史记录失败:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('clear-operation-history', async () => {
+  try {
+    await historyManager.clearHistory();
+    return { success: true };
+  } catch (error) {
+    console.error('清除历史记录失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '清除失败' };
+  }
+});
+
+ipcMain.handle('delete-history-record', async (event, id: string) => {
+  try {
+    await historyManager.deleteRecord(id);
+    return { success: true };
+  } catch (error) {
+    console.error('删除历史记录失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '删除失败' };
+  }
+});
+
+// 配置相关IPC处理
+ipcMain.handle('get-app-config', async () => {
+  try {
+    return await configManager.getConfig();
+  } catch (error) {
+    console.error('获取配置失败:', error);
+    return configManager['defaultConfig'];
+  }
+});
+
+ipcMain.handle('update-app-config', async (event, config: Partial<AppConfig>) => {
+  try {
+    await configManager.updateConfig(config);
+    return { success: true };
+  } catch (error) {
+    console.error('更新配置失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '更新失败' };
+  }
+});
+
+ipcMain.handle('reset-app-config', async () => {
+  try {
+    await configManager.resetConfig();
+    return { success: true };
+  } catch (error) {
+    console.error('重置配置失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '重置失败' };
+  }
+});
+
+// 图片压缩相关IPC处理
+
+// 选择图片文件
+ipcMain.handle('select-images', async () => {
+  try {
+    const result = await dialog.showOpenDialog({
+      title: '选择图片文件',
+      filters: [
+        { name: '图片文件', extensions: ['jpg', 'jpeg', 'png', 'webp'] }
+      ],
+      properties: ['openFile', 'multiSelections']
+    });
+    
+    if (result.canceled || !result.filePaths.length) {
+      return { success: false, error: '未选择文件' };
+    }
+    
+    // 返回文件信息
+    const fileInfos = await Promise.all(
+      result.filePaths.map(async (filePath) => {
+        try {
+          const stats = await fs.stat(filePath);
+          return {
+            path: filePath,
+            name: path.basename(filePath),
+            size: stats.size,
+          };
+        } catch (error) {
+          console.error(`获取文件信息失败: ${filePath}`, error);
+          return null;
+        }
+      })
+    );
+    
+    const validFiles = fileInfos.filter(info => info !== null);
+    
+    return {
+      success: true,
+      files: validFiles
+    };
+  } catch (error) {
+    console.error('选择图片文件失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '选择文件失败' };
+  }
+});
+
+// 选择保存位置
+ipcMain.handle('select-save-location', async () => {
+  try {
+    const result = await dialog.showOpenDialog({
+      title: '选择保存位置',
+      properties: ['openDirectory']
+    });
+    
+    if (result.canceled || !result.filePaths.length) {
+      return { success: false, error: '未选择保存位置' };
+    }
+    
+    return {
+      success: true,
+      path: result.filePaths[0]
+    };
+  } catch (error) {
+    console.error('选择保存位置失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '选择保存位置失败' };
+  }
+});
+
+// 压缩图片
+ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+  method: string;
+  quality?: number;
+  targetSize?: number;
+  maxDimension?: number;
+  outputFormat?: string;
+  namingSuffix?: string;
+  saveLocation?: string;
+}) => {
+  const startTime = Date.now();
+  let processedCount = 0;
+  
+  try {
+    const saveLocation = settings.saveLocation || app.getPath('downloads');
+    
+    // 确保保存目录存在
+    await fs.mkdir(saveLocation, { recursive: true });
+    
+    const totalFiles = filePaths.length;
+    
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
+      const fileName = path.basename(filePath);
+      const fileNameWithoutExt = path.parse(fileName).name;
+      const originalExt = path.parse(fileName).ext;
+      
+      // 发送进度更新
+      event.sender.send('compression-progress', {
+        currentFile: fileName,
+        currentIndex: i,
+        totalFiles,
+        percentage: Math.round((i / totalFiles) * 100)
+      });
+      
+      try {
+        let outputFormat = settings.outputFormat || 'original';
+        if (outputFormat === 'original') {
+          // 根据原始文件扩展名确定格式
+          const ext = originalExt.toLowerCase();
+          if (ext === '.jpg' || ext === '.jpeg') {
+            outputFormat = 'jpeg';
+          } else if (ext === '.png') {
+            outputFormat = 'png';
+          } else if (ext === '.webp') {
+            outputFormat = 'webp';
+          } else {
+            outputFormat = 'jpeg'; // 默认为jpeg
+          }
+        }
+        
+        // 确定输出文件扩展名
+        let outputExt: string;
+        switch (outputFormat) {
+          case 'jpg':
+          case 'jpeg':
+            outputExt = '.jpg';
+            break;
+          case 'png':
+            outputExt = '.png';
+            break;
+          case 'webp':
+            outputExt = '.webp';
+            break;
+          default:
+            outputExt = originalExt;
+        }
+        
+        // 构建输出文件名
+        const suffix = settings.namingSuffix || '_compressed';
+        const outputFileName = `${fileNameWithoutExt}${suffix}${outputExt}`;
+        const outputPath = path.join(saveLocation, outputFileName);
+        
+        // 处理重名文件
+        const config = await configManager.getConfig();
+        let finalOutputPath = outputPath;
+        
+        if (config.autoNumberDuplicateFiles) {
+          let counter = 1;
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            try {
+              await fs.access(finalOutputPath);
+              // 文件存在，生成新的文件名
+              const numberedFileName = `${fileNameWithoutExt}${suffix}(${counter})${outputExt}`;
+              finalOutputPath = path.join(saveLocation, numberedFileName);
+              counter++;
+            } catch {
+              // 文件不存在，使用当前路径
+              break;
+            }
+          }
+        }
+        
+                 // 动态导入sharp
+         const sharp = await import('sharp');
+         
+         // 创建sharp实例
+         let sharpInstance = sharp.default(filePath);
+         let sizeCompressionCompleted = false; // 标记是否已完成按大小压缩
+         
+         // 根据压缩方法处理图片
+         if (settings.method === 'quality') {
+           // 按质量压缩
+           const quality = settings.quality || 70;
+           
+           if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+             sharpInstance = sharpInstance.jpeg({ quality });
+           } else if (outputFormat === 'png') {
+             // PNG格式使用压缩级别，质量越高压缩级别越低
+             const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
+             sharpInstance = sharpInstance.png({ 
+               compressionLevel,
+               progressive: true
+             });
+           } else if (outputFormat === 'webp') {
+             sharpInstance = sharpInstance.webp({ quality });
+           }
+         } else if (settings.method === 'size') {
+           // 按文件大小压缩 - 智能迭代逼近目标大小
+           const targetSizeKB = settings.targetSize || 500;
+           const targetSizeBytes = targetSizeKB * 1024;
+           
+           // 获取原始文件大小
+           const originalStats = await fs.stat(filePath);
+           const originalSize = originalStats.size;
+           
+           // 如果原始文件已经小于目标大小，使用较高质量保持品质
+           if (originalSize <= targetSizeBytes) {
+             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+               sharpInstance = sharpInstance.jpeg({ quality: 85 });
+             } else if (outputFormat === 'png') {
+               sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
+             } else if (outputFormat === 'webp') {
+               sharpInstance = sharpInstance.webp({ quality: 85 });
+             }
+           } else {
+             // 智能质量估算和迭代优化
+             const bestQuality = 70;
+             let attempts = 0;
+             const maxAttempts = 5;
+             const tolerance = 0.1; // 10%的容差范围
+             
+             // 初始质量估算：基于文件大小比例和格式特性
+             const compressionRatio = targetSizeBytes / originalSize;
+             let estimatedQuality: number;
+             
+             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+               // JPEG压缩效率较高，可以使用稍高的质量
+               estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
+             } else if (outputFormat === 'png') {
+               // PNG压缩效率较低，需要更激进的压缩
+               estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
+             } else if (outputFormat === 'webp') {
+               // WebP压缩效率很高，可以使用较高质量
+               estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
+             } else {
+               estimatedQuality = Math.max(15, Math.min(85, Math.round(compressionRatio * 110)));
+             }
+             
+             // 迭代优化质量设置
+             let currentQuality = estimatedQuality;
+             let lastSize = 0;
+             
+             while (attempts < maxAttempts) {
+               const tempPath = finalOutputPath + `.tmp${attempts}`;
+               let testInstance = sharp.default(filePath);
+               
+               // 应用当前质量设置
+               if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+                 testInstance = testInstance.jpeg({ quality: currentQuality });
+               } else if (outputFormat === 'png') {
+                 const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - currentQuality) / 10)));
+                 testInstance = testInstance.png({ compressionLevel, progressive: true });
+               } else if (outputFormat === 'webp') {
+                 testInstance = testInstance.webp({ quality: currentQuality });
+               }
+               
+               try {
+                 // 生成测试文件并检查大小
+                 await testInstance.toFile(tempPath);
+                 const testStats = await fs.stat(tempPath);
+                 const testSize = testStats.size;
+                 
+                 console.log(`迭代 ${attempts + 1}: 质量=${currentQuality}, 大小=${Math.round(testSize/1024)}KB, 目标=${targetSizeKB}KB`);
+                 
+                 // 检查是否在容差范围内
+                 const sizeRatio = testSize / targetSizeBytes;
+                 if (sizeRatio >= (1 - tolerance) && sizeRatio <= (1 + tolerance)) {
+                   // 达到目标大小，使用当前设置
+                   console.log(`成功达到目标大小！质量=${currentQuality}, 实际大小=${Math.round(testSize/1024)}KB`);
+                   await fs.rename(tempPath, finalOutputPath);
+                   
+                   // 清理其他临时文件
+                   for (let i = 0; i < attempts; i++) {
+                     try {
+                       await fs.unlink(finalOutputPath + `.tmp${i}`);
+                     } catch {
+                       // 忽略清理错误
+                     }
+                   }
+                   
+                   sizeCompressionCompleted = true;
+                   break;
+                 }
+                 
+                 // 调整质量设置
+                 if (testSize > targetSizeBytes) {
+                   // 文件太大，降低质量
+                   const reduction = Math.max(5, Math.round((testSize - targetSizeBytes) / targetSizeBytes * 20));
+                   currentQuality = Math.max(10, currentQuality - reduction);
+                 } else {
+                   // 文件太小，可以适当提高质量（但不超过目标）
+                   const increase = Math.min(5, Math.round((targetSizeBytes - testSize) / targetSizeBytes * 10));
+                   currentQuality = Math.min(95, currentQuality + increase);
+                 }
+                 
+                 // 如果质量调整幅度很小且连续两次大小相近，停止迭代
+                 if (Math.abs(testSize - lastSize) < targetSizeBytes * 0.05) {
+                   console.log(`收敛停止：质量=${currentQuality}, 大小=${Math.round(testSize/1024)}KB`);
+                   await fs.rename(tempPath, finalOutputPath);
+                   
+                   // 清理临时文件
+                   for (let i = 0; i < attempts; i++) {
+                     try {
+                       await fs.unlink(finalOutputPath + `.tmp${i}`);
+                     } catch {
+                       // 忽略清理错误
+                     }
+                   }
+                   sizeCompressionCompleted = true;
+                   break;
+                 }
+                 
+                 lastSize = testSize;
+                 
+                 // 清理当前临时文件
+                 await fs.unlink(tempPath);
+                 
+               } catch (testError) {
+                 console.error(`测试质量 ${currentQuality} 时出错:`, testError);
+                 // 清理临时文件
+                 try {
+                   await fs.unlink(tempPath);
+                 } catch {
+                   // 忽略清理错误
+                 }
+               }
+               
+               attempts++;
+             }
+             
+             // 如果迭代没有成功生成最终文件，使用最后的最佳质量
+             if (!sizeCompressionCompleted) {
+               console.log(`迭代未完成，使用最佳质量=${bestQuality}生成最终文件`);
+               if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+                 sharpInstance = sharpInstance.jpeg({ quality: bestQuality });
+               } else if (outputFormat === 'png') {
+                 const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - bestQuality) / 10)));
+                 sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
+               } else if (outputFormat === 'webp') {
+                 sharpInstance = sharpInstance.webp({ quality: bestQuality });
+               }
+             }
+           }
+         } else if (settings.method === 'dimension') {
+           // 按尺寸压缩
+           const maxDimension = settings.maxDimension || 1920;
+           sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
+             fit: 'inside',
+             withoutEnlargement: true
+           });
+           
+           // 尺寸压缩时也应用适中的质量设置
+           if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+             sharpInstance = sharpInstance.jpeg({ quality: 80 });
+           } else if (outputFormat === 'png') {
+             sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
+           } else if (outputFormat === 'webp') {
+             sharpInstance = sharpInstance.webp({ quality: 80 });
+           }
+         }
+         
+         // 对于高质量设置，添加文件大小检查以避免文件变大
+         if (settings.method === 'quality' && (settings.quality || 70) > 85) {
+           const originalStats = await fs.stat(filePath);
+           const originalSize = originalStats.size;
+           
+           // 先保存到临时文件检查大小
+           const tempPath = finalOutputPath + '.tmp';
+           await sharpInstance.toFile(tempPath);
+           
+           const tempStats = await fs.stat(tempPath);
+           const compressedSize = tempStats.size;
+           
+           // 如果压缩后文件更大，使用原始文件或降低质量
+           if (compressedSize > originalSize) {
+             await fs.unlink(tempPath); // 删除临时文件
+             
+             // 使用更低的质量重新压缩
+             const adjustedQuality = Math.max(70, (settings.quality || 70) - 15);
+             let adjustedInstance = sharp.default(filePath);
+             
+             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+               adjustedInstance = adjustedInstance.jpeg({ quality: adjustedQuality });
+             } else if (outputFormat === 'png') {
+               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - adjustedQuality) / 10)));
+               adjustedInstance = adjustedInstance.png({ compressionLevel, progressive: true });
+             } else if (outputFormat === 'webp') {
+               adjustedInstance = adjustedInstance.webp({ quality: adjustedQuality });
+             }
+             
+             await adjustedInstance.toFile(finalOutputPath);
+           } else {
+             // 压缩后文件更小，重命名临时文件为最终文件
+             await fs.rename(tempPath, finalOutputPath);
+           }
+         } else if (settings.method !== 'size' || !sizeCompressionCompleted) {
+           // 正常保存（但跳过已完成的按大小压缩）
+           await sharpInstance.toFile(finalOutputPath);
+         }
+        
+        processedCount++;
+        
+      } catch (fileError) {
+        console.error(`处理文件 ${filePath} 时出错:`, fileError);
+        // 继续处理下一个文件，不中断整个流程
+      }
+    }
+    
+    // 发送完成进度
+    event.sender.send('compression-progress', {
+      currentFile: '',
+      currentIndex: filePaths.length,
+      totalFiles: filePaths.length,
+      percentage: 100
+    });
+    
+    const duration = Date.now() - startTime;
+    
+    // 添加成功的历史记录
+    await historyManager.addRecord({
+      type: 'image-compress',
+      files: await Promise.all(filePaths.map(async (filePath) => {
+        try {
+          const stats = await fs.stat(filePath);
+          return {
+            name: path.basename(filePath),
+            size: stats.size,
+            path: filePath
+          };
+        } catch {
+          return {
+            name: path.basename(filePath),
+            size: 0,
+            path: filePath
+          };
+        }
+      })),
+      output: {
+        name: `压缩完成 (${processedCount}/${filePaths.length})`,
+        path: saveLocation
+      },
+      settings: {
+        method: settings.method,
+        quality: settings.quality,
+        targetSize: settings.targetSize,
+        maxDimension: settings.maxDimension,
+        outputFormat: settings.outputFormat,
+        namingSuffix: settings.namingSuffix,
+        saveLocation
+      },
+      duration,
+      success: true
+    });
+    
+    return {
+      success: true,
+      processedCount
+    };
+    
+  } catch (error) {
+    console.error('图片压缩错误:', error);
+    
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : '压缩图片时发生未知错误';
+    
+    // 添加失败的历史记录
+    try {
+      await historyManager.addRecord({
+        type: 'image-compress',
+        files: await Promise.all(filePaths.map(async (filePath) => {
+          try {
+            const stats = await fs.stat(filePath);
+            return {
+              name: path.basename(filePath),
+              size: stats.size,
+              path: filePath
+            };
+          } catch {
+            return {
+              name: path.basename(filePath),
+              size: 0,
+              path: filePath
+            };
+          }
+        })),
+        output: {
+          name: '压缩失败',
+          path: settings.saveLocation || app.getPath('downloads')
+        },
+        settings,
+        duration,
+        success: false,
+        error: errorMessage
+      });
+    } catch (historyError) {
+      console.error('保存失败历史记录时出错:', historyError);
+    }
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+});

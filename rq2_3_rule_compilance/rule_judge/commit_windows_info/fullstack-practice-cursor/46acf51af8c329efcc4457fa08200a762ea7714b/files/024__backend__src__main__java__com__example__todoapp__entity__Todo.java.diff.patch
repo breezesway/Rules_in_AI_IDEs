@@ -1,0 +1,36 @@
+diff --git a/backend/src/main/java/com/example/todoapp/entity/Todo.java b/backend/src/main/java/com/example/todoapp/entity/Todo.java
+index 47f3af4..4eefc83 100644
+--- a/backend/src/main/java/com/example/todoapp/entity/Todo.java
++++ b/backend/src/main/java/com/example/todoapp/entity/Todo.java
+@@ -35,6 +35,10 @@ public class Todo {
+     @Column(nullable = false)
+     private Boolean completed = false;
+ 
++    // NEW: Optional deadline field
++    @Column(name = "deadline")
++    private LocalDateTime deadline;
++
+     @NotNull(message = "User is required")
+     @ManyToOne(fetch = FetchType.LAZY)
+     @JoinColumn(name = "user_id", nullable = false)
+@@ -47,4 +51,20 @@ public class Todo {
+     @UpdateTimestamp
+     @Column(name = "updated_at", nullable = false)
+     private LocalDateTime updatedAt;
++
++    // Deadline utility methods
++    public boolean hasDeadline() {
++        return deadline != null;
++    }
++    
++    public boolean isOverdue() {
++        return hasDeadline() && !completed && LocalDateTime.now().isAfter(deadline);
++    }
++    
++    public boolean isDueSoon() {
++        if (!hasDeadline() || completed) return false;
++        LocalDateTime now = LocalDateTime.now();
++        LocalDateTime dueSoonThreshold = now.plusDays(1); // Within 24 hours
++        return deadline.isBefore(dueSoonThreshold) && deadline.isAfter(now);
++    }
+ }

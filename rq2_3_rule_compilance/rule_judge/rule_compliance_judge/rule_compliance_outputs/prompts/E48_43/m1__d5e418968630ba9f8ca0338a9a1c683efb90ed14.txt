@@ -1,0 +1,820 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Build command: npm run build
++ Build command: pnpm run build
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Package manager lock files (pnpm-lock.yaml, package-lock.json), CI/CD configuration files (e.g., .github/workflows/*.yml, Jenkinsfile), and project documentation (README.md).
+- Suggested Logic: 1. Verify the presence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' in the root directory. 
+2. Search CI/CD configuration files and documentation for the string 'pnpm run build' and ensure 'npm run build' is no longer present.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: ✨ Implement CollectionService for local Kiro settings scanning
+
+Add comprehensive data collection functionality:
+- Create CollectionService with local .kiro/ directory scanning
+- Collect settings files: context.md, user-preferences.md, project-spec.md
+- Scan steering/*.md and hooks/*.kiro.hook directories
+- Implement graceful handling of missing directories/files with logging
+- Add LocalSettingsData interface for structured data collection
+- Create comprehensive test suite with 9 test cases covering all scenarios
+- Register CollectionService in BuildModule for dependency injection
+
+Complete task 3.1 as per project workflow guidelines
+- Changed Files List: 
+.kiro/specs/taptik-build-command/tasks.md	+1	-1	after_lines=148
+src/modules/build/build.module.ts	+3	-2	after_lines=11
+src/modules/build/services/collection.service.spec.ts	+298	-0	after_lines=298
+src/modules/build/services/collection.service.ts	+211	-0	after_lines=211
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── build
+│   │   │   ├── build.module.ts
+│   │   │   ├── commands
+│   │   │   │   └── build.command.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── build-config.interface.ts
+│   │   │   │   ├── settings-data.interface.ts
+│   │   │   │   └── taptik-format.interface.ts
+│   │   │   └── services
+│   │   │       ├── collection.service.spec.ts
+│   │   │       ├── collection.service.ts
+│   │   │       ├── interactive.service.spec.ts
+│   │   │       └── interactive.service.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+index f5579aa..ff59e3d 100644
+--- a/.kiro/specs/taptik-build-command/tasks.md
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -22,7 +22,7 @@
+     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+ 
+ - [ ] 3. Implement data collection service
+-  - [ ] 3.1 Create CollectionService with local settings scanning
++  - [x] 3.1 Create CollectionService with local settings scanning
+     - Implement scanning of `.kiro/` directory for project settings
+     - Collect `settings/context.md`, `settings/user-preferences.md`, `settings/project-spec.md`
+     - Scan `steering/*.md` and `hooks/*.kiro.hook` directories
+
+--- FILE: src/modules/build/build.module.ts ---
+diff --git a/src/modules/build/build.module.ts b/src/modules/build/build.module.ts
+index cf6b400..a6ca8a0 100644
+--- a/src/modules/build/build.module.ts
++++ b/src/modules/build/build.module.ts
+@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
+ 
+ import { BuildCommand } from './commands/build.command';
+ import { InteractiveService } from './services/interactive.service';
++import { CollectionService } from './services/collection.service';
+ 
+ @Module({
+-  providers: [BuildCommand, InteractiveService],
+-  exports: [BuildCommand, InteractiveService],
++  providers: [BuildCommand, InteractiveService, CollectionService],
++  exports: [BuildCommand, InteractiveService, CollectionService],
+ })
+ export class BuildModule {}
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/collection.service.spec.ts ---
+diff --git a/src/modules/build/services/collection.service.spec.ts b/src/modules/build/services/collection.service.spec.ts
+new file mode 100644
+index 0000000..e2e32cb
+--- /dev/null
++++ b/src/modules/build/services/collection.service.spec.ts
+@@ -0,0 +1,298 @@
++import { Test, TestingModule } from '@nestjs/testing';
++import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
++import { promises as fs } from 'fs';
++import * as path from 'path';
++import { CollectionService, LocalSettingsData } from './collection.service';
++
++// Mock the fs module
++vi.mock('fs', () => ({
++  promises: {
++    access: vi.fn(),
++    readdir: vi.fn(),
++    readFile: vi.fn(),
++  },
++}));
++
++describe('CollectionService', () => {
++  let service: CollectionService;
++  const mockFs = fs as any;
++
++  beforeEach(async () => {
++    const module: TestingModule = await Test.createTestingModule({
++      providers: [CollectionService],
++    }).compile();
++
++    service = module.get<CollectionService>(CollectionService);
++  });
++
++  afterEach(() => {
++    vi.clearAllMocks();
++  });
++
++  describe('collectLocalSettings', () => {
++    it('should throw error when .kiro directory does not exist', async () => {
++      mockFs.access.mockRejectedValue(new Error('Directory not found'));
++
++      await expect(service.collectLocalSettings('/test/path')).rejects.toThrow(
++        'No .kiro directory found at: /test/path/.kiro'
++      );
++    });
++
++    it('should collect data from complete .kiro directory structure', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      // Mock .kiro directory exists
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath || 
++            dirPath === path.join(kiroPath, 'settings') ||
++            dirPath === path.join(kiroPath, 'steering') ||
++            dirPath === path.join(kiroPath, 'hooks')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Not found'));
++      });
++
++      // Mock readdir for steering and hooks
++      mockFs.readdir.mockImplementation((dirPath: string) => {
++        if (dirPath === path.join(kiroPath, 'steering')) {
++          return Promise.resolve(['feature.md', 'guidelines.md', 'other.txt']);
++        }
++        if (dirPath === path.join(kiroPath, 'hooks')) {
++          return Promise.resolve(['pre-commit.kiro.hook', 'post-build.kiro.hook', 'script.sh']);
++        }
++        return Promise.resolve([]);
++      });
++
++      // Mock readFile
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        switch (basename) {
++          case 'context.md':
++            return Promise.resolve('# Context\nProject context content');
++          case 'user-preferences.md':
++            return Promise.resolve('# User Preferences\nUser preferences content');
++          case 'project-spec.md':
++            return Promise.resolve('# Project Spec\nProject specification content');
++          case 'feature.md':
++            return Promise.resolve('# Feature\nFeature steering content');
++          case 'guidelines.md':
++            return Promise.resolve('# Guidelines\nGuidelines steering content');
++          case 'pre-commit.kiro.hook':
++            return Promise.resolve('#!/bin/bash\necho "Pre-commit hook"');
++          case 'post-build.kiro.hook':
++            return Promise.resolve('#!/bin/bash\necho "Post-build hook"');
++          default:
++            return Promise.reject(new Error('File not found'));
++        }
++      });
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result).toEqual({
++        context: '# Context\nProject context content',
++        userPreferences: '# User Preferences\nUser preferences content',
++        projectSpec: '# Project Spec\nProject specification content',
++        steeringFiles: [
++          {
++            filename: 'feature.md',
++            content: '# Feature\nFeature steering content',
++            path: path.join(kiroPath, 'steering', 'feature.md'),
++          },
++          {
++            filename: 'guidelines.md',
++            content: '# Guidelines\nGuidelines steering content',
++            path: path.join(kiroPath, 'steering', 'guidelines.md'),
++          },
++        ],
++        hookFiles: [
++          {
++            filename: 'pre-commit.kiro.hook',
++            content: '#!/bin/bash\necho "Pre-commit hook"',
++            path: path.join(kiroPath, 'hooks', 'pre-commit.kiro.hook'),
++          },
++          {
++            filename: 'post-build.kiro.hook',
++            content: '#!/bin/bash\necho "Post-build hook"',
++            path: path.join(kiroPath, 'hooks', 'post-build.kiro.hook'),
++          },
++        ],
++        sourcePath: kiroPath,
++        collectedAt: expect.any(String),
++      });
++
++      expect(result.collectedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
++    });
++
++    it('should handle missing settings directory gracefully', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockResolvedValue([]);
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result).toEqual({
++        context: undefined,
++        userPreferences: undefined,
++        projectSpec: undefined,
++        steeringFiles: [],
++        hookFiles: [],
++        sourcePath: kiroPath,
++        collectedAt: expect.any(String),
++      });
++    });
++
++    it('should handle missing steering directory gracefully', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath || dirPath === path.join(kiroPath, 'settings')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        if (basename === 'context.md') {
++          return Promise.resolve('Context content');
++        }
++        return Promise.reject(new Error('File not found'));
++      });
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result.steeringFiles).toEqual([]);
++      expect(result.context).toBe('Context content');
++    });
++
++    it('should handle missing hooks directory gracefully', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath || dirPath === path.join(kiroPath, 'settings')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readFile.mockResolvedValue('File content');
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result.hookFiles).toEqual([]);
++    });
++
++    it('should handle file read errors gracefully', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath || dirPath === path.join(kiroPath, 'settings')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readFile.mockRejectedValue(new Error('Permission denied'));
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result).toEqual({
++        context: undefined,
++        userPreferences: undefined,
++        projectSpec: undefined,
++        steeringFiles: [],
++        hookFiles: [],
++        sourcePath: kiroPath,
++        collectedAt: expect.any(String),
++      });
++    });
++
++    it('should use current working directory when no path provided', async () => {
++      const currentDir = process.cwd();
++      const kiroPath = path.join(currentDir, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockResolvedValue([]);
++
++      const result = await service.collectLocalSettings();
++
++      expect(result.sourcePath).toBe(kiroPath);
++    });
++
++    it('should filter files correctly in steering and hooks directories', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath ||
++            dirPath === path.join(kiroPath, 'steering') ||
++            dirPath === path.join(kiroPath, 'hooks')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockImplementation((dirPath: string) => {
++        if (dirPath === path.join(kiroPath, 'steering')) {
++          return Promise.resolve(['valid.md', 'invalid.txt', 'another.md']);
++        }
++        if (dirPath === path.join(kiroPath, 'hooks')) {
++          return Promise.resolve(['valid.kiro.hook', 'invalid.hook', 'another.kiro.hook']);
++        }
++        return Promise.resolve([]);
++      });
++
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        return Promise.resolve(`Content of ${basename}`);
++      });
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result.steeringFiles).toHaveLength(2);
++      expect(result.steeringFiles.map(f => f.filename)).toEqual(['valid.md', 'another.md']);
++
++      expect(result.hookFiles).toHaveLength(2);
++      expect(result.hookFiles.map(f => f.filename)).toEqual(['valid.kiro.hook', 'another.kiro.hook']);
++    });
++
++    it('should handle readdir errors gracefully', async () => {
++      const testPath = '/test/project';
++      const kiroPath = path.join(testPath, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === kiroPath ||
++            dirPath === path.join(kiroPath, 'steering') ||
++            dirPath === path.join(kiroPath, 'hooks')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockRejectedValue(new Error('Permission denied'));
++
++      const result = await service.collectLocalSettings(testPath);
++
++      expect(result.steeringFiles).toEqual([]);
++      expect(result.hookFiles).toEqual([]);
++    });
++  });
++});
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/collection.service.ts ---
+diff --git a/src/modules/build/services/collection.service.ts b/src/modules/build/services/collection.service.ts
+new file mode 100644
+index 0000000..1340144
+--- /dev/null
++++ b/src/modules/build/services/collection.service.ts
+@@ -0,0 +1,211 @@
++import { Injectable, Logger } from '@nestjs/common';
++import { promises as fs } from 'fs';
++import * as path from 'path';
++
++/**
++ * Interface for collected settings data from local Kiro configuration
++ */
++export interface LocalSettingsData {
++  /** Content from settings/context.md */
++  context?: string;
++  /** Content from settings/user-preferences.md */
++  userPreferences?: string;
++  /** Content from settings/project-spec.md */
++  projectSpec?: string;
++  /** Array of steering files with their content */
++  steeringFiles: Array<{
++    filename: string;
++    content: string;
++    path: string;
++  }>;
++  /** Array of hook files with their content */
++  hookFiles: Array<{
++    filename: string;
++    content: string;
++    path: string;
++  }>;
++  /** Source directory path where data was collected */
++  sourcePath: string;
++  /** Timestamp when data was collected */
++  collectedAt: string;
++}
++
++/**
++ * Service for collecting data from local Kiro settings and configuration files
++ */
++@Injectable()
++export class CollectionService {
++  private readonly logger = new Logger(CollectionService.name);
++
++  /**
++   * Scans and collects data from local .kiro/ directory
++   * @param projectPath - Path to the project directory (defaults to current working directory)
++   * @returns Promise resolving to collected local settings data
++   */
++  async collectLocalSettings(projectPath?: string): Promise<LocalSettingsData> {
++    const basePath = projectPath || process.cwd();
++    const kiroPath = path.join(basePath, '.kiro');
++
++    this.logger.log(`Scanning local Kiro settings in: ${kiroPath}`);
++
++    // Check if .kiro directory exists
++    try {
++      await fs.access(kiroPath);
++    } catch (error) {
++      this.logger.warn(`No .kiro directory found at: ${kiroPath}`);
++      throw new Error(`No .kiro directory found at: ${kiroPath}`);
++    }
++
++    const settingsData: LocalSettingsData = {
++      steeringFiles: [],
++      hookFiles: [],
++      sourcePath: kiroPath,
++      collectedAt: new Date().toISOString(),
++    };
++
++    // Collect settings files
++    await this.collectSettingsFiles(kiroPath, settingsData);
++
++    // Collect steering files
++    await this.collectSteeringFiles(kiroPath, settingsData);
++
++    // Collect hook files
++    await this.collectHookFiles(kiroPath, settingsData);
++
++    this.logger.log(`Successfully collected data from ${kiroPath}`);
++    return settingsData;
++  }
++
++  /**
++   * Collects content from settings directory files
++   * @private
++   */
++  private async collectSettingsFiles(kiroPath: string, settingsData: LocalSettingsData): Promise<void> {
++    const settingsPath = path.join(kiroPath, 'settings');
++
++    try {
++      await fs.access(settingsPath);
++      this.logger.debug(`Found settings directory: ${settingsPath}`);
++    } catch (error) {
++      this.logger.warn(`Settings directory not found: ${settingsPath}`);
++      return;
++    }
++
++    // Collect context.md
++    await this.collectFile(
++      path.join(settingsPath, 'context.md'),
++      'context.md',
++      (content) => {
++        settingsData.context = content;
++      }
++    );
++
++    // Collect user-preferences.md
++    await this.collectFile(
++      path.join(settingsPath, 'user-preferences.md'),
++      'user-preferences.md',
++      (content) => {
++        settingsData.userPreferences = content;
++      }
++    );
++
++    // Collect project-spec.md
++    await this.collectFile(
++      path.join(settingsPath, 'project-spec.md'),
++      'project-spec.md',
++      (content) => {
++        settingsData.projectSpec = content;
++      }
++    );
++  }
++
++  /**
++   * Collects all .md files from steering directory
++   * @private
++   */
++  private async collectSteeringFiles(kiroPath: string, settingsData: LocalSettingsData): Promise<void> {
++    const steeringPath = path.join(kiroPath, 'steering');
++
++    try {
++      await fs.access(steeringPath);
++      this.logger.debug(`Found steering directory: ${steeringPath}`);
++    } catch (error) {
++      this.logger.warn(`Steering directory not found: ${steeringPath}`);
++      return;
++    }
++
++    try {
++      const files = await fs.readdir(steeringPath);
++      const mdFiles = files.filter(file => file.endsWith('.md'));
++
++      for (const filename of mdFiles) {
++        const filePath = path.join(steeringPath, filename);
++        await this.collectFile(filePath, filename, (content) => {
++          settingsData.steeringFiles.push({
++            filename,
++            content,
++            path: filePath,
++          });
++        });
++      }
++
++      this.logger.debug(`Collected ${settingsData.steeringFiles.length} steering files`);
++    } catch (error) {
++      this.logger.error(`Error reading steering directory: ${error.message}`);
++    }
++  }
++
++  /**
++   * Collects all .kiro.hook files from hooks directory
++   * @private
++   */
++  private async collectHookFiles(kiroPath: string, settingsData: LocalSettingsData): Promise<void> {
++    const hooksPath = path.join(kiroPath, 'hooks');
++
++    try {
++      await fs.access(hooksPath);
++      this.logger.debug(`Found hooks directory: ${hooksPath}`);
++    } catch (error) {
++      this.logger.warn(`Hooks directory not found: ${hooksPath}`);
++      return;
++    }
++
++    try {
++      const files = await fs.readdir(hooksPath);
++      const hookFiles = files.filter(file => file.endsWith('.kiro.hook'));
++
++      for (const filename of hookFiles) {
++        const filePath = path.join(hooksPath, filename);
++        await this.collectFile(filePath, filename, (content) => {
++          settingsData.hookFiles.push({
++            filename,
++            content,
++            path: filePath,
++          });
++        });
++      }
++
++      this.logger.debug(`Collected ${settingsData.hookFiles.length} hook files`);
++    } catch (error) {
++      this.logger.error(`Error reading hooks directory: ${error.message}`);
++    }
++  }
++
++  /**
++   * Safely reads a file and executes callback with content
++   * @private
++   */
++  private async collectFile(
++    filePath: string,
++    filename: string,
++    onSuccess: (content: string) => void
++  ): Promise<void> {
++    try {
++      const content = await fs.readFile(filePath, 'utf8');
++      onSuccess(content);
++      this.logger.debug(`Successfully read file: ${filename}`);
++    } catch (error) {
++      this.logger.warn(`Could not read file ${filename}: ${error.message}`);
++    }
++  }
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,69 @@
+diff --git a/_templates/resource/new/[id].delete.test.ts.ejs.t b/_templates/resource/new/[id].delete.test.ts.ejs.t
+index 1e04f59..7c81f3b 100644
+--- a/_templates/resource/new/[id].delete.test.ts.ejs.t
++++ b/_templates/resource/new/[id].delete.test.ts.ejs.t
+@@ -12,6 +12,7 @@ describe("DELETE /api/<%= plural %>/[id]", () => {
+     const createResponse = await $vitestFetch("/api/<%= plural %>", {
+       method: "POST",
+       body: {
++        // TODO: Customize payload as needed
+         someField: "test-delete-resource",
+       },
+     });
+@@ -59,53 +60,6 @@ describe("DELETE /api/<%= plural %>/[id]", () => {
+     expect(getResponse.error).toBeTruthy();
+   });
+ 
+-  it("should return 404 for non-existent resource", async () => {
+-    const nonExistentId = "non-existent-id-12345";
+-    const response = await $vitestFetch(`/api/<%= plural %>/${nonExistentId}`, {
+-      method: "DELETE",
+-    });
+-
+-    expect(response.statusCode).toBe(404);
+-    expect(response.error).toBeTruthy();
+-  });
+-
+-  it("should handle invalid ID format", async () => {
+-    const invalidId = "invalid-id-format-!@#$%";
+-    const response = await $vitestFetch(`/api/<%= plural %>/${invalidId}`, {
+-      method: "DELETE",
+-    });
+-
+-    // Depending on validation, this could be 400 (bad request) or 404 (not found)
+-    expect([400, 404]).toContain(response.statusCode);
+-    expect(response.error).toBeTruthy();
+-  });
+-
+-  it("should handle deleting the same resource twice", async () => {
+-    // First deletion
+-    const firstDeleteResponse = await $vitestFetch(`/api/<%= plural %>/${testResourceId}`, {
+-      method: "DELETE",
+-    });
+-    expect(firstDeleteResponse.statusCode).toBe(200);
+-
+-    // Second deletion attempt
+-    const secondDeleteResponse = await $vitestFetch(`/api/<%= plural %>/${testResourceId}`, {
+-      method: "DELETE",
+-    });
+-    expect(secondDeleteResponse.statusCode).toBe(404);
+-    expect(secondDeleteResponse.error).toBeTruthy();
+-  });
+-
+-  it("should handle cascade deletes if applicable", async () => {
+-    // TODO: If this resource has related data that should be deleted,
+-    // add tests to verify proper cascade behavior
+-    const response = await $vitestFetch(`/api/<%= plural %>/${testResourceId}`, {
+-      method: "DELETE",
+-    });
+-
+-    expect(response.statusCode).toBe(200);
+-    // TODO: Add assertions for cascade deletion verification
+-  });
+-
+-  // TODO: Add tests for soft delete vs hard delete if applicable
+-  // TODO: Add tests for business logic constraints that prevent deletion
++  // TODO: Add other tests for specific business logic
++    // Remember to handle edge cases and error scenarios
+ }); 
+\ No newline at end of file

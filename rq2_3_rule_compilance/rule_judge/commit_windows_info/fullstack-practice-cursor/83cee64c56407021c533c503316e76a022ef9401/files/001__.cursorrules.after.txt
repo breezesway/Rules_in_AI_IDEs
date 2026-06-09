@@ -1,0 +1,361 @@
+# Full-Stack Todo Application with Authentication Development Rules
+
+You are an expert full-stack developer specializing in secure web application development. Your role is to build a complete Todo application with comprehensive authentication and authorization features following industry best practices.
+
+## Project Overview
+- **Application Type**: Full-stack Todo application with user authentication
+- **Backend**: Spring Boot with Spring Security
+- **Frontend**: React with JWT token management
+- **Database**: H2 (in-memory for development)
+- **Authentication**: JWT-based stateless authentication
+- **Security**: Industry-standard security practices
+
+## Technology Stack
+
+### Backend (Spring Boot)
+- **Framework**: Spring Boot 3.x
+- **Language**: Java 17+
+- **Dependencies**: 
+  - Spring Web (REST API)
+  - Spring Data JPA (Database operations)
+  - Spring Security (Authentication & Authorization)
+  - Spring Boot Validation (Input validation)
+  - H2 Database (In-memory database)
+  - Spring Boot DevTools (Development productivity)
+  - JWT Library (io.jsonwebtoken:jjwt-api, jjwt-impl, jjwt-jackson)
+  - BCrypt (Password hashing - included in Spring Security)
+- **Build Tool**: Gradle
+
+### Frontend (React)
+- **Framework**: React 18+
+- **Language**: JavaScript/TypeScript
+- **HTTP Client**: Axios with interceptors for JWT
+- **Routing**: React Router v6 for protected routes
+- **State Management**: Context API for authentication state
+- **Storage**: localStorage/sessionStorage for JWT tokens
+- **Styling**: CSS modules or styled-components
+
+## Authentication & Authorization Requirements
+
+### User Management Features
+1. **User Registration**: Sign up with email/username and password
+2. **User Login**: Authenticate with credentials and receive JWT token
+3. **User Logout**: Clear authentication state and tokens
+4. **Password Security**: Hash passwords with BCrypt
+5. **JWT Token Management**: Generate, validate, and refresh tokens
+6. **Protected Routes**: Restrict access to authenticated users only
+7. **User Profile**: Basic user information management
+
+### Security Features
+1. **Password Validation**: Strong password requirements
+2. **Email Validation**: Valid email format validation
+3. **Rate Limiting**: Prevent brute force attacks (basic implementation)
+4. **Input Sanitization**: Prevent XSS and injection attacks
+5. **CORS Configuration**: Proper cross-origin resource sharing
+6. **Error Handling**: Secure error messages without information leakage
+
+## Data Models
+
+### User Entity
+```java
+User Entity:
+- id (Long, auto-generated)
+- username (String, unique, required, 3-50 chars)
+- email (String, unique, required, valid email format)
+- password (String, required, BCrypt hashed, min 8 chars)
+- firstName (String, optional, max 50 chars)
+- lastName (String, optional, max 50 chars)
+- enabled (Boolean, default true)
+- roles (Set<Role>, many-to-many relationship)
+- createdAt (LocalDateTime, auto-generated)
+- updatedAt (LocalDateTime, auto-updated)
+```
+
+### Role Entity
+```java
+Role Entity:
+- id (Long, auto-generated)
+- name (String, unique, required) // ROLE_USER, ROLE_ADMIN
+- description (String, optional)
+```
+
+### Todo Entity (Updated)
+```java
+Todo Entity:
+- id (Long, auto-generated)
+- title (String, required, max 100 chars)
+- description (String, optional, max 500 chars)
+- completed (Boolean, default false)
+- user (User, many-to-one relationship, required)
+- createdAt (LocalDateTime, auto-generated)
+- updatedAt (LocalDateTime, auto-updated)
+```
+
+## API Endpoints
+
+### Authentication Endpoints
+```
+POST   /api/auth/register    - User registration
+POST   /api/auth/login       - User login (returns JWT)
+POST   /api/auth/logout      - User logout
+POST   /api/auth/refresh     - Refresh JWT token
+GET    /api/auth/me          - Get current user info
+PUT    /api/auth/profile     - Update user profile
+POST   /api/auth/change-password - Change user password
+```
+
+### Todo Endpoints (Protected)
+```
+GET    /api/todos          - Get current user's todos
+GET    /api/todos/{id}     - Get specific todo (owner only)
+POST   /api/todos          - Create new todo for current user
+PUT    /api/todos/{id}     - Update todo (owner only)
+DELETE /api/todos/{id}     - Delete todo (owner only)
+PATCH  /api/todos/{id}/toggle - Toggle completion status (owner only)
+```
+
+## Security Configuration
+
+### JWT Implementation
+1. **Token Generation**: Create JWT with user ID, username, and roles
+2. **Token Validation**: Validate signature, expiration, and claims
+3. **Token Refresh**: Implement refresh token mechanism
+4. **Token Storage**: Secure storage in frontend (considerations for XSS)
+
+### Spring Security Configuration
+1. **Password Encoder**: BCrypt with strength 12
+2. **Authentication Manager**: Custom authentication provider
+3. **JWT Filter**: Custom filter for token validation
+4. **CORS Configuration**: Allow frontend origin
+5. **Exception Handling**: Custom authentication and authorization exceptions
+
+### Frontend Security
+1. **Axios Interceptors**: Automatic JWT token attachment
+2. **Protected Routes**: Route guards for authenticated pages
+3. **Token Management**: Automatic token refresh and logout on expiry
+4. **Secure Storage**: Considerations for token storage security
+
+## File Structure
+
+### Backend Structure
+```
+src/main/java/com/example/todoapp/
+├── TodoApplication.java
+├── config/
+│   ├── SecurityConfig.java
+│   ├── JwtConfig.java
+│   └── CorsConfig.java
+├── controller/
+│   ├── AuthController.java
+│   └── TodoController.java
+├── service/
+│   ├── AuthService.java
+│   ├── UserService.java
+│   ├── TodoService.java
+│   ├── JwtService.java
+│   └── impl/
+│       ├── AuthServiceImpl.java
+│       ├── UserServiceImpl.java
+│       ├── TodoServiceImpl.java
+│       └── JwtServiceImpl.java
+├── repository/
+│   ├── UserRepository.java
+│   ├── RoleRepository.java
+│   └── TodoRepository.java
+├── entity/
+│   ├── User.java
+│   ├── Role.java
+│   └── Todo.java
+├── dto/
+│   ├── auth/
+│   │   ├── LoginRequestDto.java
+│   │   ├── RegisterRequestDto.java
+│   │   ├── AuthResponseDto.java
+│   │   └── UserProfileDto.java
+│   ├── todo/
+│   │   ├── TodoRequestDto.java
+│   │   └── TodoResponseDto.java
+│   └── common/
+│       ├── ApiResponseDto.java
+│       └── ErrorResponseDto.java
+├── security/
+│   ├── JwtAuthenticationFilter.java
+│   ├── JwtAuthenticationEntryPoint.java
+│   ├── CustomUserDetailsService.java
+│   └── UserPrincipal.java
+└── exception/
+    ├── GlobalExceptionHandler.java
+    ├── AuthenticationException.java
+    └── AuthorizationException.java
+```
+
+### Frontend Structure
+```
+src/
+├── components/
+│   ├── auth/
+│   │   ├── LoginForm.jsx
+│   │   ├── RegisterForm.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   └── UserProfile.jsx
+│   ├── todo/
+│   │   ├── TodoList.jsx
+│   │   ├── TodoItem.jsx
+│   │   └── TodoForm.jsx
+│   ├── layout/
+│   │   ├── Header.jsx
+│   │   ├── Navigation.jsx
+│   │   └── Layout.jsx
+│   └── common/
+│       ├── Loading.jsx
+│       └── ErrorMessage.jsx
+├── context/
+│   └── AuthContext.jsx
+├── hooks/
+│   ├── useAuth.js
+│   ├── useTodos.js
+│   └── useApi.js
+├── services/
+│   ├── authService.js
+│   ├── todoService.js
+│   └── apiClient.js
+├── utils/
+│   ├── tokenStorage.js
+│   ├── validation.js
+│   └── constants.js
+├── pages/
+│   ├── LoginPage.jsx
+│   ├── RegisterPage.jsx
+│   ├── TodoPage.jsx
+│   ├── ProfilePage.jsx
+│   └── HomePage.jsx
+└── styles/
+    ├── auth/
+    ├── todo/
+    └── common/
+```
+
+## Implementation Guidelines
+
+### Backend Development Priorities
+1. **Security Configuration**: Set up Spring Security with JWT
+2. **User Management**: Implement user registration and authentication
+3. **JWT Service**: Create token generation and validation logic
+4. **Authorization**: Implement role-based access control
+5. **Todo Authorization**: Ensure users can only access their own todos
+6. **Exception Handling**: Comprehensive error handling for auth scenarios
+
+### Frontend Development Priorities
+1. **Authentication Context**: Set up global auth state management
+2. **Login/Register Forms**: Create user authentication forms
+3. **Protected Routes**: Implement route protection
+4. **API Integration**: Set up authenticated API calls
+5. **Token Management**: Handle token storage and refresh
+6. **User Experience**: Smooth authentication flows and error handling
+
+### Security Best Practices
+1. **Password Security**: 
+   - Minimum 8 characters with complexity requirements
+   - Hash with BCrypt strength 12
+   - Never log or expose passwords
+
+2. **JWT Security**:
+   - Short access token expiration (15-30 minutes)
+   - Longer refresh token expiration (7-30 days)
+   - Secure token storage considerations
+   - Token blacklisting for logout (optional advanced feature)
+
+3. **Input Validation**:
+   - Server-side validation for all inputs
+   - Client-side validation for user experience
+   - Sanitize all user inputs to prevent XSS
+
+4. **Error Handling**:
+   - Generic error messages for security (avoid information disclosure)
+   - Detailed logging for debugging (server-side only)
+   - Rate limiting for login attempts
+
+### Database Initialization
+```sql
+-- Create default roles
+INSERT INTO roles (name, description) VALUES 
+('ROLE_USER', 'Standard user role'),
+('ROLE_ADMIN', 'Administrator role');
+
+-- Create admin user (optional)
+-- Password should be hashed with BCrypt
+```
+
+## Authentication Flow
+
+### Registration Flow
+1. User fills registration form
+2. Frontend validates input
+3. Backend validates and creates user
+4. Password is hashed with BCrypt
+5. User assigned default ROLE_USER
+6. Return success response
+
+### Login Flow
+1. User provides credentials
+2. Backend validates credentials
+3. Generate JWT access and refresh tokens
+4. Return tokens to frontend
+5. Frontend stores tokens securely
+6. Redirect to protected area
+
+### Protected Request Flow
+1. Frontend sends request with JWT in Authorization header
+2. Backend validates JWT
+3. Extract user information from token
+4. Process request with user context
+5. Return response
+
+### Logout Flow
+1. Frontend clears stored tokens
+2. Optional: Backend blacklists tokens
+3. Redirect to login page
+
+## Validation Rules
+
+### User Registration Validation
+```java
+@NotBlank(message = "Username is required")
+@Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
+private String username;
+
+@NotBlank(message = "Email is required")
+@Email(message = "Please provide a valid email address")
+@Size(max = 100, message = "Email must not exceed 100 characters")
+private String email;
+
+@NotBlank(message = "Password is required")
+@Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]", 
+         message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character")
+private String password;
+```
+
+## Error Handling Standards
+
+### Authentication Errors
+- 401 Unauthorized: Invalid credentials, expired token
+- 403 Forbidden: Insufficient permissions
+- 409 Conflict: Username/email already exists
+- 422 Unprocessable Entity: Validation errors
+
+### Security Considerations
+- Never expose sensitive information in error messages
+- Log security events for monitoring
+- Implement rate limiting for authentication attempts
+- Use HTTPS in production
+- Validate and sanitize all inputs
+
+## Testing Requirements
+1. **Unit Tests**: Test all service methods
+2. **Integration Tests**: Test authentication flows
+3. **Security Tests**: Test authorization rules
+4. **API Tests**: Test all endpoints with various scenarios
+
+Remember: Security is paramount. Always validate inputs, use secure defaults, and follow the principle of least privilege. Implement comprehensive logging for security events and ensure all authentication flows are thoroughly tested.

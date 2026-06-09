@@ -1,0 +1,107 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursor/rules/tech-stack.mdc
+- Change Type: added
+- Target Rule Content:
+- vitest
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project dependency files (e.g., package.json) and configuration files (e.g., vitest.config.ts, vitest.config.js).
+- Suggested Logic: Check for the presence of 'vitest' in the dependencies or devDependencies section of 'package.json'. Additionally, verify the existence of a Vitest configuration file (e.g., 'vitest.config.ts' or 'vitest.config.js') in the project root.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: fix(vite.config): TanStackRouterVite import 수정 및 플러그인 순서 변경
+
+TanStackRouterVite is Deprecated
+- Changed Files List: 
+vite.config.ts	+4	-4	after_lines=20
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── commit-convention.mdc
+│       ├── folder-structure.mdc
+│       └── tech-stack.mdc
+├── .gitignore
+├── components.json
+├── docs
+│   ├── commit-convention.md
+│   └── eslint-setup.md
+├── eslint.config.js
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── prettier.config.js
+├── src
+│   ├── app
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── routes
+│   │       ├── __root.tsx
+│   │       ├── about.tsx
+│   │       ├── index.tsx
+│   │       ├── posts.$postId.tsx
+│   │       ├── posts.tsx
+│   │       └── tags.tsx
+│   ├── shared
+│   │   ├── assets
+│   │   │   └── icon
+│   │   │       ├── github-mark-white.svg
+│   │   │       └── github-mark.svg
+│   │   ├── components
+│   │   │   └── shadcn-ui
+│   │   │       ├── badge.tsx
+│   │   │       ├── card.tsx
+│   │   │       ├── navigation-menu.tsx
+│   │   │       ├── sonner.tsx
+│   │   │       ├── switch.tsx
+│   │   │       └── typography.tsx
+│   │   └── utils
+│   │       ├── router
+│   │       │   └── routeTree.gen.ts
+│   │       └── style
+│   │           └── shadcn.ts
+│   ├── vite-env.d.ts
+│   └── widgets
+│       └── gnb.tsx
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: vite.config.ts ---
+diff --git a/vite.config.ts b/vite.config.ts
+index 933899e..d6dffa8 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -1,5 +1,5 @@
+ import tailwindcss from '@tailwindcss/vite';
+-import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
++import { tanstackRouter } from '@tanstack/router-plugin/vite';
+ import react from '@vitejs/plugin-react';
+ import { defineConfig } from 'vite';
+ import tsconfigPaths from 'vite-tsconfig-paths';
+@@ -7,14 +7,14 @@ import tsconfigPaths from 'vite-tsconfig-paths';
+ // https://vite.dev/config/
+ export default defineConfig({
+   plugins: [
+-    TanStackRouterVite({
++    react(),
++    tailwindcss(),
++    tanstackRouter({
+       target: 'react',
+       autoCodeSplitting: true,
+       routesDirectory: './src/app/routes',
+       generatedRouteTree: './src/shared/utils/router/routeTree.gen.ts',
+     }),
+-    react(),
+-    tailwindcss(),
+     tsconfigPaths(),
+   ],
+ });
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

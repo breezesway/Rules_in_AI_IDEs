@@ -1,0 +1,370 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+TARGET macOS 15.6 as minimum deployment target
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Xcode project configuration files (*.pbxproj), build configuration files (*.xcconfig), Swift Package Manager manifest (Package.swift), or CocoaPods Podfile.
+- Suggested Logic: Statically parse project configuration files for deployment target keys such as 'MACOSX_DEPLOYMENT_TARGET' or 'platforms: [.macOS(...)]' and verify that the version value is set to '15.6' or higher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Add persistent toolbar configuration with UserDefaults storage
+- Changed Files List: 
+SwiftFlash/SwiftFlash/ContentView.swift	+112	-68	after_lines=1017
+SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift	+69	-0	after_lines=69
+
+- Project Directory Tree (Snapshot after commit):
+├── .DS_Store
+├── .gitignore
+├── LICENSE
+├── README.md
+└── SwiftFlash
+    ├── .DS_Store
+    ├── AppIcon.icon
+    │   ├── Assets
+    │   │   └── icon.png
+    │   └── icon.json
+    ├── SwiftFlash
+    │   ├── AboutView.swift
+    │   ├── Assets.xcassets
+    │   │   ├── AccentColor.colorset
+    │   │   │   └── Contents.json
+    │   │   ├── Contents.json
+    │   │   ├── Logo.imageset
+    │   │   │   ├── 367EF6FC-80F4-462E-B123-9A80CEB05E49_1_201_a.jpeg
+    │   │   │   └── Contents.json
+    │   │   └── icon.png
+    │   ├── ContentView.swift
+    │   ├── DeviceInventory.swift
+    │   ├── DriveDetectionService.swift
+    │   ├── DriveInspectorView.swift
+    │   ├── DriveModel.swift
+    │   ├── DropZoneView.swift
+    │   ├── FlashConfirmationDialog.swift
+    │   ├── FlashProgressView.swift
+    │   ├── ImageFileModel.swift
+    │   ├── ImageFileService.swift
+    │   ├── ImageFileView.swift
+    │   ├── ImageFlashService.swift
+    │   ├── ImageHistoryService.swift
+    │   ├── ImageHistoryView.swift
+    │   ├── ImageInspectorView.swift
+    │   ├── InspectorFonts.swift
+    │   ├── LabelAndPicker.swift
+    │   ├── LabelAndStatus.swift
+    │   ├── LabelAndText.swift
+    │   ├── LabelAndTextField.swift
+    │   ├── SettingsView.swift
+    │   ├── SwiftFlashApp.swift
+    │   └── ToolbarConfigurationService.swift
+    └── SwiftFlash.xcodeproj
+        ├── project.pbxproj
+        └── project.xcworkspace
+            └── contents.xcworkspacedata
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: SwiftFlash/SwiftFlash/ContentView.swift ---
+diff --git a/SwiftFlash/SwiftFlash/ContentView.swift b/SwiftFlash/SwiftFlash/ContentView.swift
+index 4fa1c00..900da8c 100644
+--- a/SwiftFlash/SwiftFlash/ContentView.swift
++++ b/SwiftFlash/SwiftFlash/ContentView.swift
+@@ -4,6 +4,7 @@ struct ContentView: View {
+     @StateObject private var imageService = ImageFileService()
+     @State private var imageHistoryService = ImageHistoryService()
+     @State private var flashService = ImageFlashService()
++    @State private var toolbarConfig = ToolbarConfigurationService()
+     @EnvironmentObject var deviceInventory: DeviceInventory
+     @StateObject private var driveService: DriveDetectionService
+     @State private var selectedDrive: Drive?
+@@ -72,40 +73,60 @@ struct ContentView: View {
+         .frame(minWidth: 400)
+         .frame(minHeight: 700)
+         .toolbar(id: "mainToolbar") {
+-            ToolbarItem(id: "refresh", placement: .automatic) {
+-                refreshButton
+-            }
+-            
+-            ToolbarItem(id: "space1", placement: .automatic) {
+-                Spacer()
+-            }
+-            
+-            ToolbarItem(id: "flash", placement: .automatic) {
+-                flashButton
+-            }
+-            
+-            ToolbarItem(id: "eject", placement: .automatic) {
+-                ejectButton
+-            }
+-            
+-            ToolbarItem(id: "flexibleSpace", placement: .automatic) {
+-                Spacer()
+-            }
+-            
+-            ToolbarItem(id: "tags", placement: .automatic) {
+-                tagsButton
+-            }
+-            
+-            ToolbarItem(id: "debug", placement: .automatic) {
+-                debugButton
+-            }
+-            
+-            ToolbarItem(id: "about", placement: .automatic) {
+-                aboutButton
+-            }
+-            
+-            ToolbarItem(id: "inspector", placement: .automatic) {
+-                inspectorToggleButton
++            Group {
++                if toolbarConfig.toolbarItems.contains("refresh") {
++                    ToolbarItem(id: "refresh", placement: .automatic) {
++                        refreshButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("space1") {
++                    ToolbarItem(id: "space1", placement: .automatic) {
++                        Spacer()
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("flash") {
++                    ToolbarItem(id: "flash", placement: .automatic) {
++                        flashButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("eject") {
++                    ToolbarItem(id: "eject", placement: .automatic) {
++                        ejectButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("flexibleSpace") {
++                    ToolbarItem(id: "flexibleSpace", placement: .automatic) {
++                        Spacer()
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("tags") {
++                    ToolbarItem(id: "tags", placement: .automatic) {
++                        tagsButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("debug") {
++                    ToolbarItem(id: "debug", placement: .automatic) {
++                        debugButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("about") {
++                    ToolbarItem(id: "about", placement: .automatic) {
++                        aboutButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("inspector") {
++                    ToolbarItem(id: "inspector", placement: .automatic) {
++                        inspectorToggleButton
++                    }
++                }
+             }
+         }
+         .alert("Set Custom Name", isPresented: $showCustomNameDialog) {
+@@ -526,6 +547,7 @@ struct PreviewContentView: View {
+     @StateObject private var imageService = ImageFileService()
+     @State private var imageHistoryService = ImageHistoryService()
+     @State private var flashService = ImageFlashService()
++    @State private var toolbarConfig = ToolbarConfigurationService()
+     @EnvironmentObject var deviceInventory: DeviceInventory
+     @State private var selectedDrive: Drive?
+     @State private var selectedImage: ImageFile?
+@@ -596,40 +618,60 @@ struct PreviewContentView: View {
+         .frame(minWidth: 400)
+         .frame(minHeight: 700)
+         .toolbar(id: "previewToolbar") {
+-            ToolbarItem(id: "refresh", placement: .automatic) {
+-                refreshButton
+-            }
+-            
+-            ToolbarItem(id: "space1", placement: .automatic) {
+-                Spacer()
+-            }
+-            
+-            ToolbarItem(id: "flash", placement: .automatic) {
+-                flashButton
+-            }
+-            
+-            ToolbarItem(id: "eject", placement: .automatic) {
+-                ejectButton
+-            }
+-            
+-            ToolbarItem(id: "flexibleSpace", placement: .automatic) {
+-                Spacer()
+-            }
+-            
+-            ToolbarItem(id: "tags", placement: .automatic) {
+-                tagsButton
+-            }
+-            
+-            ToolbarItem(id: "debug", placement: .automatic) {
+-                debugButton
+-            }
+-            
+-            ToolbarItem(id: "about", placement: .automatic) {
+-                aboutButton
+-            }
+-            
+-            ToolbarItem(id: "inspector", placement: .automatic) {
+-                inspectorToggleButton
++            Group {
++                if toolbarConfig.toolbarItems.contains("refresh") {
++                    ToolbarItem(id: "refresh", placement: .automatic) {
++                        refreshButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("space1") {
++                    ToolbarItem(id: "space1", placement: .automatic) {
++                        Spacer()
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("flash") {
++                    ToolbarItem(id: "flash", placement: .automatic) {
++                        flashButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("eject") {
++                    ToolbarItem(id: "eject", placement: .automatic) {
++                        ejectButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("flexibleSpace") {
++                    ToolbarItem(id: "flexibleSpace", placement: .automatic) {
++                        Spacer()
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("tags") {
++                    ToolbarItem(id: "tags", placement: .automatic) {
++                        tagsButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("debug") {
++                    ToolbarItem(id: "debug", placement: .automatic) {
++                        debugButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("about") {
++                    ToolbarItem(id: "about", placement: .automatic) {
++                        aboutButton
++                    }
++                }
++                
++                if toolbarConfig.toolbarItems.contains("inspector") {
++                    ToolbarItem(id: "inspector", placement: .automatic) {
++                        inspectorToggleButton
++                    }
++                }
+             }
+         }
+         .alert("Set Custom Name", isPresented: $showCustomNameDialog) {
+@@ -883,6 +925,8 @@ struct PreviewContentView: View {
+             print("❌ [DEBUG] Flash failed: \(error)")
+         }
+     }
++    
++
+ }
+ 
+ // MARK: - Preview Helpers
+
+--- FILE: SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift ---
+diff --git a/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift b/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift
+new file mode 100644
+index 0000000..1abbc5f
+--- /dev/null
++++ b/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift
+@@ -0,0 +1,69 @@
++import Foundation
++import SwiftUI
++
++@Observable
++class ToolbarConfigurationService {
++    private let userDefaults = UserDefaults.standard
++    private let toolbarConfigurationKey = "toolbarConfiguration"
++    
++    // Default toolbar configuration
++    var toolbarItems: [String] = [
++        "refresh",
++        "space1", 
++        "flash",
++        "eject",
++        "flexibleSpace",
++        "tags",
++        "debug",
++        "about",
++        "inspector"
++    ]
++    
++    init() {
++        loadToolbarConfiguration()
++    }
++    
++    func loadToolbarConfiguration() {
++        if let savedItems = userDefaults.array(forKey: toolbarConfigurationKey) as? [String] {
++            toolbarItems = savedItems
++        }
++    }
++    
++    func saveToolbarConfiguration() {
++        userDefaults.set(toolbarItems, forKey: toolbarConfigurationKey)
++    }
++    
++    func resetToDefault() {
++        toolbarItems = [
++            "refresh",
++            "space1", 
++            "flash",
++            "eject",
++            "flexibleSpace",
++            "tags",
++            "debug",
++            "about",
++            "inspector"
++        ]
++        saveToolbarConfiguration()
++    }
++    
++    func moveItem(from source: IndexSet, to destination: Int) {
++        toolbarItems.move(fromOffsets: source, toOffset: destination)
++        saveToolbarConfiguration()
++    }
++    
++    func removeItem(at offsets: IndexSet) {
++        toolbarItems.remove(atOffsets: offsets)
++        saveToolbarConfiguration()
++    }
++    
++    func addItem(_ itemId: String, at index: Int? = nil) {
++        if let index = index {
++            toolbarItems.insert(itemId, at: index)
++        } else {
++            toolbarItems.append(itemId)
++        }
++        saveToolbarConfiguration()
++    }
++} 
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

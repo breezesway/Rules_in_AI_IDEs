@@ -1,0 +1,813 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Language Features
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Formatting: Prettier with single quotes, 2-space tabs
++ - Formatting: Prettier with single quotes, 2-space tabs, don't use "any" as ts type
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Prettier configuration files (e.g., .prettierrc, package.json) and TypeScript source code files (.ts, .tsx).
+- Suggested Logic: 1. Inspect Prettier configuration files to verify that 'singleQuote' is set to true and 'tabWidth' is set to 2. 2. Scan TypeScript source files using a static analysis tool or AST parser to identify any instances where 'any' is used as a type annotation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: refactor: format code
+- Changed Files List: 
+.kiro/specs/kirapilot-app/tasks.md	+1	-1	after_lines=139
+src/services/ai/ReactAIService.ts	+88	-27	after_lines=649
+src/services/ai/tools.ts	+204	-63	after_lines=530
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .husky
+│   └── pre-commit
+├── .kiro
+│   ├── hooks
+│   │   └── fix-any-types.kiro.hook
+│   ├── specs
+│   │   └── kirapilot-app
+│   │       ├── design.md
+│   │       ├── future_plan.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── extensions.json
+├── FORMATTING_SETUP.md
+├── PROJECT_STRUCTURE.md
+├── README.md
+├── TESTING.md
+├── TEST_SOLUTION.md
+├── eslint.config.js
+├── hero.ts
+├── index.html
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── tauri.svg
+│   └── vite.svg
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── TitleBar.tsx
+│   │   ├── ai
+│   │   │   ├── AIFloatingButton.tsx
+│   │   │   ├── ChatUI.tsx
+│   │   │   └── index.ts
+│   │   ├── common
+│   │   │   ├── DatePicker.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── PrioritySelector.tsx
+│   │   │   ├── RichTextEditor.tsx
+│   │   │   ├── TagInput.tsx
+│   │   │   └── index.ts
+│   │   ├── planning
+│   │   │   ├── DayView.tsx
+│   │   │   ├── Planner.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── TaskColumn.tsx
+│   │   │   ├── TaskModal.tsx
+│   │   │   ├── TimeHistoryModal.tsx
+│   │   │   ├── WeekView.tsx
+│   │   │   └── WeeklyPlan.tsx
+│   │   ├── reports
+│   │   │   ├── Reports.tsx
+│   │   │   └── index.ts
+│   │   └── timer
+│   │       ├── SessionHistory.tsx
+│   │       └── index.ts
+│   ├── contexts
+│   │   ├── AIContext.tsx
+│   │   └── TimerContext.tsx
+│   ├── hooks
+│   │   ├── useDatabase.ts
+│   │   └── useSimpleTimer.ts
+│   ├── main.tsx
+│   ├── services
+│   │   ├── ai
+│   │   │   ├── ReactAIService.ts
+│   │   │   ├── index.ts
+│   │   │   └── tools.ts
+│   │   ├── database
+│   │   │   ├── DatabaseProvider.tsx
+│   │   │   ├── README.md
+│   │   │   ├── __mocks__
+│   │   │   │   └── mockDatabase.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mockDatabase.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── FocusRepository.ts
+│   │   │   │   ├── PatternRepository.ts
+│   │   │   │   ├── README.md
+│   │   │   │   ├── TaskRepository.ts
+│   │   │   │   ├── TimeTrackingRepository.ts
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── TaskRepository.test.ts
+│   │   │   │   └── index.ts
+│   │   │   └── utils.ts
+│   │   └── notifications
+│   │       └── TimerNotifications.ts
+│   ├── setupTests.ts
+│   ├── types
+│   │   ├── README.md
+│   │   ├── database.ts
+│   │   ├── index.ts
+│   │   └── validation.ts
+│   ├── utils
+│   │   ├── __tests__
+│   │   │   ├── migration.test.ts
+│   │   │   └── validation.test.ts
+│   │   ├── clearOldData.ts
+│   │   ├── debugDatabase.ts
+│   │   ├── index.ts
+│   │   ├── migration.ts
+│   │   ├── resetDatabase.ts
+│   │   └── transformations.ts
+│   └── vite-env.d.ts
+├── src-tauri
+│   ├── .gitignore
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── build.rs
+│   ├── capabilities
+│   │   └── default.json
+│   ├── icons
+│   │   ├── 128x128.png
+│   │   ├── 128x128@2x.png
+│   │   ├── 32x32.png
+│   │   ├── Square107x107Logo.png
+│   │   ├── Square142x142Logo.png
+│   │   ├── Square150x150Logo.png
+│   │   ├── Square284x284Logo.png
+│   │   ├── Square30x30Logo.png
+│   │   ├── Square310x310Logo.png
+│   │   ├── Square44x44Logo.png
+│   │   ├── Square71x71Logo.png
+│   │   ├── Square89x89Logo.png
+│   │   ├── StoreLogo.png
+│   │   ├── icon.icns
+│   │   ├── icon.ico
+│   │   └── icon.png
+│   ├── src
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   └── tauri.conf.json
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/kirapilot-app/tasks.md ---
+diff --git a/.kiro/specs/kirapilot-app/tasks.md b/.kiro/specs/kirapilot-app/tasks.md
+index bbe7dd3..f7f6d03 100644
+--- a/.kiro/specs/kirapilot-app/tasks.md
++++ b/.kiro/specs/kirapilot-app/tasks.md
+@@ -84,7 +84,7 @@
+   - Adjust linting configs to improve it and iterate
+ 
+ - [ ] 5. Develop Kira AI assistant foundation
+-- [-] 5.1 Set up AI service architecture
++- [x] 5.1 Set up AI service architecture
+   - Create AIService interface and implementation
+   - Set up cloud LLM API integration with error handling
+   - Implement conversation context management
+
+--- FILE: src/services/ai/ReactAIService.ts ---
+diff --git a/src/services/ai/ReactAIService.ts b/src/services/ai/ReactAIService.ts
+index 50b67e9..5ad9ac3 100644
+--- a/src/services/ai/ReactAIService.ts
++++ b/src/services/ai/ReactAIService.ts
+@@ -13,6 +13,28 @@ import {
+   Priority,
+   DistractionLevel,
+ } from '../../types';
++
++// Internal types for AI service
++interface ToolCall {
++  name: string;
++  args: Record<string, unknown>;
++  id: string;
++}
++
++interface ToolExecution {
++  name: string;
++  args: Record<string, unknown>;
++  id: string;
++}
++
++interface TaskSummary {
++  id: string;
++  title: string;
++  priority: number;
++  status: string;
++  dueDate?: string;
++  timeEstimate?: number;
++}
+ import { getKiraPilotTools } from './tools';
+ 
+ // Configuration schema for the ReAct agent
+@@ -207,7 +229,26 @@ export class ReactAIService {
+   private apiKey: string | null = null;
+ 
+   constructor(apiKey?: string) {
+-    this.apiKey = apiKey || import.meta.env.VITE_GOOGLE_API_KEY || null;
++    this.apiKey = apiKey || this.getEnvironmentApiKey() || null;
++  }
++
++  private getEnvironmentApiKey(): string | null {
++    try {
++      // Handle both browser and test environments
++      if (typeof window !== 'undefined' && (window as any).import?.meta?.env) {
++        return (window as any).import.meta.env.VITE_GOOGLE_API_KEY || null;
++      }
++      // In browser environment with Vite
++      if (
++        typeof globalThis !== 'undefined' &&
++        (globalThis as any).import?.meta?.env
++      ) {
++        return (globalThis as any).import.meta.env.VITE_GOOGLE_API_KEY || null;
++      }
++      return null;
++    } catch {
++      return null;
++    }
+   }
+ 
+   /**
+@@ -258,8 +299,8 @@ export class ReactAIService {
+       if (lastMessage.content) {
+         if (Array.isArray(lastMessage.content)) {
+           responseMessage = lastMessage.content
+-            .filter((item: any) => item.type === 'text')
+-            .map((item: any) => item.text)
++            .filter(item => 'type' in item && item.type === 'text')
++            .map(item => ('text' in item ? item.text : ''))
+             .join('');
+         } else if (typeof lastMessage.content === 'string') {
+           responseMessage = lastMessage.content;
+@@ -274,7 +315,7 @@ export class ReactAIService {
+         // Create action records for executed tools
+         toolExecutions.forEach(execution => {
+           actions.push({
+-            type: execution.name.toUpperCase() as any,
++            type: execution.name.toUpperCase() as AIAction['type'],
+             parameters: execution.args,
+             context,
+             confidence: 100,
+@@ -316,12 +357,18 @@ export class ReactAIService {
+   /**
+    * Extract tool executions from message history
+    */
+-  private extractToolExecutions(messages: any[]): any[] {
+-    const executions: any[] = [];
++  private extractToolExecutions(messages: unknown[]): ToolExecution[] {
++    const executions: ToolExecution[] = [];
+ 
+     for (const message of messages) {
+-      if (message.tool_calls && message.tool_calls.length > 0) {
+-        for (const toolCall of message.tool_calls) {
++      if (
++        message &&
++        typeof message === 'object' &&
++        'tool_calls' in message &&
++        Array.isArray((message as { tool_calls: unknown[] }).tool_calls)
++      ) {
++        const toolCalls = (message as { tool_calls: ToolCall[] }).tool_calls;
++        for (const toolCall of toolCalls) {
+           executions.push({
+             name: toolCall.name,
+             args: toolCall.args,
+@@ -338,13 +385,19 @@ export class ReactAIService {
+    * Generate a response summary based on tool executions and tool messages
+    */
+   private generateToolResponseSummary(
+-    executions: any[],
+-    messages: any[]
++    executions: ToolExecution[],
++    messages: unknown[]
+   ): string {
+     // Look for tool messages (responses from tool executions)
+     const toolMessages = messages.filter(
+       msg =>
+-        msg.constructor.name === 'ToolMessage' || msg._getType?.() === 'tool'
++        msg &&
++        typeof msg === 'object' &&
++        ((msg.constructor && msg.constructor.name === 'ToolMessage') ||
++          ('_getType' in msg &&
++            typeof (msg as { _getType: () => string })._getType ===
++              'function' &&
++            (msg as { _getType: () => string })._getType() === 'tool'))
+     );
+ 
+     let summary = '';
+@@ -355,27 +408,35 @@ export class ReactAIService {
+ 
+       try {
+         // Try to parse the tool result
+-        const result = toolMessage ? JSON.parse(toolMessage.content) : null;
++        const result =
++          toolMessage &&
++          typeof toolMessage === 'object' &&
++          'content' in toolMessage &&
++          typeof (toolMessage as { content: string }).content === 'string'
++            ? JSON.parse((toolMessage as { content: string }).content)
++            : null;
+ 
+         switch (execution.name) {
+           case 'get_tasks':
+             if (result?.success && result?.tasks) {
+               summary += `I found ${result.tasks.length} tasks:\n\n`;
+-              result.tasks.slice(0, 5).forEach((task: any, index: number) => {
+-                const priority =
+-                  ['Low', 'Medium', 'High', 'Urgent'][task.priority] ||
+-                  'Medium';
+-                const status = task.status
+-                  .replace('_', ' ')
+-                  .replace(/\b\w/g, (l: string) => l.toUpperCase());
+-                summary += `${index + 1}. **${task.title}** (${priority} priority, ${status})\n`;
+-                if (task.dueDate) {
+-                  summary += `   Due: ${new Date(task.dueDate).toLocaleDateString()}\n`;
+-                }
+-                if (task.timeEstimate) {
+-                  summary += `   Estimated: ${task.timeEstimate} minutes\n`;
+-                }
+-              });
++              result.tasks
++                .slice(0, 5)
++                .forEach((task: TaskSummary, index: number) => {
++                  const priority =
++                    ['Low', 'Medium', 'High', 'Urgent'][task.priority] ||
++                    'Medium';
++                  const status = task.status
++                    .replace('_', ' ')
++                    .replace(/\b\w/g, (l: string) => l.toUpperCase());
++                  summary += `${index + 1}. **${task.title}** (${priority} priority, ${status})\n`;
++                  if (task.dueDate) {
++                    summary += `   Due: ${new Date(task.dueDate).toLocaleDateString()}\n`;
++                  }
++                  if (task.timeEstimate) {
++                    summary += `   Estimated: ${task.timeEstimate} minutes\n`;
++                  }
++                });
+               if (result.tasks.length > 5) {
+                 summary += `\n...and ${result.tasks.length - 5} more tasks.\n`;
+               }
+
+--- FILE: src/services/ai/tools.ts ---
+diff --git a/src/services/ai/tools.ts b/src/services/ai/tools.ts
+index 696e3c4..a1a5af1 100644
+--- a/src/services/ai/tools.ts
++++ b/src/services/ai/tools.ts
+@@ -1,16 +1,88 @@
+ import { tool } from '@langchain/core/tools';
+ import { z } from 'zod';
+-import { Priority, TaskStatus } from '../../types';
++import { Priority, TaskStatus, UpdateTaskRequest } from '../../types';
+ import {
+   getTaskRepository,
+   getTimeTrackingRepository,
+ } from '../database/repositories';
+ 
++// Tool response interfaces for better type safety
++interface TaskResponse {
++  id: string;
++  title: string;
++  priority: Priority;
++  status: TaskStatus;
++}
++
++interface SessionResponse {
++  id: string;
++  taskId: string;
++  startTime: Date;
++  isActive: boolean;
++}
++
++interface StoppedSessionResponse {
++  id: string;
++  duration: number;
++  notes?: string;
++}
++
++interface TaskListResponse {
++  id: string;
++  title: string;
++  status: TaskStatus;
++  priority: Priority;
++  dueDate?: Date;
++  scheduledDate?: Date;
++  timeEstimate: number;
++  actualTime: number;
++  tags: string[];
++  description: string;
++}
++
++interface TimeDataSession {
++  id: string;
++  taskId: string;
++  duration: number;
++  startTime: Date;
++  endTime?: Date;
++  notes?: string;
++}
++
++interface TimeDataResponse {
++  totalSessions: number;
++  totalTime: number;
++  averageSession: number;
++  sessions: TimeDataSession[];
++}
++
++interface ProductivityInsights {
++  mostProductiveTime: { start: string; end: string; dayOfWeek: number };
++  leastProductiveTime: { start: string; end: string; dayOfWeek: number };
++  averageTaskDuration: number;
++  completionRate: number;
++  focusEfficiency: number;
++}
++
++interface ProductivityAnalysis {
++  insights: ProductivityInsights;
++  recommendations: string[];
++}
++
+ /**
+  * Create a new task in the system
+  */
++interface CreateTaskInput {
++  title: string;
++  description?: string;
++  priority?: number;
++  timeEstimate?: number;
++  dueDate?: string;
++  tags?: string[];
++}
++
+ const createTaskTool = tool(
+-  async (input: any) => {
++  async (input: CreateTaskInput) => {
+     const { title, description, priority, timeEstimate, dueDate, tags } = input;
+     try {
+       const taskRepo = getTaskRepository();
+@@ -22,7 +94,7 @@ const createTaskTool = tool(
+         dueDate: dueDate ? new Date(dueDate) : undefined,
+         tags: tags ?? [],
+       });
+-      return JSON.stringify({
++      const response: { success: true; task: TaskResponse } = {
+         success: true,
+         task: {
+           id: task.id,
+@@ -30,12 +102,14 @@ const createTaskTool = tool(
+           priority: task.priority,
+           status: task.status,
+         },
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error: error instanceof Error ? error.message : 'Failed to create task',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -68,17 +142,33 @@ const createTaskTool = tool(
+ /**
+  * Update an existing task
+  */
++interface UpdateTaskInput {
++  taskId: string;
++  updates: {
++    title?: string;
++    description?: string;
++    priority?: number;
++    status?: string;
++    scheduledDate?: string;
++  };
++}
++
+ const updateTaskTool = tool(
+-  async (input: any) => {
++  async (input: UpdateTaskInput) => {
+     const { taskId, updates } = input;
+     try {
+       const taskRepo = getTaskRepository();
+-      const processedUpdates: any = { ...updates };
+-      if (updates.status) {
+-        processedUpdates.status = updates.status as TaskStatus;
+-      }
++      const processedUpdates: UpdateTaskRequest = {
++        title: updates.title,
++        description: updates.description,
++        priority: updates.priority,
++        status: updates.status ? (updates.status as TaskStatus) : undefined,
++        scheduledDate: updates.scheduledDate
++          ? new Date(updates.scheduledDate)
++          : undefined,
++      };
+       const task = await taskRepo.update(taskId, processedUpdates);
+-      return JSON.stringify({
++      const response: { success: true; task: TaskResponse } = {
+         success: true,
+         task: {
+           id: task.id,
+@@ -86,12 +176,14 @@ const updateTaskTool = tool(
+           status: task.status,
+           priority: task.priority,
+         },
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error: error instanceof Error ? error.message : 'Failed to update task',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -121,8 +213,17 @@ const updateTaskTool = tool(
+ /**
+  * Get tasks based on filters
+  */
++interface GetTasksInput {
++  filters?: {
++    status?: string[];
++    priority?: number[];
++    tags?: string[];
++    search?: string;
++  };
++}
++
+ const getTasksTool = tool(
+-  async (input: any) => {
++  async (input: GetTasksInput) => {
+     const { filters } = input;
+     try {
+       const taskRepo = getTaskRepository();
+@@ -137,27 +238,35 @@ const getTasksTool = tool(
+         : undefined;
+ 
+       const tasks = await taskRepo.findAll(processedFilters, undefined);
+-      return JSON.stringify({
++      const response: {
++        success: true;
++        tasks: TaskListResponse[];
++        count: number;
++      } = {
+         success: true,
+-        tasks: tasks.map(task => ({
+-          id: task.id,
+-          title: task.title,
+-          status: task.status,
+-          priority: task.priority,
+-          dueDate: task.dueDate,
+-          scheduledDate: task.scheduledDate,
+-          timeEstimate: task.timeEstimate,
+-          actualTime: task.actualTime,
+-          tags: task.tags,
+-          description: task.description,
+-        })),
++        tasks: tasks.map(
++          (task): TaskListResponse => ({
++            id: task.id,
++            title: task.title,
++            status: task.status,
++            priority: task.priority,
++            dueDate: task.dueDate,
++            scheduledDate: task.scheduledDate,
++            timeEstimate: task.timeEstimate,
++            actualTime: task.actualTime,
++            tags: task.tags,
++            description: task.description,
++          })
++        ),
+         count: tasks.length,
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error: error instanceof Error ? error.message : 'Failed to get tasks',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -195,13 +304,17 @@ const getTasksTool = tool(
+ /**
+  * Start a timer for a task
+  */
++interface StartTimerInput {
++  taskId: string;
++}
++
+ const startTimerTool = tool(
+-  async (input: any) => {
++  async (input: StartTimerInput) => {
+     const { taskId } = input;
+     try {
+       const timeRepo = getTimeTrackingRepository();
+       const session = await timeRepo.startSession(taskId);
+-      return JSON.stringify({
++      const response: { success: true; session: SessionResponse } = {
+         success: true,
+         session: {
+           id: session.id,
+@@ -209,12 +322,14 @@ const startTimerTool = tool(
+           startTime: session.startTime,
+           isActive: session.isActive,
+         },
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error: error instanceof Error ? error.message : 'Failed to start timer',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -230,25 +345,32 @@ const startTimerTool = tool(
+ /**
+  * Stop the current timer
+  */
++interface StopTimerInput {
++  sessionId: string;
++  notes?: string;
++}
++
+ const stopTimerTool = tool(
+-  async (input: any) => {
++  async (input: StopTimerInput) => {
+     const { sessionId, notes } = input;
+     try {
+       const timeRepo = getTimeTrackingRepository();
+       const session = await timeRepo.stopSession(sessionId, notes);
+-      return JSON.stringify({
++      const response: { success: true; session: StoppedSessionResponse } = {
+         success: true,
+         session: {
+           id: session.id,
+           duration: session.duration,
+           notes: session.notes,
+         },
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error: error instanceof Error ? error.message : 'Failed to stop timer',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -267,8 +389,13 @@ const stopTimerTool = tool(
+ /**
+  * Get time tracking data for analysis
+  */
++interface GetTimeDataInput {
++  startDate: string;
++  endDate: string;
++}
++
+ const getTimeDataTool = tool(
+-  async (input: any) => {
++  async (input: GetTimeDataInput) => {
+     const { startDate, endDate } = input;
+     try {
+       const timeRepo = getTimeTrackingRepository();
+@@ -277,7 +404,15 @@ const getTimeDataTool = tool(
+         new Date(endDate)
+       );
+ 
+-      const totalTime = sessions.reduce((sum: number, session: any) => {
++      interface SessionData {
++        id: string;
++        taskId: string;
++        startTime: Date;
++        endTime?: Date;
++        notes?: string;
++      }
++
++      const totalTime = sessions.reduce((sum: number, session: SessionData) => {
+         if (session.endTime) {
+           return (
+             sum + (session.endTime.getTime() - session.startTime.getTime())
+@@ -288,30 +423,34 @@ const getTimeDataTool = tool(
+ 
+       const avgSession = sessions.length > 0 ? totalTime / sessions.length : 0;
+ 
+-      return JSON.stringify({
++      const response: { success: true; timeData: TimeDataResponse } = {
+         success: true,
+         timeData: {
+           totalSessions: sessions.length,
+           totalTime: totalTime,
+           averageSession: avgSession,
+-          sessions: sessions.map((s: any) => ({
+-            id: s.id,
+-            taskId: s.taskId,
+-            duration: s.endTime
+-              ? s.endTime.getTime() - s.startTime.getTime()
+-              : 0,
+-            startTime: s.startTime,
+-            endTime: s.endTime,
+-            notes: s.notes,
+-          })),
++          sessions: sessions.map(
++            (s: SessionData): TimeDataSession => ({
++              id: s.id,
++              taskId: s.taskId,
++              duration: s.endTime
++                ? s.endTime.getTime() - s.startTime.getTime()
++                : 0,
++              startTime: s.startTime,
++              endTime: s.endTime,
++              notes: s.notes,
++            })
++          ),
+         },
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error:
+           error instanceof Error ? error.message : 'Failed to get time data',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+@@ -336,7 +475,7 @@ const analyzeProductivityTool = tool(
+   async () => {
+     try {
+       // Generate mock productivity analysis
+-      const analysis = {
++      const analysis: ProductivityAnalysis = {
+         insights: {
+           mostProductiveTime: { start: '09:00', end: '11:00', dayOfWeek: 1 },
+           leastProductiveTime: { start: '14:00', end: '16:00', dayOfWeek: 5 },
+@@ -351,18 +490,20 @@ const analyzeProductivityTool = tool(
+         ],
+       };
+ 
+-      return JSON.stringify({
++      const response: { success: true; analysis: ProductivityAnalysis } = {
+         success: true,
+         analysis,
+-      });
++      };
++      return JSON.stringify(response);
+     } catch (error) {
+-      return JSON.stringify({
++      const errorResponse: { success: false; error: string } = {
+         success: false,
+         error:
+           error instanceof Error
+             ? error.message
+             : 'Failed to analyze productivity',
+-      });
++      };
++      return JSON.stringify(errorResponse);
+     }
+   },
+   {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

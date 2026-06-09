@@ -1,0 +1,21 @@
+diff --git a/Makefile b/Makefile
+index c976481..b45f7d5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,7 +7,7 @@ $(WASMFILE): $(GOFILES)
+ 
+ .PHONY: test
+ test:
+-	go test -v ./...
++	go test ./...
+ 
+ $(WASMEXEC):
+ 	cp "$(shell go env GOROOT)/lib/wasm/wasm_exec.js" $(WASMEXEC)
+@@ -19,3 +19,7 @@ serve:
+ .PHONY: setup
+ setup: $(WASMEXEC) $(WASMFILE)
+ 
++.PHONY: watch
++watch:
++	fswatch -o . -e ".*" -i "\\.go$$" | xargs -n1 -I{} make
++

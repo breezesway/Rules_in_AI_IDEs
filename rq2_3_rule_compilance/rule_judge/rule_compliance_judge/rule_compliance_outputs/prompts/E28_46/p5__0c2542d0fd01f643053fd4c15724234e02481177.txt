@@ -1,0 +1,178 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+## Webview UI Structure (webview-ui/)
+- src/components/: Preact components (PascalCase .tsx files)
+ - App.tsx: Main application component
+ - GraphDashboard.tsx: Dashboard visualization component
+ - Button.tsx: Reusable button component
+- src/main.tsx: Preact application entry point
+- src/styles/global.css: Global styling
+- vite.config.ts: Vite build configuration for webview
+- tsconfig.json: TypeScript config for webview components
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and file naming within the 'webview-ui/' directory.
+- Suggested Logic: 1. Verify the existence of the specific mandatory files: 'webview-ui/src/main.tsx', 'webview-ui/src/styles/global.css', 'webview-ui/vite.config.ts', 'webview-ui/tsconfig.json', 'webview-ui/src/components/App.tsx', 'webview-ui/src/components/GraphDashboard.tsx', and 'webview-ui/src/components/Button.tsx'. 
+2. Check all files within 'webview-ui/src/components/' to ensure they use the '.tsx' extension and follow PascalCase naming conventions (e.g., using a regex like '^[A-Z][a-zA-Z0-9]+\.tsx$').
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: Moves self-test functionality
+
+Moves the self-test functionality from its own module into the mcp-config service.
+
+This change consolidates related configuration and testing logic, improving code organization and maintainability.
+- Changed Files List: 
+src/extension.ts	+1	-2	after_lines=68
+src/services/mcp-config.service.ts	+26	-0	after_lines=105
+src/services/self-test.service.ts	+0	-25	after_lines=0
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   └── test
+│       └── extension.test.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index dcc6070..b96fc3a 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -1,7 +1,6 @@
+ import * as vscode from "vscode";
+ import { getEffectiveServerId, resolveNodeBin } from "./services/extension-config.service.js";
+-import { upsertUserMcpConfig, maybeWriteWorkspaceConfig } from "./services/mcp-config.service.js";
+-import { selfTest } from "./services/self-test.service.js";
++import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./services/mcp-config.service.js";
+ import { isNodeVersionSupported } from "./services/node-version.service.js";
+ 
+ export async function activate(context: vscode.ExtensionContext) {
+
+--- FILE: src/services/mcp-config.service.ts ---
+diff --git a/src/services/mcp-config.service.ts b/src/services/mcp-config.service.ts
+index 7ff674b..fca2bbd 100644
+--- a/src/services/mcp-config.service.ts
++++ b/src/services/mcp-config.service.ts
+@@ -2,6 +2,7 @@ import * as vscode from "vscode";
+ import * as fs from "node:fs/promises";
+ import * as os from "node:os";
+ import * as path from "node:path";
++import { spawn } from "node:child_process";
+ 
+ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string): Promise<string> {
+   const userDir = path.join(os.homedir(), ".kiro", "settings");
+@@ -77,3 +78,28 @@ async function pathExists(p: string): Promise<boolean> {
+     return false;
+   }
+ }
++
++
++export async function selfTest(nodeBin: string, serverJs: string): Promise<boolean> {
++  return new Promise<boolean>((resolve) => {
++    const child = spawn(nodeBin, [serverJs, "--selftest"], { stdio: ["ignore", "pipe", "pipe"] });
++    let out = "";
++    let done = false;
++
++    const finish = (ok: boolean) => {
++      if (!done) {
++        done = true;
++        resolve(ok);
++      }
++    };
++
++    child.stdout.on("data", (d) => { out += d.toString(); });
++    child.on("error", () => finish(false));
++    child.on("close", (code) => finish(code === 0 && out.includes("SELFTEST_OK")));
++
++    setTimeout(() => {
++      try { child.kill(); } catch { }
++      finish(false);
++    }, 4000);
++  });
++}
+\ No newline at end of file
+
+--- FILE: src/services/self-test.service.ts ---
+diff --git a/src/services/self-test.service.ts b/src/services/self-test.service.ts
+deleted file mode 100644
+index 90b0184..0000000
+--- a/src/services/self-test.service.ts
++++ /dev/null
+@@ -1,25 +0,0 @@
+-import { spawn } from "node:child_process";
+-
+-export async function selfTest(nodeBin: string, serverJs: string): Promise<boolean> {
+-  return new Promise<boolean>((resolve) => {
+-    const child = spawn(nodeBin, [serverJs, "--selftest"], { stdio: ["ignore", "pipe", "pipe"] });
+-    let out = "";
+-    let done = false;
+-
+-    const finish = (ok: boolean) => {
+-      if (!done) {
+-        done = true;
+-        resolve(ok);
+-      }
+-    };
+-
+-    child.stdout.on("data", (d) => { out += d.toString(); });
+-    child.on("error", () => finish(false));
+-    child.on("close", (code) => finish(code === 0 && out.includes("SELFTEST_OK")));
+-
+-    setTimeout(() => {
+-      try { child.kill(); } catch {}
+-      finish(false);
+-    }, 4000);
+-  });
+-}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

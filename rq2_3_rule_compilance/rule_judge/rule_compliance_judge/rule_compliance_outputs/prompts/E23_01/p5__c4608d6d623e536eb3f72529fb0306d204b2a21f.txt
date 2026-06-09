@@ -1,0 +1,183 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech_stack.md
+- Change Type: modified
+- Target Rule Content:
+- Immutable Ledger: Amazon QLDB
++ Immutable Ledger: Amazon Aurora PostgreSQL
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency management files (e.g., package.json, requirements.txt, pom.xml), configuration files (e.g., .env, application.yaml), and Infrastructure-as-Code (IaC) files (e.g., Terraform .tf files, CloudFormation templates).
+- Suggested Logic: 1. Check dependency manifests for the removal of QLDB-specific SDKs (e.g., @aws-sdk/client-qldb, amazon-qldb-driver-nodejs) and the addition of PostgreSQL drivers (e.g., 'pg', 'psycopg2', 'jdbc:postgresql'). 2. Scan configuration and IaC files to ensure that database connection strings or resource definitions point to Amazon Aurora/RDS (PostgreSQL) instead of AWS::QLDB::Ledger resources.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: feat: Improve S3 bucket configuration with JSON-based settings
+
+- Create JSON configuration file for environment settings
+- Implement improved configuration script with JSON support
+- Add additional permissions needed for CDK bootstrapping
+- Successfully configure bucket for both development and production environments
+- Changed Files List: 
+infrastructure/additional-permissions.json	+16	-0	after_lines=16
+infrastructure/configure-s3.sh	+61	-0	after_lines=61
+infrastructure/s3-config.json	+10	-0	after_lines=10
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── README.md
+│   ├── specs
+│   │   └── core-audit-workflow
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── project_conventions.md
+│       └── tech_stack.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── GRACE_ARCHITECTURE.md
+│   ├── GRACE_DEPLOYMENT_GUIDE.md
+│   ├── GRACE_GLOBAL_STRATEGY.md
+│   ├── GRACE_MODEL_SPEC.md
+│   └── dataset_manifest.md
+├── infrastructure
+│   ├── README.md
+│   ├── additional-permissions.json
+│   ├── bin
+│   │   └── grace-app.ts
+│   ├── bootstrap-instructions.md
+│   ├── cdk-bootstrap-permissions.json
+│   ├── cdk.json
+│   ├── configure-s3.sh
+│   ├── create-s3-bucket.sh
+│   ├── deploy.sh
+│   ├── lib
+│   │   └── grace-foundation-stack.ts
+│   ├── package.json
+│   ├── s3-config.json
+│   ├── tsconfig.json
+│   └── update-s3-policy.sh
+└── scripts
+    └── verify_dataset.sh
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: infrastructure/additional-permissions.json ---
+diff --git a/infrastructure/additional-permissions.json b/infrastructure/additional-permissions.json
+new file mode 100644
+index 0000000..c5ba58b
+--- /dev/null
++++ b/infrastructure/additional-permissions.json
+@@ -0,0 +1,16 @@
++{
++  "Version": "2012-10-17",
++  "Statement": [
++    {
++      "Effect": "Allow",
++      "Action": [
++        "ecr:CreateRepository",
++        "ecr:DescribeRepositories",
++        "ecr:DeleteRepository",
++        "ecr:PutLifecyclePolicy",
++        "ssm:DeleteParameter"
++      ],
++      "Resource": "*"
++    }
++  ]
++}
+\ No newline at end of file
+
+--- FILE: infrastructure/configure-s3.sh ---
+diff --git a/infrastructure/configure-s3.sh b/infrastructure/configure-s3.sh
+new file mode 100755
+index 0000000..75ccbcd
+--- /dev/null
++++ b/infrastructure/configure-s3.sh
+@@ -0,0 +1,61 @@
++#!/bin/bash
++
++# GRACE S3 Bucket Configuration Script
++
++# Exit on error
++set -e
++
++BUCKET_NAME="grace-kirocomp-data"
++AWS_PROFILE="grace"
++CONFIG_FILE="s3-config.json"
++
++echo "=== GRACE S3 Bucket Configuration ==="
++
++# Check if environment is specified
++if [ "$1" == "--production" ]; then
++  ENVIRONMENT="production"
++else
++  ENVIRONMENT="development"
++fi
++
++# Read configuration from JSON file
++REMOVAL_POLICY=$(jq -r ".$ENVIRONMENT.removalPolicy" $CONFIG_FILE)
++DESCRIPTION=$(jq -r ".$ENVIRONMENT.description" $CONFIG_FILE)
++
++echo "Configuring bucket for $ENVIRONMENT environment"
++echo "Removal Policy: $REMOVAL_POLICY"
++echo "Description: $DESCRIPTION"
++
++# Update the tags to reflect the environment and removal policy
++echo "Updating bucket tags..."
++aws --profile $AWS_PROFILE s3api put-bucket-tagging \
++  --bucket $BUCKET_NAME \
++  --tagging '{
++    "TagSet": [
++      {
++        "Key": "Project",
++        "Value": "GRACE"
++      },
++      {
++        "Key": "Environment",
++        "Value": "'"$ENVIRONMENT"'"
++      },
++      {
++        "Key": "ManagedBy",
++        "Value": "CLI"
++      },
++      {
++        "Key": "RemovalPolicy",
++        "Value": "'"$REMOVAL_POLICY"'"
++      },
++      {
++        "Key": "Description",
++        "Value": "'"$DESCRIPTION"'"
++      }
++    ]
++  }'
++
++echo "=== Bucket Configuration Complete ==="
++echo "Bucket Name: $BUCKET_NAME"
++echo "Environment: $ENVIRONMENT"
++echo "Removal Policy: $REMOVAL_POLICY"
+\ No newline at end of file
+
+--- FILE: infrastructure/s3-config.json ---
+diff --git a/infrastructure/s3-config.json b/infrastructure/s3-config.json
+new file mode 100644
+index 0000000..328aa9e
+--- /dev/null
++++ b/infrastructure/s3-config.json
+@@ -0,0 +1,10 @@
++{
++  "development": {
++    "removalPolicy": "DESTROY",
++    "description": "Development environment - bucket can be deleted"
++  },
++  "production": {
++    "removalPolicy": "RETAIN",
++    "description": "Production environment - bucket is protected from deletion"
++  }
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

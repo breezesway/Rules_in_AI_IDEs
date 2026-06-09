@@ -1,0 +1,148 @@
+diff --git a/docs/ARCHITECTURE_DIAGRAM.md b/docs/ARCHITECTURE_DIAGRAM.md
+index f245318..5e3b880 100644
+--- a/docs/ARCHITECTURE_DIAGRAM.md
++++ b/docs/ARCHITECTURE_DIAGRAM.md
+@@ -21,6 +21,26 @@
+ │  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘  │
+ │                                                                             │
+ └─────────────────────────────────────────────────────────────────────────────┘
++
++┌─────────────────────────────────────────────────────────────────────────────┐
++│                           CI/CD PIPELINE LAYER                              │
++├─────────────────────────────────────────────────────────────────────────────┤
++│                                                                             │
++│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
++│  │     CI      │    │   Deploy    │    │Accessibility│    │Dependencies │  │
++│  │ Pipeline    │    │ Pipeline    │    │ Pipeline    │    │ Pipeline    │  │
++│  │ (ci.yml)    │    │(deploy.yml) │    │(accessibility│    │(dependencies│  │
++│  │             │    │             │    │.yml)        │    │.yml)        │  │
++│  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘  │
++│         │                   │                   │                   │      │
++│         ▼                   ▼                   ▼                   ▼      │
++│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
++│  │   Quality   │    │   Release   │    │   WCAG      │    │   Security  │  │
++│  │   Gates     │    │  Creation   │    │ Compliance  │    │   Audit     │  │
++│  │             │    │             │    │             │    │             │  │
++│  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘  │
++│                                                                             │
++└─────────────────────────────────────────────────────────────────────────────┘
+ ```
+ 
+ ## Detailed Component Architecture
+@@ -36,12 +56,20 @@
+ │  ├── Real-time progress tracking via WebSocket                             │
+ │  ├── Static file serving (HTML, CSS, JS)                                   │
+ │  ├── WorkflowOrchestrator integration                                      │
+-│  └── Error handling and user feedback                                      │
++│  ├── Error handling and user feedback                                      │
++│  └── WCAG 2.1 AAA compliant interface                                     │
+ │                                                                             │
+ │  Public Files (Frontend)                                                    │
+-│  ├── index.html - Main web interface                                       │
+-│  ├── styles.css - UK brand-compliant styling                               │
+-│  └── app.js - Frontend JavaScript with real-time updates                   │
++│  ├── index.html - Main web interface with 7 ARIA live regions             │
++│  ├── styles.css - UK brand-compliant styling with accessibility features  │
++│  └── app.js - Frontend JavaScript with form validation and focus management│
++│                                                                             │
++│  E2E Testing (23 tests passing)                                            │
++│  ├── WCAG 2.1 AAA compliance testing                                      │
++│  ├── Keyboard navigation and focus management                              │
++│  ├── Screen reader compatibility testing                                   │
++│  ├── Form validation and error handling                                    │
++│  └── Responsive design accessibility testing                               │
+ │                                                                             │
+ └─────────────────────────────────────────────────────────────────────────────┘
+ ```
+@@ -128,6 +156,45 @@
+ └─────────────────────────────────────────────────────────────────────────────┘
+ ```
+ 
++### 5. CI/CD Pipeline Layer
++```
++┌─────────────────────────────────────────────────────────────────────────────┐
++│                          CI/CD PIPELINE LAYER                              │
++├─────────────────────────────────────────────────────────────────────────────┤
++│                                                                             │
++│  CI Pipeline (ci.yml)                                                      │
++│  ├── Unit & Integration Tests (214 + 47 tests)                            │
++│  ├── E2E Tests with Playwright (47 tests)                                 │
++│  ├── Accessibility Tests (23 WCAG 2.1 AAA tests)                          │
++│  ├── Storybook Component Tests (9 tests)                                  │
++│  ├── Cross-browser Testing (Chrome, Firefox, Safari)                      │
++│  ├── Documentation Validation                                             │
++│  ├── Security & Quality Checks                                            │
++│  └── Build Preview for PRs                                                │
++│                                                                             │
++│  Deploy Pipeline (deploy.yml)                                              │
++│  ├── Pre-deployment validation tests                                      │
++│  ├── Application and Storybook build                                      │
++│  ├── Security scanning and audit                                          │
++│  ├── Documentation updates                                                │
++│  ├── Automated GitHub release creation                                    │
++│  └── Release package generation                                           │
++│                                                                             │
++│  Accessibility Pipeline (accessibility.yml)                               │
++│  ├── WCAG 2.1 AAA compliance testing                                     │
++│  ├── Cross-browser accessibility validation                               │
++│  ├── Accessibility report generation                                      │
++│  └── Weekly accessibility monitoring                                      │
++│                                                                             │
++│  Dependencies Pipeline (dependencies.yml)                                 │
++│  ├── Security audit with vulnerability scanning                           │
++│  ├── Dependency update checks                                             │
++│  ├── Automated minor/patch updates                                        │
++│  └── Dependency health reporting                                          │
++│                                                                             │
++└─────────────────────────────────────────────────────────────────────────────┘
++```
++
+ ## Data Flow Architecture
+ 
+ ### 1. Initial Request Flow
+@@ -188,6 +255,45 @@ Cleanup Phase (0-5% Progress)
+ └─────────────────────────────────────────────────────────────────────────────┘
+ ```
+ 
++### 3. CI/CD Data Flow
++```
++┌─────────────────────────────────────────────────────────────────────────────┐
++│                          CI/CD DATA FLOW                                   │
++├─────────────────────────────────────────────────────────────────────────────┤
++│                                                                             │
++│  GitHub Events → Workflow Triggers → Quality Gates → Artifacts → Reports   │
++│       │                                                                     │
++│       ├── Pull Requests → CI Pipeline → Test Results → Build Preview       │
++│       │   ├── Unit & Integration Tests (261 tests)                        │
++│       │   ├── E2E Tests (47 tests)                                        │
++│       │   ├── Accessibility Tests (23 tests)                              │
++│       │   ├── Cross-browser Tests (3 browsers)                            │
++│       │   ├── Security & Quality Checks                                   │
++│       │   └── Documentation Validation                                    │
++│       │                                                                     │
++│       ├── Main Branch → Deploy Pipeline → Release Creation                 │
++│       │   ├── Pre-deployment Tests                                        │
++│       │   ├── Application Build                                           │
++│       │   ├── Security Scan                                               │
++│       │   ├── Documentation Update                                        │
++│       │   ├── GitHub Release Creation                                     │
++│       │   └── Release Package Generation                                   │
++│       │                                                                     │
++│       ├── Weekly Schedule → Accessibility Pipeline → Compliance Reports   │
++│       │   ├── WCAG 2.1 AAA Compliance Testing                             │
++│       │   ├── Cross-browser Accessibility Validation                      │
++│       │   ├── Accessibility Report Generation                             │
++│       │   └── Weekly Accessibility Monitoring                             │
++│       │                                                                     │
++│       └── Package Changes → Dependencies Pipeline → Security Reports      │
++│           ├── Security Audit                                              │
++│           ├── Dependency Update Checks                                    │
++│           ├── Automated Minor/Patch Updates                               │
++│           └── Dependency Health Reporting                                 │
++│                                                                             │
++└─────────────────────────────────────────────────────────────────────────────┘
++```
++
+ ## Dependency Relationships
+ 
+ ### Core Dependencies (Critical Path)

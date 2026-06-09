@@ -1,0 +1,124 @@
+diff --git a/docs/ARCHITECTURE_DIAGRAM.md b/docs/ARCHITECTURE_DIAGRAM.md
+index 49b0dc8..f245318 100644
+--- a/docs/ARCHITECTURE_DIAGRAM.md
++++ b/docs/ARCHITECTURE_DIAGRAM.md
+@@ -200,31 +200,57 @@ common.ts (Types)
+     │   └── All Runners
+     │
+     └── Testing Framework
+-        ├── Jest Configuration
++        ├── Jest Configuration (Unit & Integration)
++        ├── Playwright Configuration (E2E)
+         ├── Test Utilities
+-        ├── Unit Tests
+-        └── Integration Tests
++        ├── Unit Tests (70%)
++        ├── Integration Tests (20%)
++        └── E2E Tests (5%)
+ ```
+ 
+-### Testing Architecture
++### Testing Architecture (Testing Pyramid)
+ ```
+-Jest Framework
+-    │
+-    ├── Unit Tests
+-    │   ├── Core Services (ErrorHandler, Configuration, Security, FileOps)
+-    │   ├── Core Types (common.ts validation)
+-    │   ├── Processors (ViolationProcessor)
+-    │   └── Runners (AxeTestRunner, Pa11yTestRunner)
+-    │
+-    ├── Integration Tests
+-    │   ├── Cross-service communication
+-    │   ├── Singleton pattern verification
+-    │   └── End-to-end workflows
+-    │
+-    └── Test Utilities
+-        ├── Global test helpers
+-        ├── Mock data creation
+-        └── Performance testing
++┌─────────────────────────────────────────────────────────────────────────────┐
++│                        TESTING PYRAMID ARCHITECTURE                        │
++├─────────────────────────────────────────────────────────────────────────────┤
++│                                                                             │
++│  ┌─────────────────────────────────────────────────────────────────────────┐ │
++│  │                    E2E TESTS (5% - Playwright)                         │ │
++│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │ │
++│  │  │   Web       │  │   User      │  │   Interface │  │   Cross-    │    │ │
++│  │  │ Interface   │  │  Journey    │  │Accessibility│  │  Browser    │    │ │
++│  │  │   Tests     │  │   Tests     │  │   Tests     │  │   Tests     │    │ │
++│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │ │
++│  └─────────────────────────────────────────────────────────────────────────┘ │
++│                                                                             │
++│  ┌─────────────────────────────────────────────────────────────────────────┐ │
++│  │                  COMPONENT TESTS (5% - Storybook)                      │ │
++│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │ │
++│  │  │   UI        │  │   Visual    │  │   A11y      │  │   Component │    │ │
++│  │  │Components   │  │ Regression  │  │   Testing   │  │Documentation│    │ │
++│  │  │   Tests     │  │   Tests     │  │             │  │             │    │ │
++│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │ │
++│  └─────────────────────────────────────────────────────────────────────────┘ │
++│                                                                             │
++│  ┌─────────────────────────────────────────────────────────────────────────┐ │
++│  │                INTEGRATION TESTS (20% - Jest)                          │ │
++│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │ │
++│  │  │   Service   │  │     API     │  │   Storage   │  │   Workflow  │    │ │
++│  │  │Integration  │  │Integration  │  │Integration  │  │Integration  │    │ │
++│  │  │   Tests     │  │   Tests     │  │   Tests     │  │   Tests     │    │ │
++│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │ │
++│  └─────────────────────────────────────────────────────────────────────────┘ │
++│                                                                             │
++│  ┌─────────────────────────────────────────────────────────────────────────┐ │
++│  │                    UNIT TESTS (70% - Jest)                             │ │
++│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │ │
++│  │  │   Core      │  │   Service   │  │   Processors│  │   Runners   │    │ │
++│  │  │  Services   │  │   Tests     │  │   Tests     │  │   Tests     │    │ │
++│  │  │   Tests     │  │             │  │             │  │             │    │ │
++│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │ │
++│  └─────────────────────────────────────────────────────────────────────────┘ │
++│                                                                             │
++└─────────────────────────────────────────────────────────────────────────────┘
+ ```
+     │
+     ├── ConfigurationService
+@@ -373,7 +399,38 @@ ParallelAnalyzer
+ - Reusable components
+ - Easy to extend and maintain
+ 
++### Test Cleanup Architecture
++```
++┌─────────────────────────────────────────────────────────────────────────────┐
++│                        TEST CLEANUP SYSTEM                                 │
++├─────────────────────────────────────────────────────────────────────────────┤
++│                                                                             │
++│  Global Test Setup (tests/setup.ts)                                        │
++│  ├── Track created test files and directories                              │
++│  ├── Automatic cleanup after all tests complete                            │
++│  ├── Cleanup of common test directories                                    │
++│  └── Cleanup of temporary HTML files                                       │
++│                                                                             │
++│  Test Utilities (global.testUtils)                                         │
++│  ├── createTempDir() - Creates tracked temporary directories               │
++│  ├── createTestFile() - Creates tracked test files                         │
++│  ├── cleanupTempDir() - Cleans up specific directories                     │
++│  ├── cleanupTestFile() - Cleans up specific files                          │
++│  ├── createTestReportsDir() - Creates tracked reports directories          │
++│  ├── cleanupTestReportsDir() - Cleans up reports directories               │
++│  └── cleanupTempHtmlFiles() - Cleans up temporary HTML files               │
++│                                                                             │
++│  Automatic Cleanup Targets                                                 │
++│  ├── test-temp directories                                                 │
++│  ├── temp-test-* directories                                               │
++│  ├── accessibility-reports directories                                     │
++│  ├── test-results directories                                              │
++│  └── temp-*.html files (PDF orchestrator temporary files)                  │
++│                                                                             │
++└─────────────────────────────────────────────────────────────────────────────┘
++```
++
+ ---
+ 
+-**Last Updated**: 18/12/2024 14:30 GMT
++**Last Updated**: 19/12/2024 15:30 GMT
+ **Purpose**: Visual reference for understanding system architecture and dependencies 
+\ No newline at end of file

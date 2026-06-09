@@ -1,0 +1,101 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-├── worker/ # Cloudflare Worker (Rust)
++├── worker/ # Cloudflare Worker (JavaScript/TypeScript)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure, file extensions, and configuration files within the 'worker/' directory.
+- Suggested Logic: Verify that the 'worker/' directory contains JavaScript or TypeScript files (e.g., .js, .ts) and associated configuration files (e.g., package.json, tsconfig.json). Ensure that Rust-specific files (e.g., Cargo.toml, .rs files) are no longer the primary language artifacts in that directory.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Add incremental compilation to frontend TypeScript node config
+
+- Enable incremental TypeScript compilation in tsconfig.node.json
+- Improves build performance by reusing previous compilation results
+- Aligns with existing incremental config in tsconfig.app.json
+- Changed Files List: 
+frontend/tsconfig.node.json	+1	-1	after_lines=25
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: frontend/tsconfig.node.json ---
+diff --git a/frontend/tsconfig.node.json b/frontend/tsconfig.node.json
+index f85a399..d7f87a3 100644
+--- a/frontend/tsconfig.node.json
++++ b/frontend/tsconfig.node.json
+@@ -1,6 +1,7 @@
+ {
+   "compilerOptions": {
+     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
++    "incremental": true,
+     "target": "ES2023",
+     "lib": ["ES2023"],
+     "module": "ESNext",
+@@ -17,7 +18,6 @@
+     "strict": true,
+     "noUnusedLocals": true,
+     "noUnusedParameters": true,
+-    "erasableSyntaxOnly": true,
+     "noFallthroughCasesInSwitch": true,
+     "noUncheckedSideEffectImports": true
+   },
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

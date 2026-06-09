@@ -1,0 +1,277 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- dependency-cruiser: ^16.8.0 (Codebase dependency analysis)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json' in a Node.js environment) to verify that 'dependency-cruiser' is listed under 'dependencies' or 'devDependencies' with a version matching '^16.8.0'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Clean up webview initialization
+- Changed Files List: 
+src/extension.ts	+2	-24	after_lines=118
+src/services/webview.service.ts	+31	-0	after_lines=31
+src/side-panel-view-provider.ts	+2	-37	after_lines=28
+webview-ui/src/types/vscode-webview.d.ts	+8	-0	after_lines=8
+webview-ui/src/views/SidePanelView.tsx	+2	-2	after_lines=19
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index 08190b3..326c485 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -89,7 +89,6 @@ export async function activate(context: vscode.ExtensionContext) {
+             }
+           }),
+           vscode.commands.registerCommand("constellation.openGraphView", async () => {
+-            // Open a new editor tab with a webview that renders GraphView
+             const panel = vscode.window.createWebviewPanel(
+               'constellation.graph',
+               'Constellation Graph',
+@@ -103,29 +102,8 @@ export async function activate(context: vscode.ExtensionContext) {
+               }
+             );
+ 
+-            const scriptUri = panel.webview.asWebviewUri(
+-              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'main.js')
+-            );
+-            const styleUri = panel.webview.asWebviewUri(
+-              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'style.css')
+-            );
+-            const nonce = Math.random().toString(36).slice(2);
+-
+-            panel.webview.html = `<!DOCTYPE html>
+-<html lang="en">
+-<head>
+-  <meta charset="UTF-8" />
+-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} https:; style-src 'unsafe-inline' ${panel.webview.cspSource}; script-src 'nonce-${nonce}' ${panel.webview.cspSource};" />
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-  <link rel="stylesheet" href="${styleUri}" />
+-  <title>Constellation Graph</title>
+-  <style>body,html{margin:0;padding:0}#root{padding:8px;font-family: var(--vscode-font-family); color: var(--vscode-foreground);}</style>
+-</head>
+-<body>
+-  <div id="root" data-view="graph"></div>
+-  <script nonce="${nonce}" src="${scriptUri}"></script>
+-</body>
+-</html>`;
++            const { renderHtml } = await import('./services/webview.service.js')
++            panel.webview.html = renderHtml(panel.webview, context.extensionUri, 'graph', 'Constellation Graph')
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: src/services/webview.service.ts ---
+diff --git a/src/services/webview.service.ts b/src/services/webview.service.ts
+new file mode 100644
+index 0000000..c4b3736
+--- /dev/null
++++ b/src/services/webview.service.ts
+@@ -0,0 +1,31 @@
++// Centralized helpers for rendering VS Code webviews that reuse the same bundle.
++import * as vscode from 'vscode'
++
++function nonce() {
++  let text = ''
++  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
++  for (let i = 0; i < 32; i++) text += possible.charAt(Math.floor(Math.random() * possible.length))
++  return text
++}
++
++export function renderHtml(webview: vscode.Webview, extensionUri: vscode.Uri, view: 'sidepanel' | 'graph', title: string) {
++  const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'ui', 'main.js'))
++  const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'ui', 'style.css'))
++  const n = nonce()
++  return `<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8" />
++  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${n}' ${webview.cspSource};" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++  <link rel="stylesheet" href="${styleUri}" />
++  <title>${title}</title>
++  <style>body,html{margin:0;padding:0}#root{padding:8px;font-family: var(--vscode-font-family); color: var(--vscode-foreground);}</style>
++</head>
++<body>
++  <div id="root" data-view="${view}"></div>
++  <script nonce="${n}" src="${scriptUri}"></script>
++</body>
++</html>`
++}
++
+
+--- FILE: src/side-panel-view-provider.ts ---
+diff --git a/src/side-panel-view-provider.ts b/src/side-panel-view-provider.ts
+index 2b0c5ac..8f01c3c 100644
+--- a/src/side-panel-view-provider.ts
++++ b/src/side-panel-view-provider.ts
+@@ -1,4 +1,5 @@
+ import * as vscode from "vscode";
++import { renderHtml } from "./services/webview.service.js";
+ 
+ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+   public static readonly viewType = "constellation.sidePanel";
+@@ -22,42 +23,6 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+       ],
+     };
+ 
+-    const scriptUri = webview.asWebviewUri(
+-      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "main.js")
+-    );
+-    const styleUri = webview.asWebviewUri(
+-      vscode.Uri.joinPath(this.extensionUri, "out", "ui", "style.css")
+-    );
+-
+-    const nonce = getNonce();
+-
+-    webview.html = /* html */ `<!DOCTYPE html>
+-<html lang="en">
+-<head>
+-  <meta charset="UTF-8" />
+-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}' ${webview.cspSource};" />
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-  <link rel="stylesheet" href="${styleUri}" />
+-  <title>Constellation</title>
+-  <style>
+-    /* Minimal fallback styling */
+-    body, html { padding: 0; margin: 0; }
+-    #root { padding: 8px; font-family: var(--vscode-font-family); color: var(--vscode-foreground); }
+-  </style>
+-</head>
+-<body>
+-  <div id="root" data-view="sidepanel"></div>
+-  <script nonce="${nonce}" src="${scriptUri}"></script>
+-</body>
+-</html>`;
+-  }
+-}
+-
+-function getNonce() {
+-  let text = "";
+-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+-  for (let i = 0; i < 32; i++) {
+-    text += possible.charAt(Math.floor(Math.random() * possible.length));
++    webview.html = renderHtml(webview, this.extensionUri, "sidepanel", "Constellation");
+   }
+-  return text;
+ }
+
+--- FILE: webview-ui/src/types/vscode-webview.d.ts ---
+diff --git a/webview-ui/src/types/vscode-webview.d.ts b/webview-ui/src/types/vscode-webview.d.ts
+new file mode 100644
+index 0000000..3c27d24
+--- /dev/null
++++ b/webview-ui/src/types/vscode-webview.d.ts
+@@ -0,0 +1,8 @@
++// Ambient types for VS Code webview API to satisfy TypeScript in the webview UI.
++// This is only used in the webview-ui build; it has no effect in the extension host.
++declare function acquireVsCodeApi(): {
++  postMessage: (message: any) => void
++  getState: () => any
++  setState: (state: any) => void
++}
++
+
+--- FILE: webview-ui/src/views/SidePanelView.tsx ---
+diff --git a/webview-ui/src/views/SidePanelView.tsx b/webview-ui/src/views/SidePanelView.tsx
+index 21fdf71..ea43d0e 100644
+--- a/webview-ui/src/views/SidePanelView.tsx
++++ b/webview-ui/src/views/SidePanelView.tsx
+@@ -1,7 +1,7 @@
+ import { Button } from '../components/Button'
+ 
+-// Simple event service for cross-view communication
+-const vscodeApi = acquireVsCodeApi?.() as any | undefined
++// Simple event service for cross-view communication (typed via global declaration in src/types)
++const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined
+ 
+ export function SidePanelView() {
+   const openGraph = () => {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,141 @@
+diff --git a/app/panel/src/views/lockers.html b/app/panel/src/views/lockers.html
+index 3c90dd6..33b6e29 100644
+--- a/app/panel/src/views/lockers.html
++++ b/app/panel/src/views/lockers.html
+@@ -1106,7 +1106,7 @@
+                     window.location.href = '/login.html';
+                 }
+             } catch (error) {
+-                showError('Failed to load user information');
++                showError('Kullanıcı bilgileri yüklenemedi');
+             }
+         }
+ 
+@@ -1121,7 +1121,7 @@
+                 await loadLockers();
+                 
+             } catch (error) {
+-                showError('Network error loading data');
++                showError('Veri yükleme ağ hatası');
+             } finally {
+                 showLoading(false);
+             }
+@@ -1633,7 +1633,7 @@
+                 updateSelectedCount();
+                 await loadLockers();
+             } catch (error) {
+-                showError('Action failed: ' + error.message);
++                showError('İşlem başarısız: ' + error.message);
+             }
+         }
+ 
+@@ -1930,7 +1930,7 @@
+                     document.body.removeChild(a);
+                     window.URL.revokeObjectURL(url);
+                     
+-                    showSuccess('End of day operation completed and report downloaded');
++                    showSuccess('Gün sonu işlemi tamamlandı ve rapor indirildi');
+                     closeEodModal();
+                     await loadLockers();
+                 } else {
+@@ -1938,7 +1938,7 @@
+                     throw new Error(data.error);
+                 }
+             } catch (error) {
+-                showError('End of day operation failed: ' + error.message);
++                showError('Gün sonu işlemi başarısız: ' + error.message);
+             }
+         }
+ 
+@@ -1971,7 +1971,7 @@
+                     document.body.removeChild(a);
+                     window.URL.revokeObjectURL(url);
+                     
+-                    showSuccess('End of day operation completed and report downloaded');
++                    showSuccess('Gün sonu işlemi tamamlandı ve rapor indirildi');
+                     closeEodModal();
+                     await loadLockers();
+                 } else {
+@@ -1979,7 +1979,7 @@
+                     throw new Error(data.error);
+                 }
+             } catch (error) {
+-                showError('End of day operation failed: ' + error.message);
++                showError('Gün sonu işlemi başarısız: ' + error.message);
+             }
+         }
+ 
+@@ -2057,6 +2057,10 @@
+             try {
+                 console.log(`⚡ Direct opening locker ${lockerId} via relay activation`);
+                 
++                // Find the locker to get its display name
++                const locker = lockers.find(l => l.id === lockerId);
++                const displayName = locker?.display_name || `Dolap ${lockerId}`;
++                
+                 const response = await fetch('/api/relay/activate', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+@@ -2070,7 +2074,7 @@
+                 const data = await response.json();
+                 
+                 if (data.success) {
+-                    showSuccess(`⚡ Locker ${lockerId} activated directly! You should hear the relay click.`);
++                    showSuccess(`⚡ ${displayName} başarıyla aktive edildi! Röle sesini duymalısınız.`);
+                     console.log(`✅ Direct relay activation successful for locker ${lockerId}`);
+                     
+                     // Refresh after a short delay
+@@ -2078,24 +2082,28 @@
+                         loadLockers();
+                     }, 1000);
+                 } else {
+-                    showError(`❌ Direct activation failed: ${data.error}`);
++                    showError(`❌ Aktivasyon başarısız: ${data.error}`);
+                 }
+                 
+             } catch (error) {
+-                showError(`❌ Direct activation error: ${error.message}`);
++                showError(`❌ Aktivasyon hatası: ${error.message}`);
+                 console.error('❌ Direct activation error:', error);
+             }
+         }
+ 
+         // Individual locker operations
+         async function openSingleLocker(kioskId, lockerId) {
+-            const reason = prompt('Enter reason for opening this locker:', 'Manual admin open');
++            const reason = prompt('Bu dolabı açma sebebini girin:', 'Manuel yönetici açma');
+             if (!reason) return;
+ 
+             try {
+                 showLoading(true);
+                 console.log(`🔓 Opening single locker: ${kioskId}-${lockerId}`);
+ 
++                // Find the locker to get its display name
++                const locker = lockers.find(l => l.id === lockerId);
++                const displayName = locker?.display_name || `Dolap ${lockerId}`;
++
+                 const response = await fetch(`/api/lockers/${kioskId}/${lockerId}/open`, {
+                     method: 'POST',
+                     headers: {
+@@ -2111,7 +2119,7 @@
+                 const data = await response.json();
+ 
+                 if (response.ok) {
+-                    showSuccess(`Locker ${kioskId}-${lockerId} opening command sent! You should hear the relay click.`);
++                    showSuccess(`🔓 ${displayName} açma komutu gönderildi! Röle sesini duymalısınız.`);
+                     console.log(`✅ Locker open command sent - Command ID: ${data.command_id}`);
+                     
+                     // Refresh the locker data after a short delay
+@@ -2119,10 +2127,10 @@
+                         loadLockers();
+                     }, 2000);
+                 } else {
+-                    showError(`Failed to open locker: ${data.error || 'Unknown error'}`);
++                    showError(`Dolap açma başarısız: ${data.error || 'Bilinmeyen hata'}`);
+                 }
+             } catch (error) {
+-                showError(`Network error opening locker: ${error.message}`);
++                showError(`Dolap açma ağ hatası: ${error.message}`);
+                 console.error('❌ Open locker error:', error);
+             } finally {
+                 showLoading(false);

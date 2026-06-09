@@ -1,0 +1,146 @@
+diff --git a/playwright/tests/pre-crawl.spec.ts b/playwright/tests/pre-crawl.spec.ts
+index ba40ee3..91665c5 100644
+--- a/playwright/tests/pre-crawl.spec.ts
++++ b/playwright/tests/pre-crawl.spec.ts
+@@ -1,6 +1,7 @@
+ import { expect, test } from '@playwright/test';
+ import { SiteCrawler } from './utils/site-crawler';
+ import { CachedPageList, PageListCache } from './utils/page-list-cache';
++import { ConfigurationService } from './utils/services/configuration-service';
+ 
+ // Debug logging utility
+ const debugLog = (message: string, data?: any) => {
+@@ -37,7 +38,7 @@ function getViewportInfo(page: any): string {
+ const logMemoryUsage = (context: string) => {
+   if (typeof process !== 'undefined' && process.memoryUsage) {
+     const usage = process.memoryUsage();
+-    const formatBytes = (bytes: number) => Math.round(bytes / 1024 / 1024) + 'MB';
++    const formatBytes = (bytes: number) => `${Math.round(bytes / 1024 / 1024)}MB`;
+     debugLog(`🧠 Memory usage (${context}):`, {
+       rss: formatBytes(usage.rss),
+       heapTotal: formatBytes(usage.heapTotal),
+@@ -57,16 +58,17 @@ test.describe('Pre-crawl Site Discovery', () => {
+     (page as any).viewportInfo = getViewportInfo(page);
+ 
+     // Add page error listeners for debugging
+-    page.on('pageerror', (error) => {
++    page.on('pageerror', error => {
+       debugLog('🚨 Page error detected', { error: error.message });
+     });
+ 
+-    page.on('console', (msg) => {
++    page.on('console', msg => {
+       if (msg.type() === 'error') {
+         const message = msg.text();
+ 
+         // Filter out resource loading errors (404s for images, CSS, JS, etc.)
+-        const isResourceError = message.includes('Failed to load resource') ||
++        const isResourceError =
++          message.includes('Failed to load resource') ||
+           message.includes('404') ||
+           message.includes('net::ERR_ABORTED') ||
+           message.includes('net::ERR_FAILED');
+@@ -101,9 +103,10 @@ test.describe('Pre-crawl Site Discovery', () => {
+         return;
+       }
+ 
+-      // Check if we already have a valid cache
++      // Check if we already have a valid cache for the target URL
++      const targetSiteUrl = process.env.TARGET_SITE_URL || 'https://nimbleapproach.com';
+       const cacheCheckMonitor = performanceMonitor.start('Cache validation');
+-      const cacheValid = PageListCache.isCacheValid(60); // 60 minutes cache
++      const cacheValid = PageListCache.isCacheValid(60, targetSiteUrl); // 60 minutes cache with URL validation
+       cacheCheckMonitor.end();
+ 
+       if (cacheValid) {
+@@ -114,7 +117,6 @@ test.describe('Pre-crawl Site Discovery', () => {
+       }
+ 
+       const startTime = Date.now();
+-      const targetSiteUrl = process.env.TARGET_SITE_URL || 'https://nimbleapproach.com';
+       const siteCrawler = new SiteCrawler(page, targetSiteUrl);
+ 
+       console.log('\n📡 Phase 1: Discovering all pages on the site...');
+@@ -128,43 +130,8 @@ test.describe('Pre-crawl Site Discovery', () => {
+         maxRetries: parseInt(process.env.MAX_RETRIES || '3'),
+         retryDelay: parseInt(process.env.RETRY_DELAY || '1500'),
+         timeoutMs: parseInt(process.env.PAGE_TIMEOUT || '20000'),
+-        excludePatterns: [
+-          // Universal patterns that should be excluded from any website
+-          /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|tar|gz|7z)$/i, // Documents
+-          /\.(jpg|jpeg|png|gif|svg|webp|ico|bmp|tiff)$/i, // Images
+-          /\.(mp4|avi|mov|wmv|flv|webm|mkv|mp3|wav|ogg)$/i, // Media files
+-          /\.(css|js|json|xml|txt|csv)$/i, // Static resources
+-          /\/wp-admin\//i, // WordPress admin
+-          /\/admin\//i, // Generic admin
+-          /\/login\//i, // Login pages
+-          /\/logout\//i, // Logout pages
+-          /\/signin\//i, // Sign in pages
+-          /\/signup\//i, // Sign up pages
+-          /\/register\//i, // Registration pages
+-          /\/search\?/i, // Search results
+-          /\/cart\//i, // Shopping cart
+-          /\/checkout\//i, // Checkout process
+-          /\/payment\//i, // Payment pages
+-          /\/api\//i, // API endpoints
+-          /\/feed\//i, // RSS/Atom feeds
+-          /\/feeds\//i, // RSS/Atom feeds
+-          /\/rss\//i, // RSS feeds
+-          /\/sitemap/i, // Sitemap files
+-          /\/robots\.txt$/i, // Robots.txt
+-          /\?.*utm_/i, // UTM tracking parameters
+-          /\?.*fbclid/i, // Facebook tracking
+-          /\?.*gclid/i, // Google tracking
+-          /#/i, // URL fragments
+-          /mailto:/i, // Email links
+-          /tel:/i, // Phone links
+-          /ftp:/i, // FTP links
+-          /javascript:/i, // JavaScript links
+-          /\/\d{4}\/\d{2}\/\d{2}\//i, // Date-based URLs (often paginated)
+-          /\/page\/\d+/i, // Pagination
+-          /\/p\/\d+/i, // Alternative pagination
+-          /\?page=/i, // Query-based pagination
+-          /\?p=/i, // Query-based pagination
+-        ],
++        excludePatterns:
++          ConfigurationService.getInstance().getCrawlingConfiguration().excludePatterns,
+       };
+ 
+       debugLog('🔧 Universal crawl options configured', crawlOptions);
+@@ -191,7 +158,9 @@ test.describe('Pre-crawl Site Discovery', () => {
+       if (crawlErrors.length > 0) {
+         console.log('⚠️  Errors encountered during crawl:');
+         crawlErrors.forEach((error, index) => {
+-          console.log(`   ${index + 1}. ${error.url}: ${error.error} (${error.retryCount} retries)`);
++          console.log(
++            `   ${index + 1}. ${error.url}: ${error.error} (${error.retryCount} retries)`
++          );
+         });
+       }
+ 
+@@ -264,10 +233,12 @@ test.describe('Pre-crawl Site Discovery', () => {
+       console.log(
+         '✅ Enhanced pre-crawl completed successfully! All parallel tests can now use the cached page list.'
+       );
+-
+     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : String(error);
+-      debugLog('❌ Pre-crawl test failed', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
++      debugLog('❌ Pre-crawl test failed', {
++        error: errorMessage,
++        stack: error instanceof Error ? error.stack : undefined,
++      });
+       logMemoryUsage('pre-crawl-error');
+       throw error;
+     }
+@@ -282,7 +253,9 @@ test.describe('Pre-crawl Site Discovery', () => {
+       await page.close();
+       debugLog('✅ Test cleanup completed');
+     } catch (error) {
+-      debugLog('⚠️  Test cleanup warning', { error: error instanceof Error ? error.message : String(error) });
++      debugLog('⚠️  Test cleanup warning', {
++        error: error instanceof Error ? error.message : String(error),
++      });
+     }
+   });
+ });

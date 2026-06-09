@@ -1,0 +1,831 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Uses Zustand for state management.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The project's package configuration files (e.g., package.json) and source code files (imports).
+- Suggested Logic: 1. Check if 'zustand' is listed as a dependency in the 'package.json' file.
+2. Scan source code files (e.g., .js, .ts, .jsx, .tsx) for import statements referencing 'zustand' (e.g., `import { create } from 'zustand'`).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: feat: add container-level canvas drag and zoom; persist layer shape type
+
+    * Move canvas drag and zoom functionality to CanvasContainer for better control at the container level
+    * Enable drag-and-drop canvas movement constrained to half visible area
+    * Preserve and display shape type for each layer in Layers store and Sidebar, including shape icons
+    * Refactor Canvas component to delegate drag/zoom handling to parent and persist shape type in new layers
+    * Improve Sidebar layers scrolling and UI to handle overflow better
+    * Update store to support shapeType and shape updates for layers
+    * Add related conversation notes
+- Changed Files List: 
+conversations/19-implement-container-level-zoom-drag.md	+58	-0	after_lines=58
+conversations/20-fix-sidebar-layers-scrolling.md	+71	-0	after_lines=71
+conversations/21-add-shape-type-persistence-to-layers.md	+91	-0	after_lines=91
+src/components/Canvas.tsx	+21	-89	after_lines=632
+src/components/CanvasContainer.tsx	+120	-1	after_lines=132
+src/components/Sidebar.tsx	+39	-19	after_lines=176
+src/store/index.ts	+8	-0	after_lines=178
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 10-sidebar-scrollbar-overflow.md
+│   ├── 11-redesign-layer-items.md
+│   ├── 12-add-shadcn-button-with-icons.md
+│   ├── 13-add-product-name-reduce-padding.md
+│   ├── 14-implement-draggable-canvas.md
+│   ├── 15-add-copy-functionality-with-toast-notifications.md
+│   ├── 16-sidebar-redesign-light-theme.md
+│   ├── 17-implement-canvas-zoom-functionality.md
+│   ├── 18-fix-passive-event-listener-errors.md
+│   ├── 19-implement-container-level-zoom-drag.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 20-fix-sidebar-layers-scrolling.md
+│   ├── 21-add-shape-type-persistence-to-layers.md
+│   ├── 3-adjust-layers-rendering.md
+│   ├── 4-implement-drag-drop-layers.md
+│   ├── 5-implement-text-shape.md
+│   ├── 6-remove-add-layer-button-fix-remove-functionality.md
+│   ├── 7-implement-layer-hover-highlighting.md
+│   ├── 8-optimize-shape-rendering.md
+│   └── 9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ui
+│   │       ├── button.tsx
+│   │       └── sonner.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: conversations/19-implement-container-level-zoom-drag.md ---
+diff --git a/conversations/19-implement-container-level-zoom-drag.md b/conversations/19-implement-container-level-zoom-drag.md
+new file mode 100644
+index 0000000..236e11f
+--- /dev/null
++++ b/conversations/19-implement-container-level-zoom-drag.md
+@@ -0,0 +1,58 @@
++# Conversation 19: Implement Container-Level Zoom and Drag
++
++**Date:** December 2024  
++**Topic:** Container-level zoom and drag functionality for blank areas
++
++## Chuang:
++I want to be able to scroll and drag on the container of the @Canvas.tsx to perform the same functionalities that are already implemented - zooming and repositioning. So the blank areas work too.
++
++## Cursor:
++I'll help you implement scrolling and dragging functionality on the canvas container so that the blank areas also work for zooming and repositioning. Let me first examine the current implementation and then make the necessary changes.
++
++### Changes Made:
++
++#### 1. **CanvasContainer.tsx** - Added container-level interactions:
++- Added zoom functionality with wheel events on the container
++- Added drag functionality with mouse events on the container  
++- Imported necessary constants (`CANVAS_COLS`, `CANVAS_ROWS`)
++- Added proper cursor styling for drag mode
++- Applied the same constraints logic to keep the canvas visible
++
++#### 2. **Canvas.tsx** - Simplified and made it more modular:
++- Added props interface to allow external event handling
++- Removed duplicate drag and zoom functionality
++- Simplified mouse event handlers to focus only on drawing
++- Removed unused variables and functions
++- Made the component more reusable by accepting external event handlers
++
++### Key Features Implemented:
++
++✅ **Zoom on blank areas**: Users can now scroll to zoom anywhere on the container, not just on the canvas itself
++
++✅ **Drag on blank areas**: Users can now click and drag on the blank areas around the canvas to reposition it
++
++✅ **Maintained existing functionality**: All the original drawing, text input, and layer management features still work perfectly
++
++✅ **Proper constraints**: The canvas stays within reasonable bounds when dragged
++
++✅ **Smooth interactions**: The cursor changes appropriately when in drag mode
++
++### Technical Implementation:
++
++The implementation moves the zoom and drag logic from the Canvas component to the CanvasContainer component, allowing interactions on the entire container area. The Canvas component now accepts optional event handler props, making it more modular while maintaining backward compatibility.
++
++The same zoom sensitivity and drag constraints are preserved, providing a consistent user experience across the entire workspace.
++
++## Chuang:
++It works very well. Save the chat.
++
++## Cursor:
++Conversation saved successfully! The container-level zoom and drag functionality has been implemented and is working as expected.
++
++---
++
++**Code Changes:**
++- Modified `src/components/CanvasContainer.tsx` to handle zoom and drag events
++- Updated `src/components/Canvas.tsx` to be more modular with optional event handlers
++- Removed duplicate functionality and cleaned up unused code
++- Maintained all existing drawing and interaction features 
+\ No newline at end of file
+
+--- FILE: conversations/20-fix-sidebar-layers-scrolling.md ---
+diff --git a/conversations/20-fix-sidebar-layers-scrolling.md b/conversations/20-fix-sidebar-layers-scrolling.md
+new file mode 100644
+index 0000000..c9dda17
+--- /dev/null
++++ b/conversations/20-fix-sidebar-layers-scrolling.md
+@@ -0,0 +1,71 @@
++# Conversation 20: Fix Sidebar Layers Scrolling
++
++**Date:** [Current Date]
++
++## Summary
++Fixed the sidebar layers list scrolling functionality to ensure the "Clear All Layers" button stays fixed at the bottom while the layers list takes all available space and scrolls when needed.
++
++## Participants
++- **Chuang:** User
++- **Cursor:** Assistant
++
++## Conversation Flow
++
++### Chuang:
++The layers list should be scrollable, resulting the 'clear all layers' button sitting on the bottom. It's broken right now.
++
++### Cursor:
++I can see the issue with the layers list scrolling. The problem is in the flex layout structure - the layers list needs to be properly constrained to allow scrolling while keeping the "Clear All Layers" button fixed at the bottom.
++
++[First attempt - restructured flex layout with DndContext]
++
++### Chuang:
++Try again. I don't thnk it's working.
++
++### Cursor:
++Let me check the current state and try a different approach. The issue might be with the overall sidebar height constraints.
++
++[Second attempt - moved DndContext outside scrollable area]
++
++### Chuang:
++Not working still.
++
++### Cursor:
++I see the issue. The problem is that the sidebar itself needs to have a defined height constraint. Let me check how the sidebar is being used in the parent component to understand the layout better.
++
++[Third attempt - added explicit max height]
++
++### Chuang:
++I don't want to set a max height for it. It should always take all the available space, pushing the 'clear all layers' button to the bottom.
++
++### Cursor:
++You're absolutely right! Let me remove the max height and fix the layout to properly use all available space.
++
++[Final solution - proper flex layout without height constraints]
++
++### Chuang:
++Good. Now save the chat.
++
++## Code Changes Made
++
++### Modified: `src/components/Sidebar.tsx`
++- Added `flex-shrink-0` to the logo container to prevent it from shrinking
++- Added `min-h-0` to the main layers container to allow proper flex shrinking
++- Restructured the DndContext and SortableContext to wrap the scrollable area properly
++- Created a scrollable container with `flex-1 overflow-y-auto min-h-0` classes
++- Added `flex-shrink-0` to the "Clear All Layers" button to keep it fixed at bottom
++
++## Technical Details
++- Used CSS Flexbox with proper constraints to create a scrollable layout
++- The layers list now takes all available space with `flex-1` and `min-h-0`
++- When there are too many layers, the list scrolls with `overflow-y-auto`
++- The "Clear All Layers" button stays fixed at the bottom with `flex-shrink-0`
++- Maintained drag-and-drop functionality while fixing the scrolling issue
++
++## Result
++The sidebar now properly handles any number of layers:
++- Layers list takes all available space
++- Scrolls when there are too many layers
++- "Clear All Layers" button stays fixed at the bottom
++- No artificial height constraints
++- All existing functionality (drag-and-drop, layer management) remains intact 
+\ No newline at end of file
+
+--- FILE: conversations/21-add-shape-type-persistence-to-layers.md ---
+diff --git a/conversations/21-add-shape-type-persistence-to-layers.md b/conversations/21-add-shape-type-persistence-to-layers.md
+new file mode 100644
+index 0000000..1097129
+--- /dev/null
++++ b/conversations/21-add-shape-type-persistence-to-layers.md
+@@ -0,0 +1,91 @@
++# Conversation 21: Add Shape Type Persistence to Layers
++
++**Date:** December 2024  
++**Participants:** Chuang, Cursor
++
++## Summary
++Implemented shape type persistence in the store so that each layer stores information about what type of shape it contains (rectangle, circle, line, or text). Updated the sidebar to display shape type information with visual icons for better user experience.
++
++## Problem
++Each layer contained only canvas data and an ID, making it difficult to identify what type of shape was in each layer from the sidebar. Users couldn't easily tell if a layer contained a rectangle, circle, line, or text.
++
++## Solution
++Enhanced the Layer interface to include shape type information and updated the UI to display this information with visual indicators.
++
++## Code Changes Made
++
++### 1. Store Updates (`src/store/index.ts`)
++- **Enhanced Layer Interface**: Added `shapeType: "rectangle" | "circle" | "line" | "text"` property
++- **Added New Method**: Added `updateLayerShape` method to update shape type of existing layers
++- **Backward Compatibility**: Maintained existing `updateLayer` method for canvas updates
++
++```typescript
++interface Layer {
++  id: string;
++  canvas: string[][];
++  shapeType: "rectangle" | "circle" | "line" | "text";
++}
++
++interface LayersStore {
++  // ... existing properties
++  updateLayerShape: (id: string, shapeType: "rectangle" | "circle" | "line" | "text") => void;
++}
++```
++
++### 2. Canvas Component Updates (`src/components/Canvas.tsx`)
++- **Shape Layer Creation**: Added `shapeType: selectedShape.type` when creating new shape layers
++- **Text Layer Creation**: Added `shapeType: "text"` when creating text layers
++- **Three Locations Updated**: 
++  - Text layer creation in `handleTextInput`
++  - Shape layer creation in `handleMouseUp`
++  - Shape layer creation in `handleMouseLeave`
++
++```typescript
++// Example of updated layer creation
++const newLayer = {
++  id: `layer-${Date.now()}`,
++  canvas: newCanvas,
++  shapeType: selectedShape.type,
++};
++```
++
++### 3. Sidebar Component Updates (`src/components/Sidebar.tsx`)
++- **Enhanced Interface**: Updated `SortableLayerItemProps` to include `shapeType` property
++- **Visual Indicators**: Added shape icons (⬜ rectangle, ⭕ circle, ➖ line, 📝 text)
++- **Display Format**: Each layer shows index, shape icon, and shape type name
++- **Backward Compatibility**: Added fallback for existing layers without shape type
++
++```typescript
++// Function to get shape icon/emoji
++const getShapeIcon = (shapeType: string) => {
++  switch (shapeType) {
++    case "rectangle": return "⬜";
++    case "circle": return "⭕";
++    case "line": return "➖";
++    case "text": return "📝";
++    default: return "❓";
++  }
++};
++```
++
++## Features Added
++
++1. **Shape Type Persistence**: Each layer stores its shape type information
++2. **Visual Layer Identification**: Sidebar displays clear visual indicators for each shape type
++3. **Backward Compatibility**: Existing layers without shape information show as "unknown"
++4. **Consistent Naming**: Shape types displayed in capitalized, user-friendly format
++
++## Benefits
++
++- **Better UX**: Users can easily identify what type of shape each layer contains
++- **Improved Organization**: Sidebar provides clear visual hierarchy with icons and labels
++- **Future Extensibility**: Shape type information can be used for filtering, grouping, or shape-specific operations
++- **Maintainable Code**: Shape information is properly typed and integrated into existing store structure
++
++## Files Modified
++- `src/store/index.ts`: Enhanced Layer interface and added updateLayerShape method
++- `src/components/Canvas.tsx`: Updated layer creation to include shape type
++- `src/components/Sidebar.tsx`: Added shape type display with visual icons
++
++## Result
++Users can now see at a glance what type of shape each layer contains in the sidebar, with clear visual indicators and descriptive labels. This improves the overall user experience and makes layer management more intuitive. 
+\ No newline at end of file
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+index 7acc90d..46755f9 100644
+--- a/src/components/Canvas.tsx
++++ b/src/components/Canvas.tsx
+@@ -27,7 +27,19 @@ const SHAPE_CHARS = {
+   },
+ };
+ 
+-export default function Canvas() {
++interface CanvasProps {
++  onMouseDown?: (e: React.MouseEvent) => void;
++  onMouseMove?: (e: React.MouseEvent) => void;
++  onMouseUp?: (e: React.MouseEvent) => void;
++  onMouseLeave?: () => void;
++}
++
++export default function Canvas({ 
++  onMouseDown, 
++  onMouseMove, 
++  onMouseUp, 
++  onMouseLeave 
++}: CanvasProps) {
+   const layers = useLayersStore((state) => state.layers);
+   const hoveredLayerId = useLayersStore((state) => state.hoveredLayerId);
+   const addLayer = useLayersStore((state) => state.addLayer);
+@@ -36,17 +48,12 @@ export default function Canvas() {
+   const selectedShape = useShapeStore((state) => state.selectedShape);
+   
+   // Scaling functionality
+-  const { cellWidth, cellHeight, fontSize, updateScaling } = useScalingStore();
++  const { cellWidth, cellHeight, fontSize } = useScalingStore();
+   
+   // Drag functionality
+   const isDragging = useDragStore((state) => state.isDragging);
+   const dragPosition = useDragStore((state) => state.dragPosition);
+-  const setDragPosition = useDragStore((state) => state.setDragPosition);
+   const containerRef = useRef<HTMLDivElement>(null);
+-  
+-  // Drag state
+-  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+ 
+   const [isDrawing, setIsDrawing] = useState(false);
+   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
+@@ -71,22 +78,6 @@ export default function Canvas() {
+     return { x: clampedX, y: clampedY };
+   };
+ 
+-  // Handle wheel events for zooming
+-  const handleWheel = (e: WheelEvent) => {
+-    e.preventDefault();
+-    
+-    // Get current scale from store
+-    const currentScale = useScalingStore.getState().scale;
+-    
+-    // Calculate new scale based on wheel delta with better sensitivity
+-    const zoomSensitivity = 0.001; // Adjust this value to change zoom sensitivity
+-    const delta = e.deltaY > 0 ? 1 - (e.deltaY * zoomSensitivity) : 1 + (Math.abs(e.deltaY) * zoomSensitivity);
+-    const newScale = currentScale * delta;
+-    
+-    // Update scaling
+-    updateScaling(newScale);
+-  };
+-
+   // Find next available position for text with collision detection
+   const findNextTextPositionWithCollision = (currentX: number, currentY: number): { x: number; y: number } => {
+     let x = currentX;
+@@ -119,6 +110,7 @@ export default function Canvas() {
+         canvas: Array.from({ length: CANVAS_ROWS }, () =>
+           Array.from({ length: CANVAS_COLS }, () => " ")
+         ),
++        shapeType: "text",
+       };
+       addLayer(textLayer);
+       setTextLayerId(textLayer.id);
+@@ -351,13 +343,6 @@ export default function Canvas() {
+ 
+   // Handle mouse down
+   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    // If in drag mode, handle canvas dragging instead of drawing
+-    if (isDragging) {
+-      setIsDraggingCanvas(true);
+-      setDragStart({ x: e.clientX - dragPosition.x, y: e.clientY - dragPosition.y });
+-      return;
+-    }
+-    
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+ 
+@@ -376,34 +361,6 @@ export default function Canvas() {
+ 
+   // Handle mouse move
+   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    // If in drag mode, handle canvas dragging
+-    if (isDragging && isDraggingCanvas) {
+-      const newX = e.clientX - dragStart.x;
+-      const newY = e.clientY - dragStart.y;
+-      
+-      // Apply constraints to keep at least half the canvas visible
+-      const containerRect = containerRef.current?.getBoundingClientRect();
+-      if (containerRect) {
+-        const containerWidth = containerRect.width;
+-        const containerHeight = containerRect.height;
+-        const canvasWidth = CANVAS_COLS * cellWidth;
+-        const canvasHeight = CANVAS_ROWS * cellHeight;
+-        
+-        // Constrain X: when dragged left, right edge can touch middle; when dragged right, left edge can touch middle
+-        const minX = -canvasWidth / 2;
+-        const maxX = containerWidth - canvasWidth / 2;
+-        const constrainedX = Math.max(minX, Math.min(maxX, newX));
+-        
+-        // Constrain Y: same logic
+-        const minY = -canvasHeight / 2;
+-        const maxY = containerHeight - canvasHeight / 2;
+-        const constrainedY = Math.max(minY, Math.min(maxY, newY));
+-        
+-        setDragPosition({ x: constrainedX, y: constrainedY });
+-      }
+-      return;
+-    }
+-    
+     // Handle drawing preview
+     if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
+ 
+@@ -488,12 +445,6 @@ export default function Canvas() {
+ 
+   // Handle mouse up
+   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    // If in drag mode, stop canvas dragging
+-    if (isDragging && isDraggingCanvas) {
+-      setIsDraggingCanvas(false);
+-      return;
+-    }
+-    
+     if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
+ 
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+@@ -522,6 +473,7 @@ export default function Canvas() {
+     const newLayer = {
+       id: `layer-${Date.now()}`,
+       canvas: newCanvas,
++      shapeType: selectedShape.type,
+     };
+     addLayer(newLayer);
+ 
+@@ -531,12 +483,6 @@ export default function Canvas() {
+ 
+   // Handle mouse leave - finish drawing if in progress
+   const handleMouseLeave = () => {
+-    // If in drag mode, stop canvas dragging
+-    if (isDragging && isDraggingCanvas) {
+-      setIsDraggingCanvas(false);
+-      return;
+-    }
+-    
+     if (isDrawing && startPos && selectedShape && selectedShape.type !== "text") {
+       // Use the last known position or a default position
+       const endPos = { x: startPos.x, y: startPos.y };
+@@ -564,6 +510,7 @@ export default function Canvas() {
+       const newLayer = {
+         id: `layer-${Date.now()}`,
+         canvas: newCanvas,
++        shapeType: selectedShape.type,
+       };
+       addLayer(newLayer);
+ 
+@@ -658,21 +605,6 @@ export default function Canvas() {
+     }
+   };
+ 
+-  // Set up wheel event listener with non-passive option
+-  useEffect(() => {
+-    const canvas = canvasRef.current;
+-    if (!canvas) return;
+-
+-    const wheelHandler = (e: WheelEvent) => handleWheel(e);
+-    
+-    // Add event listener with non-passive option
+-    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+-    
+-    return () => {
+-      canvas.removeEventListener('wheel', wheelHandler);
+-    };
+-  }, [updateScaling]);
+-
+   return (
+     <div 
+       ref={containerRef}
+@@ -690,10 +622,10 @@ export default function Canvas() {
+         style={{ 
+           cursor: isDragging ? "grab" : "crosshair"
+         }}
+-        onMouseDown={handleMouseDown}
+-        onMouseMove={handleMouseMove}
+-        onMouseUp={handleMouseUp}
+-        onMouseLeave={handleMouseLeave}
++        onMouseDown={onMouseDown || handleMouseDown}
++        onMouseMove={onMouseMove || handleMouseMove}
++        onMouseUp={onMouseUp || handleMouseUp}
++        onMouseLeave={onMouseLeave || handleMouseLeave}
+       />
+     </div>
+   );
+
+--- FILE: src/components/CanvasContainer.tsx ---
+diff --git a/src/components/CanvasContainer.tsx b/src/components/CanvasContainer.tsx
+index 1ace931..8846e5d 100644
+--- a/src/components/CanvasContainer.tsx
++++ b/src/components/CanvasContainer.tsx
+@@ -1,10 +1,129 @@
++"use client";
++
++import { useDragStore, useScalingStore } from "@/store";
++import { useEffect, useRef, useState } from "react";
++import { CANVAS_COLS, CANVAS_ROWS } from "@/lib/constants";
+ import Canvas from "./Canvas";
+ import CanvasToolbar from "./CanvasToolbar";
+ 
+ export default function CanvasContainer() {
++  const containerRef = useRef<HTMLDivElement>(null);
++  
++  // Scaling functionality
++  const { updateScaling } = useScalingStore();
++  
++  // Drag functionality
++  const isDragging = useDragStore((state) => state.isDragging);
++  const dragPosition = useDragStore((state) => state.dragPosition);
++  const setDragPosition = useDragStore((state) => state.setDragPosition);
++  
++  // Drag state
++  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
++  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
++
++  // Handle wheel events for zooming
++  const handleWheel = (e: WheelEvent) => {
++    e.preventDefault();
++    
++    // Get current scale from store
++    const currentScale = useScalingStore.getState().scale;
++    
++    // Calculate new scale based on wheel delta with better sensitivity
++    const zoomSensitivity = 0.001; // Adjust this value to change zoom sensitivity
++    const delta = e.deltaY > 0 ? 1 - (e.deltaY * zoomSensitivity) : 1 + (Math.abs(e.deltaY) * zoomSensitivity);
++    const newScale = currentScale * delta;
++    
++    // Update scaling
++    updateScaling(newScale);
++  };
++
++  // Handle mouse down for dragging
++  const handleMouseDown = (e: React.MouseEvent) => {
++    // If in drag mode, handle canvas dragging
++    if (isDragging) {
++      setIsDraggingCanvas(true);
++      setDragStart({ x: e.clientX - dragPosition.x, y: e.clientY - dragPosition.y });
++    }
++  };
++
++  // Handle mouse move for dragging
++  const handleMouseMove = (e: React.MouseEvent) => {
++    // If in drag mode, handle canvas dragging
++    if (isDragging && isDraggingCanvas) {
++      const newX = e.clientX - dragStart.x;
++      const newY = e.clientY - dragStart.y;
++      
++      // Apply constraints to keep at least half the canvas visible
++      const containerRect = containerRef.current?.getBoundingClientRect();
++      if (containerRect) {
++        const containerWidth = containerRect.width;
++        const containerHeight = containerRect.height;
++        
++        // Get current canvas dimensions from scaling store
++        const { cellWidth, cellHeight } = useScalingStore.getState();
++        
++        const canvasWidth = CANVAS_COLS * cellWidth;
++        const canvasHeight = CANVAS_ROWS * cellHeight;
++        
++        // Constrain X: when dragged left, right edge can touch middle; when dragged right, left edge can touch middle
++        const minX = -canvasWidth / 2;
++        const maxX = containerWidth - canvasWidth / 2;
++        const constrainedX = Math.max(minX, Math.min(maxX, newX));
++        
++        // Constrain Y: same logic
++        const minY = -canvasHeight / 2;
++        const maxY = containerHeight - canvasHeight / 2;
++        const constrainedY = Math.max(minY, Math.min(maxY, newY));
++        
++        setDragPosition({ x: constrainedX, y: constrainedY });
++      }
++    }
++  };
++
++  // Handle mouse up for dragging
++  const handleMouseUp = () => {
++    // If in drag mode, stop canvas dragging
++    if (isDragging && isDraggingCanvas) {
++      setIsDraggingCanvas(false);
++    }
++  };
++
++  // Handle mouse leave for dragging
++  const handleMouseLeave = () => {
++    // If in drag mode, stop canvas dragging
++    if (isDragging && isDraggingCanvas) {
++      setIsDraggingCanvas(false);
++    }
++  };
++
++  // Set up wheel event listener with non-passive option
++  useEffect(() => {
++    const container = containerRef.current;
++    if (!container) return;
++
++    const wheelHandler = (e: WheelEvent) => handleWheel(e);
++    
++    // Add event listener with non-passive option
++    container.addEventListener('wheel', wheelHandler, { passive: false });
++    
++    return () => {
++      container.removeEventListener('wheel', wheelHandler);
++    };
++  }, [updateScaling]);
++
+   return (
+     <div className="flex h-full w-full flex-col overflow-hidden">
+-      <div className="flex-1 bg-gray-100 p-4 overflow-hidden flex items-center justify-center">
++      <div 
++        ref={containerRef}
++        className="flex-1 bg-gray-100 p-4 overflow-hidden flex items-center justify-center"
++        style={{
++          cursor: isDragging ? "grab" : "default"
++        }}
++        onMouseDown={handleMouseDown}
++        onMouseMove={handleMouseMove}
++        onMouseUp={handleMouseUp}
++        onMouseLeave={handleMouseLeave}
++      >
+         <Canvas />
+       </div>
+       <CanvasToolbar />
+
+--- FILE: src/components/Sidebar.tsx ---
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+index e2683d4..8a32c20 100644
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -23,7 +23,7 @@ import {
+ import { CSS } from "@dnd-kit/utilities";
+ 
+ interface SortableLayerItemProps {
+-  layer: { id: string; canvas: string[][] };
++  layer: { id: string; canvas: string[][]; shapeType: "rectangle" | "circle" | "line" | "text" };
+   onRemove: (id: string) => void;
+   index: number;
+ }
+@@ -46,6 +46,25 @@ function SortableLayerItem({ layer, onRemove, index }: SortableLayerItemProps) {
+     opacity: isDragging ? 0.5 : 1,
+   };
+ 
++  // Function to get shape icon/emoji
++  const getShapeIcon = (shapeType: string) => {
++    switch (shapeType) {
++      case "rectangle":
++        return "⬜";
++      case "circle":
++        return "⭕";
++      case "line":
++        return "➖";
++      case "text":
++        return "📝";
++      default:
++        return "❓";
++    }
++  };
++
++  // Get shape type with fallback for existing layers
++  const shapeType = layer.shapeType || "unknown";
++
+   return (
+     <li
+       ref={setNodeRef}
+@@ -60,7 +79,8 @@ function SortableLayerItem({ layer, onRemove, index }: SortableLayerItemProps) {
+         {...listeners}
+       >
+         <span className="text-gray-500 text-sm font-mono mr-2 flex-shrink-0">{index}</span>
+-        <span className="text-gray-800 truncate">{layer.id}</span>
++        <span className="text-gray-600 text-sm mr-2 flex-shrink-0">{getShapeIcon(shapeType)}</span>
++        <span className="text-gray-800 truncate capitalize">{shapeType}</span>
+       </div>
+       <Button
+         variant="outline"
+@@ -100,7 +120,7 @@ export default function Sidebar() {
+ 
+   return (
+     <div className="flex h-full w-64 flex-col p-3 text-white shrink-0">
+-      <div className="mb-4 flex justify-center">
++      <div className="mb-4 flex justify-center flex-shrink-0">
+         <div className="inline-flex items-center px-3 py-2 rounded-lg shadow-lg bg-gray-100" style={{
+           backgroundImage: `
+             linear-gradient(rgba(156, 163, 175, 0.15) 1px, transparent 1px),
+@@ -113,20 +133,20 @@ export default function Sidebar() {
+         </div>
+       </div>
+       
+-      <div className="flex-1 bg-white rounded-lg p-3 flex flex-col shadow-sm border border-gray-200">
+-        <h2 className="mb-4 text-base font-medium text-gray-700">Layers</h2>
++      <div className="flex-1 bg-white rounded-lg p-3 flex flex-col shadow-sm border border-gray-200 min-h-0">
++        <h2 className="mb-4 text-base font-medium text-gray-700 flex-shrink-0">Layers</h2>
+         
+-        <div className="flex-1 min-h-0">
+-          <DndContext
+-            sensors={sensors}
+-            collisionDetection={closestCenter}
+-            onDragEnd={handleDragEnd}
++        <DndContext
++          sensors={sensors}
++          collisionDetection={closestCenter}
++          onDragEnd={handleDragEnd}
++        >
++          <SortableContext
++            items={layers.map(layer => layer.id)}
++            strategy={verticalListSortingStrategy}
+           >
+-            <SortableContext
+-              items={layers.map(layer => layer.id)}
+-              strategy={verticalListSortingStrategy}
+-            >
+-              <ul className="space-y-2 overflow-y-auto max-h-full">
++            <div className="flex-1 overflow-y-auto min-h-0">
++              <ul className="space-y-2">
+                 {layers.map((layer, index) => (
+                   <SortableLayerItem
+                     key={layer.id}
+@@ -136,14 +156,14 @@ export default function Sidebar() {
+                   />
+                 ))}
+               </ul>
+-            </SortableContext>
+-          </DndContext>
+-        </div>
++            </div>
++          </SortableContext>
++        </DndContext>
+         
+         <Button
+           variant="secondary"
+           size="sm"
+-          className="mt-4 hover:bg-red-500 hover:text-white"
++          className="mt-4 hover:bg-red-500 hover:text-white flex-shrink-0"
+           onClick={clearAllLayers}
+           disabled={layers.length === 0}
+         >
+
+--- FILE: src/store/index.ts ---
+diff --git a/src/store/index.ts b/src/store/index.ts
+index 227672d..4db3468 100644
+--- a/src/store/index.ts
++++ b/src/store/index.ts
+@@ -4,6 +4,7 @@ import { CANVAS_ROWS, CANVAS_COLS } from "@/lib/constants";
+ interface Layer {
+   id: string;
+   canvas: string[][];
++  shapeType: "rectangle" | "circle" | "line" | "text";
+ }
+ 
+ interface LayersStore {
+@@ -12,6 +13,7 @@ interface LayersStore {
+   addLayer: (layer: Layer) => void;
+   removeLayer: (id: string) => void;
+   updateLayer: (id: string, canvas: string[][]) => void;
++  updateLayerShape: (id: string, shapeType: "rectangle" | "circle" | "line" | "text") => void;
+   reorderLayers: (fromIndex: number, toIndex: number) => void;
+   clearAllLayers: () => void;
+   setHoveredLayer: (id: string | null) => void;
+@@ -31,6 +33,12 @@ export const useLayersStore = create<LayersStore>((set) => ({
+         layer.id === id ? { ...layer, canvas } : layer
+       ),
+     })),
++  updateLayerShape: (id, shapeType) =>
++    set((state) => ({
++      layers: state.layers.map((layer) =>
++        layer.id === id ? { ...layer, shapeType } : layer
++      ),
++    })),
+   reorderLayers: (fromIndex, toIndex) =>
+     set((state) => {
+       const layers = [...state.layers];
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

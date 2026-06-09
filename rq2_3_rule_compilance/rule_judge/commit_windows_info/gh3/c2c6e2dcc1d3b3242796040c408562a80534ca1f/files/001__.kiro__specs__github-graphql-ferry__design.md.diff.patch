@@ -1,0 +1,314 @@
+diff --git a/.kiro/specs/github-graphql-ferry/design.md b/.kiro/specs/github-graphql-ferry/design.md
+index 1dd0fb4..4296df5 100644
+--- a/.kiro/specs/github-graphql-ferry/design.md
++++ b/.kiro/specs/github-graphql-ferry/design.md
+@@ -415,112 +415,201 @@ This architecture provides maximum colocation by organizing code around UI compo
+ 
+ ### ViewModel Integration (Requirement 3)
+ 
+-#### ViewModels with Injectable Integration
+-**Dependency Injection Pattern**: ViewModels receive Ferry client through constructor injection using Injectable
++#### ViewModel Factory Pattern with Injectable Integration
++**Dependency Injection Pattern**: ViewModel factories are injectable and receive Ferry client, then create ViewModels with the necessary dependencies
+ 
+ ```dart
+-// lib/src/screens/user_details_screen/user_details_viewmodel.dart
++// lib/src/screens/user_details/user_details_viewmodel_factory.dart
+ import 'package:ferry/ferry.dart';
+ import 'package:injectable/injectable.dart';
+-import 'user_details_viewmodel.graphql.dart'; // Generated from colocated .graphql
++import 'user_details_viewmodel.dart';
+ 
+ @injectable
+-class UserDetailsViewModel extends ChangeNotifier {
++class UserDetailsViewModelFactory {
++  final Client _ferryClient;
++
++  UserDetailsViewModelFactory(this._ferryClient);
++
++  UserDetailsViewModel create(String login) {
++    return UserDetailsViewModel(login, _ferryClient);
++  }
++}
++```
++
++```dart
++// lib/src/screens/user_details/user_details_viewmodel.dart
++import 'dart:async';
++import 'package:ferry/ferry.dart';
++import '../base_viewmodel.dart';
++import '__generated__/user_details_viewmodel.req.gql.dart';
++import '__generated__/user_details_viewmodel.data.gql.dart';
++import '__generated__/user_details_viewmodel.var.gql.dart';
++
++class UserDetailsViewModel extends DisposableViewModel {
++  final String _login;
+   final Client _ferryClient;
++
++  UserDetailsViewModel(this._login, this._ferryClient);
+   
+   // Store raw GraphQL results - no model conversion
+-  QueryResult<GetUserDetailsQuery>? _userResult;
+-  QueryResult<GetUserRepositoriesQuery>? _repositoriesResult;
++  OperationResponse<GGetUserDetailsData, GGetUserDetailsVars>? _userResult;
++  OperationResponse<GGetUserRepositoriesData, GGetUserRepositoriesVars>? _repositoriesResult;
+   
+-  StreamSubscription<QueryResult<GetUserDetailsQuery>>? _userSubscription;
+-  StreamSubscription<QueryResult<GetUserRepositoriesQuery>>? _reposSubscription;
+-  
+-  // Constructor injection through Injectable
+-  UserDetailsViewModel(this._ferryClient);
++  StreamSubscription<OperationResponse<GGetUserDetailsData, GGetUserDetailsVars>>? _userSubscription;
++  StreamSubscription<OperationResponse<GGetUserRepositoriesData, GGetUserRepositoriesVars>>? _reposSubscription;
++
++  String get login => _login;
+   
+   // Expose raw GraphQL data for UI consumption
+-  GetUserDetailsQuery$Query$User? get user => _userResult?.data?.user;
+-  GetUserRepositoriesQuery$Query$User$Repositories? get repositories => 
++  GGetUserDetailsData_user? get user => _userResult?.data?.user;
++  GGetUserRepositoriesData_user_repositories? get repositories => 
+       _repositoriesResult?.data?.user?.repositories;
+   
+   bool get isLoading => 
+       (_userResult?.loading ?? true) || (_repositoriesResult?.loading ?? true);
+   
+   String? get error {
+-    if (_userResult?.hasException == true) {
+-      return _userResult!.exception.toString();
++    final userException = _userResult?.linkException ?? _userResult?.graphqlErrors;
++    if (userException != null) {
++      return _getErrorMessage(userException);
+     }
+-    if (_repositoriesResult?.hasException == true) {
+-      return _repositoriesResult!.exception.toString();
++    final reposException = _repositoriesResult?.linkException ?? _repositoriesResult?.graphqlErrors;
++    if (reposException != null) {
++      return _getErrorMessage(reposException);
+     }
+     return null;
+   }
+   
+-  Future<void> loadUser(String login) async {
+-    // Load user profile
+-    final userRequest = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: login),
+-    );
++  Future<void> init() async {
++    await loadUserDetails();
++    await loadUserRepositories();
++  }
++  
++  Future<void> loadUserDetails() async {
++    final request = GGetUserDetailsReq((b) => b..vars.login = _login);
+     
+-    _userSubscription = _ferryClient
+-        .request(userRequest)
+-        .listen((result) {
+-          _userResult = result;
+-          notifyListeners();
+-        });
+-        
+-    // Load user repositories
+-    final reposRequest = GetUserRepositoriesQuery(
+-      variables: GetUserRepositoriesArguments(
+-        login: login,
+-        first: 20,
+-        after: null,
+-      ),
++    _userSubscription?.cancel();
++    _userSubscription = _ferryClient.request(request).listen((result) {
++      _userResult = result;
++      notifyListeners();
++    });
++  }
++  
++  Future<void> loadUserRepositories() async {
++    final request = GGetUserRepositoriesReq(
++      (b) => b
++        ..vars.login = _login
++        ..vars.first = 20
++        ..vars.after = null,
+     );
+     
+-    _reposSubscription = _ferryClient
+-        .request(reposRequest)
+-        .listen((result) {
+-          _repositoriesResult = result;
+-          notifyListeners();
+-        });
++    _reposSubscription?.cancel();
++    _reposSubscription = _ferryClient.request(request).listen((result) {
++      _repositoriesResult = result;
++      notifyListeners();
++    });
+   }
+   
+   @override
+-  void dispose() {
++  void onDispose() {
+     _userSubscription?.cancel();
+     _reposSubscription?.cancel();
+-    super.dispose();
++    _userSubscription = null;
++    _reposSubscription = null;
++    _userResult = null;
++    _repositoriesResult = null;
+   }
+ }
+ ```
+ 
+-#### ViewModel Factory Registration
++#### HomeViewModel Factory Pattern
+ ```dart
+-// lib/src/screens/user_details_screen/user_details_screen.dart
+-// ViewModels are directly injected through Injectable without factories
+-import 'package:flutter/material.dart';
++// lib/src/screens/home_screen/home_viewmodel_factory.dart
++import 'package:ferry/ferry.dart';
+ import 'package:injectable/injectable.dart';
+-import 'user_details_viewmodel.dart';
+-// Injectable handles the dependency resolution automatically
++import 'home_viewmodel.dart';
++
++@injectable
++class HomeViewModelFactory {
++  final Client _ferryClient;
++
++  HomeViewModelFactory(this._ferryClient);
++
++  HomeViewModel create() {
++    return HomeViewModel(_ferryClient);
++  }
++}
+ ```
++
++```dart
++// lib/src/screens/home_screen/home_viewmodel.dart
++import 'dart:async';
++import 'package:ferry/ferry.dart';
++import '../base_viewmodel.dart';
++import '__generated__/home_viewmodel.req.gql.dart';
++import '__generated__/home_viewmodel.data.gql.dart';
++import '__generated__/home_viewmodel.var.gql.dart';
++
++class HomeViewModel extends DisposableViewModel {
++  final Client _ferryClient;
++
++  HomeViewModel(this._ferryClient);
++
++  // Store raw GraphQL results - no model conversion
++  OperationResponse<GGetFollowingData, GGetFollowingVars>? _followingResult;
++  StreamSubscription<OperationResponse<GGetFollowingData, GGetFollowingVars>>? _followingSubscription;
++
++  // Expose raw GraphQL data for UI consumption
++  GGetFollowingData_viewer_following? get following => _followingResult?.data?.viewer.following;
++  List<GGetFollowingData_viewer_following_nodes> get followingUsers => 
++      following?.nodes?.cast<GGetFollowingData_viewer_following_nodes>().toList() ?? [];
++
++  bool get isLoading => _followingResult?.loading ?? true;
++  
++  Future<void> loadFollowingUsers() async {
++    final request = GGetFollowingReq((b) => b..vars.first = 20..vars.after = null);
++    
++    _followingSubscription?.cancel();
++    _followingSubscription = _ferryClient.request(request).listen((result) {
++      _followingResult = result;
++      notifyListeners();
++    });
++  }
++
++  @override
++  void onDispose() {
++    _followingSubscription?.cancel();
++    _followingSubscription = null;
++    _followingResult = null;
++  }
++}
+ ```
+ 
+-#### Screen with Colocated ViewModel and UI Components
++#### Injectable Registration Pattern
++The Factory pattern ensures that:
++- **Factories are Injectable**: Only ViewModel factories have `@injectable` annotations
++- **ViewModels are created by Factories**: ViewModels receive dependencies through their constructors via factories  
++- **Consistent Pattern**: All ViewModels (HomeViewModel, UserDetailsViewModel, etc.) follow the same factory pattern for dependency injection
++- **Route Providers use Factories**: Route providers inject factory dependencies and pass them to screens
++
++#### Screen with Factory-Based ViewModel Integration
+ ```dart
+-// lib/src/screens/user_details_screen/user_details_screen.dart
++// lib/src/screens/user_details/user_details_screen.dart
+ import 'package:flutter/material.dart';
+-import 'package:injectable/injectable.dart';
+-import 'package:ferry/ferry.dart';
+ import 'user_details_viewmodel.dart';
+-import '../../init.config.dart'; // Generated injectable config
++import 'user_details_viewmodel_factory.dart';
+ import '../../widgets/user_profile/user_profile.dart';
+ import '../../widgets/repository_card/repository_card.dart';
+ 
+ class UserDetailsScreen extends StatefulWidget {
+   final String username;
++  final UserDetailsViewModelFactory viewModelFactory;
+   
+-  const UserDetailsScreen({Key? key, required this.username}) : super(key: key);
++  const UserDetailsScreen({
++    Key? key, 
++    required this.username,
++    required this.viewModelFactory,
++  }) : super(key: key);
+   
+   @override
+   State<UserDetailsScreen> createState() => _UserDetailsScreenState();
+@@ -532,9 +621,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
+   @override
+   void initState() {
+     super.initState();
+-    _viewModel = getIt<UserDetailsViewModel>();
++    // Create ViewModel using factory
++    _viewModel = widget.viewModelFactory.create(widget.username);
+     _viewModel.addListener(_onViewModelChanged);
+-    _viewModel.loadUser(widget.username);
++    _viewModel.init(); // Load user data
+   }
+   
+   @override
+@@ -591,6 +681,37 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
+ }
+ ```
+ 
++#### Route Provider Integration
++```dart
++// lib/src/screens/user_details/user_details_route_provider.dart
++import 'package:go_router/go_router.dart';
++import 'package:injectable/injectable.dart';
++import '../../routing/route_provider.dart';
++import 'user_details_screen.dart';
++import 'user_details_viewmodel_factory.dart';
++
++@injectable
++class UserDetailsRouteProvider implements RouteProvider {
++  final UserDetailsViewModelFactory _viewModelFactory;
++
++  UserDetailsRouteProvider(this._viewModelFactory);
++
++  @override
++  GoRoute getRoute() {
++    return GoRoute(
++      path: '/user/:username',
++      builder: (context, state) {
++        final username = state.pathParameters['username']!;
++        return UserDetailsScreen(
++          username: username,
++          viewModelFactory: _viewModelFactory,
++        );
++      },
++    );
++  }
++}
++```
++
+ #### UI Components Consuming GraphQL Fragments Directly
+ ```dart
+ // lib/src/widgets/user_profile/user_profile.dart

@@ -1,0 +1,197 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Use relative imports within src/youtube_notion/ package
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files within the 'src/youtube_notion/' directory.
+- Suggested Logic: Iterate through all source files in the 'src/youtube_notion/' directory. Use AST parsing or Regex to identify import statements. Verify that any imports referencing other modules within the same package use relative syntax (e.g., 'from . import module' or 'from ..subpackage import module') instead of absolute paths that include the package root (e.g., 'import youtube_notion.module').
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: batch mode
+- Changed Files List: 
+.kiro/steering/product.md	+12	-1	after_lines=57
+.kiro/steering/structure.md	+11	-5	after_lines=86
+.kiro/steering/tech.md	+8	-0	after_lines=89
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           ├── chat_logger.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_chat_logging.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index 5ed17b4..0ed1e4e 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -39,8 +39,19 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - **Cleanup Management**: Automatic cleanup of logs older than 30 days
+ - **Error Resilience**: Logging failures don't interrupt main processing workflow
+ 
++### Batch Processing Standards
++- **Multiple URLs**: Support processing multiple YouTube URLs in a single operation
++- **Progress Tracking**: Show progress indicators for batch operations (e.g., "Processing 3/10...")
++- **Error Resilience**: Continue processing remaining URLs even if some fail
++- **Batch Reporting**: Provide summary of successful/failed operations at completion
++- **Rate Limiting**: Implement appropriate delays between API calls to respect quotas
++- **Reduced Verbosity**: Use concise output in batch mode to avoid overwhelming logs
++- **Parallel Processing**: Consider concurrent processing for improved performance (with rate limits)
++- **Resume Capability**: Support resuming interrupted batch operations
++
+ ### User Experience Principles
+ - **Clear Feedback**: Provide progress indicators and success/failure messages
+ - **Validation First**: Validate inputs (URLs, API keys) before processing
+ - **Helpful Errors**: Include specific troubleshooting steps in error messages
+-- **Mode Clarity**: Make operation mode clear to users in CLI help and output
+\ No newline at end of file
++- **Mode Clarity**: Make operation mode clear to users in CLI help and output
++- **Batch Efficiency**: Minimize redundant operations (database lookups, client initialization) in batch mode
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 03fe3d3..63fde16 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -32,11 +32,12 @@ youtube-notion-integration/
+ 
+ ### Module Responsibilities
+ 
+-- **`main.py`**: Application orchestration, error handling, and user feedback
++- **`main.py`**: Application orchestration, error handling, user feedback, and batch processing coordination
+ - **`config/`**: Environment configuration, validation, and example data
+-- **`notion_db/operations.py`**: Database discovery and entry creation
+-- **`processors/`**: YouTube video processing and AI integration
++- **`notion_db/operations.py`**: Database discovery and entry creation with batch optimization
++- **`processors/`**: YouTube video processing and AI integration with rate limiting
+ - **`utils/markdown_converter.py`**: Markdown to Notion rich text conversion
++- **`utils/batch_processor.py`**: Batch processing utilities, progress tracking, and error aggregation
+ 
+ ### Import Patterns
+ 
+@@ -56,6 +57,8 @@ from .processors.youtube_processor import YouTubeProcessor
+ - **API Errors**: Specific exception types with retry logic and fallbacks
+ - **Processing Errors**: Detailed error context with troubleshooting guidance
+ - **Return Values**: Boolean success indicators for main functions
++- **Batch Errors**: Aggregate error reporting with individual URL failure tracking
++- **Rate Limiting**: Exponential backoff and quota management for batch operations
+ 
+ ### Testing Structure
+ 
+@@ -75,6 +78,9 @@ from .processors.youtube_processor import YouTubeProcessor
+ ### CLI Design
+ 
+ - **Dual Entry Points**: `youtube_notion_cli.py` (development) and console script (installed)
+-- **Mutually Exclusive Modes**: `--url` vs `--example-data`
++- **Mutually Exclusive Modes**: `--url` vs `--example-data` vs `--batch`
++- **Batch Input Methods**: Multiple URLs via `--urls` or file input via `--file`
+ - **Argument Validation**: Clear error messages for invalid combinations
+-- **Help Documentation**: Comprehensive usage examples
+\ No newline at end of file
++- **Help Documentation**: Comprehensive usage examples including batch operations
++- **Progress Indicators**: Real-time progress feedback for batch processing
++- **Output Control**: Verbose vs concise output modes based on operation type
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 5e2fbc5..368bfc5 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -58,12 +58,18 @@ from notion_client import Client
+ - Support dual entry points: `youtube_notion_cli.py` (dev) and console script (installed)
+ - Use mutually exclusive argument groups for different modes
+ - Provide comprehensive help documentation with examples
++- Support batch processing with `--batch` flag and multiple URL inputs
++- Implement file-based URL input for large batch operations
++- Use `batch_mode` parameter to control output verbosity
+ 
+ ### API Integration Standards
+ - Implement retry logic for external API calls
+ - Use structured error handling with specific exception types
+ - Support fallback mechanisms (API → web scraping)
+ - Validate API responses before processing
++- Implement rate limiting for batch operations to respect API quotas
++- Use connection pooling and session reuse for batch processing efficiency
++- Handle quota exceeded errors gracefully with exponential backoff
+ 
+ ## Development Commands
+ 
+@@ -78,4 +84,6 @@ python run_tests.py
+ # Running application
+ python youtube_notion_cli.py --example-data  # Default mode
+ python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"  # YouTube mode
++python youtube_notion_cli.py --batch --urls url1 url2 url3  # Batch mode
++python youtube_notion_cli.py --batch --file urls.txt  # Batch from file
+ ```
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,184 @@
+diff --git a/playwright/tests/utils/accessibility-helpers.ts b/playwright/tests/utils/accessibility-helpers.ts
+index 996c195..6ac1c62 100644
+--- a/playwright/tests/utils/accessibility-helpers.ts
++++ b/playwright/tests/utils/accessibility-helpers.ts
+@@ -113,6 +113,22 @@ export class AccessibilityTestUtils {
+     this.page = page;
+   }
+ 
++  /**
++   * Creates a clickable terminal link using ANSI escape codes
++   * @param text - The text to display
++   * @param url - The URL or file path to link to
++   * @param color - The color to apply to the link (default: magenta)
++   * @returns Formatted clickable link
++   */
++  private createClickableLink(text: string, url: string, color: string = '\x1b[35m'): string {
++    const reset = '\x1b[0m';
++    // Convert file path to file:// URL for better compatibility
++    const linkUrl = url.startsWith('/') ? `file://${url}` : url;
++
++    // OSC 8 hyperlink format: \x1b]8;;URL\x1b\\TEXT\x1b]8;;\x1b\\
++    return `${color}\x1b]8;;${linkUrl}\x1b\\${text}\x1b]8;;\x1b\\${reset}`;
++  }
++
+   async injectAxe(): Promise<void> {
+     // AxeBuilder automatically injects axe, no separate injection needed
+   }
+@@ -229,7 +245,9 @@ export class AccessibilityTestUtils {
+         if (pa11yResults.issues.length > 500) {
+           const originalCount = pa11yResults.issues.length;
+           pa11yResults.issues = pa11yResults.issues.filter((issue: any) => issue.type !== 'notice');
+-          console.log(`   🔧 Filtered ${originalCount - pa11yResults.issues.length} notices to focus on actionable issues`);
++          console.log(
++            `   🔧 Filtered ${originalCount - pa11yResults.issues.length} notices to focus on actionable issues`
++          );
+         }
+ 
+         // Log issue breakdown
+@@ -242,7 +260,6 @@ export class AccessibilityTestUtils {
+       } else {
+         console.log('   ✅ Pa11y completed with no issues');
+       }
+-
+     } catch (error) {
+       const duration = Date.now() - startTime;
+       const errorMessage = error instanceof Error ? error.message : String(error);
+@@ -259,22 +276,55 @@ export class AccessibilityTestUtils {
+       };
+     }
+ 
+-    return pa11yResults || {
+-      issues: [],
+-      documentTitle: '',
+-      pageUrl: this.page.url(),
+-    };
++    return (
++      pa11yResults || {
++        issues: [],
++        documentTitle: '',
++        pageUrl: this.page.url(),
++      }
++    );
+   }
+ 
+   async runLighthouseAccessibilityAnalysis(): Promise<any> {
+     try {
+-      // Lighthouse integration is complex and may not work well with Playwright
+-      // For now, we'll skip it and focus on axe-core + Pa11y
+-      console.log('ℹ️  Lighthouse accessibility audit skipped (complex browser integration)');
+-      return {};
++      const { playAudit } = await import('playwright-lighthouse');
++
++      console.log('🔍 Running Lighthouse accessibility audit...');
++
++      const config = this.configService.getLighthouseConfiguration();
++
++      // Use playwright-lighthouse for seamless integration
++      const lighthouseResults = await playAudit({
++        page: this.page,
++        thresholds: {
++          accessibility: 90, // WCAG 2.1 AAA compliance threshold
++          'best-practices': 85,
++          performance: 70,
++          seo: 80,
++        },
++        config: {
++          extends: 'lighthouse:default',
++          settings: {
++            onlyCategories: ['accessibility', 'best-practices'],
++            emulatedFormFactor: 'desktop',
++            throttling: {
++              rttMs: 40,
++              throughputKbps: 10240,
++              cpuSlowdownMultiplier: 1,
++            },
++          },
++        },
++        port: config.port,
++        // Don't fail the test if thresholds aren't met - we'll handle results ourselves
++        ignoreError: true,
++      });
++
++      console.log('✅ Lighthouse accessibility audit completed');
++      return lighthouseResults;
+     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : String(error);
+-      console.warn('Lighthouse accessibility analysis failed:', errorMessage);
++      console.warn('⚠️  Lighthouse accessibility analysis failed:', errorMessage);
++      console.warn('   Continuing with axe-core and Pa11y analysis...');
+       return {};
+     }
+   }
+@@ -389,7 +439,7 @@ export class AccessibilityTestUtils {
+                 screenshot = screenshotBuffer.toString('base64');
+               }
+             }
+-          } catch (error) {
++          } catch {
+             // Screenshot failed, continue without it
+           }
+         }
+@@ -424,7 +474,7 @@ export class AccessibilityTestUtils {
+ 
+   private async processLighthouseAudits(
+     audits: any,
+-    captureScreenshots: boolean = true
++    _captureScreenshots: boolean = true
+   ): Promise<ProcessedViolation[]> {
+     const violations: ProcessedViolation[] = [];
+ 
+@@ -975,7 +1025,8 @@ export class AccessibilityTestUtils {
+           file.startsWith('site-wide-accessibility-') ||
+           file.startsWith('parallel-comprehensive-audit-');
+ 
+-        const isNewFormat = file.includes('-accessibility-report-') &&
++        const isNewFormat =
++          file.includes('-accessibility-report-') &&
+           (file.endsWith('.json') || file.endsWith('.pdf') || file.endsWith('.txt'));
+ 
+         return (
+@@ -1427,8 +1478,6 @@ export class AccessibilityTestUtils {
+     }
+   }
+ 
+-
+-
+   // Aggregate multiple reports into a site-wide report
+   aggregateReports(reports: AccessibilityReport[]): SiteWideAccessibilityReport {
+     const successfulReports = reports.filter(r => r.violations.length >= 0); // Include all reports
+@@ -1507,8 +1556,8 @@ export class AccessibilityTestUtils {
+     const compliancePercentage =
+       successfulReports.length > 0
+         ? Math.round(
+-          ((successfulReports.length - pagesWithViolations) / successfulReports.length) * 100
+-        )
++            ((successfulReports.length - pagesWithViolations) / successfulReports.length) * 100
++          )
+         : 100;
+ 
+     return {
+@@ -1573,7 +1622,9 @@ export class AccessibilityTestUtils {
+           filename
+         );
+ 
+-        console.log(`📄 Generated ${generatedReports.length} audience-specific PDF reports:`);
++        console.log(
++          `📄 Generated ${generatedReports.length} audience-specific PDF reports (click to open):`
++        );
+         generatedReports.forEach((reportPath: string) => {
+           const reportType = reportPath.includes('-stakeholders')
+             ? 'Product Owners & Stakeholders'
+@@ -1582,7 +1633,11 @@ export class AccessibilityTestUtils {
+               : reportPath.includes('-developers')
+                 ? 'Developers & Testers'
+                 : 'Unknown';
+-          console.log(`   📄 ${reportType}: ${reportPath}`);
++
++          // Create clickable link for terminal display
++          const displayName = `📄 ${reportType}`;
++          const clickableLink = this.createClickableLink(displayName, reportPath);
++          console.log(`   ${clickableLink}`);
+         });
+       } catch (error) {
+         console.warn('Could not generate PDF reports:', error);

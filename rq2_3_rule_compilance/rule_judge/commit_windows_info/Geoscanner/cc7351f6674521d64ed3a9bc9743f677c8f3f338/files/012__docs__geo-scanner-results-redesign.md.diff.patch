@@ -1,0 +1,485 @@
+diff --git a/docs/geo-scanner-results-redesign.md b/docs/geo-scanner-results-redesign.md
+index f66b145..97ce83a 100644
+--- a/docs/geo-scanner-results-redesign.md
++++ b/docs/geo-scanner-results-redesign.md
+@@ -6,6 +6,7 @@
+ **Naar**: Action-driven dashboard voor niet-technische gebruikers
+ 
+ **Success Criteria:**
++
+ - 90% van gebruikers begrijpt direct wat ze moeten doen
+ - Quick wins zijn zichtbaar binnen 5 seconden
+ - Technische details zijn beschikbaar maar niet overweldigend
+@@ -15,6 +16,7 @@
+ ## 📋 Component Breakdown
+ 
+ ### 1. **ScoreHero Component**
++
+ ```typescript
+ interface ScoreHeroProps {
+   score: number;
+@@ -26,6 +28,7 @@ interface ScoreHeroProps {
+ ```
+ 
+ **Visual Elements:**
++
+ - Animated score circle (200px diameter)
+ - Color gradient based on score (red → orange → green)
+ - Count-up animation from 0 to score
+@@ -33,6 +36,7 @@ interface ScoreHeroProps {
+ - Improvement potential subtitle
+ 
+ ### 2. **QuickWinsPanel Component**
++
+ ```typescript
+ interface QuickWin {
+   id: string;
+@@ -48,12 +52,14 @@ interface QuickWin {
+ ```
+ 
+ **Visual Treatment:**
++
+ - High priority: Red gradient border, "START HIER" badge
+-- Medium priority: Orange gradient, "DEZE WEEK" badge  
++- Medium priority: Orange gradient, "DEZE WEEK" badge
+ - Low priority: Blue gradient, "VOLGENDE MAAND" badge
+ - Each card shows impact (+X punten) and time estimate
+ 
+ ### 3. **ModuleOverview Component**
++
+ ```typescript
+ interface ModuleStatus {
+   id: string;
+@@ -69,18 +75,20 @@ interface ModuleStatus {
+ ```
+ 
+ **Layout Options:**
++
+ - Option A: Simple progress bars with icons
+ - Option B: Mini radar chart
+ - Option C: Status grid with cards
+ 
+ ### 4. **DetailedAnalysis Component**
++
+ ```typescript
+ interface ModuleDetail {
+   module: ModuleStatus;
+   findings: {
+     positive: string[]; // "✅ AI snapt je hoofdonderwerp"
+     negative: string[]; // "❌ Mist auteur-informatie"
+-    neutral: string[];  // "ℹ️ Sitemap gevonden"
++    neutral: string[]; // "ℹ️ Sitemap gevonden"
+   };
+   fixes: {
+     title: string;
+@@ -93,6 +101,7 @@ interface ModuleDetail {
+ ```
+ 
+ **Interaction Pattern:**
++
+ - Collapsed by default
+ - Expand on click with smooth animation
+ - Copy-to-clipboard for code snippets
+@@ -103,22 +112,24 @@ interface ModuleDetail {
+ ## 🎨 Design Specifications
+ 
+ ### Color System
++
+ ```css
+ :root {
+   /* Score-based colors */
+-  --score-excellent: #14B870;  /* 80-100 */
+-  --score-good: #22C55E;       /* 60-79 */
+-  --score-warning: #FF9F0A;    /* 40-59 */
+-  --score-critical: #FF3B5C;   /* 0-39 */
+-  
++  --score-excellent: #14b870; /* 80-100 */
++  --score-good: #22c55e; /* 60-79 */
++  --score-warning: #ff9f0a; /* 40-59 */
++  --score-critical: #ff3b5c; /* 0-39 */
++
+   /* Priority-based colors */
+-  --priority-high: linear-gradient(135deg, #FF3B5C 0%, #FF5C5C 100%);
+-  --priority-medium: linear-gradient(135deg, #FF9F0A 0%, #FFBF4A 100%);
+-  --priority-low: linear-gradient(135deg, #0ACDDA 0%, #4ADDEA 100%);
++  --priority-high: linear-gradient(135deg, #ff3b5c 0%, #ff5c5c 100%);
++  --priority-medium: linear-gradient(135deg, #ff9f0a 0%, #ffbf4a 100%);
++  --priority-low: linear-gradient(135deg, #0acdda 0%, #4addea 100%);
+ }
+ ```
+ 
+ ### Typography
++
+ ```css
+ /* Score numbers */
+ .score-display {
+@@ -144,21 +155,22 @@ interface ModuleDetail {
+ ```
+ 
+ ### Animations
++
+ ```typescript
+ const animations = {
+   scoreCountUp: {
+     duration: 1500,
+-    easing: 'easeOutQuart'
++    easing: 'easeOutQuart',
+   },
+   cardHover: {
+     scale: 1.02,
+-    transition: { duration: 200 }
++    transition: { duration: 200 },
+   },
+   expandCollapse: {
+     initial: { height: 0, opacity: 0 },
+     animate: { height: 'auto', opacity: 1 },
+-    exit: { height: 0, opacity: 0 }
+-  }
++    exit: { height: 0, opacity: 0 },
++  },
+ };
+ ```
+ 
+@@ -167,6 +179,7 @@ const animations = {
+ ## 📱 Responsive Behavior
+ 
+ ### Desktop (>1024px)
++
+ ```
+ ┌─────────────────────────────────────────────────────┐
+ │                  HERO SECTION                       │
+@@ -183,6 +196,7 @@ const animations = {
+ ```
+ 
+ ### Tablet (768-1024px)
++
+ ```
+ ┌─────────────────────────────────────────────────────┐
+ │                  HERO SECTION                       │
+@@ -197,6 +211,7 @@ const animations = {
+ ```
+ 
+ ### Mobile (<768px)
++
+ ```
+ ┌─────────────────────┐
+ │    HERO SECTION     │
+@@ -215,6 +230,7 @@ const animations = {
+ ## 🔧 Technical Implementation
+ 
+ ### New Components to Create
++
+ 1. `components/results/ScoreHero.tsx`
+ 2. `components/results/QuickWinsPanel.tsx`
+ 3. `components/results/QuickWinCard.tsx`
+@@ -226,6 +242,7 @@ const animations = {
+ 9. `components/results/ActionButton.tsx`
+ 
+ ### Dependencies to Add
++
+ ```json
+ {
+   "framer-motion": "^10.16.0",
+@@ -236,6 +253,7 @@ const animations = {
+ ```
+ 
+ ### State Management Updates
++
+ ```typescript
+ // Enhanced scan result interface
+ interface EnhancedScanResult {
+@@ -254,55 +272,67 @@ interface EnhancedScanResult {
+ ## 🚀 Implementation Roadmap
+ 
+ ### Phase 1: Core Visual Transformation (Week 1)
++
+ **Priority**: Get the visual hierarchy right
+ 
+ **Day 1-2:**
++
+ - [ ] Create ScoreHero component with animated circle
+ - [ ] Replace current layout with new structure
+ - [ ] Add basic styling and responsive behavior
+ 
+ **Day 3-4:**
++
+ - [ ] Implement QuickWinsPanel with priority-based styling
+ - [ ] Add quick win cards with impact indicators
+ - [ ] Create collapsible/expandable interaction
+ 
+ **Day 5:**
++
+ - [ ] Add ModuleOverview with progress bars
+ - [ ] Implement basic responsive breakpoints
+ - [ ] Polish animations and transitions
+ 
+ ### Phase 2: Enhanced Functionality (Week 2)
++
+ **Priority**: Make it actionable
+ 
+ **Day 1-2:**
++
+ - [ ] Add copy-to-clipboard for code snippets
+ - [ ] Implement "mark as completed" functionality
+ - [ ] Add progress tracking state management
+ 
+ **Day 3-4:**
++
+ - [ ] Create detailed analysis expandable sections
+ - [ ] Add before/after score predictions
+ - [ ] Implement action button interactions
+ 
+ **Day 5:**
++
+ - [ ] Add loading states and skeleton components
+ - [ ] Polish error handling and edge cases
+ - [ ] Performance optimization
+ 
+ ### Phase 3: User Experience Polish (Week 3)
++
+ **Priority**: Make it delightful
+ 
+ **Day 1-2:**
++
+ - [ ] Add micro-animations and hover effects
+ - [ ] Implement tooltip system for explanations
+ - [ ] Add keyboard navigation support
+ 
+ **Day 3-4:**
++
+ - [ ] Create onboarding highlights for first-time users
+ - [ ] Add sharing functionality
+ - [ ] Implement export improvements
+ 
+ **Day 5:**
++
+ - [ ] User testing and iteration
+ - [ ] Final polish and optimization
+ - [ ] Documentation and handoff
+@@ -312,16 +342,19 @@ interface EnhancedScanResult {
+ ## 📊 Success Metrics
+ 
+ ### Immediate Metrics (Week 1)
++
+ - [ ] Visual hierarchy is immediately apparent
+ - [ ] Score and quick wins are visible above the fold
+ - [ ] Responsive design works on all breakpoints
+ 
+ ### Functional Metrics (Week 2)
++
+ - [ ] All interactive elements work smoothly
+ - [ ] Copy-to-clipboard success rate > 95%
+ - [ ] Page load performance maintained
+ 
+ ### User Experience Metrics (Week 3)
++
+ - [ ] Time to understand results < 10 seconds
+ - [ ] Quick win identification < 5 seconds
+ - [ ] Overall user satisfaction improvement
+@@ -331,6 +364,7 @@ interface EnhancedScanResult {
+ ## 🎯 Definition of Done
+ 
+ **Visual Transformation Complete When:**
++
+ 1. ✅ Score circle is prominent and animated
+ 2. ✅ Quick wins are clearly prioritized and visible
+ 3. ✅ Technical details are hidden by default
+@@ -338,6 +372,7 @@ interface EnhancedScanResult {
+ 5. ✅ Responsive design works across all devices
+ 
+ **User Experience Complete When:**
++
+ 1. ✅ Non-technical users can identify actions in <30 seconds
+ 2. ✅ Copy-to-clipboard works for all code snippets
+ 3. ✅ Progress can be tracked across scanning sessions
+@@ -349,23 +384,24 @@ interface EnhancedScanResult {
+ ## 📋 Data Transformation Requirements
+ 
+ ### Current ScanResult → Enhanced ScanResult
++
+ ```typescript
+ // Transform function needed
+ function transformScanResult(current: CurrentScanResult): EnhancedScanResult {
+   // Calculate potential improvement
+   const potentialImprovement = calculateMaxPossibleGain(current.modules);
+-  
++
+   // Generate user-friendly quick wins
+   const quickWins = generateQuickWins(current.modules, current.quickWins);
+-  
++
+   // Create friendly module status
+   const modules = current.modules.map(module => ({
+     ...module,
+     friendlyName: getFriendlyName(module.name),
+     oneLineExplain: generateExplanation(module),
+-    icon: getModuleIcon(module.id)
++    icon: getModuleIcon(module.id),
+   }));
+-  
++
+   return {
+     overallScore: current.overallScore,
+     potentialImprovement,
+@@ -373,22 +409,23 @@ function transformScanResult(current: CurrentScanResult): EnhancedScanResult {
+     modules,
+     quickWins,
+     completedActions: [],
+-    estimatedTimeToComplete: calculateTimeEstimate(quickWins)
++    estimatedTimeToComplete: calculateTimeEstimate(quickWins),
+   };
+ }
+ ```
+ 
+ ### Module Name Mapping
++
+ ```typescript
+ const friendlyNames = {
+   'crawl-access': 'Vindbaarheid',
+-  'structured-data': 'Begrijpbaarheid', 
++  'structured-data': 'Begrijpbaarheid',
+   'content-analysis': 'Content Kwaliteit',
+   'technical-seo': 'Technische Prestaties',
+-  'authority': 'Betrouwbaarheid',
+-  'freshness': 'Actualiteit',
++  authority: 'Betrouwbaarheid',
++  freshness: 'Actualiteit',
+   'cross-web': 'Online Aanwezigheid',
+-  'monitoring': 'Tracking'
++  monitoring: 'Tracking',
+ };
+ ```
+ 
+@@ -397,12 +434,14 @@ const friendlyNames = {
+ ## 🔄 Migration Strategy
+ 
+ ### Parallel Development
++
+ 1. **Keep current ScanResults** functional during development
+ 2. **Build new components** in `components/results/` directory
+ 3. **Feature flag** to switch between old/new interface
+ 4. **A/B testing** capability for validation
+ 
+ ### Gradual Rollout
++
+ 1. **Internal testing** with new interface
+ 2. **Beta users** with opt-in to new design
+ 3. **Public rollout** with fallback option
+@@ -413,6 +452,7 @@ const friendlyNames = {
+ ## 🎨 Style Guide Additions
+ 
+ ### Component-Specific Classes
++
+ ```css
+ /* Score Hero */
+ .score-hero {
+@@ -480,17 +520,18 @@ const friendlyNames = {
+ ```
+ 
+ ### Responsive Utilities
++
+ ```css
+ @media (max-width: 768px) {
+   .score-circle {
+     width: 150px;
+     height: 150px;
+   }
+-  
++
+   .quick-wins-grid {
+     grid-template-columns: 1fr;
+   }
+-  
++
+   .module-overview {
+     grid-template-columns: 1fr;
+   }
+@@ -500,7 +541,7 @@ const friendlyNames = {
+   .score-hero {
+     padding: 1rem;
+   }
+-  
++
+   .quick-win-card {
+     padding: 1rem;
+   }
+@@ -512,6 +553,7 @@ const friendlyNames = {
+ ## 🧪 Testing Strategy
+ 
+ ### Component Testing
++
+ ```typescript
+ // ScoreHero.test.tsx
+ describe('ScoreHero', () => {
+@@ -519,14 +561,14 @@ describe('ScoreHero', () => {
+     render(<ScoreHero score={78} />);
+     // Test animation behavior
+   });
+-  
++
+   it('shows correct status based on score', () => {
+     render(<ScoreHero score={45} />);
+     expect(screen.getByText(/needs work/i)).toBeInTheDocument();
+   });
+ });
+ 
+-// QuickWinCard.test.tsx  
++// QuickWinCard.test.tsx
+ describe('QuickWinCard', () => {
+   it('copies code snippet to clipboard', async () => {
+     render(<QuickWinCard quickWin={mockQuickWin} />);
+@@ -537,39 +579,41 @@ describe('QuickWinCard', () => {
+ ```
+ 
+ ### Integration Testing
++
+ ```typescript
+ // ScanResults.integration.test.tsx
+ describe('ScanResults Integration', () => {
+   it('transforms scan data correctly', () => {
+     render(<NewScanResults result={mockScanResult} />);
+-    
++
+     // Verify data transformation
+     expect(screen.getByText('78')).toBeInTheDocument();
+     expect(screen.getByText(/quick wins/i)).toBeInTheDocument();
+   });
+-  
++
+   it('handles empty quick wins gracefully', () => {
+     const resultWithNoWins = { ...mockScanResult, quickWins: [] };
+     render(<NewScanResults result={resultWithNoWins} />);
+-    
++
+     expect(screen.getByText(/no immediate actions/i)).toBeInTheDocument();
+   });
+ });
+ ```
+ 
+ ### E2E Testing
++
+ ```typescript
+ // e2e/scan-results.spec.ts
+ test('complete scan results flow', async ({ page }) => {
+   await page.goto('/scan-results/test-id');
+-  
++
+   // Verify score animation
+   await expect(page.locator('.score-display')).toHaveText('78');
+-  
++
+   // Test quick win interaction
+   await page.click('[data-testid="quick-win-expand"]');
+   await expect(page.locator('.code-snippet')).toBeVisible();
+-  
++
+   // Test copy functionality
+   await page.click('[data-testid="copy-code"]');
+   await expect(page.locator('.copy-success')).toBeVisible();
+@@ -578,4 +622,4 @@ test('complete scan results flow', async ({ page }) => {
+ 
+ ---
+ 
+-Deze complete specificatie vormt de basis voor de volledige herontwerp van het GEO Scanner resultaat scherm, met focus op gebruiksvriendelijkheid en actionable feedback voor niet-technische gebruikers.
+\ No newline at end of file
++Deze complete specificatie vormt de basis voor de volledige herontwerp van het GEO Scanner resultaat scherm, met focus op gebruiksvriendelijkheid en actionable feedback voor niet-technische gebruikers.

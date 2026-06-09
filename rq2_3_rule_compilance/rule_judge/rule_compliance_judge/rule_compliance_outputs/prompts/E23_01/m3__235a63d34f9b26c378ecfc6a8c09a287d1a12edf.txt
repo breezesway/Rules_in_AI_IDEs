@@ -1,0 +1,213 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech_stack.md
+- Change Type: modified
+- Target Rule Content:
+- Immutable Ledger: Amazon QLDB
++ Immutable Ledger: Amazon Aurora PostgreSQL
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency management files (e.g., package.json, requirements.txt, pom.xml), configuration files (e.g., .env, application.yaml), and Infrastructure-as-Code (IaC) files (e.g., Terraform .tf files, CloudFormation templates).
+- Suggested Logic: 1. Check dependency manifests for the removal of QLDB-specific SDKs (e.g., @aws-sdk/client-qldb, amazon-qldb-driver-nodejs) and the addition of PostgreSQL drivers (e.g., 'pg', 'psycopg2', 'jdbc:postgresql'). 2. Scan configuration and IaC files to ensure that database connection strings or resource definitions point to Amazon Aurora/RDS (PostgreSQL) instead of AWS::QLDB::Ledger resources.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: feat(infra): Implement GraceLogicStack as a nested stack with ProvenanceLogger Lambda
+- Changed Files List: 
+infrastructure/bin/grace-app.ts	+6	-7	after_lines=38
+infrastructure/lib/grace-foundation-stack.ts	+12	-1	after_lines=162
+infrastructure/lib/grace-logic-stack.ts	+22	-8	after_lines=81
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── README.md
+│   ├── specs
+│   │   └── core-audit-workflow
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── project_conventions.md
+│       └── tech_stack.md
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── GRACE_ARCHITECTURE.md
+│   ├── GRACE_DEPLOYMENT_GUIDE.md
+│   ├── GRACE_GLOBAL_STRATEGY.md
+│   ├── GRACE_MODEL_SPEC.md
+│   └── dataset_manifest.md
+├── infrastructure
+│   ├── README.md
+│   ├── additional-permissions.json
+│   ├── bin
+│   │   ├── grace-app.ts
+│   │   └── s3-app.ts
+│   ├── bootstrap-instructions.md
+│   ├── cdk-bootstrap-permissions.json
+│   ├── cdk.context.json
+│   ├── cdk.json
+│   ├── configure-s3.sh
+│   ├── create-s3-bucket.sh
+│   ├── deploy.sh
+│   ├── lambda
+│   │   ├── db-init
+│   │   │   ├── cfnresponse.py
+│   │   │   ├── index.py
+│   │   │   └── requirements.txt
+│   │   ├── dependencies
+│   │   │   ├── README.md
+│   │   │   └── build_layer.sh
+│   │   ├── index.js
+│   │   └── provenance_logger
+│   │       ├── index.py
+│   │       └── requirements.txt
+│   ├── lib
+│   │   ├── grace-api-stack.ts
+│   │   ├── grace-foundation-stack.ts
+│   │   ├── grace-foundation-stack.ts.original
+│   │   ├── grace-logic-stack.ts
+│   │   ├── s3-stack.ts
+│   │   └── simple-s3-stack.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── s3-config.json
+│   ├── sql
+│   │   └── init-audit-schema.sql
+│   ├── tsconfig.json
+│   └── update-s3-policy.sh
+└── scripts
+    └── verify_dataset.sh
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: infrastructure/bin/grace-app.ts ---
+diff --git a/infrastructure/bin/grace-app.ts b/infrastructure/bin/grace-app.ts
+index 1665efe..4f7cfcf 100644
+--- a/infrastructure/bin/grace-app.ts
++++ b/infrastructure/bin/grace-app.ts
+@@ -22,17 +22,16 @@ const foundationStack = new GraceFoundationStack(app, 'GraceFoundationStack', {
+   isProduction
+ });
+ 
+-// Create the logic stack with Lambda functions
+-const logicStack = new GraceLogicStack(app, 'GraceLogicStack', {
+-  env,
++// Create the logic stack as a nested stack
++const logicStack = new GraceLogicStack(foundationStack, 'GraceLogicStack', {
+   description: 'Business logic layer for the GRACE project including Lambda functions',
+-  foundationStack,
++  vpc: foundationStack.vpc,
++  databaseSecret: foundationStack.databaseSecret,
++  databaseEndpoint: foundationStack.database.clusterEndpoint.hostname,
++  databaseSecurityGroup: foundationStack.database.connections.securityGroups[0],
+   isProduction
+ });
+ 
+-// Add dependency to ensure the foundation stack is deployed first
+-logicStack.addDependency(foundationStack);
+-
+ // Add tags to all resources
+ cdk.Tags.of(app).add('Project', 'GRACE');
+ cdk.Tags.of(app).add('Environment', isProduction ? 'Production' : 'Development');
+
+--- FILE: infrastructure/lib/grace-foundation-stack.ts ---
+diff --git a/infrastructure/lib/grace-foundation-stack.ts b/infrastructure/lib/grace-foundation-stack.ts
+index 8e472d5..f510bae 100644
+--- a/infrastructure/lib/grace-foundation-stack.ts
++++ b/infrastructure/lib/grace-foundation-stack.ts
+@@ -125,8 +125,19 @@ export class GraceFoundationStack extends cdk.Stack {
+     // Output the resources for reference
+     new cdk.CfnOutput(this, 'VpcId', {
+       value: this.vpc.vpcId,
+-      description: 'The ID of the VPC'
++      description: 'The ID of the VPC',
++      exportName: `${cdk.Stack.of(this).stackName}-VpcId`
+     });
++    
++    // Export private subnet IDs for cross-stack references
++    const privateSubnets = this.vpc.privateSubnets;
++    for (let i = 0; i < privateSubnets.length; i++) {
++      new cdk.CfnOutput(this, `PrivateSubnet${i+1}Id`, {
++        value: privateSubnets[i].subnetId,
++        description: `The ID of private subnet ${i+1}`,
++        exportName: `${cdk.Stack.of(this).stackName}-PrivateSubnet${i+1}`
++      });
++    }
+ 
+     new cdk.CfnOutput(this, 'DatabaseClusterEndpoint', {
+       value: this.database.clusterEndpoint.hostname,
+
+--- FILE: infrastructure/lib/grace-logic-stack.ts ---
+diff --git a/infrastructure/lib/grace-logic-stack.ts b/infrastructure/lib/grace-logic-stack.ts
+index 9aae50d..55ffcd2 100644
+--- a/infrastructure/lib/grace-logic-stack.ts
++++ b/infrastructure/lib/grace-logic-stack.ts
+@@ -6,12 +6,15 @@ import * as iam from 'aws-cdk-lib/aws-iam';
+ import * as path from 'path';
+ import { GraceFoundationStack } from './grace-foundation-stack';
+ 
+-export interface GraceLogicStackProps extends cdk.StackProps {
+-  foundationStack: GraceFoundationStack;
++export interface GraceLogicStackProps extends cdk.NestedStackProps {
++  vpc: ec2.IVpc;
++  databaseSecret: cdk.aws_secretsmanager.ISecret;
++  databaseEndpoint: string;
++  databaseSecurityGroup: ec2.ISecurityGroup;
+   isProduction?: boolean;
+ }
+ 
+-export class GraceLogicStack extends cdk.Stack {
++export class GraceLogicStack extends cdk.NestedStack {
+   public readonly provenanceLogger: lambda.Function;
+ 
+   constructor(scope: Construct, id: string, props: GraceLogicStackProps) {
+@@ -21,8 +24,8 @@ export class GraceLogicStack extends cdk.Stack {
+     const isProduction = props?.isProduction ?? false;
+     const envSuffix = isProduction ? 'prod' : 'dev';
+ 
+-    // Reference resources from the foundation stack
+-    const { vpc, database, databaseSecret } = props.foundationStack;
++    // Use the resources passed from the parent stack
++    const { vpc, databaseSecret, databaseSecurityGroup } = props;
+ 
+     // Create a security group for the Lambda function
+     const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'ProvenanceLoggerSecurityGroup', {
+@@ -30,9 +33,20 @@ export class GraceLogicStack extends cdk.Stack {
+       description: 'Security group for the ProvenanceLogger Lambda function',
+       allowAllOutbound: true
+     });
+-
++    
+     // Allow the Lambda function to connect to the database
+-    database.connections.allowFrom(lambdaSecurityGroup, ec2.Port.tcp(5432), 'Allow Lambda to connect to PostgreSQL');
++    lambdaSecurityGroup.addEgressRule(
++      databaseSecurityGroup,
++      ec2.Port.tcp(5432),
++      'Allow Lambda to connect to PostgreSQL'
++    );
++    
++    // Allow inbound connections from the Lambda to the database
++    databaseSecurityGroup.addIngressRule(
++      lambdaSecurityGroup,
++      ec2.Port.tcp(5432),
++      'Allow Lambda to connect to PostgreSQL'
++    );
+ 
+     // Create the ProvenanceLogger Lambda function
+     this.provenanceLogger = new lambda.Function(this, 'ProvenanceLogger', {
+@@ -46,7 +60,7 @@ export class GraceLogicStack extends cdk.Stack {
+       securityGroups: [lambdaSecurityGroup],
+       environment: {
+         DATABASE_SECRET_ARN: databaseSecret.secretArn,
+-        DATABASE_ENDPOINT: database.clusterEndpoint.hostname,
++        DATABASE_ENDPOINT: props.databaseEndpoint,
+         ENVIRONMENT: isProduction ? 'production' : 'development'
+       },
+       timeout: cdk.Duration.seconds(30),
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,743 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- GraphCanvas.tsx: Cytoscape.js graph rendering component
+- GraphToolbar.tsx: Graph interaction controls
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and source code files (specifically GraphCanvas.tsx and GraphToolbar.tsx).
+- Suggested Logic: Verify that the files 'GraphCanvas.tsx' and 'GraphToolbar.tsx' exist within the repository's source directories.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: feat: Add constellation impact analysis tool and update documentation
+- Changed Files List: 
+README.md	+4	-4	after_lines=39
+docs/configuration.md	+1	-1	after_lines=65
+docs/development.md	+3	-1	after_lines=86
+docs/troubleshooting.md	+2	-2	after_lines=40
+docs/usage.md	+1	-2	after_lines=51
+package.json	+1	-2	after_lines=93
+src/extension.ts	+8	-111	after_lines=114
+src/mcp.server.ts	+0	-10	after_lines=162
+src/providers/graph-panel-provider.ts	+102	-0	after_lines=102
+src/services/dependency-cruiser.service.ts	+4	-5	after_lines=274
+src/services/graph-data.service.ts	+2	-4	after_lines=337
+src/services/mcp-config.service.ts	+2	-2	after_lines=105
+src/services/message-router.service.ts	+19	-0	after_lines=19
+src/services/workspace.service.ts	+16	-0	after_lines=16
+src/side-panel-view-provider.ts	+20	-23	after_lines=52
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 02-cytoscape-graph-visualization
+│   │   │   ├── cytoscape-graph-initial-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 03-graph-view-layout
+│   │   │   ├── design.md
+│   │   │   ├── graph-view-layout-prd.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── impact-analysis-phase-1
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── IMPACT_ANALYSIS_DEMO.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── impact-analysis-phase-1-prd.md
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── providers
+│   │   └── graph-panel-provider.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── impact-analysis.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── message-router.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   ├── webview.service.ts
+│   │   └── workspace.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── test-impact-flow.mjs
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   ├── GraphCanvas.tsx
+    │   │   ├── GraphDashboard.tsx
+    │   │   └── GraphToolbar.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   ├── extension-config.service.ts
+    │   │   ├── file-type.service.ts
+    │   │   ├── graph-styles.service.ts
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 8428109..bad8123 100644
+--- a/README.md
++++ b/README.md
+@@ -1,9 +1,9 @@
+ # Kiro Constellation
+ 
+-A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes two tools and a side panel UI (Preact webview):
++A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes tools and a side panel UI (Preact webview):
+ 
+ - ping → responds with "pong"
+-- echo → responds with the same text you send
++- constellation_impactAnalysis → analyzes the dependency impact of changing a source file
+ 
+ On activation the extension:
+ 1. Verifies Node.js 18+.
+@@ -23,8 +23,8 @@ npm run build
+ Verify in Kiro and open the side panel
+ - Open MCP panel → `constellation-mcp` (or `constellation-mcp-dev`) should be running
+ - Try: `#[constellation-mcp] ping` → pong
+-- Try: `#[constellation-mcp] echo Hello` → Hello
+-- Click the Constellation icon in the Activity Bar to open the side panel (webview). It should display "Hello world".
++- Optionally: call `#[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }` to visualize impact in the Graph view.
++- Click the Constellation icon in the Activity Bar to open the side panel (webview).
+ - Dependency scan output: ./.constellation/data/codebase-dependencies.json (re-run via "Constellation: Scan Dependencies").
+ 
+ Docs
+
+--- FILE: docs/configuration.md ---
+diff --git a/docs/configuration.md b/docs/configuration.md
+index 8000b40..89cc053 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -18,7 +18,7 @@ Example ~/.kiro/settings/mcp.json after activation:
+       "args": ["/absolute/path/to/kiro-ide-constellation/out/mcpServer.js"],
+       "env": {},
+       "disabled": false,
+-      "autoApprove": ["ping", "echo"]
++      "autoApprove": ["ping", "constellation_impactAnalysis"]
+     }
+   }
+ }
+
+--- FILE: docs/development.md ---
+diff --git a/docs/development.md b/docs/development.md
+index e2ddff2..14aaf30 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -69,9 +69,11 @@ Debug profiles
+   - Uses the default namespace from settings (constellation.serverId).
+ 
+ Useful commands (palette)
+-- Constellation: Self-test — Boot the server with --selftest and report OK/FAILED.
+ - Constellation: Open user MCP config — Open ~/.kiro/settings/mcp.json.
+ 
++Internal self-test
++- On activation the extension performs a quick internal self-test to verify the MCP server boots. This is not exposed as a command palette action.
++
+ Packaging
+ ```bash
+ npm run package
+
+--- FILE: docs/troubleshooting.md ---
+diff --git a/docs/troubleshooting.md b/docs/troubleshooting.md
+index 3a8843b..ae7c22e 100644
+--- a/docs/troubleshooting.md
++++ b/docs/troubleshooting.md
+@@ -24,11 +24,11 @@ Self-test fails or setup toast shows an error
+ - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.
+ 
+ Server starts but fails at runtime
+-- Open the MCP server logs (if available) or run the self-test command.
++- Open the MCP server logs (if available).
+ - Restart constellation-mcp from the MCP panel after building (npm run watch is handy).
+ 
+ I moved or renamed the repository, and now it can’t start
+-- The MCP config stores an absolute path to out/mcpServer.js. Re-run the extension (or run the self-test) to upsert the path.
++- The MCP config stores an absolute path to out/mcpServer.js. Re-run the extension to upsert the path.
+ 
+ I want to disable or remove the server
+ - Remove the constellation-mcp block from ~/.kiro/settings/mcp.json (and from ./.kiro/settings/mcp.json if you created one).
+
+--- FILE: docs/usage.md ---
+diff --git a/docs/usage.md b/docs/usage.md
+index 2c13815..46de718 100644
+--- a/docs/usage.md
++++ b/docs/usage.md
+@@ -20,7 +20,7 @@ npm run build
+ - Open Kiro’s MCP panel and confirm constellation-mcp is running.
+ - Try the tools:
+   - #[constellation-mcp] ping → pong
+-  - #[constellation-mcp] echo Hello → Hello
++  - #[constellation-mcp] constellation_impactAnalysis { "filePath": "src/index.ts" }
+ 
+ 5) Open the side panel UI
+ - Click the Constellation icon in the Activity Bar to open the webview side panel.
+@@ -37,7 +37,6 @@ npm run build
+ - When you call the MCP tool #[constellation-mcp] ping, the Graph tab will also auto-open via the local HTTP bridge.
+ 
+ Helpful commands
+-- Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
+ - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
+ - Constellation: Scan Dependencies — Re-run dependency-cruiser on the workspace and overwrite the output file.
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 9196e8b..f76f09f 100644
+--- a/package.json
++++ b/package.json
+@@ -2,7 +2,7 @@
+   "name": "kiro-constellation",
+   "displayName": "Kiro Constellation",
+   "publisher": "xXValhallaCoderXx",
+-  "description": "Bare-bones Kiro MCP server (ping/echo) + setup helper, with a side panel UI.",
++  "description": "Kiro MCP server (ping + impact analysis) setup helper with a side panel UI.",
+   "version": "0.0.1",
+   "type": "module",
+   "engines": { "vscode": "^1.85.0" },
+@@ -29,7 +29,6 @@
+       ]
+     },
+     "commands": [
+-      { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
+       { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" },
+       { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" },
+       { "command": "constellation.openGraphView", "title": "Constellation: Open Graph View" }
+
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index d5f5e79..caaa6fa 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -6,9 +6,8 @@ import { SidePanelViewProvider } from "./side-panel-view-provider.js";
+ import { runScan } from "./services/dependency-cruiser.service.js";
+ import { startHttpBridge } from "./services/http-bridge.service.js";
+ 
+-let graphPanel: vscode.WebviewPanel | undefined;
+-let graphWebviewReady = false;
+-let pendingImpactPayload: { sourceFile: string; affectedFiles: string[] } | null = null;
++// Graph panel provider singleton instance (lazily imported)
++let graphProvider: any | null = null;
+ 
+ export async function activate(context: vscode.ExtensionContext) {
+   try {
+@@ -79,10 +78,6 @@ export async function activate(context: vscode.ExtensionContext) {
+ 
+         // Commands
+         context.subscriptions.push(
+-          vscode.commands.registerCommand("constellation.selfTest", async () => {
+-            const ok2 = await selfTest(nodeBin, serverJs);
+-            void vscode.window.showInformationMessage(`Self-test: ${ok2 ? "OK" : "FAILED"}`);
+-          }),
+           vscode.commands.registerCommand("constellation.openUserMcpConfig", async () => {
+             const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(userCfgPath));
+             void vscode.window.showTextDocument(doc);
+@@ -97,112 +92,14 @@ export async function activate(context: vscode.ExtensionContext) {
+             }
+           }),
+           vscode.commands.registerCommand("constellation.openGraphView", async () => {
+-            // Singleton: if already open, just reveal
+-            if (graphPanel) {
+-              graphPanel.reveal(vscode.ViewColumn.Active, true);
+-              return;
+-            }
+-            graphPanel = vscode.window.createWebviewPanel(
+-              'constellation.graphPanel',
+-              'Constellation Graph',
+-              vscode.ViewColumn.Active,
+-              {
+-                enableScripts: true,
+-                retainContextWhenHidden: true,
+-                localResourceRoots: [
+-                  vscode.Uri.joinPath(context.extensionUri, 'out'),
+-                  vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
+-                ],
+-              }
+-            );
+-            
+-            // Reset readiness for a newly created panel
+-            graphWebviewReady = false;
+-            
+-            // Set up message handling for graph panel
+-            const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
+-              // Intercept webview readiness handshake
+-              try {
+-                if (msg && typeof msg.type === 'string' && msg.type === 'graph/ready') {
+-                  graphWebviewReady = true;
+-                  if (pendingImpactPayload && graphPanel) {
+-                    graphPanel.webview.postMessage({
+-                      type: 'graph/impact',
+-                      payload: pendingImpactPayload,
+-                    });
+-                    pendingImpactPayload = null;
+-                  }
+-                }
+-              } catch {/* ignore */}
+-
+-              import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
+-                handleWebviewMessage(msg, {
+-                  revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+-                  log: (s) => console.log(s),
+-                  postMessage: (message) => graphPanel?.webview.postMessage(message),
+-                  extensionContext: context,
+-                  openFile: async (path: string) => {
+-                    try {
+-                      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+-                      await vscode.window.showTextDocument(doc);
+-                    } catch (error) {
+-                      console.error('Failed to open file:', path, error);
+-                    }
+-                  },
+-                  triggerScan: async () => {
+-                    const { runScan } = await import('./services/dependency-cruiser.service.js');
+-                    await runScan(context);
+-                  }
+-                })
+-              ).catch(() => {/* ignore */})
+-            });
+-            
+-            const { renderHtml } = await import('./services/webview.service.js');
+-            graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
+-            
+-            // Ensure proper cleanup of message handlers on panel disposal
+-            graphPanel.onDidDispose(() => { 
+-              messageDisposable.dispose();
+-              graphPanel = undefined; 
+-              graphWebviewReady = false;
+-              pendingImpactPayload = null;
+-            });
++            const { GraphPanelProvider } = await import('./providers/graph-panel-provider.js');
++            if (!graphProvider) graphProvider = new GraphPanelProvider(context);
++            await graphProvider.ensureOpen();
+           }),
+           vscode.commands.registerCommand("constellation.showImpact", async (payload: { sourceFile: string; affectedFiles: string[] }) => {
+-            // Store payload so we can deliver it after webview is ready
+-            pendingImpactPayload = payload;
+-
+-            // Ensure graph panel exists and is visible
+-            await vscode.commands.executeCommand('constellation.openGraphView');
+-            
+-            // Helper to attempt immediate send
+-            const trySend = () => {
+-              if (graphPanel && graphWebviewReady && pendingImpactPayload) {
+-                console.log('[Constellation] Sending impact payload to webview', {
+-                  count: pendingImpactPayload.affectedFiles?.length ?? 0,
+-                  source: pendingImpactPayload.sourceFile
+-                });
+-                graphPanel.webview.postMessage({
+-                  type: 'graph/impact',
+-                  payload: pendingImpactPayload
+-                });
+-                pendingImpactPayload = null;
+-                return true;
+-              }
+-              return false;
+-            };
+-
+-            // Try right away
+-            if (trySend()) return;
+-
+-            // Fallback: retry a few times in case the ready signal just hasn't propagated yet
+-            const retries = [100, 250, 500, 1000];
+-            for (const delay of retries) {
+-              await new Promise((r) => setTimeout(r, delay));
+-              if (trySend()) return;
+-            }
+-            // If still not sent, leave payload queued — it will be delivered on the next graph/ready
+-            console.warn('[Constellation] Impact payload not sent yet; queued awaiting graph/ready');
++            const { GraphPanelProvider } = await import('./providers/graph-panel-provider.js');
++            if (!graphProvider) graphProvider = new GraphPanelProvider(context);
++            await graphProvider.postImpact(payload);
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: src/mcp.server.ts ---
+diff --git a/src/mcp.server.ts b/src/mcp.server.ts
+index c75362d..150b2cc 100644
+--- a/src/mcp.server.ts
++++ b/src/mcp.server.ts
+@@ -34,16 +34,6 @@ server.registerTool(
+   }
+ );
+ 
+-// echo -> returns what you sent
+-server.registerTool(
+-  "echo",
+-  {
+-    title: "Echo",
+-    description: "Replies with the same text you send.",
+-    inputSchema: { message: z.string() },
+-  },
+-  async ({ message }) => ({ content: [{ type: "text", text: message }] })
+-);
+ 
+ // constellation_impactAnalysis -> analyzes dependency impact of changing a source file
+ server.registerTool(
+
+--- FILE: src/providers/graph-panel-provider.ts ---
+diff --git a/src/providers/graph-panel-provider.ts b/src/providers/graph-panel-provider.ts
+new file mode 100644
+index 0000000..c85da30
+--- /dev/null
++++ b/src/providers/graph-panel-provider.ts
+@@ -0,0 +1,102 @@
++import * as vscode from "vscode";
++import { renderHtml } from "../services/webview.service.js";
++import { configureGraphMessaging } from "../services/message-router.service.js";
++
++export type ImpactPayload = { sourceFile: string; affectedFiles: string[] };
++
++export class GraphPanelProvider {
++  private panel: vscode.WebviewPanel | undefined;
++  private ready = false;
++  private pendingImpact: ImpactPayload | null = null;
++  private messageDisposable: vscode.Disposable | undefined;
++
++  constructor(private readonly context: vscode.ExtensionContext) {}
++
++  async ensureOpen() {
++    if (this.panel) {
++      this.panel.reveal(vscode.ViewColumn.Active, true);
++      return;
++    }
++
++    this.panel = vscode.window.createWebviewPanel(
++      'constellation.graphPanel',
++      'Constellation Graph',
++      vscode.ViewColumn.Active,
++      {
++        enableScripts: true,
++        retainContextWhenHidden: true,
++        localResourceRoots: [
++          vscode.Uri.joinPath(this.context.extensionUri, 'out'),
++          vscode.Uri.joinPath(this.context.extensionUri, 'out', 'ui'),
++        ],
++      }
++    );
++
++    this.ready = false;
++
++    this.messageDisposable = configureGraphMessaging(this.panel.webview, {
++      revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
++      log: (s) => console.log(s),
++      postMessage: (message) => this.panel?.webview.postMessage(message),
++      extensionContext: this.context,
++      openFile: async (path: string) => {
++        try {
++          const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
++          await vscode.window.showTextDocument(doc);
++        } catch (error) {
++          console.error('Failed to open file:', path, error);
++        }
++      },
++      triggerScan: async () => {
++        const { runScan } = await import('../services/dependency-cruiser.service.js');
++        await runScan(this.context);
++      }
++    });
++
++    // Intercept readiness handshake to flush pending impact payload
++    this.panel.webview.onDidReceiveMessage((msg) => {
++      try {
++        if (msg && typeof msg.type === 'string' && msg.type === 'graph/ready') {
++          this.ready = true;
++          if (this.pendingImpact && this.panel) {
++            this.panel.webview.postMessage({ type: 'graph/impact', payload: this.pendingImpact });
++            this.pendingImpact = null;
++          }
++        }
++      } catch {/* ignore */}
++    });
++
++    this.panel.webview.html = renderHtml(this.panel.webview, this.context.extensionUri, 'graph', 'Constellation Graph');
++
++    this.panel.onDidDispose(() => {
++      this.messageDisposable?.dispose();
++      this.panel = undefined;
++      this.ready = false;
++      this.pendingImpact = null;
++    });
++  }
++
++  async postImpact(payload: ImpactPayload) {
++    this.pendingImpact = payload;
++    await this.ensureOpen();
++
++    const trySend = () => {
++      if (this.panel && this.ready && this.pendingImpact) {
++        this.panel.webview.postMessage({ type: 'graph/impact', payload: this.pendingImpact });
++        this.pendingImpact = null;
++        return true;
++      }
++      return false;
++    };
++
++    if (trySend()) return;
++
++    const retries = [100, 250, 500, 1000];
++    for (const delay of retries) {
++      await new Promise((r) => setTimeout(r, delay));
++      if (trySend()) return;
++    }
++    console.warn('[Constellation] Impact payload not sent yet; queued awaiting graph/ready');
++  }
++}
++
+
+--- FILE: src/services/dependency-cruiser.service.ts ---
+diff --git a/src/services/dependency-cruiser.service.ts b/src/services/dependency-cruiser.service.ts
+index 0d182ad..6a29c7f 100644
+--- a/src/services/dependency-cruiser.service.ts
++++ b/src/services/dependency-cruiser.service.ts
+@@ -19,15 +19,14 @@ interface DependencyAnalysisResult {
+  * Detects and validates the current workspace
+  * @returns WorkspaceInfo object or null if no workspace is available
+  */
++import { getWorkspaceRoot } from './workspace.service.js';
++
+ function detectWorkspace(): WorkspaceInfo | null {
+-    // Check if any workspace folders are open
+-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
++    const workspaceRoot = getWorkspaceRoot();
++    if (!workspaceRoot) {
+         return null;
+     }
+ 
+-    // Use the first workspace folder
+-    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+-
+     // Check for TypeScript config
+     const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
+     const hasTsConfig = fs.existsSync(tsconfigPath);
+
+--- FILE: src/services/graph-data.service.ts ---
+diff --git a/src/services/graph-data.service.ts b/src/services/graph-data.service.ts
+index c641f15..5fdc3c1 100644
+--- a/src/services/graph-data.service.ts
++++ b/src/services/graph-data.service.ts
+@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
+ import * as fs from 'fs';
+ import * as path from 'path';
+ import { runScan } from './dependency-cruiser.service.js';
++import { getWorkspaceRoot } from './workspace.service.js';
+ 
+ // Error message constants for different failure scenarios
+ // Requirements: R2.5, R7.3
+@@ -238,10 +239,7 @@ function checkFileSize(filePath: string): { isLarge: boolean; sizeInMB: number }
+  * Requirements: R2.5 (graceful handling for missing workspace)
+  */
+ function detectWorkspace(): string | null {
+-  if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+-    return null;
+-  }
+-  return vscode.workspace.workspaceFolders[0].uri.fsPath;
++  return getWorkspaceRoot();
+ }
+ 
+ /**
+
+--- FILE: src/services/mcp-config.service.ts ---
+diff --git a/src/services/mcp-config.service.ts b/src/services/mcp-config.service.ts
+index a82c94b..dcf5301 100644
+--- a/src/services/mcp-config.service.ts
++++ b/src/services/mcp-config.service.ts
+@@ -23,7 +23,7 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
+     args: [serverJs],
+     env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
+     disabled: false,
+-    autoApprove: ["ping", "echo"],
++    autoApprove: ["ping", "constellation_impactAnalysis"],
+   };
+ 
+   await fs.writeFile(userCfgPath, JSON.stringify(cfg, null, 2), "utf8");
+@@ -61,7 +61,7 @@ export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: strin
+       args: [serverJs],
+       env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
+       disabled: false,
+-      autoApprove: ["ping", "echo"],
++      autoApprove: ["ping", "constellation_impactAnalysis"],
+     };
+ 
+     await fs.writeFile(wsCfgPath, JSON.stringify(cfg, null, 2), "utf8");
+
+--- FILE: src/services/message-router.service.ts ---
+diff --git a/src/services/message-router.service.ts b/src/services/message-router.service.ts
+new file mode 100644
+index 0000000..e06fb3f
+--- /dev/null
++++ b/src/services/message-router.service.ts
+@@ -0,0 +1,19 @@
++import * as vscode from "vscode";
++
++export type WebviewContext = {
++  revealGraphView: () => void;
++  log: (s: string) => void;
++  postMessage?: (message: any) => void;
++  extensionContext: vscode.ExtensionContext;
++  openFile: (path: string) => Promise<void>;
++  triggerScan: () => Promise<void>;
++};
++
++export function configureGraphMessaging(webview: vscode.Webview, ctx: WebviewContext) {
++  return webview.onDidReceiveMessage((msg) => {
++    import('./messenger.service.js').then(({ handleWebviewMessage }) =>
++      handleWebviewMessage(msg, ctx)
++    ).catch(() => { /* ignore */ });
++  });
++}
++
+
+--- FILE: src/services/workspace.service.ts ---
+diff --git a/src/services/workspace.service.ts b/src/services/workspace.service.ts
+new file mode 100644
+index 0000000..5efef87
+--- /dev/null
++++ b/src/services/workspace.service.ts
+@@ -0,0 +1,16 @@
++import * as vscode from "vscode";
++
++export function getWorkspaceRoot(): string | null {
++  const folders = vscode.workspace.workspaceFolders;
++  if (!folders || folders.length === 0) return null;
++  return folders[0].uri.fsPath;
++}
++
++export function getWorkspaceRootOrThrow(): string {
++  const root = getWorkspaceRoot();
++  if (!root) {
++    throw new Error('No workspace folder open. Open a project to view dependencies.');
++  }
++  return root;
++}
++
+
+--- FILE: src/side-panel-view-provider.ts ---
+diff --git a/src/side-panel-view-provider.ts b/src/side-panel-view-provider.ts
+index 27ead56..a273256 100644
+--- a/src/side-panel-view-provider.ts
++++ b/src/side-panel-view-provider.ts
+@@ -16,31 +16,28 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+     return this.extensionContext;
+   }
+ 
+-  resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
++  async resolveWebviewView(webviewView: vscode.WebviewView): Promise<void> {
+     const { webview } = webviewView;
+ 
+-    // Handle messages via centralized messenger
+-    webview.onDidReceiveMessage((msg) => {
+-      import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
+-        handleWebviewMessage(msg, {
+-          revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+-          log: (s) => console.log(s),
+-          postMessage: (message) => webview.postMessage(message),
+-          extensionContext: this.getExtensionContext(),
+-          openFile: async (path: string) => {
+-            try {
+-              const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
+-              await vscode.window.showTextDocument(doc);
+-            } catch (error) {
+-              console.error('Failed to open file:', path, error);
+-            }
+-          },
+-          triggerScan: async () => {
+-            const { runScan } = await import('./services/dependency-cruiser.service.js');
+-            await runScan(this.getExtensionContext());
+-          }
+-        })
+-      ).catch(() => {/* ignore */})
++    // Handle messages via centralized router
++    const { configureGraphMessaging } = await import('./services/message-router.service.js');
++    configureGraphMessaging(webview, {
++      revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
++      log: (s) => console.log(s),
++      postMessage: (message) => webview.postMessage(message),
++      extensionContext: this.getExtensionContext(),
++      openFile: async (path: string) => {
++        try {
++          const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
++          await vscode.window.showTextDocument(doc);
++        } catch (error) {
++          console.error('Failed to open file:', path, error);
++        }
++      },
++      triggerScan: async () => {
++        const { runScan } = await import('./services/dependency-cruiser.service.js');
++        await runScan(this.getExtensionContext());
++      }
+     });
+     webview.options = {
+       enableScripts: true,
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

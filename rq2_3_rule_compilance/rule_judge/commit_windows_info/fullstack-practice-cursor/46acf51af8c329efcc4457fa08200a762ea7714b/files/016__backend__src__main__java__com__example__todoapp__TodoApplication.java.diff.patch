@@ -1,0 +1,51 @@
+diff --git a/backend/src/main/java/com/example/todoapp/TodoApplication.java b/backend/src/main/java/com/example/todoapp/TodoApplication.java
+index d98bcdc..f23380a 100644
+--- a/backend/src/main/java/com/example/todoapp/TodoApplication.java
++++ b/backend/src/main/java/com/example/todoapp/TodoApplication.java
+@@ -1,10 +1,11 @@
+ package com.example.todoapp;
+ 
++import com.fasterxml.jackson.databind.ObjectMapper;
++import com.fasterxml.jackson.databind.SerializationFeature;
++import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
+ import org.springframework.context.annotation.Bean;
+-import org.springframework.web.servlet.config.annotation.CorsRegistry;
+-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+ 
+ @SpringBootApplication
+ public class TodoApplication {
+@@ -13,19 +14,19 @@ public class TodoApplication {
+         SpringApplication.run(TodoApplication.class, args);
+     }
+ 
+-    // 여기! 전역 CORS 설정 추가
+     @Bean
+-    public WebMvcConfigurer corsConfigurer() {
+-        return new WebMvcConfigurer() {
+-            @Override
+-            public void addCorsMappings(CorsRegistry registry) {
+-                registry.addMapping("/api/**")
+-                        .allowedOrigins("http://localhost:3000")
+-                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+-                        .allowedHeaders("*")
+-                        .allowCredentials(true)
+-                        .maxAge(3600);
+-            }
+-        };
++    public ObjectMapper objectMapper() {
++        ObjectMapper objectMapper = new ObjectMapper();
++        
++        // Register JavaTimeModule for Java 8 date/time support
++        objectMapper.registerModule(new JavaTimeModule());
++        
++        // Disable writing dates as timestamps
++        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
++        
++        // Configure to handle timezone information by stripping it
++        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
++        
++        return objectMapper;
+     }
+ }

@@ -1,0 +1,571 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Update docs
+- Changed Files List: 
+.kiro/steering/messaging.md	+104	-0	after_lines=104
+cytoscape-graph-initial-prd.md	+128	-0	after_lines=128
+docs/README.md	+12	-0	after_lines=90
+docs/configuration.md	+21	-0	after_lines=65
+docs/development.md	+21	-0	after_lines=84
+docs/events.md	+66	-0	after_lines=66
+docs/troubleshooting.md	+8	-0	after_lines=40
+docs/usage.md	+5	-0	after_lines=52
+
+- Project Directory Tree (Snapshot after commit):
+├── .constellation
+│   └── data
+│       └── codebase-dependencies.json
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── cytoscape-graph-initial-prd.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   └── Button.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/messaging.md ---
+diff --git a/.kiro/steering/messaging.md b/.kiro/steering/messaging.md
+new file mode 100644
+index 0000000..9e4c696
+--- /dev/null
++++ b/.kiro/steering/messaging.md
+@@ -0,0 +1,104 @@
++# Messaging & Event Architecture
++
++## Overview
++Kiro Constellation implements a multi-layer messaging system that enables communication between the webview UI, VS Code extension host, and MCP server processes. This architecture supports both user-initiated actions and programmatic tool-driven UI updates.
++
++## Message Flow Layers
++
++### 1. Webview ↔ Extension (UI Messaging)
++- **Protocol**: VS Code webview messaging API (`window.postMessage`)
++- **Direction**: Bidirectional
++- **Security**: Sandboxed within VS Code webview context
++- **Implementation**: 
++  - UI side: `webview-ui/src/services/messenger.ts`
++  - Extension side: `src/services/messenger.service.ts`
++  - Provider integration: `src/side-panel-view-provider.ts`
++
++#### Current Message Types
++- `open-graph-view`: Opens/reveals the Graph visualization tab
++- `ping`: Simple connectivity test
++
++#### Planned Message Types (Graph Integration)
++- `graph/load`: Request dependency graph data
++- `graph/data`: Response with graph nodes/edges/metadata
++- `graph/open-file`: Open specific file in editor from graph node
++- `graph/scan`: Trigger dependency rescan
++- `graph/error`: Error response for graph operations
++
++### 2. MCP Server → Extension (HTTP Bridge)
++- **Protocol**: HTTP REST API over loopback (127.0.0.1)
++- **Direction**: MCP → Extension (one-way)
++- **Security**: Bearer token authentication + loopback-only binding
++- **Implementation**: `src/services/http-bridge.service.ts`
++
++#### Environment Variables (Injected into MCP Config)
++- `CONSTELLATION_BRIDGE_PORT`: Dynamic port number
++- `CONSTELLATION_BRIDGE_TOKEN`: Random session token
++
++#### Current Endpoints
++- `POST /open-graph`: Opens/reveals Graph tab (triggered by ping tool)
++
++## Implementation Details
++
++### Webview Messenger Service
++```typescript
++// webview-ui/src/services/messenger.ts
++messenger.post('open-graph-view')  // Send to extension
++messenger.on((msg) => { ... })     // Listen for extension messages
++```
++
++### Extension Message Handler
++```typescript
++// src/services/messenger.service.ts
++handleWebviewMessage(msg, {
++  revealGraphView: () => vscode.commands.executeCommand('constellation.openGraphView'),
++  log: (s) => console.log(s)
++})
++```
++
++### HTTP Bridge Usage (MCP Server)
++```typescript
++// src/mcp.server.ts (ping tool)
++await fetch(`http://127.0.0.1:${port}/open-graph`, {
++  method: "POST",
++  headers: { Authorization: `Bearer ${token}` }
++})
++```
++
++## Security Model
++- **Webview messaging**: Contained within VS Code's webview sandbox
++- **HTTP bridge**: Loopback-only (127.0.0.1) with random bearer tokens
++- **Token rotation**: New token generated per extension activation
++- **No external access**: Bridge rejects non-loopback connections
++
++## Development Patterns
++
++### Adding New UI Messages
++1. Update type definitions in both `webview-ui/src/services/messenger.ts` and `src/services/messenger.service.ts`
++2. Add handler logic in `handleWebviewMessage()`
++3. Implement UI sender in appropriate view component
++
++### Adding New HTTP Endpoints
++1. Add route handler in `src/services/http-bridge.service.ts`
++2. Update MCP server tools to use new endpoint
++3. Ensure proper authentication and loopback validation
++
++### Message Flow Testing
++- **UI messages**: Use webview developer tools and console logging
++- **HTTP bridge**: Manual curl testing with dynamic port/token from MCP config
++- **Integration**: Use MCP tool execution to verify end-to-end flow
++
++## Architecture Benefits
++- **Separation of concerns**: Clear boundaries between UI, extension, and MCP layers
++- **Type safety**: Centralized message type definitions
++- **Security**: Multiple isolation layers (webview sandbox + loopback + tokens)
++- **Extensibility**: Easy to add new message types and endpoints
++- **Debugging**: Centralized message handling for easier troubleshooting
++
++## Related Files
++- **Documentation**: `docs/events.md` (detailed message specifications)
++- **UI messaging**: `webview-ui/src/services/messenger.ts`
++- **Extension messaging**: `src/services/messenger.service.ts`
++- **HTTP bridge**: `src/services/http-bridge.service.ts`
++- **MCP integration**: `src/mcp.server.ts`
++- **Webview providers**: `src/side-panel-view-provider.ts`
+\ No newline at end of file
+
+--- FILE: cytoscape-graph-initial-prd.md ---
+diff --git a/cytoscape-graph-initial-prd.md b/cytoscape-graph-initial-prd.md
+new file mode 100644
+index 0000000..7fb2d70
+--- /dev/null
++++ b/cytoscape-graph-initial-prd.md
+@@ -0,0 +1,128 @@
++# Cytoscape Graph – initial implementation PRD
++
++Objective
++- Visualize the project dependency graph using Cytoscape.js in the GraphView tab.
++- Data source: ./.constellation/data/codebase-dependencies.json created by the dependency-cruiser scan.
++- If the file does not exist, trigger a scan, wait for completion, and then render.
++
++Non-goals (v1)
++- Fancy styling (file-type colors, status indicators) — we’ll stub hooks for later.
++- Layout persistence across reloads.
++- Live updates on file change — v1 is on-demand (scan → render).
++
++User stories
++1) As a user, when I open the GraphView, I see a graph representing files and their dependencies.
++2) If the dependency data is missing, the extension runs a scan; when done, the graph appears.
++3) I can pan/zoom the graph, click a node to see its path in a small details pane, and double-click to open the file in the editor (stretch goal within v1).
++
++Design overview
++- Data flow
++  - GraphView (webview UI) requests graph data from the extension via message ‘graph/load’.
++  - Extension reads ./.constellation/data/codebase-dependencies.json (or triggers scan and re-reads), transforms dependency-cruiser output to a normalized format (nodes[] and edges[]), and returns it to the webview via message reply ‘graph/data’.
++  - GraphView renders with Cytoscape and basic layout/styling.
++
++- Message contract
++  - From webview → extension
++    - { type: 'graph/load' }
++    - { type: 'graph/open-file', path: string } (double-click node)
++    - { type: 'graph/scan' } (optional manual re-scan)
++  - From extension → webview
++    - { type: 'graph/data', payload: { nodes: Node[], edges: Edge[], meta: Meta } }
++    - { type: 'graph/error', message: string }
++    - { type: 'graph/status', message: string }
++
++- Types (v1)
++  - Node: { id: string; label: string; path: string; language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other' }
++  - Edge: { id: string; source: string; target: string; kind?: 'import' | 'require' | 'dynamic' | 'unknown' }
++  - Meta: { generatedAt?: string; count: { nodes: number; edges: number } }
++
++- Transformation (dependency-cruiser → cytoscape)
++  - dependency-cruiser JSON (summary/graph) typically contains a modules array with source → dependencies[].
++  - Node id: absolute path (or workspace-relative unique path). Prefer workspace-relative to keep ids stable and readable.
++  - Node label: basename(file).
++  - Edge id: `${sourceId}->${targetId}` + optional index to ensure uniqueness.
++  - Edge kind: use dependency.dependencyTypes (e.g., esm, cjs, dynamic) → map to import/require/dynamic/unknown.
++
++- Rendering (Cytoscape)
++  - Use a basic layout: ‘cose’ or ‘cose-bilkent’ (if the plugin is available; otherwise cose).
++  - Styles (initial):
++    - Nodes: background-color: var(--vscode-charts-blue) or default; label: data(label); color based on filetype later.
++    - Edges: line-color: var(--vscode-foreground, #aaa); arrows: none in v1.
++  - Interactions:
++    - Pan/zoom default.
++    - Click node: show selection (bold label) and display node details in a sidebar area in the graph view.
++    - Double-click node: send ‘graph/open-file’ to extension.
++
++Detailed tasks
++1) Dependency additions (root)
++   - Add cytoscape to devDependencies (root; used in webview-ui bundle):
++     - "cytoscape": "^3.27.0"
++   - If using cose-bilkent later, add plugin; v1 can use builtin ‘cose’.
++
++2) Extension-side: graph data service
++   - File: src/services/graph-data.service.ts
++   - export async function loadGraphData(context: ExtensionContext): Promise<{ nodes: Node[]; edges: Edge[]; meta: Meta }>
++     - Determine workspace root (first folder). If none, return error.
++     - Compute path: <ws>/.constellation/data/codebase-dependencies.json.
++     - If missing: runScan(context) and poll the file until present or timeout (e.g., 30s). Emit status messages while waiting (optional).
++     - Read and parse JSON. Validate minimal shape (has depcruise.modules or similar).
++     - Transform to nodes/edges using helper transform function.
++   - export function transformDepCruise(dep: any, wsRoot: string): { nodes, edges, meta }
++
++3) Extension-side: webview messaging
++   - Extend centralized messenger handling (src/services/messenger.service.ts):
++     - Handle ‘graph/load’ → call loadGraphData → post ‘graph/data’ to the webview.
++     - Handle ‘graph/open-file’ → vscode.workspace.openTextDocument + showTextDocument.
++     - Optional ‘graph/scan’ → call runScan(context), then loadGraphData and reply.
++   - Wiring:
++     - Graph WebviewPanel setup (constellation.openGraphView) should attach onDidReceiveMessage and route to messenger.service.
++     - Side panel provider remains unchanged.
++
++4) Webview UI: GraphView implementation
++   - Install cytoscape in webview-ui project (already part of root devDependencies; Vite will bundle it into out/ui/main.js).
++   - webview-ui/src/views/GraphView.tsx
++     - On mount: messenger.post('graph/load'); listen for ‘graph/data’ and ‘graph/error’.
++     - Build Cytoscape instance in a container div; set elements from payload.
++     - Basic layout: cy.layout({ name: 'cose', fit: true }).run().
++     - Add event handlers:
++       - cy.on('tap', 'node', (e) => set selected node state + render details)
++       - cy.on('dbltap', 'node', (e) => messenger.post('graph/open-file', { path: node.data('path') }))
++     - Provide a small “Re-scan” button that posts ‘graph/scan’ (optional v1).
++
++5) UI plumbing and state
++   - Introduce a lightweight GraphView component state: { loading: boolean, error?: string, selected?: Node }
++   - Render states: loading spinner (text), error, graph + info panel.
++
++6) File path semantics
++   - Prefer workspace-relative ids for nodes and show absolute path in tooltip/details.
++   - When opening the file, pass vscode.Uri.file(absPath) from the extension handler.
++
++7) Timeouts and fallbacks
++   - If scan is triggered: show status "Scanning project..." with up to 30s timeout. On timeout, show error with suggestion to run ‘Constellation: Scan Dependencies’.
++
++8) Security/CSP
++   - No external resources — Cytoscape is bundled.
++   - Keep CSP as is; no eval needed.
++
++9) Testing
++   - Small repo with a handful of .ts files; run ping to open Graph tab; observe auto-load.
++   - Remove the JSON file; open Graph tab → triggers scan → graph appears.
++   - Double-click a node → underlying file opens.
++
++10) Future hooks (out of scope, leave TODO comments)
++   - Color nodes by file type.
++   - Hover metadata: size, #deps, cycles.
++   - Filtering: show only src/, only cycles, etc.
++   - Persist layout positions per workspace.
++
++Milestones
++- M1: Data layer complete (load/scan/transform) + minimal GraphView rendering.
++- M2: Interaction polish (open on double-click, details pane).
++- M3: Visual polish (colors per file type), optional filters.
++
++Acceptance criteria
++- Opening Graph tab loads and renders a Cytoscape graph from codebase-dependencies.json.
++- If the file is missing, the extension triggers a scan and then renders once available.
++- Double-clicking a node opens the corresponding file in the editor.
++- No blocking of the main activation path; all heavy work done in background.
++
+
+--- FILE: docs/README.md ---
+diff --git a/docs/README.md b/docs/README.md
+index 121483b..a29a714 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -58,6 +58,18 @@ Dependency scan (background)
+ - Output is written to ./.constellation/data/codebase-dependencies.json.
+ - You can re-run the scan any time via the command palette: "Constellation: Scan Dependencies".
+ 
++Event architecture (overview)
++- Webview ↔ Extension (UI messaging)
++  - Webview UI posts messages via window.postMessage (wrapped by webview-ui/src/services/messenger.ts).
++  - Providers and WebviewPanels receive messages and route them through src/services/messenger.service.ts.
++  - Example: Side panel “Open Graph View” sends { type: 'open-graph-view' } → extension runs the command to open the Graph tab.
++- MCP → Extension (HTTP bridge)
++  - The extension starts a loopback HTTP server on 127.0.0.1 (src/services/http-bridge.service.ts) and publishes two env vars in the MCP config: CONSTELLATION_BRIDGE_PORT and CONSTELLATION_BRIDGE_TOKEN.
++  - The MCP server (src/mcp.server.ts) sends POST /open-graph with Authorization: Bearer <token> on ping completion, which opens/reveals the Graph tab.
++- Graph tab
++  - Opened as a singleton WebviewPanel by the "Constellation: Open Graph View" command.
++  - Future graph data messages will use the same webview messaging channel.
++
+ What the extension writes
+ - User-level MCP config: ~/.kiro/settings/mcp.json
+   - The entry is keyed constellation-mcp and runs the compiled server via Node.
+
+--- FILE: docs/configuration.md ---
+diff --git a/docs/configuration.md b/docs/configuration.md
+index a19e73a..8000b40 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -31,6 +31,27 @@ Workspace config (optional)
+ Output files
+ - Dependency scan: ./.constellation/data/codebase-dependencies.json (workspace relative)
+ 
++Bridge environment (in MCP config)
++- The extension injects these env vars into your MCP server entry to enable UI actions from tools:
++  - CONSTELLATION_BRIDGE_PORT: loopback port of the local HTTP bridge
++  - CONSTELLATION_BRIDGE_TOKEN: bearer token used to authenticate calls
++- Example (snippet inside mcp.json):
++```json
++{
++  "mcpServers": {
++    "constellation-mcp": {
++      "command": "node",
++      "args": ["/abs/path/to/out/mcp.server.js"],
++      "env": {
++        "CONSTELLATION_SERVER_ID": "constellation-mcp",
++        "CONSTELLATION_BRIDGE_PORT": "54023",
++        "CONSTELLATION_BRIDGE_TOKEN": "<random>"
++      }
++    }
++  }
++}
++```
++
+ Extension settings
+ - constellation.nodePath (string)
+   - Optional absolute path to the Node.js binary. Leave blank to use node from PATH.
+
+--- FILE: docs/development.md ---
+diff --git a/docs/development.md b/docs/development.md
+index fb574b9..e2ddff2 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -41,6 +41,27 @@ Dependency scan (dev notes)
+ - Output path: ./.constellation/data/codebase-dependencies.json
+ - You can re-run the scan via command palette: "Constellation: Scan Dependencies".
+ 
++Event architecture (details)
++- Webview UI messaging
++  - Webview posts messages via messenger.post(type, payload) (webview-ui/src/services/messenger.ts).
++  - Providers/Graph panels listen to webview.onDidReceiveMessage and route into src/services/messenger.service.ts.
++  - Current inbound messages: 'open-graph-view'. Planned graph messages: 'graph/load', 'graph/open-file', 'graph/scan'.
++- HTTP bridge for MCP → extension
++  - startHttpBridge in src/services/http-bridge.service.ts creates a small HTTP server (listen(0), loopback only) and a random token.
++  - Env injected into MCP config: CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN.
++  - MCP (Node 18+) uses global fetch to POST http://127.0.0.1:<port>/open-graph with Authorization: Bearer <token>.
++  - The handler validates token and runs the command to open/reveal the singleton Graph tab.
++- Graph tab singleton
++  - The command keeps a module-level WebviewPanel reference; further opens call reveal instead of creating duplicates.
++
++Manual bridge testing
++```bash
++# View env in ~/.kiro/settings/mcp.json (values are dynamic per run)
++# Test the bridge manually (replace <PORT> and <TOKEN>)
++curl -s -X POST -H "Authorization: Bearer <TOKEN>" http://127.0.0.1:<PORT>/open-graph -o /dev/null -w "%{http_code}\n"
++# Expected: 204
++```
++
+ Debug profiles
+ - Run Extension (Dev MCP)
+   - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.
+
+--- FILE: docs/events.md ---
+diff --git a/docs/events.md b/docs/events.md
+new file mode 100644
+index 0000000..f004fbd
+--- /dev/null
++++ b/docs/events.md
+@@ -0,0 +1,66 @@
++# Events & Messaging
++
++This doc summarizes how messages and events travel between the webview UI, the extension host, and the MCP server.
++
++Legend
++- UI: webview bundle (Preact), built from webview-ui/src/**/*
++- Ext: extension host (Node.js), src/**/*
++- MCP: MCP server process, out/mcp.server.js (built from src/mcp.server.ts)
++
++Current message types
++
++UI → Ext (webview messaging)
++- open-graph-view
++  - Sender: UI (SidePanelView) via webview-ui/src/services/messenger.ts
++  - Receiver: src/side-panel-view-provider.ts → src/services/messenger.service.ts
++  - Action: runs command constellation.openGraphView
++
++Planned graph messages (PRD)
++- graph/load
++  - UI asks Ext for data; Ext replies with graph/data or graph/error
++- graph/data { nodes, edges, meta }
++  - Ext → UI reply with transformed graph elements
++- graph/open-file { path }
++  - UI double‑click node → Ext opens file in the editor
++- graph/scan
++  - UI asks Ext to re-run the dependency scan, then send graph/data
++
++MCP → Ext (HTTP bridge)
++- POST /open-graph
++  - Sender: MCP server (ping tool handler) — src/mcp.server.ts
++  - Receiver: Ext HTTP handler — src/services/http-bridge.service.ts
++  - Auth: Authorization: Bearer <CONSTELLATION_BRIDGE_TOKEN>
++  - Env: CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN (in mcp.json)
++  - Action: opens/reveals the singleton Graph tab (command: constellation.openGraphView)
++
++Files and responsibilities
++- UI
++  - webview-ui/src/services/messenger.ts: post/subscribe wrappers for window.postMessage
++  - webview-ui/src/views/SidePanelView.tsx: sends open-graph-view
++  - webview-ui/src/views/GraphView.tsx: will send graph/load, graph/open-file, graph/scan and render data
++
++- Extension
++  - src/extension.ts: registers providers; singleton Graph tab command; wires startup
++  - src/side-panel-view-provider.ts: receives messages and delegates to the messenger service
++  - src/services/messenger.service.ts: centralized inbound message handling (currently open-graph-view; will add graph/*)
++  - src/services/http-bridge.service.ts: loopback HTTP server; verifies token; opens Graph tab on POST /open-graph
++  - src/services/mcp-config.service.ts: injects bridge env (PORT/TOKEN) into mcp.json, writes/upserts configuration
++
++- MCP
++  - src/mcp.server.ts: tool handlers; ping posts to /open-graph when env present
++
++Sequence examples
++1) UI button → Graph tab
++   UI(SidePanelView) → Ext(onDidReceiveMessage) → messenger.service → command: constellation.openGraphView → opens/reveals singleton tab.
++
++2) MCP ping → Graph tab
++   MCP(ping) → HTTP POST 127.0.0.1:<PORT>/open-graph (Authorization: Bearer <TOKEN>) → Ext(http-bridge) → command: constellation.openGraphView.
++
++Security
++- HTTP bridge listens on 127.0.0.1 only and requires a random bearer token generated per session.
++- UI messaging is internal to the VS Code webview host.
++
++Future
++- Add graph/load/data/open-file/scan as per cytoscape-graph-initial-prd.md.
++- Optional: add more endpoints to the HTTP bridge if tools need to drive UI (e.g., focus node, load subset).
++
+
+--- FILE: docs/troubleshooting.md ---
+diff --git a/docs/troubleshooting.md b/docs/troubleshooting.md
+index cf54ae4..3a8843b 100644
+--- a/docs/troubleshooting.md
++++ b/docs/troubleshooting.md
+@@ -11,6 +11,14 @@ Dependency scan issues
+ - Ensure tsconfig.json is valid if present; the extension passes it to the CLI.
+ - Very large repos might hit the scan timeout (60s). Re-run on a narrower subfolder or adjust excludes.
+ 
++Graph tab doesn’t open on ping
++- Ensure the bridge env exists in ~/.kiro/settings/mcp.json under your server:
++  - CONSTELLATION_BRIDGE_PORT, CONSTELLATION_BRIDGE_TOKEN
++- The bridge listens on 127.0.0.1 only; this should work in local/WSL environments. If you’re in a remote with port sandboxing, open the Graph manually via the command.
++- Test manually:
++  - curl -s -X POST -H "Authorization: Bearer <TOKEN>" http://127.0.0.1:<PORT>/open-graph -o /dev/null -w "%{http_code}\n"  # expect 204
++- If the HTTP call fails, the ping tool still returns pong; check the Extension Host debug console for bridge logs/errors.
++
+ Self-test fails or setup toast shows an error
+ - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.
+ - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.
+
+--- FILE: docs/usage.md ---
+diff --git a/docs/usage.md b/docs/usage.md
+index 74c803f..2c13815 100644
+--- a/docs/usage.md
++++ b/docs/usage.md
+@@ -31,6 +31,11 @@ npm run build
+   - ./.constellation/data/codebase-dependencies.json
+ - To re-run manually: open the command palette and run "Constellation: Scan Dependencies".
+ 
++7) Open the Graph tab
++- From the side panel, click "Open Graph View".
++- Or run the command "Constellation: Open Graph View".
++- When you call the MCP tool #[constellation-mcp] ping, the Graph tab will also auto-open via the local HTTP bridge.
++
+ Helpful commands
+ - Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
+ - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

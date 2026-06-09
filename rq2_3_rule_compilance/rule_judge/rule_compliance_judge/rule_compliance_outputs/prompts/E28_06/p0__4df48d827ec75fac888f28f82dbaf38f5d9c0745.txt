@@ -1,0 +1,256 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+- - Asset resolution via asset-manifest.ts for Vite-built resources
++ - Asset resolution via getEntryUris(context, webview, entry) from asset-manifest.ts
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (TypeScript/JavaScript) and the 'asset-manifest.ts' file.
+- Suggested Logic: Scan source code files for calls related to asset resolution. Verify that the function 'getEntryUris' is imported from 'asset-manifest.ts' and is used with the signature 'getEntryUris(context, webview, entry)' when resolving Vite-built resources.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: Document: Updates architecture and dev patterns
+
+Improves documentation on architecture patterns, development workflows, and troubleshooting for the Kiro extension.
+
+This update includes details on:
+- Message bus communication, including sticky events
+- UI provider pattern
+- MCP integration and runtime resolution
+- Naming conventions
+- Adding new webview entry points
+- Message bus usage (extension and webview side)
+- Provider lifecycle
+- Build architecture
+- Troubleshooting common issues like MCP errors and missing webview assets.
+- Changed Files List: 
+.kiro/steering/structure.md	+35	-8	after_lines=105
+.kiro/steering/tech.md	+40	-2	after_lines=86
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcpProvider.ts
+│   │   └── mcpStdioServer.ts
+│   ├── services
+│   │   └── messageBus.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+├── vsc-extension-quickstart.md
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── messageBus.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 24c2f45..761d774 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -55,24 +55,51 @@ web/
+ ## Architecture Patterns
+ 
+ ### Message Bus Communication
+-- **Shared Events**: `src/shared/events.ts` defines all message types
+-- **Extension Bus**: `src/services/messageBus.ts` handles extension-side messaging
+-- **Web Bus**: `web/src/services/messageBus.ts` wraps VS Code webview API
++- **Shared Events**: `src/shared/events.ts` defines all message types with `Events` enum and `EventPayloads` type mapping
++- **Extension Bus**: `src/services/messageBus.ts` handles extension-side messaging with sticky event support
++- **Web Bus**: `web/src/services/messageBus.ts` wraps VS Code webview API with `acquireVsCodeApi`
+ - **Type Safety**: All messages are strongly typed with payload interfaces
+ 
++### Sticky Events System
++- State-like events (e.g., `DashboardOpened`) are replayed to late-joining webviews
++- Sticky events cleared by opposing events (e.g., `DashboardClosed` clears `DashboardOpened`)
++- Configured in `stickyTypes` set in `src/services/messageBus.ts`
++
+ ### UI Provider Pattern
+ - Each webview has a dedicated provider in `src/ui-providers/`
+-- Providers handle webview lifecycle, HTML generation, and message routing
+-- Asset resolution via `asset-manifest.ts` for Vite-built resources
++- Providers use `registerWebviewWithBus(id, webview)` helper for lifecycle management
++- Asset resolution via `getEntryUris(context, webview, entry)` from `asset-manifest.ts`
++- HTML generation includes correct `<script>` and `<link>` tags for Vite-built assets
+ 
+ ### MCP Integration
+-- MCP server bundled separately to `out/mcp/mcpStdioServer.cjs`
++- MCP server bundled separately to `out/mcp/mcpStdioServer.cjs` (self-contained ~500KB)
+ - Provider registers with VS Code's MCP API when available
+-- Fallback configuration written to `.kiro/settings/mcp.json`
++- Fallback configuration written to `.kiro/settings/mcp.json` for Kiro IDE discovery
++- Runtime path resolution with multiple candidate locations
+ 
+ ## Naming Conventions
+ 
+ - **Files**: kebab-case for directories, camelCase for TypeScript files
+ - **Components**: PascalCase for Preact components
+ - **Events**: PascalCase constants in `Events` enum
+-- **CSS Modules**: Component.module.css pattern for scoped styles
+\ No newline at end of file
++- **CSS Modules**: Component.module.css pattern for scoped styles
++- **Webview IDs**: Use consistent identifiers like "sidebar", "dashboard" for message bus registration
++
++## Development Patterns
++
++### Adding New Webview Entry Points
++1. Add input entry in `web/vite.config.ts` under `rollupOptions.input`
++2. Create `web/src/main-<name>.tsx` file rendering Preact component to `#root`
++3. In webview provider, call `getEntryUris(context, webview, '<name>')` for asset URIs
++
++### Message Bus Usage
++- **Extension side**: `messageBus.broadcast({ type: Events.EventName, payload: data })`
++- **Webview side**: `messageBus.emit(events.EventName, data)`
++- **Listening**: `messageBus.on(Events.EventName, handler)` returns unsubscribe function
++- **Targeted messaging**: `messageBus.sendTo(id, event)` for specific webviews
++
++### Provider Lifecycle
++1. Configure webview options (CSP, localResourceRoots)
++2. Generate HTML with `getEntryUris` for JS/CSS injection
++3. Register with bus using `registerWebviewWithBus(id, webview)`
++4. Handle disposal to clean up resources and broadcast close events
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 7a04db5..cb77e45 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -24,18 +24,38 @@ npm run compile        # Full build: web + extension + MCP
+ ### Production
+ ```bash
+ npm run build          # Clean build of everything
+-npm run package        # Create .vsix package
++npm run package        # Create .vsix package (runs vscode:prepublish)
+ ```
+ 
+ ### Specific Tasks
+ ```bash
+ npm run bundle:mcp     # Build MCP server bundle only
++npm run watch:mcp      # MCP bundle in watch mode
+ npm run clean          # Remove out/ directory
+ npm run clean:web      # Remove web build artifacts
+ npm run lint           # ESLint on src/
+ npm run test           # Run VS Code extension tests
+ ```
+ 
++## Build Architecture
++
++### Multi-Target Build System
++- **Web UI**: Vite builds Preact components to `out/` with manifest generation
++- **Extension**: TypeScript compiler (tsc) compiles `src/` to `out/`
++- **MCP Server**: esbuild bundles to single CommonJS file at `out/mcp/mcpStdioServer.cjs`
++
++### MCP Server Bundling
++The MCP server is bundled into a self-contained ~500KB file to avoid shipping `node_modules`:
++```bash
++esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs
++```
++
++### Runtime Resolution
++MCP provider resolves server script from candidates:
++1. `out/mcp/mcpStdioServer.cjs` (preferred)
++2. `out/mcp/mcpStdioServer.js`
++3. `out/mcp/mcpStdioServer.mjs`
++
+ ## Configuration Files
+ 
+ - `tsconfig.json`: Extension TypeScript config (Node16, ES2022)
+@@ -45,4 +65,22 @@ npm run test           # Run VS Code extension tests
+ 
+ ## Asset Management
+ 
+-Vite generates a manifest at `out/.vite/manifest.json` mapping entry points to built assets. The extension uses `src/ui-providers/asset-manifest.ts` to resolve correct script/CSS URIs for webviews, with fallbacks for development.
+\ No newline at end of file
++Vite generates a manifest at `out/.vite/manifest.json` mapping entry points to built assets. The extension uses `src/ui-providers/asset-manifest.ts` to resolve correct script/CSS URIs for webviews, with fallbacks for development.
++
++### Webview Entry Points
++- `web/src/main-sidebar.tsx` → `out/sidebar.js`, `out/sidebar.css`
++- `web/src/main-dashboard.tsx` → `out/dashboard.js`, `out/dashboard.css`
++
++### Development Fallbacks
++If manifest is missing (first run), asset helper falls back to predictable names. A restart after first Vite emit may help resolve missing assets.
++
++## Troubleshooting
++
++### Common Issues
++- **MCP Error**: `Cannot find module '.../out/mcp/mcpStdioServer.cjs'`
++  - Ensure `npm run watch` is running or run `npm run bundle:mcp` once
++  - Check resolved path in logs: "Kiro MCP server script resolved to: ..."
++
++- **Missing Webview Assets**: CSS/JS not loading in development
++  - Ensure Vite watch is running (part of `npm run watch`)
++  - Check for manifest file at `out/.vite/manifest.json`
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

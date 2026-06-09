@@ -1,0 +1,49 @@
+diff --git a/backend/src/app.ts b/backend/src/app.ts
+index 3f962c9..f11c94c 100644
+--- a/backend/src/app.ts
++++ b/backend/src/app.ts
+@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
+ 
+ import { createRequestLogger, addResponseTime } from './middleware/request-logger';
+ import { errorHandler, notFoundHandler } from './middleware/error-handler';
+-import { testConnection } from './database/connection';
++// Database connection is initialized in index.ts
+ import { checkDatabaseHealth } from './database/utils';
+ 
+ // Import routes
+@@ -32,7 +32,7 @@ app.use(helmet({
+ 
+ // CORS configuration
+ app.use(cors({
+-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
++  origin: process.env['CORS_ORIGIN'] || 'http://localhost:3001',
+   credentials: true,
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+   allowedHeaders: ['Content-Type', 'Authorization'],
+@@ -47,7 +47,7 @@ app.use(addResponseTime);
+ app.use(createRequestLogger());
+ 
+ // Health check endpoint
+-app.get('/health', async (req, res) => {
++app.get('/health', async (_req, res) => {
+   try {
+     const dbHealth = await checkDatabaseHealth();
+     
+@@ -56,7 +56,7 @@ app.get('/health', async (req, res) => {
+       timestamp: new Date().toISOString(),
+       uptime: process.uptime(),
+       database: dbHealth,
+-      environment: process.env.NODE_ENV || 'development',
++      environment: process.env['NODE_ENV'] || 'development',
+     });
+   } catch (error) {
+     res.status(503).json({
+@@ -68,7 +68,7 @@ app.get('/health', async (req, res) => {
+ });
+ 
+ // API routes
+-app.get('/api', (req, res) => {
++app.get('/api', (_req, res) => {
+   res.json({
+     message: 'Bug Tracker API',
+     version: '1.0.0',

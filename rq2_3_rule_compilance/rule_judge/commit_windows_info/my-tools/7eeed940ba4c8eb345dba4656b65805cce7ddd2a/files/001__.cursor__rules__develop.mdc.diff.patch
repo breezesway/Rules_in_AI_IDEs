@@ -1,0 +1,216 @@
+diff --git a/.cursor/rules/develop.mdc b/.cursor/rules/develop.mdc
+index 779e5ae..760f7d3 100644
+--- a/.cursor/rules/develop.mdc
++++ b/.cursor/rules/develop.mdc
+@@ -1,5 +1,5 @@
+ ---
+-description: 
++description:  技术实现和代码规范
+ globs: 
+ alwaysApply: true
+ ---
+@@ -21,12 +21,16 @@ src/
+ ├── ui/                              # 通用UI组件目录
+ │   ├── button.tsx                   # 按钮组件
+ │   ├── modal.tsx                    # 模态框组件
++│   ├── theme-selector.tsx           # 主题选择器组件
+ │   └── feature-card.tsx             # 功能卡片组件
+ ├── components/                      # 功能组件目录
+ │   ├── pdf-merger.tsx              # PDF合并工具组件
+-│   └── image-compressor.tsx        # 图片压缩工具组件
++│   ├── image-compressor.tsx        # 图片压缩工具组件
++│   ├── operation-history.tsx       # 操作历史组件
++│   └── app-settings.tsx            # 应用设置组件
+ ├── hooks/                           # 自定义Hooks
+-│   └── use-dropzone.ts             # 拖拽相关hook（注意是.ts扩展名）
++│   ├── use-dropzone.ts             # 拖拽相关hook（注意是.ts扩展名）
++│   └── use-theme.ts                # 主题管理hook
+ ├── lib/                             # 工具函数库
+ │   └── utils.ts                     # 通用工具函数
+ ├── main/                            # 主进程代码目录
+@@ -60,6 +64,145 @@ src/
+ - **工具函数** → 使用 `.ts` 扩展名
+ - **类型定义** → 使用 `.d.ts` 或 `.ts` 扩展名
+ 
++## 🎨 主题系统技术规范
++
++### 主题管理架构
++- **集中管理** - 主题状态通过自定义Hook `useTheme` 统一管理
++- **类型安全** - 使用 `ThemeMode` 类型定义：`'light' | 'dark' | 'system'`
++- **配置持久化** - 主题偏好保存到应用配置文件，重启后保持
++- **实时切换** - 主题切换立即生效，无需重启应用
++
++### useTheme Hook 设计规范
++```typescript
++// ✅ 正确的Hook设计
++export function useTheme() {
++  const [theme, setTheme] = useState<ThemeMode>('system');
++  const [isDark, setIsDark] = useState(false);
++
++  // 初始化主题
++  useEffect(() => {
++    initializeTheme();
++  }, []); // 只在组件挂载时执行
++
++  // 监听系统主题变化
++  useEffect(() => {
++    if (theme === 'system') {
++      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
++      const handleChange = (e: MediaQueryListEvent) => {
++        setIsDark(e.matches);
++        applyTheme(e.matches ? 'dark' : 'light');
++      };
++      
++      mediaQuery.addEventListener('change', handleChange);
++      return () => mediaQuery.removeEventListener('change', handleChange);
++    }
++  }, [theme]); // 只依赖theme变化
++
++  return { theme, isDark, changeTheme };
++}
++```
++
++### 深色模式CSS规范
++- **Tailwind CSS Dark Mode** - 使用 `dark:` 前缀为所有UI元素提供深色模式样式
++- **完整覆盖** - 每个有颜色的CSS类都必须提供对应的深色模式样式
++- **层次分明** - 使用不同灰度层次区分信息重要性
++
++#### 标准颜色映射
++```css
++/* 文本颜色层次 */
++text-gray-900 dark:text-gray-100     /* 主要文本 (#111827 → #F9FAFB) */
++text-gray-700 dark:text-gray-300     /* 次要文本 → #D1D5DB */
++text-gray-600 dark:text-gray-400     /* 辅助文本 → #9CA3AF */
++text-gray-500 dark:text-gray-500     /* 禁用/占位文本 */
++
++/* 背景颜色层次 */
++bg-white dark:bg-gray-900           /* 主背景 (#FFFFFF → #111827) */
++bg-gray-50 dark:bg-gray-800         /* 次级背景 → #1F2937 */
++bg-gray-100 dark:bg-gray-700        /* 三级背景 → #374151 */
++
++/* 边框颜色 */
++border-gray-200 dark:border-gray-700 /* 主要边框 */
++border-gray-300 dark:border-gray-600 /* 次要边框 */
++
++/* 交互状态 */
++hover:bg-gray-50 dark:hover:bg-gray-800     /* 悬停状态 */
++focus:ring-gray-900 dark:focus:ring-gray-100 /* 焦点状态 */
++```
++
++#### 特殊元素样式规范
++```css
++/* 开关按钮 */
++bg-gray-200 dark:bg-gray-600                    /* 未选中背景 */
++peer-checked:bg-white dark:peer-checked:bg-white /* 选中背景（白底设计） */
++peer-checked:after:bg-gray-900                   /* 选中滑块（深色） */
++
++/* 状态指示 */
++bg-green-50 dark:bg-green-900/10    /* 成功状态背景（半透明） */
++bg-red-50 dark:bg-red-900/10        /* 错误状态背景（半透明） */
++border-green-200 dark:border-green-800 /* 成功状态边框 */
++border-red-200 dark:border-red-800     /* 错误状态边框 */
++
++/* 进度条和滑块 */
++bg-gray-200 dark:bg-gray-600        /* 滑块轨道背景 */
++bg-gray-900 dark:bg-gray-100        /* 进度填充 */
++```
++
++### 组件深色模式适配检查清单
++- [ ] 所有文本颜色提供深色模式样式
++- [ ] 所有背景颜色提供深色模式样式
++- [ ] 所有边框颜色提供深色模式样式
++- [ ] 所有交互状态（hover、focus、active）提供深色模式样式
++- [ ] 所有图标颜色提供深色模式样式
++- [ ] 所有状态指示（成功、错误、警告）提供深色模式样式
++- [ ] 开关、滑块等表单控件提供深色模式样式
++- [ ] 模态框、弹窗等覆盖层提供深色模式样式
++
++### 主题切换最佳实践
++```typescript
++// ✅ 正确的主题切换处理
++const handleThemeChange = async (newTheme: ThemeMode) => {
++  if (changingTheme) return; // 防止重复点击
++  
++  setChangingTheme(true);
++  try {
++    // 立即应用主题
++    await changeTheme(newTheme);
++    
++    // 更新本地配置状态
++    updateConfig('theme', newTheme);
++    
++    // 显示成功提示
++    const themeNames = {
++      light: '浅色',
++      dark: '深色', 
++      system: '跟随系统'
++    };
++    toast.success(`已切换到${themeNames[newTheme]}模式`);
++  } catch (error) {
++    console.error('切换主题失败:', error);
++    toast.error('主题切换失败，请重试');
++  } finally {
++    setChangingTheme(false);
++  }
++};
++```
++
++### 主题系统实现要点
++- **技术架构**：
++  - 使用自定义Hook（useTheme）统一管理主题状态
++  - Tailwind CSS的dark:前缀实现深色模式样式
++  - 主进程配置管理器持久化主题偏好
++- **常见问题及解决方案**：
++  - **无限循环问题**：useEffect依赖数组要精确，避免不必要的重新渲染
++  - **配置缓存问题**：组件打开时重新获取配置，确保设置立即生效
++  - **样式不完整**：所有有颜色的CSS类都必须提供dark:前缀样式
++  - **开关不明显**：使用白底设计，在深色模式下更加突出
++  - **状态指示协调性**：使用半透明背景，避免过于突兀的颜色对比
++- **质量保证**：
++  - 所有组件必须完整测试浅色和深色模式
++  - 确保文本对比度符合可访问性标准
++  - 验证所有交互状态在两种模式下都清晰可见
++
+ ## 🔧 代码质量要求
+ 
+ ### Lint规范
+@@ -79,12 +222,14 @@ src/
+ 2. **可复用性** - UI组件应该具有良好的可复用性
+ 3. **类型安全** - 所有组件都应该有完整的TypeScript类型定义
+ 4. **错误处理** - 组件应该有适当的错误处理机制
++5. **主题兼容** - 所有组件必须完整支持深色模式
+ 
+ ### 工具组件开发
+ - **一个工具一个组件** - 每个Electron工具功能对应一个独立组件
+ - **模态框封装** - 工具组件通常使用Modal进行封装
+ - **状态管理** - 使用React hooks进行状态管理
+ - **用户反馈** - 使用Toast等方式提供操作反馈
++- **主题适配** - 确保所有UI元素在深色模式下正常显示
+ 
+ ## 🏗️ 主进程架构规范
+ 
+@@ -225,6 +370,7 @@ field3: value3,  // 字段在对象外部，语法错误
+ - 代码格式不规范，影响可读性
+ - 对象结构不完整，导致语法错误
+ - 存在重复的功能时，需要提取公共函数或组件
++- 组件缺少深色模式适配
+ 
+ ### 重构最佳实践
+ 1. **渐进式重构** - 按模块逐步迁移，每次只移动一个功能模块
+@@ -245,6 +391,16 @@ field3: value3,  // 字段在对象外部，语法错误
+ - [ ] 代码格式一致，缩进和空行规范
+ - [ ] 调试日志结构完整，信息充分
+ 
++### 主题系统检查
++- [ ] 所有组件完整支持深色模式
++- [ ] 所有颜色相关CSS类提供dark:前缀样式
++- [ ] 主题切换功能正常工作
++- [ ] 主题偏好正确持久化
++- [ ] 系统主题跟随功能正常
++- [ ] 开关按钮等表单控件在深色模式下清晰可见
++- [ ] 状态指示在深色模式下对比度足够
++- [ ] 空状态界面在深色模式下协调美观
++
+ ### 构建和部署
+ - [ ] 项目能够正常启动（`pnpm start`）
+ - [ ] 项目能够正常构建（`pnpm package`）

@@ -1,0 +1,312 @@
+diff --git a/src/utils/orchestration/parallel-analyzer.ts b/src/utils/orchestration/parallel-analyzer.ts
+index 4b82b99..21d8386 100644
+--- a/src/utils/orchestration/parallel-analyzer.ts
++++ b/src/utils/orchestration/parallel-analyzer.ts
+@@ -1,7 +1,7 @@
+-import { AnalysisResult, BatchResult, PageInfo, ProcessedViolation } from '../../core/types/common';
+-import { BrowserManager } from '../../core/utils/browser-manager';
+-import { ErrorHandlerService } from '../services/error-handler-service';
+-import { ConfigurationService } from '../services/configuration-service';
++import { AnalysisResult, BatchResult, PageInfo, ProcessedViolation } from '@/core/types/common';
++import { BrowserManager } from '@/core/utils/browser-manager';
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++import { ConfigurationService } from '@/utils/services/configuration-service';
+ import { Page } from '@playwright/test';
+ 
+ export interface ParallelAnalysisOptions {
+@@ -140,23 +140,23 @@ export class ParallelAnalyzer {
+ 
+     const processPage = async (page: PageInfo, retryCount: number = 0): Promise<void> => {
+       try {
+-        this.errorHandler.logInfo(`[DEBUG] Starting analysis for page: ${page.url}`);
++        this.errorHandler.logInfo(`Starting analysis for page: ${page.url}`);
+         const sessionId = `analysis-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+ 
+         // Navigate to page
+-        this.errorHandler.logInfo(`[DEBUG] Navigating to page: ${page.url}`);
++        this.errorHandler.logInfo(`Navigating to page: ${page.url}`);
+         const playwrightPage = await this.browserManager.navigateToUrl(sessionId, page.url);
+-        this.errorHandler.logInfo(`[DEBUG] Navigation complete for: ${page.url}`);
++        this.errorHandler.logInfo(`Navigation complete for: ${page.url}`);
+ 
+         // Create tool runners for this page
+-        this.errorHandler.logInfo(`[DEBUG] Registering accessibility tools for: ${page.url}`);
++        this.errorHandler.logInfo(`Registering accessibility tools for: ${page.url}`);
+         const toolRunners = await this.registerAccessibilityTools(playwrightPage);
+-        this.errorHandler.logInfo(`[DEBUG] Tool runners created for: ${page.url}`);
++        this.errorHandler.logInfo(`Tool runners created for: ${page.url}`);
+ 
+         // Run comprehensive accessibility analysis
+-        this.errorHandler.logInfo(`[DEBUG] Running comprehensive analysis for: ${page.url}`);
++        this.errorHandler.logInfo(`Running comprehensive analysis for: ${page.url}`);
+         const analysisResult = await this.runComprehensiveAnalysis(page, toolRunners);
+-        this.errorHandler.logInfo(`[DEBUG] Analysis complete for: ${page.url}`);
++        this.errorHandler.logInfo(`Analysis complete for: ${page.url}`);
+ 
+         successful.push(analysisResult);
+ 
+@@ -166,7 +166,7 @@ export class ParallelAnalyzer {
+       } catch (error) {
+         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+         this.errorHandler.logWarning(
+-          `[DEBUG] Error during analysis for ${page.url}: ${errorMessage}`
++          `Error during analysis for ${page.url}: ${errorMessage}`
+         );
+         if (retryFailedPages && retryCount < maxRetries) {
+           this.errorHandler.logWarning(
+@@ -224,12 +224,12 @@ export class ParallelAnalyzer {
+    */
+   private async registerAccessibilityTools(page: Page): Promise<ToolRunners> {
+     try {
+-      this.errorHandler.logInfo(`[DEBUG] Importing accessibility tool runners...`);
++      this.errorHandler.logInfo(`Importing accessibility tool runners...`);
+       // Import accessibility testing tools
+       const { AxeTestRunner } = await import('@/utils/runners/axe-test-runner');
+       const { Pa11yTestRunner } = await import('@/utils/runners/pa11y-test-runner');
+ 
+-      this.errorHandler.logInfo(`[DEBUG] Instantiating tool runners...`);
++      this.errorHandler.logInfo(`Instantiating tool runners...`);
+       // Create tool instances with the page
+       const axeRunner = new AxeTestRunner(page);
+       const pa11yRunner = new Pa11yTestRunner(page);
+@@ -267,10 +267,10 @@ export class ParallelAnalyzer {
+     const startTime = Date.now();
+ 
+     try {
+-      this.errorHandler.logInfo(`[DEBUG] Running axe-core and pa11y analysis for ${page.url}`);
++      this.errorHandler.logInfo(`Running axe-core and pa11y analysis for ${page.url}`);
+       const results = await Promise.all([axeRunner.run(), pa11yRunner.run()]);
+ 
+-      this.errorHandler.logInfo(`[DEBUG] Tool results received for ${page.url}:`, {
++      this.errorHandler.logInfo(`Tool results received for ${page.url}:`, {
+         axeStatus: results[0]?.status,
+         pa11yStatus: results[1]?.status,
+         axeData: results[0]?.data ? 'present' : 'missing',
+@@ -291,45 +291,68 @@ export class ParallelAnalyzer {
+         result => result.status === 'success' && result.data
+       );
+ 
+-      this.errorHandler.logInfo(`[DEBUG] Successful results for ${page.url}:`, {
++              this.errorHandler.logInfo(`Successful results for ${page.url}:`, {
+         count: successfulResults.length,
+         tools: successfulResults.map((r: any) => r.data?.tool),
+       });
+ 
+-      const allViolations: ProcessedViolation[] = successfulResults.flatMap((result: any) => {
++      const allViolations: ProcessedViolation[] = [];
++      const allPasses: ProcessedViolation[] = [];
++      const allWarnings: ProcessedViolation[] = [];
++
++      successfulResults.forEach((result: any) => {
+         const toolName = result.data.tool;
+-        this.errorHandler.logInfo(`[DEBUG] Processing ${toolName} data for ${page.url}:`, {
++        this.errorHandler.logInfo(`Processing ${toolName} data for ${page.url}:`, {
+           violationsCount: result.data.violations?.length || 0,
++          passesCount: result.data.passes?.length || 0,
++          warningsCount: result.data.warnings?.length || 0,
+           dataKeys: Object.keys(result.data),
+         });
+ 
+         try {
+           const violations = this.extractViolations(result.data, toolName);
+-          this.errorHandler.logInfo(`Extracted ${violations.length} violations for ${toolName}`);
+-          return violations;
++          const passes = this.extractPasses(result.data, toolName);
++          const warnings = this.extractWarnings(result.data, toolName);
++
++          this.errorHandler.logInfo(`Extracted ${violations.length} violations, ${passes.length} passes, ${warnings.length} warnings for ${toolName}`);
++
++          allViolations.push(...violations);
++          allPasses.push(...passes);
++          allWarnings.push(...warnings);
+         } catch (error) {
+-          this.errorHandler.logWarning(`Failed to extract violations for ${toolName}: ${error}`, {
++          this.errorHandler.logWarning(`Failed to extract data for ${toolName}: ${error}`, {
+             toolName,
+             url: page.url,
+             resultData: result.data,
+           });
+-          return [];
+         }
+       });
+ 
+       this.errorHandler.logSuccess(`Multi-tool analysis complete for ${page.url}`, {
+         violations: allViolations.length,
++        passes: allPasses.length,
++        warnings: allWarnings.length,
+         duration: Date.now() - startTime,
+       });
+ 
+-      const violationSummary = this.calculateViolationSummary(allViolations);
++      const summary = {
++        totalViolations: allViolations.length,
++        totalPasses: allPasses.length,
++        totalWarnings: allWarnings.length,
++        criticalViolations: allViolations.filter(v => v.impact === 'critical').length,
++        seriousViolations: allViolations.filter(v => v.impact === 'serious').length,
++        moderateViolations: allViolations.filter(v => v.impact === 'moderate').length,
++        minorViolations: allViolations.filter(v => v.impact === 'minor').length,
++      };
+ 
+       return {
+         url: page.url,
+         timestamp: new Date().toISOString(),
+         tool: 'parallel-analyzer',
+         violations: allViolations,
+-        summary: violationSummary,
++        passes: allPasses,
++        warnings: allWarnings,
++        summary: summary,
+       };
+     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+@@ -340,8 +363,12 @@ export class ParallelAnalyzer {
+         timestamp: new Date().toISOString(),
+         tool: 'parallel-analyzer',
+         violations: [],
++        passes: [],
++        warnings: [],
+         summary: {
+           totalViolations: 0,
++          totalPasses: 0,
++          totalWarnings: 0,
+           criticalViolations: 0,
+           seriousViolations: 0,
+           moderateViolations: 0,
+@@ -352,7 +379,7 @@ export class ParallelAnalyzer {
+   }
+ 
+   private extractViolations(toolData: any, toolName: string): ProcessedViolation[] {
+-    this.errorHandler.logInfo(`[DEBUG] Extracting violations for ${toolName}:`, {
++            this.errorHandler.logInfo(`Extracting violations for ${toolName}:`, {
+       hasToolData: !!toolData,
+       hasViolations: !!toolData?.violations,
+       violationsLength: toolData?.violations?.length || 0,
+@@ -366,7 +393,7 @@ export class ParallelAnalyzer {
+ 
+     // Add detailed debugging for the first few violations
+     if (toolData.violations.length > 0) {
+-      this.errorHandler.logInfo(`[DEBUG] Sample violation structure for ${toolName}:`, {
++              this.errorHandler.logInfo(`Sample violation structure for ${toolName}:`, {
+         sampleViolation: toolData.violations[0],
+         totalViolations: toolData.violations.length,
+       });
+@@ -443,6 +470,100 @@ export class ParallelAnalyzer {
+     }
+   }
+ 
++  private extractPasses(toolData: any, toolName: string): ProcessedViolation[] {
++    if (!toolData || !toolData.passes) {
++      return [];
++    }
++
++    const passes: ProcessedViolation[] = [];
++
++    switch (toolName) {
++      case 'axe-core':
++        for (const p of toolData.passes) {
++          try {
++            passes.push({
++              id: p.id || 'axe-pass-' + p.ruleId || 'unknown',
++              tools: ['axe-core'],
++              description: p.description,
++              impact: 'minor', // Passes are typically minor impact
++              wcagLevel: this.mapWcagTagsToLevel(p.tags),
++              helpUrl: p.helpUrl,
++              help: p.help || p.description,
++              wcagTags: p.tags || [],
++              occurrences: p.nodes?.length || 1,
++              elements: p.nodes?.map((n: any) => ({
++                html: n.html,
++                target: n.target,
++                failureSummary: '', // Passes don't have failure summaries
++                selector: n.target?.join(', ') || '',
++              })) || [],
++              scenarioRelevance: [],
++              remediation: {
++                priority: 'Low',
++                effort: 'Low',
++                suggestions: ['This element passes accessibility checks'],
++              },
++            });
++          } catch (error) {
++            this.errorHandler.logWarning(`Failed to process axe-core pass: ${error}`, { pass: p });
++          }
++        }
++        return passes;
++      case 'pa11y':
++        // Pa11y doesn't return passes, only issues
++        return [];
++      default:
++        return [];
++    }
++  }
++
++  private extractWarnings(toolData: any, toolName: string): ProcessedViolation[] {
++    if (!toolData || !toolData.warnings) {
++      return [];
++    }
++
++    const warnings: ProcessedViolation[] = [];
++
++    switch (toolName) {
++      case 'axe-core':
++        for (const w of toolData.warnings) {
++          try {
++            warnings.push({
++              id: w.id || 'axe-warning-' + w.ruleId || 'unknown',
++              tools: ['axe-core'],
++              description: w.description,
++              impact: 'minor', // Warnings are typically minor impact
++              wcagLevel: this.mapWcagTagsToLevel(w.tags),
++              helpUrl: w.helpUrl,
++              help: w.help || w.description,
++              wcagTags: w.tags || [],
++              occurrences: w.nodes?.length || 1,
++              elements: w.nodes?.map((n: any) => ({
++                html: n.html,
++                target: n.target,
++                failureSummary: '', // Warnings don't have failure summaries
++                selector: n.target?.join(', ') || '',
++              })) || [],
++              scenarioRelevance: [],
++              remediation: {
++                priority: 'Low',
++                effort: 'Low',
++                suggestions: [w.help || w.description],
++              },
++            });
++          } catch (error) {
++            this.errorHandler.logWarning(`Failed to process axe-core warning: ${error}`, { warning: w });
++          }
++        }
++        return warnings;
++      case 'pa11y':
++        // Pa11y doesn't return separate warnings, only issues
++        return [];
++      default:
++        return [];
++    }
++  }
++
+   private mapWcagTagsToLevel(tags: string[] | undefined | null): 'A' | 'AA' | 'AAA' | 'Unknown' {
+     // Handle undefined or null tags
+     if (!tags || !Array.isArray(tags)) {
+@@ -559,6 +680,8 @@ export class ParallelAnalyzer {
+ 
+   private calculateViolationSummary(violations: ProcessedViolation[]): {
+     totalViolations: number;
++    totalPasses: number;
++    totalWarnings: number;
+     criticalViolations: number;
+     seriousViolations: number;
+     moderateViolations: number;
+@@ -566,6 +689,8 @@ export class ParallelAnalyzer {
+   } {
+     const summary = {
+       totalViolations: violations.length,
++      totalPasses: 0, // Will be updated when we extract passes
++      totalWarnings: 0, // Will be updated when we extract warnings
+       criticalViolations: 0,
+       seriousViolations: 0,
+       moderateViolations: 0,

@@ -1,0 +1,117 @@
+diff --git a/test/routing/route_collection_service_test.dart b/test/routing/route_collection_service_test.dart
+index fcdd23a..9bc0048 100644
+--- a/test/routing/route_collection_service_test.dart
++++ b/test/routing/route_collection_service_test.dart
+@@ -65,57 +65,60 @@ void main() {
+       expect(routes, contains(route2));
+     });
+ 
+-    test('should sort routes by specificity with literal segments having higher priority', () {
+-      // Arrange
+-      final mockProvider1 = MockRouteProvider();
+-      final mockProvider2 = MockRouteProvider();
+-      final mockProvider3 = MockRouteProvider();
+-
+-      final parameterizedRoute = GoRoute(
+-        path: '/:login',
+-        builder: (context, state) => const SizedBox(),
+-      );
+-      final literalRoute = GoRoute(
+-        path: '/loading',
+-        builder: (context, state) => const SizedBox(),
+-      );
+-      final complexRoute = GoRoute(
+-        path: '/users/:id/profile',
+-        builder: (context, state) => const SizedBox(),
+-      );
+-
+-      when(mockProvider1.getRoute()).thenReturn(parameterizedRoute);
+-      when(mockProvider2.getRoute()).thenReturn(literalRoute);
+-      when(mockProvider3.getRoute()).thenReturn(complexRoute);
+-
+-      getIt.registerSingleton<RouteProvider>(
+-        mockProvider1,
+-        instanceName: 'provider1',
+-      );
+-      getIt.registerSingleton<RouteProvider>(
+-        mockProvider2,
+-        instanceName: 'provider2',
+-      );
+-      getIt.registerSingleton<RouteProvider>(
+-        mockProvider3,
+-        instanceName: 'provider3',
+-      );
+-
+-      // Act
+-      final routes = service.collectRoutes();
+-
+-      // Assert
+-      expect(routes, hasLength(3));
+-      
+-      // Extract paths for easier testing
+-      final paths = routes.map((r) => (r as GoRoute).path).toList();
+-      
+-      // Most specific should come first: /users/:id/profile (2 literal + 1 param + length)
+-      // Then: /loading (1 literal)
+-      // Then: /:login (1 param)
+-      expect(paths[0], equals('/users/:id/profile'));
+-      expect(paths[1], equals('/loading'));
+-      expect(paths[2], equals('/:login'));
+-    });
++    test(
++      'should sort routes by specificity with literal segments having higher priority',
++      () {
++        // Arrange
++        final mockProvider1 = MockRouteProvider();
++        final mockProvider2 = MockRouteProvider();
++        final mockProvider3 = MockRouteProvider();
++
++        final parameterizedRoute = GoRoute(
++          path: '/:login',
++          builder: (context, state) => const SizedBox(),
++        );
++        final literalRoute = GoRoute(
++          path: '/loading',
++          builder: (context, state) => const SizedBox(),
++        );
++        final complexRoute = GoRoute(
++          path: '/users/:id/profile',
++          builder: (context, state) => const SizedBox(),
++        );
++
++        when(mockProvider1.getRoute()).thenReturn(parameterizedRoute);
++        when(mockProvider2.getRoute()).thenReturn(literalRoute);
++        when(mockProvider3.getRoute()).thenReturn(complexRoute);
++
++        getIt.registerSingleton<RouteProvider>(
++          mockProvider1,
++          instanceName: 'provider1',
++        );
++        getIt.registerSingleton<RouteProvider>(
++          mockProvider2,
++          instanceName: 'provider2',
++        );
++        getIt.registerSingleton<RouteProvider>(
++          mockProvider3,
++          instanceName: 'provider3',
++        );
++
++        // Act
++        final routes = service.collectRoutes();
++
++        // Assert
++        expect(routes, hasLength(3));
++
++        // Extract paths for easier testing
++        final paths = routes.map((r) => (r as GoRoute).path).toList();
++
++        // Most specific should come first: /users/:id/profile (2 literal + 1 param + length)
++        // Then: /loading (1 literal)
++        // Then: /:login (1 param)
++        expect(paths[0], equals('/users/:id/profile'));
++        expect(paths[1], equals('/loading'));
++        expect(paths[2], equals('/:login'));
++      },
++    );
+   });
+ }

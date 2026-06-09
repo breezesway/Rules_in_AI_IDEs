@@ -1,0 +1,412 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-
+-youtube-notion-integration/
+-├── src/
+-│ └── youtube_notion/ # Main package
+-│ ├── __init__.py
+-│ ├── main.py # Application entry point
+-│ ├── config/ # Configuration and example data
+-│ │ ├── __init__.py
+-│ │ └── example_data.py
+-│ ├── notion_db/ # Notion database operations
+-│ │ ├── __init__.py
+-│ │ └── operations.py
+-│ └── utils/ # Utility modules
+-│ ├── __init__.py
+-│ └── markdown_converter.py
+-├── tests/ # Comprehensive test suite
+-├── youtube_notion_cli.py # Command-line entry point
+-├── pyproject.toml # Modern Python packaging
+-├── setup.py # Package setup
+-└── requirements.txt # Dependencies
+-
++
++youtube-notion-integration/
++├── src/youtube_notion/ # Main package (importable)
++│ ├── __init__.py
++│ ├── main.py # Application entry point
++│ ├── config/ # Configuration and example data
++│ │ ├── __init__.py
++│ │ └── example_data.py
++│ ├── notion_db/ # Notion database operations
++│ │ ├── __init__.py
++│ │ └── operations.py
++│ ├── processors/ # Video processing logic
++│ │ └── youtube_processor.py
++│ └── utils/ # Utility modules
++│ ├── __init__.py
++│ └── markdown_converter.py
++├── tests/ # Comprehensive test suite
++├── youtube_notion_cli.py # CLI entry point script
++├── run_tests.py # Test runner with path setup
++├── pyproject.toml # Modern Python packaging
++├── setup.py # Package setup
++└── requirements.txt # Dependencies
++
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and project root files.
+- Suggested Logic: Verify the existence of the following specific file paths: 'src/youtube_notion/processors/youtube_processor.py' and 'run_tests.py' in the project root. Additionally, ensure the structural integrity of the 'src/youtube_notion/' package including 'main.py', 'config/', 'notion_db/', and 'utils/' subdirectories as defined in the rule.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: documentation
+- Changed Files List: 
+.kiro/steering/product.md	+10	-9	after_lines=23
+.kiro/steering/structure.md	+60	-41	after_lines=80
+.kiro/steering/tech.md	+44	-30	after_lines=74
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index dba88e6..282c658 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -1,22 +1,23 @@
+ # Product Overview
+ 
+-YouTube to Notion Database Integration is a Python application that automatically processes YouTube video summaries and adds them to a Notion database with rich formatting and interactive features.
++YouTube to Notion Database Integration is a Python application that automatically processes YouTube videos and adds AI-generated summaries to a Notion database with proper markdown formatting and rich text conversion.
+ 
+ ## Core Features
+ 
+-- **YouTube Integration**: Processes video metadata (title, URL, channel, cover image)
++- **Dynamic YouTube Processing**: Process any YouTube video URL with AI-generated summaries using Google Gemini
++- **Embedded Videos**: Automatically embeds YouTube videos at the top of each page
+ - **Smart Timestamps**: Converts timestamps like `[8:05]` or `[8:05-8:24]` to clickable YouTube links
+ - **Markdown to Notion**: Converts markdown summaries to Notion's rich text format
+ - **Rich Formatting**: Supports headers, bullet points, numbered lists, bold, and italic text
+-- **Embedded Videos**: Automatically embeds YouTube videos at the top of each page
+ - **Cover Images**: Automatically adds video thumbnails as page covers
++- **Dual Mode Operation**: Supports both example data mode and live YouTube processing
++- **Robust Error Handling**: Comprehensive error handling with retry logic and graceful fallbacks
+ 
+-## Target Use Case
++## Operation Modes
+ 
+-The application is designed for users who want to organize YouTube learning content in Notion databases, creating structured knowledge bases with clickable timestamps that jump to specific video moments.
++1. **YouTube URL Processing Mode**: Process real YouTube videos with AI-generated summaries (requires GEMINI_API_KEY)
++2. **Example Data Mode**: Uses pre-built example data for testing and demonstration (default mode)
+ 
+-## Database Requirements
++## Target Users
+ 
+-- Notion database named "YT Summaries" in a page called "YouTube Knowledge Base"
+-- Required properties: Title (Title), Video URL (URL), Channel (Rich Text), Tags (Multi-select, optional)
+-- Requires Notion integration token with database access
+\ No newline at end of file
++Developers and content creators who want to organize YouTube learning content in Notion databases with AI-generated summaries and proper formatting.
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 671c5c7..03fe3d3 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -1,61 +1,80 @@
+ # Project Structure
+ 
+-## Directory Layout
++## Package Organization
++
++The project follows modern Python packaging standards with a clear separation of concerns:
+ 
+ ```
+ youtube-notion-integration/
+-├── src/
+-│   └── youtube_notion/          # Main package
++├── src/youtube_notion/          # Main package (importable)
++│   ├── __init__.py
++│   ├── main.py                  # Application entry point
++│   ├── config/                  # Configuration and example data
++│   │   ├── __init__.py
++│   │   └── example_data.py
++│   ├── notion_db/               # Notion database operations
++│   │   ├── __init__.py
++│   │   └── operations.py
++│   ├── processors/              # Video processing logic
++│   │   └── youtube_processor.py
++│   └── utils/                   # Utility modules
+ │       ├── __init__.py
+-│       ├── main.py              # Application entry point
+-│       ├── config/              # Configuration and example data
+-│       │   ├── __init__.py
+-│       │   └── example_data.py
+-│       ├── notion_db/           # Notion database operations
+-│       │   ├── __init__.py
+-│       │   └── operations.py
+-│       └── utils/               # Utility modules
+-│           ├── __init__.py
+-│           └── markdown_converter.py
++│       └── markdown_converter.py
+ ├── tests/                       # Comprehensive test suite
+-├── youtube_notion_cli.py        # Command-line entry point
++├── youtube_notion_cli.py        # CLI entry point script
++├── run_tests.py                 # Test runner with path setup
+ ├── pyproject.toml              # Modern Python packaging
+ ├── setup.py                    # Package setup
+ └── requirements.txt            # Dependencies
+ ```
+ 
+-## Module Organization
++## Key Architectural Patterns
++
++### Module Responsibilities
++
++- **`main.py`**: Application orchestration, error handling, and user feedback
++- **`config/`**: Environment configuration, validation, and example data
++- **`notion_db/operations.py`**: Database discovery and entry creation
++- **`processors/`**: YouTube video processing and AI integration
++- **`utils/markdown_converter.py`**: Markdown to Notion rich text conversion
++
++### Import Patterns
++
++```python
++# Internal imports use relative imports within package
++from .notion_db.operations import find_database_by_name
++from .config.example_data import EXAMPLE_DATA
++from .utils.markdown_converter import parse_rich_text
++
++# External imports for processors (optional dependencies)
++from .processors.youtube_processor import YouTubeProcessor
++```
+ 
+-### Core Application (`src/youtube_notion/`)
+-- **main.py**: Entry point, orchestrates the workflow using example data
+-- **config/example_data.py**: Sample YouTube video data for testing/demo
++### Error Handling Strategy
+ 
+-### Database Layer (`notion_db/`)
+-- **operations.py**: Notion API interactions
+-  - `find_database_by_name()`: Locate target database
+-  - `add_youtube_entry()`: Create formatted Notion pages
++- **Configuration Errors**: Graceful validation with user-friendly messages
++- **API Errors**: Specific exception types with retry logic and fallbacks
++- **Processing Errors**: Detailed error context with troubleshooting guidance
++- **Return Values**: Boolean success indicators for main functions
+ 
+-### Utilities (`utils/`)
+-- **markdown_converter.py**: Markdown to Notion conversion
+-  - `markdown_to_notion_blocks()`: Convert markdown to Notion blocks
+-  - `enrich_timestamps_with_links()`: Transform timestamps to clickable links
+-  - `parse_rich_text()`: Handle markdown formatting (bold, italic, links)
++### Testing Structure
+ 
+-### Testing (`tests/`)
+-- **Unit tests**: Individual component testing
+-- **Integration tests**: End-to-end workflow testing
+-- **conftest.py**: Pytest configuration and path setup
+-- **run_tests.py**: Custom test runner with fallback support
++- **Unit Tests**: Individual module functionality (`test_*.py`)
++- **Integration Tests**: API interactions with mocking
++- **End-to-End Tests**: Full workflow testing
++- **Test Configuration**: `conftest.py` with fixtures and path setup
++- **Test Runner**: `run_tests.py` handles PYTHONPATH automatically
+ 
+-## Import Conventions
++### Configuration Management
+ 
+-- Use relative imports within the package: `from .utils.markdown_converter import ...`
+-- Package imports in tests: `from youtube_notion.module import ...`
+-- External dependencies imported at module level
++- **Environment Files**: `.env` with `.env.example` template
++- **Mode-Based Validation**: Different requirements for YouTube vs example mode
++- **Graceful Fallbacks**: YouTube API → web scraping, detailed error messages
++- **Structured Config**: Configuration classes with validation
+ 
+-## File Naming
++### CLI Design
+ 
+-- Snake_case for Python files and modules
+-- Test files prefixed with `test_`
+-- Configuration files use standard names (`.env`, `pyproject.toml`)
+-- CLI entry point uses descriptive name (`youtube_notion_cli.py`)
+\ No newline at end of file
++- **Dual Entry Points**: `youtube_notion_cli.py` (development) and console script (installed)
++- **Mutually Exclusive Modes**: `--url` vs `--example-data`
++- **Argument Validation**: Clear error messages for invalid combinations
++- **Help Documentation**: Comprehensive usage examples
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 5533f93..66c0403 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -1,60 +1,74 @@
+ # Technology Stack
+ 
+-## Core Dependencies
++## Core Technologies
+ 
+-- **Python 3.12+**: Minimum supported version
+-- **notion-client**: Official Notion Python SDK for database operations
+-- **python-dotenv**: Environment variable management
+-- **pytest**: Testing framework
++- **Python 3.12+**: Primary language with modern packaging structure
++- **Notion SDK**: Official Python client for Notion API integration
++- **Google Gemini AI**: AI-powered video summary generation
++- **YouTube Data API**: Optional metadata extraction (falls back to web scraping)
++
++## Key Dependencies
++
++```
++notion-client          # Notion API integration
++python-dotenv          # Environment variable management
++pytest                 # Testing framework
++google-genai>=0.1.0    # Google Gemini AI integration
++google-api-python-client>=2.0.0  # YouTube Data API
++requests>=2.25.0       # HTTP requests for web scraping fallback
++```
+ 
+ ## Build System
+ 
+-- **Modern Python packaging**: Uses `pyproject.toml` with setuptools backend
+-- **Development installation**: `pip install -e .` for editable installs
+-- **Entry points**: Console script `youtube-notion` defined in pyproject.toml
++- **Modern Python Packaging**: Uses `pyproject.toml` with setuptools backend
++- **Development Installation**: `pip install -e .` for editable installs
++- **Entry Points**: Console script `youtube-notion` available after installation
+ 
+ ## Common Commands
+ 
+ ### Development Setup
+ ```bash
+-# Install dependencies
++# Clone and install dependencies
+ pip install -r requirements.txt
+ 
+ # Install in development mode (recommended)
+ pip install -e .
+ 
+-# Set up environment
++# Copy environment template
+ cp .env.example .env
+-# Edit .env to add NOTION_TOKEN
+ ```
+ 
+-### Running the Application
++### Testing
+ ```bash
+-# Option 1: Use CLI script
+-python youtube_notion_cli.py
++# Preferred method - uses test runner with proper path setup
++python run_tests.py
+ 
+-# Option 2: Use installed entry point
+-youtube-notion
++# Direct pytest (requires proper PYTHONPATH)
++python -m pytest tests/ -v
+ 
+-# Option 3: Run as module
+-python -m youtube_notion.main
++# Install package first, then test
++pip install -e .
++pytest tests/ -v
+ ```
+ 
+-### Testing
++### Running the Application
+ ```bash
+-# Recommended: Use test runner (handles path setup)
+-python run_tests.py
++# CLI script (recommended for development)
++python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"
+ 
+-# Alternative: Direct pytest
+-python -m pytest tests/ -v
++# Installed console command
++youtube-notion --url "https://youtu.be/VIDEO_ID"
+ 
+-# After development install
+-pytest tests/ -v
++# Module execution
++python -m youtube_notion.main
++
++# Example data mode (default)
++python youtube_notion_cli.py --example-data
+ ```
+ 
+-## Architecture Patterns
++## Configuration Management
+ 
+-- **Package structure**: Modern src-layout with `src/youtube_notion/`
+-- **Modular design**: Separate modules for database operations, markdown conversion, and utilities
+-- **Configuration**: Environment-based config with .env files
+-- **Error handling**: Graceful error handling with user-friendly messages
+\ No newline at end of file
++- **Environment Variables**: Uses `.env` files with python-dotenv
++- **Configuration Classes**: Structured config validation in `config/` module
++- **API Key Management**: Supports multiple API providers with graceful fallbacks
++- **Mode Detection**: Automatic configuration validation based on operation mode
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

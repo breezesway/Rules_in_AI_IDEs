@@ -1,0 +1,38 @@
+diff --git a/app/src/context/AuthContext.jsx b/app/src/context/AuthContext.jsx
+index 06c7c87..6a63af1 100644
+--- a/app/src/context/AuthContext.jsx
++++ b/app/src/context/AuthContext.jsx
+@@ -29,7 +29,9 @@ export const AuthProvider = ({ children }) => {
+           console.log('Attempting to get current user with token');
+           const userProfile = await authService.getCurrentUser();
+           console.log('User profile retrieved:', userProfile);
+-          setUser(userProfile);
++          // Extract user profile from nested structure if needed
++          const actualUserProfile = userProfile?.data || userProfile;
++          setUser(actualUserProfile);
+         } catch (error) {
+           console.error('Failed to get current user:', error);
+           console.log('Clearing invalid token and logging out');
+@@ -55,6 +57,9 @@ export const AuthProvider = ({ children }) => {
+         refreshToken: refreshToken ? 'present' : 'null'
+       });
+       
++      console.log('Login response full data:', response.data);
++      console.log('User profile from login:', userProfile);
++      
+       // 토큰 유효성 검사
+       if (!accessToken || accessToken.trim() === '') {
+         console.error('Invalid access token received');
+@@ -65,7 +70,11 @@ export const AuthProvider = ({ children }) => {
+       tokenStorage.setTokens(accessToken, refreshToken);
+       
+       setToken(accessToken);
+-      setUser(userProfile);
++      // Extract user profile from nested structure if needed
++      const actualUserProfile = userProfile?.data || userProfile;
++      setUser(actualUserProfile);
++      
++      console.log('User set in context after login:', actualUserProfile);
+       
+       return { success: true };
+     } catch (error) {

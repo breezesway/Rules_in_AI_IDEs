@@ -1,0 +1,200 @@
+diff --git a/.kiro/specs/github-client-authentication/design.md b/.kiro/specs/github-client-authentication/design.md
+index 28fde74..31b59a0 100644
+--- a/.kiro/specs/github-client-authentication/design.md
++++ b/.kiro/specs/github-client-authentication/design.md
+@@ -2,9 +2,9 @@
+ 
+ ## Overview
+ 
+-The GitHub Client Authentication system is built using Flutter with a clean architecture approach that separates concerns between services, ViewModels, and UI components. The system implements GitHub's OAuth device flow for secure authentication without requiring users to enter credentials directly on mobile devices.
++The GitHub Client Authentication system implements GitHub's OAuth device flow for secure authentication without requiring users to enter credentials directly on mobile devices. The design focuses on the core authentication services, token management, and error handling required for secure GitHub API access.
+ 
+-The architecture follows a hybrid dependency injection pattern where services are managed by get_it/injectable, while ViewModels are manually instantiated with explicit dependencies to improve testability and maintainability.
++The system provides a clean separation between authentication concerns and application logic, allowing other modules to consume authentication services through well-defined interfaces.
+ 
+ ## Architecture
+ 
+@@ -12,43 +12,34 @@ The architecture follows a hybrid dependency injection pattern where services ar
+ 
+ ```mermaid
+ graph TB
+-    UI[UI Layer - Screens] --> VM[ViewModel Layer]
+-    VM --> SVC[Service Layer]
+-    SVC --> EXT[External APIs]
++    CONSUMER[Consumer Modules] --> AUTH[AuthService]
++    AUTH --> CLIENT[GithubAuthClient]
++    AUTH --> TOKEN[TokenStorage]
++    AUTH --> SCOPE[ScopeService]
+     
+-    subgraph "UI Layer"
+-        LOGIN[LoginScreen]
+-        HOME[HomeScreen]
+-        LOADING[LoadingScreen]
+-        USER[UserDetailsScreen]
+-        REPO[RepositoryDetailsScreen]
+-    end
+-    
+-    subgraph "ViewModel Layer"
+-        AUTHVM[AuthViewModel]
+-        LOGINVM[LoginViewModel]
+-    end
++    CLIENT --> GITHUB[GitHub OAuth API]
++    TOKEN --> STORAGE[Local Storage]
++    SCOPE --> GITHUB
+     
+-    subgraph "Service Layer"
+-        AUTH[AuthService]
+-        CLIENT[GithubAuthClient]
+-        TOKEN[TokenStorage]
+-        SCOPE[ScopeService]
++    subgraph "Authentication Module"
++        AUTH
++        CLIENT
++        TOKEN
++        SCOPE
+     end
+     
+-    subgraph "External APIs"
+-        GITHUB[GitHub OAuth API]
+-        STORAGE[Local Storage]
++    subgraph "External Dependencies"
++        GITHUB
++        STORAGE
+     end
+ ```
+ 
+-### Dependency Flow
++### Module Interface
+ 
+-The application uses explicit dependency injection where:
+-- Services are registered with get_it and injectable
+-- ViewModels receive services through constructor injection
+-- Screens receive ViewModels through constructor parameters
+-- GoRouter handles ViewModel instantiation with explicit dependencies
++The authentication module exposes a single primary interface:
++- **AuthService**: Main authentication orchestrator consumed by other modules
++- **Service Registration**: Authentication services registered with dependency injection for consumption
++- **Token Access**: Provides authenticated HTTP client and token validation for API calls
+ 
+ ### Authentication Flow
+ 
+@@ -172,41 +163,26 @@ sequenceDiagram
+   - `userCode`: Code for user to enter on GitHub
+   - `errorMessage`: Authentication error feedback
+ 
+-### UI Layer
+-
+-#### Screen Architecture
+-All screens follow a consistent pattern:
+-- Receive ViewModels through constructor injection
+-- Use StatefulWidget for ViewModel listener management
+-- Implement proper listener cleanup in dispose()
+-- Handle navigation through GoRouter context
+-
+-#### LoginScreen
+-- **Purpose**: GitHub device flow authentication UI
+-- **Features**:
+-  - Sign in button with loading states
+-  - User code display with copy functionality
+-  - Browser launch for GitHub authorization
+-  - Error message display
+-- **Integration**: Uses flutter_custom_tabs for in-app browser
+-
+-#### HomeScreen
+-- **Purpose**: Main application dashboard
+-- **Features**:
+-  - Welcome message for authenticated users
+-  - List of sample GitHub users
+-  - User avatar placeholders with color coding
+-  - Navigation to user detail screens
+-  - Logout functionality
+-
+-#### LoadingScreen
+-- **Purpose**: App initialization feedback
+-- **Usage**: Displayed during token validation on app start
+-
+-#### UserDetailsScreen & RepositoryDetailsScreen
+-- **Purpose**: Placeholder screens for future GitHub data display
+-- **Current State**: Show static content with proper navigation
+-- **Future Enhancement**: Will integrate with GitHub API for real data
++### Public API
++
++#### AuthService Interface
++The primary interface for consuming modules:
++```dart
++class AuthService {
++  Future<void> init();
++  Future<void> login();
++  Future<void> loginWithDeviceCode(String deviceCode);
++  Future<void> logout();
++  bool get isAuthenticated;
++  String? get accessToken;
++}
++```
++
++#### Authentication Events
++The service provides state change notifications:
++- **Authentication Status**: Observable changes to login state
++- **Token Updates**: Notifications when tokens are refreshed or invalidated
++- **Error Events**: Authentication failures and recovery states
+ 
+ ## Data Models
+ 
+@@ -219,9 +195,10 @@ class GithubDeviceCodeResult {
+ ```
+ 
+ ### Authentication State
+-- Managed through AuthViewModel properties
++- Managed internally by AuthService
+ - Persisted via TokenStorage interface
+-- Validated against required scopes
++- Validated against required scopes (`repo`, `read:user`)
++- Exposed to consumers through observable properties
+ 
+ ### Exception Hierarchy
+ ```
+@@ -246,32 +223,27 @@ GithubAuthException (base)
+ - Token validation failures result in automatic logout
+ - Browser launch failures are logged but don't crash the app
+ 
+-### State Management Errors
+-- ViewModel listener management prevents memory leaks
+-- Proper disposal of resources in screen lifecycle
+-- Error boundaries through try-catch in async operations
++### Service Errors
++- Graceful degradation for network failures
++- Automatic token cleanup on validation failures
++- Proper resource disposal in service lifecycle
+ 
+ ## Testing Strategy
+ 
+ ### Unit Testing
+ - **Services**: Mock HTTP client and storage dependencies
+-- **ViewModels**: Create with mock service dependencies
+ - **Authentication Flow**: Test all exception scenarios
++- **Token Management**: Verify storage, retrieval, and validation
+ 
+ ### Integration Testing
+ - **Device Flow**: End-to-end authentication testing
+-- **Token Persistence**: Verify storage and retrieval
+-- **Navigation**: Test routing with authentication states
+-
+-### Widget Testing
+-- **Screens**: Test with mock ViewModels
+-- **User Interactions**: Verify button states and navigation
+-- **Error States**: Test error message display
+-
+-### Architecture Testing
+-- **Dependency Injection**: Verify service registration
+-- **Explicit Dependencies**: Ensure no hidden GetIt calls in UI
+-- **Clean Architecture**: Validate layer separation
++- **Token Persistence**: Verify storage and retrieval across app restarts
++- **Service Integration**: Test service interactions and error propagation
++
++### Module Testing
++- **Public API**: Test all exposed service methods
++- **Error Scenarios**: Verify proper exception handling and recovery
++- **State Consistency**: Ensure authentication state remains consistent
+ 
+ ## Security Considerations
+ 

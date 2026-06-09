@@ -1,0 +1,471 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: a0.4.5 hotfix
+- Changed Files List: 
+public/changelog.md	+6	-0	after_lines=130
+src/data/abilities/leino.js	+1	-1	after_lines=55
+src/data/battle.js	+2	-2	after_lines=379
+src/data/gameState.js	+0	-2	after_lines=77
+src/data/skills/fireAssist.js	+48	-9	after_lines=426
+src/data/skills/refuelWeky.js	+1	-1	after_lines=232
+src/data/skills/shielding.js	+18	-7	after_lines=185
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   └── TestEffectDisplay.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationDispatcher.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effect.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── animationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: public/changelog.md ---
+diff --git a/public/changelog.md b/public/changelog.md
+index c88b2c1..19527be 100644
+--- a/public/changelog.md
++++ b/public/changelog.md
+@@ -1,3 +1,9 @@
++## 2025.9.29 [Alpha 0.4.5 hotfix]
++- 签名：Hineven
++
++### 改进
++- 修复一些问题
++
+ ## 2025.9.29 [Alpha 0.4.5]
+ - 签名：Hineven
+
+--- FILE: src/data/abilities/leino.js ---
+diff --git a/src/data/abilities/leino.js b/src/data/abilities/leino.js
+index b13d425..cc67678 100644
+--- a/src/data/abilities/leino.js
++++ b/src/data/abilities/leino.js
+@@ -4,7 +4,7 @@ import {backendGameState} from "../gameState";
+ 
+ export class FireLeino extends Ability {
+   constructor() {
+-    super('火灵脉', '能使用火系灵御技能', 5, 10);
++    super('火灵脉', '能使用火系灵御技能，来自/effect{燃烧}的伤害减2', 5, 10);
+   }
+ 
+   apply(player) {
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 5ad7d6e..41cb206 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -312,8 +312,8 @@ function handleSkillAfterUse(skill) {
+   const index = gameState.player.frontierSkills.findIndex(s => s === skill);
+   if (index !== -1) {
+ 
+-    if (skill.coldDownTurns !== 0 || skill.maxUses === Infinity) {
+-      // 如果是可充能/无限使用技能，移动到后备技能列表尾部
++    if (skill.coldDownTurns !== 0 || skill.maxUses === Infinity || skill.remainingUses > 0) {
++      // 如果是可充能/无限使用技能，或者充能有剩余，移动到后备技能列表尾部
+       // enqueueUI('animateCardById', {id: skill.uniqueID, kind: 'flyToDeckFade'});
+       dropSkillCard(gameState.player, skill.uniqueID);
+       // addSystemLog(`/blue{${skill.name}} 进入后备。`);
+
+--- FILE: src/data/gameState.js ---
+diff --git a/src/data/gameState.js b/src/data/gameState.js
+index 49eb330..6a468a7 100644
+--- a/src/data/gameState.js
++++ b/src/data/gameState.js
+@@ -3,8 +3,6 @@
+ import { reactive } from 'vue';
+ import { Player } from './player.js';
+ import SkillManager from './skillManager.js';
+-import AbilityManager from './abilityManager.js';
+-import ItemManager from './itemManager.js';
+ 
+ // 工厂方法：创建一个“干净”的游戏状态对象（非响应式）
+ export function createGameState() {
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index c4804ee..c550ca8 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -33,6 +33,7 @@ export class UnreasonableFire extends Skill {
+       return false;
+     } else if(stage === 1){
+       player.addEffect('燃烧', this.selfStacks);
++      enqueueDelay(500);
+       return false;
+     } else {
+       enemy.addEffect('燃烧', this.enemyStacks);
+@@ -101,6 +102,7 @@ export class SearingHeat extends Skill {
+       launchAttack(player, enemy, this.getDamage(player));
+       return false;
+     } else {
++      enqueueDelay(500);
+       player.addEffect('燃烧', this.stacks);
+       return true;
+     }
+@@ -133,7 +135,7 @@ export class HotHands extends Skill {
+     } else {
+       for(let i = 0; i < this.cards; i ++) {
+         drawSkillCard(player)
+-        enqueueDelay(200);
++        enqueueDelay(400);
+       }
+       return true;
+     }
+@@ -180,6 +182,42 @@ export class Firework extends Skill {
+   }
+ }
+ 
++// 散火（C-）
++// 丢弃前方所有牌，并失去所有燃烧
++export class DisperseFire extends Skill {
++  constructor() {
++    super('散火', 'fire', 1, 0, 1, 1);
++    this.baseColdDownTurns = 3;
++  }
++
++  get coldDownTurns() {
++    return Math.max(super.coldDownTurns - this.power, 1);
++  }
++
++  use(player, enemy, stage) {
++    if(stage === 0) {
++      while (player.frontierSkills.length > 0) {
++        const skill = player.frontierSkills[0];
++        if(skill === this) {
++          break;
++        }
++        dropSkillCard(player, skill.uniqueID);
++        enqueueDelay(300);
++      }
++      return false;
++    } else {
++      const burnEffect = player.effects['燃烧'];
++      if (burnEffect) {
++        player.removeEffect('燃烧', burnEffect);
++      }
++      return true;
++    }
++  }
++  regenerateDescription(player) {
++    return `丢弃所有牌，失去所有/effect{燃烧}`;
++  }
++}
++
+ // 炽热诅咒（C+）
+ // 烧掉最近的卡，赋予敌人【7+灵能】层燃烧
+ export class ScorchingCurse extends Skill {
+@@ -216,9 +254,9 @@ export class ScorchingCurse extends Skill {
+     if(stage === 0) {
+       const closestSkillID = this.getClosestSkill(player)?.uniqueID;
+       burnSkillCard(player, closestSkillID, true);
+-      enqueueDelay(200);
+       return false;
+     } else {
++      enqueueDelay(500);
+       enemy.addEffect('燃烧', this.getStacks(player));
+       return true;
+     }
+@@ -242,13 +280,11 @@ export class FireAssistance extends Skill {
+     return Math.max(3 - this.power, 1);
+   }
+   use(player, enemy, stage) {
+-    if (stage === 0) {
+-      const burnEffect = player.effects['燃烧'];
+-      if (burnEffect) {
+-        const convertableStacks = Math.ceil(burnEffect.stacks / this.conversionRate);
+-        player.removeEffect('燃烧', burnEffect);
+-        player.addEffect('集中', convertableStacks);
+-      }
++    const burnEffect = player.effects['燃烧'];
++    if (burnEffect) {
++      const convertableStacks = Math.ceil(burnEffect.stacks / this.conversionRate);
++      player.removeEffect('燃烧', burnEffect);
++      player.addEffect('集中', convertableStacks);
+     }
+     return true;
+   }
+@@ -273,6 +309,7 @@ export class DevotionCurse extends Skill {
+   use(player, enemy, stage) {
+     if(stage === 0) {
+         player.addEffect('集中', this.stacks);
++        enqueueDelay(500);
+         return false;
+     } else {
+         player.addEffect('燃心', 1);
+@@ -304,6 +341,7 @@ export class DualExtinction extends Skill {
+   use(player, enemy, stage) {
+     if(stage === 0) {
+       player.addEffect('燃烧', this.getStacks(player));
++      enqueueDelay(500);
+       return false;
+     } else {
+       enemy.addEffect('燃烧', this.getStacks(player));
+@@ -371,6 +409,7 @@ export class FlameableAmmo extends Skill {
+   use (player, enemy, stage) {
+     if(stage === 0) {
+         player.addEffect('高燃弹药', this.stacks);
++        enqueueDelay(500);
+         return this.power >= 0;
+     } else {
+         player.addEffect('燃烧', this.burnStacks);
+
+--- FILE: src/data/skills/refuelWeky.js ---
+diff --git a/src/data/skills/refuelWeky.js b/src/data/skills/refuelWeky.js
+index 39d7e7c..8159ad5 100644
+--- a/src/data/skills/refuelWeky.js
++++ b/src/data/skills/refuelWeky.js
+@@ -227,6 +227,6 @@ export class ExploitWeky extends Skill {
+     if (player) {
+       return `攻击自己，造成${10 + player.attack}伤害，受伤则获得${this.stack}/named{魏启}`;
+     }
+-    return `攻击自己，造成10伤害，受伤则获得${this.stack}/effect{魏启}`;
++    return `攻击自己，造成10伤害，受伤则获得${this.stack}/named{魏启}`;
+   }
+ }
+\ No newline at end of file
+
+--- FILE: src/data/skills/shielding.js ---
+diff --git a/src/data/skills/shielding.js b/src/data/skills/shielding.js
+index ce2e242..87fba9b 100644
+--- a/src/data/skills/shielding.js
++++ b/src/data/skills/shielding.js
+@@ -1,5 +1,6 @@
+ import Skill from '../skill.js';
+ import { launchAttack, dealDamage, gainShield } from '../battleUtils.js';
++import {enqueueDelay} from "../animationDispatcher";
+ 
+ // 紧急护盾技能
+ // 获得14点护盾，每次使用后，冷却时间增1
+@@ -72,19 +73,24 @@ export class ChargeShield extends Skill {
+   get damage () {
+     return Math.max(3 + this.power, 1);
+   }
++
++  getShieldAmount(player) {
++    return 2 + player.attack;
++  }
+   
+   use(player, enemy, stage) {
+-    if(stage == 0) {
+-        dealDamage(player, enemy, this.damage);
+-        return false;
++    if(stage === 0) {
++      dealDamage(player, enemy, this.damage);
++      enqueueDelay(500);
++      return false;
+     }
+-    gainShield(player, player, 2 + player.attack);
++    gainShield(player, player, this.getShieldAmount(player));
+     return true;
+   }
+   
+   regenerateDescription(player) {
+     if(player) {
+-      return `造成${this.damage}伤害，获得2+${player.attack}/named{护盾}`;
++      return `造成${this.damage}伤害，获得${this.getShieldAmount(player)}/named{护盾}`;
+     }
+     return `造成${this.damage}伤害，获得【2+/effect{力量}】/named{护盾}`;
+   }
+@@ -157,9 +163,14 @@ export class PsychicShield extends Skill {
+     return Math.max(1 + Math.floor(this.power / 2), 1);
+   }
+ 
++  getShieldAmount(player) {
++    return this.shield + 2 * player.magic;
++  }
++
+   use(player, enemy, stage) {
+     if(stage === 0) {
+-      gainShield(player, player, this.shield);
++      gainShield(player, player, this.getShieldAmount(player));
++      enqueueDelay(500);
+       return false;
+     } else {
+       player.addEffect('警戒', this.guardStacks);
+@@ -168,7 +179,7 @@ export class PsychicShield extends Skill {
+   }
+ 
+   regenerateDescription(player) {
+-    if(player) return `获得${this.shield + 2 * player.magic}/named{护盾}，${this.guardStacks}层/effect{警戒}`;
++    if(player) return `获得${this.getShieldAmount(player)}/named{护盾}，${this.guardStacks}层/effect{警戒}`;
+     return `获得【${this.shield}+2x/named{灵能}】/named{护盾}，${this.guardStacks}层/effect{警戒}`;
+   }
+ }
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

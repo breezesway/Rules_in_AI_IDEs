@@ -1,0 +1,25 @@
+diff --git a/server/api/health.get.ts b/server/api/health.get.ts
+index 03c4eb7..76c3fbe 100644
+--- a/server/api/health.get.ts
++++ b/server/api/health.get.ts
+@@ -6,11 +6,14 @@ export default defineApiEventHandler({
+     data: z.string().optional(),
+   }),
+   handler: async (event, payload) => {
+-    return {
+-      data: payload.data,
+-      status: "healthy",
+-      timestamp: new Date().toISOString(),
+-      version: packageJson.version,
+-    };
++    return defineApiResponse(event, {
++      data: {
++        requestPayload: payload.data,
++        timestamp: new Date().toISOString(),
++        version: packageJson.version,
++        status: "healthy",
++      },
++      statusMessage: "Health check successful",
++    });
+   },
+ });

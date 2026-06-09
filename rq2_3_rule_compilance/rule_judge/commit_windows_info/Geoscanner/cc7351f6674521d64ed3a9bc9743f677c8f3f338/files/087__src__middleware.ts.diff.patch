@@ -1,0 +1,75 @@
+diff --git a/src/middleware.ts b/src/middleware.ts
+index f942dd9..e6a1770 100644
+--- a/src/middleware.ts
++++ b/src/middleware.ts
+@@ -2,40 +2,24 @@ import { NextResponse } from 'next/server';
+ import type { NextRequest } from 'next/server';
+ 
+ // Lijst van statische paden die gecached kunnen worden
+-const STATIC_PATHS = [
+-  '/hoe-werkt-het',
+-  '/faq',
+-  '/over-ons',
+-  '/prijzen',
+-  '/blog'
+-];
++const STATIC_PATHS = ['/hoe-werkt-het', '/faq', '/over-ons', '/prijzen', '/blog'];
+ 
+ // Paden die nooit gecached mogen worden
+-const DYNAMIC_PATHS = [
+-  '/api/',
+-  '/dashboard/'
+-];
++const DYNAMIC_PATHS = ['/api/', '/dashboard/'];
+ 
+ // Paden die altijd publiek toegankelijk zijn (geen login nodig)
+-const PUBLIC_PATHS = [
+-  '/login',
+-  '/register',
+-  '/_next',
+-  '/favicon.ico',
+-  '/robots.txt',
+-  '/api/trpc'
+-];
++const PUBLIC_PATHS = ['/login', '/register', '/_next', '/favicon.ico', '/robots.txt', '/api/trpc'];
+ 
+ // Caching TTL per route type (in seconden)
+ const CACHE_TIMES = {
+   static: 60 * 60 * 24, // 24 uur voor statische pagina's
+   api: 60 * 5, // 5 minuten voor API calls (behalve scan API)
+-  default: 60 * 60 // 1 uur voor overige routes
++  default: 60 * 60, // 1 uur voor overige routes
+ };
+ 
+ export function middleware(request: NextRequest) {
+   const { pathname } = request.nextUrl;
+-  let response = NextResponse.next();
++  const response = NextResponse.next();
+ 
+   // Authenticatie check
+   const session = request.cookies.get('session');
+@@ -67,7 +51,7 @@ export function middleware(request: NextRequest) {
+   // Langere cache voor statische pagina's
+   if (STATIC_PATHS.includes(pathname) || pathname === '/') {
+     response.headers.set(
+-      'Cache-Control', 
++      'Cache-Control',
+       `public, s-maxage=${CACHE_TIMES.static}, stale-while-revalidate=${CACHE_TIMES.static * 2}`
+     );
+     return response;
+@@ -78,7 +62,7 @@ export function middleware(request: NextRequest) {
+     'Cache-Control',
+     `public, s-maxage=${CACHE_TIMES.default}, stale-while-revalidate`
+   );
+-  
++
+   return response;
+ }
+ 
+@@ -92,4 +76,4 @@ export const config = {
+      */
+     '/((?!_next/static|_vercel/static|favicon.ico|robots.txt).*)',
+   ],
+-}; 
+\ No newline at end of file
++};

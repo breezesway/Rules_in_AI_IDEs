@@ -1,0 +1,55 @@
+diff --git a/src/utils/analysis/tool-orchestrator.ts b/src/utils/analysis/tool-orchestrator.ts
+index a8472d5..db63c92 100644
+--- a/src/utils/analysis/tool-orchestrator.ts
++++ b/src/utils/analysis/tool-orchestrator.ts
+@@ -1,4 +1,4 @@
+-import { Page } from 'playwright';
++import { Page } from '@playwright/test';
+ import { AccessibilityTool, AccessibilityToolOptions } from './accessibility-tool';
+ import {
+   AnalysisSummary,
+@@ -165,19 +165,31 @@ export class ToolOrchestrator {
+ 
+   private async combineResults(results: ToolResult[]): Promise<CombinedResult> {
+     const violations: ProcessedViolation[] = [];
++    const passes: ProcessedViolation[] = [];
++    const warnings: ProcessedViolation[] = [];
+     const successfulResults = results.filter(r => r.success);
+ 
+-    // Extract violations from successful results
++    // Extract violations, passes, and warnings from successful results
+     for (const result of successfulResults) {
+-      // TODO: Fix this type error
+-      if (result.data && (result.data as any).violations) {
+-        violations.push(...(result.data as any).violations);
++      if (result.data) {
++        const data = result.data as any;
++        if (data.violations) {
++          violations.push(...data.violations);
++        }
++        if (data.passes) {
++          passes.push(...data.passes);
++        }
++        if (data.warnings) {
++          warnings.push(...data.warnings);
++        }
+       }
+     }
+ 
+     // Create combined summary
+     const summary: AnalysisSummary = {
+       totalViolations: violations.length,
++      totalPasses: passes.length,
++      totalWarnings: warnings.length,
+       criticalViolations: violations.filter(v => v.impact === 'critical').length,
+       seriousViolations: violations.filter(v => v.impact === 'serious').length,
+       moderateViolations: violations.filter(v => v.impact === 'moderate').length,
+@@ -187,6 +199,8 @@ export class ToolOrchestrator {
+     return {
+       results,
+       violations: await this.deduplicateViolations(violations),
++      passes: await this.deduplicateViolations(passes),
++      warnings: await this.deduplicateViolations(warnings),
+       summary,
+     };
+   }

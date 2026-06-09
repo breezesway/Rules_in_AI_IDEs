@@ -1,0 +1,125 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/unit-tests.mdc
+- Change Type: added
+- Target Rule Content:
+This project uses pytest for unit testing.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Python dependency configuration files (e.g., requirements.txt, pyproject.toml, setup.py), and test source code files (e.g., test_*.py, *_test.py).
+- Suggested Logic: 1. Search for 'pytest' in dependency files like 'requirements.txt', 'pyproject.toml', or 'setup.py'. 2. Check for the existence of 'conftest.py' files. 3. Scan Python test files for 'import pytest' statements or pytest-specific decorators such as '@pytest.mark.parametrize' or '@pytest.fixture'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: Fixed tests
+- Changed Files List: 
+tests/unit/test_quiz_engine.py	+6	-3	after_lines=113
+
+- Project Directory Tree (Snapshot after commit):
+├── .cloudbuild
+│   └── infrastructure.yaml
+├── .cursor
+│   └── rules
+│       └── unit-tests.mdc
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── README.MD
+├── cloudbuild.yaml
+├── docker-compose.debug.yml
+├── docker-compose.yml
+├── infrastructure
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── pytest.ini
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── equations
+│   │   │   ├── __init__.py
+│   │   │   ├── equations.py
+│   │   │   └── equations_tests.py
+│   │   └── game
+│   │       ├── __init__.py
+│   │       ├── game_config.py
+│   │       ├── game_manager.py
+│   │       ├── quiz_engine.py
+│   │       └── session_manager.py
+│   ├── data
+│   │   └── quizzes.json
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── images
+│   │       ├── bulbasaur.png
+│   │       ├── charmander.png
+│   │       ├── favicon.svg
+│   │       ├── mew.png
+│   │       ├── pikachu.png
+│   │       ├── pokeball-1.gif
+│   │       ├── psyduck_wonder.gif
+│   │       └── squirtle.png
+│   └── templates
+│       ├── all_exercises.html
+│       ├── base.html
+│       ├── index.html
+│       ├── new_exercise.html
+│       ├── profile.html
+│       └── quiz.html
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── data
+    │   └── quizzes.json
+    └── unit
+        ├── __init__.py
+        ├── test_equations.py
+        ├── test_game_manager.py
+        ├── test_quiz_data.py
+        ├── test_quiz_engine.py
+        └── test_session_manager.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: tests/unit/test_quiz_engine.py ---
+diff --git a/tests/unit/test_quiz_engine.py b/tests/unit/test_quiz_engine.py
+index 5a538b4..175b703 100644
+--- a/tests/unit/test_quiz_engine.py
++++ b/tests/unit/test_quiz_engine.py
+@@ -67,23 +67,26 @@ def test_check_quiz_answers(sample_quiz):
+     """Test checking quiz answers."""
+     # Test with correct answers
+     correct_answers = {"x": 5, "y": 5, "z": 2}
+-    all_correct, correct_dict = check_quiz_answers(sample_quiz, correct_answers)
++    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, correct_answers)
+     assert all_correct is True
+     assert all(correct_dict.values())
++    assert all_answered is True
+     
+     # Test with some incorrect answers
+     wrong_answers = {"x": 5, "y": 4, "z": 2}
+-    all_correct, correct_dict = check_quiz_answers(sample_quiz, wrong_answers)
++    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, wrong_answers)
+     assert all_correct is False
+     assert correct_dict["x"] is True
+     assert correct_dict["y"] is False
+     assert correct_dict["z"] is True
++    assert all_answered is True
+     
+     # Test with missing answers
+     incomplete_answers = {"x": 5, "z": 2}
+-    all_correct, correct_dict = check_quiz_answers(sample_quiz, incomplete_answers)
++    all_correct, correct_dict, all_answered = check_quiz_answers(sample_quiz, incomplete_answers)
+     assert all_correct is False
+     assert correct_dict["y"] is False
++    assert all_answered is False
+ 
+ def test_get_display_variables(sample_quiz, sample_pokemon, quiz_data):
+     """Test getting display variables for a quiz."""
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

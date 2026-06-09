@@ -1,0 +1,59 @@
+diff --git a/lib/src/screens/user_details/user_details_screen.dart b/lib/src/screens/user_details/user_details_screen.dart
+index 5ed16c3..372b95c 100644
+--- a/lib/src/screens/user_details/user_details_screen.dart
++++ b/lib/src/screens/user_details/user_details_screen.dart
+@@ -1,9 +1,34 @@
+ import 'package:flutter/material.dart';
+ import 'package:go_router/go_router.dart';
++import 'user_details_viewmodel.dart';
+ 
+-class UserDetailsScreen extends StatelessWidget {
+-  final String login;
+-  const UserDetailsScreen({super.key, required this.login});
++class UserDetailsScreen extends StatefulWidget {
++  final UserDetailsViewModel viewModel;
++
++  const UserDetailsScreen({super.key, required this.viewModel});
++
++  @override
++  State<UserDetailsScreen> createState() => _UserDetailsScreenState();
++}
++
++class _UserDetailsScreenState extends State<UserDetailsScreen> {
++  late final UserDetailsViewModel _viewModel;
++
++  void _onViewModelChanged() => setState(() {});
++
++  @override
++  void initState() {
++    super.initState();
++    _viewModel = widget.viewModel;
++    _viewModel.addListener(_onViewModelChanged);
++    _viewModel.init();
++  }
++
++  @override
++  void dispose() {
++    _viewModel.removeListener(_onViewModelChanged);
++    super.dispose();
++  }
+ 
+   @override
+   Widget build(BuildContext context) {
+@@ -21,10 +46,12 @@ class UserDetailsScreen extends StatelessWidget {
+         title: const Text('User Details'),
+       ),
+       body: Center(
+-        child: Text(
+-          'User: $login',
+-          style: Theme.of(context).textTheme.headlineMedium,
+-        ),
++        child: _viewModel.isLoading
++            ? const CircularProgressIndicator()
++            : Text(
++                'User: ${_viewModel.login}',
++                style: Theme.of(context).textTheme.headlineMedium,
++              ),
+       ),
+     );
+   }

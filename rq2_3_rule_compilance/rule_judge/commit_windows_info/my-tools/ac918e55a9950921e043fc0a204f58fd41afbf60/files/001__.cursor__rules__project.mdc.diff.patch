@@ -1,0 +1,63 @@
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index 65fc1dc..16584cf 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -75,6 +75,20 @@ src/
+ - **状态管理** - 使用React hooks进行状态管理
+ - **用户反馈** - 使用Toast等方式提供操作反馈
+ 
++### 原生模块集成规范
++- **动态导入原生模块** - 使用 `await import()` 而非静态导入
++  - 示例：`const sharp = await import('sharp'); sharp.default(filePath)`
++- **Vite 外部依赖配置** - 将原生模块配置为外部依赖
++  - 在 `vite.main.config.ts` 中配置 `external: ['moduleName']`
++- **依赖安装策略** - 原生模块建议安装为 devDependencies
++- **错误处理** - 原生模块加载失败时提供友好的错误提示
++
++### 构建配置最佳实践
++- **主进程配置** - `vite.main.config.ts` 处理主进程相关配置
++- **渲染进程配置** - `vite.renderer.config.ts` 处理渲染进程相关配置
++- **预加载脚本配置** - `vite.preload.config.ts` 处理预加载脚本配置
++- **外部依赖管理** - 合理配置 `rollupOptions.external` 避免打包问题
++
+ ### 代码重构指导
+ 当发现以下情况时，应该进行重构：
+ - 单个文件包含多个组件定义
+@@ -82,14 +96,34 @@ src/
+ - 存在未使用的代码
+ - 导入路径不正确
+ - 有lint警告或错误
++- 原生模块使用静态导入
++- 缺少构建配置优化
+ 
+ ## 📋 检查清单
+ 
+ 在完成开发后，请确保：
++
++### 基础代码质量
+ - [ ] 每个tsx文件只包含一个组件定义
+ - [ ] UI组件正确放置在 `src/ui/` 目录
+ - [ ] 功能组件正确放置在 `src/components/` 目录
+ - [ ] 所有导入路径正确
+ - [ ] 没有未使用的变量和函数
+ - [ ] 通过lint检查（`npm run lint`）
+-- [ ] 项目能够正常构建（`npm run package`）
+\ No newline at end of file
++
++### 构建和部署
++- [ ] 项目能够正常构建（`npm run package`）
++- [ ] 原生模块正确配置为外部依赖
++- [ ] 动态导入替代静态导入（针对原生模块）
++- [ ] Vite 配置文件正确设置
++
++### 功能完整性
++- [ ] IPC 通信正确实现
++- [ ] 错误处理机制完善
++- [ ] 用户反馈（Toast/通知）正常工作
++- [ ] 文件操作（选择/保存）功能正常
++
++### 文档更新
++- [ ] `product.md` 记录实际实现状态
++- [ ] 开发过程中的挑战和解决方案已记录
++- [ ] 技术架构决策已文档化
+\ No newline at end of file

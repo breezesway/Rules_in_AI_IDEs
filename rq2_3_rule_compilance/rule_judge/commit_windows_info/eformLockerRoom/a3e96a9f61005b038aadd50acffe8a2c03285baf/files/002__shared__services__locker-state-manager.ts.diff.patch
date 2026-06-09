@@ -1,0 +1,30 @@
+diff --git a/shared/services/locker-state-manager.ts b/shared/services/locker-state-manager.ts
+index 11f2fe3..6a733f7 100644
+--- a/shared/services/locker-state-manager.ts
++++ b/shared/services/locker-state-manager.ts
+@@ -927,6 +927,25 @@ export class LockerStateManager {
+     return enhancedLockers;
+   }
+ 
++  /**
++   * Get available lockers with display names
++   */
++  async getEnhancedAvailableLockers(kioskId: string): Promise<Array<Locker & { displayName: string }>> {
++    const lockers = await this.getAvailableLockers(kioskId);
++    
++    const enhancedLockers = await Promise.all(
++      lockers.map(async (locker) => {
++        const displayName = await this.namingService.getDisplayName(kioskId, locker.id);
++        return {
++          ...locker,
++          displayName
++        };
++      })
++    );
++
++    return enhancedLockers;
++  }
++
+   /**
+    * Initialize WebSocket service
+    */

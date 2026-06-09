@@ -1,0 +1,367 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index ac8dab9..6c9c9ae 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,5 +1,6 @@
+ import React, { useState, useRef } from 'react';
+ import { FileText, Image, X, FolderOpen, Settings, AlertCircle, CheckCircle, GripVertical, RotateCcw } from 'lucide-react';
++import { Toaster, toast } from 'sonner';
+ 
+ interface FeatureCardProps {
+   icon: React.ReactNode;
+@@ -78,7 +79,7 @@ interface PdfFile {
+   id: string;
+   name: string;
+   size: number;
+-  file: File;
++  path: string;
+   status: 'ready' | 'invalid' | 'processing' | 'done' | 'error';
+   error?: string;
+ }
+@@ -86,65 +87,44 @@ interface PdfFile {
+ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+   const [files, setFiles] = useState<PdfFile[]>([]);
+   const [outputFileName, setOutputFileName] = useState('merged-document.pdf');
++  const [outputPath, setOutputPath] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
+   const [progress, setProgress] = useState(0);
++  const [currentFile, setCurrentFile] = useState('');
+   const [error, setError] = useState<string | null>(null);
+-  const [success, setSuccess] = useState<string | null>(null);
+-  const [isDragOver, setIsDragOver] = useState(false);
+-  const fileInputRef = useRef<HTMLInputElement>(null);
+ 
+-  const validateFile = (file: File): { valid: boolean; error?: string } => {
+-    if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
++
++
++  // 初始化默认保存路径
++  React.useEffect(() => {
++    if (isOpen && !outputPath) {
++      window.electronAPI?.getDownloadsPath().then(path => {
++        setOutputPath(path);
++      }).catch(err => {
++        console.error('获取下载目录失败:', err);
++        setOutputPath('');
++      });
++    }
++  }, [isOpen, outputPath]);
++
++  const validateFile = (fileInfo: { name: string; size: number }): { valid: boolean; error?: string } => {
++    if (!fileInfo.name.toLowerCase().endsWith('.pdf')) {
+       return { valid: false, error: '只支持PDF格式文件' };
+     }
+-    if (file.size > 100 * 1024 * 1024) {
++    if (fileInfo.size > 100 * 1024 * 1024) {
+       return { valid: false, error: '文件大小不能超过100MB' };
+     }
+     return { valid: true };
+   };
+ 
+-  const handleDrop = (e: React.DragEvent) => {
+-    e.preventDefault();
+-    setIsDragOver(false);
+-    
+-    const droppedFiles = Array.from(e.dataTransfer.files) as File[];
+-    const currentTotalSize = files.reduce((sum, file) => sum + file.size, 0);
+-    
+-    if (files.length + droppedFiles.length > 10) {
+-      setError('最多只能选择10个文件');
+-      return;
+-    }
+-
+-    const newFiles: PdfFile[] = [];
+-    let newTotalSize = currentTotalSize;
+-
+-    for (const file of droppedFiles) {
+-      const validation = validateFile(file);
++  const handleSelectFiles = async () => {
++    try {
++      const selectedFiles = await window.electronAPI?.selectPdfFiles();
+       
+-      if (newTotalSize + file.size > 500 * 1024 * 1024) {
+-        setError('文件总大小不能超过500MB');
+-        break;
++      if (!selectedFiles) {
++        return; // 用户取消选择
+       }
+ 
+-      newFiles.push({
+-        id: Math.random().toString(36).substring(2, 9),
+-        name: file.name,
+-        size: file.size,
+-        file,
+-        status: validation.valid ? 'ready' : 'invalid',
+-        error: validation.error
+-      });
+-
+-      newTotalSize += file.size;
+-    }
+-
+-    setFiles(prev => [...prev, ...newFiles]);
+-    setError(null);
+-  };
+-
+-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+-    if (e.target.files) {
+-      const selectedFiles = Array.from(e.target.files) as File[];
+       const currentTotalSize = files.reduce((sum, file) => sum + file.size, 0);
+       
+       if (files.length + selectedFiles.length > 10) {
+@@ -155,31 +135,36 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+       const newFiles: PdfFile[] = [];
+       let newTotalSize = currentTotalSize;
+ 
+-      for (const file of selectedFiles) {
+-        const validation = validateFile(file);
++      for (const fileInfo of selectedFiles) {
++        const validation = validateFile(fileInfo);
+         
+-        if (newTotalSize + file.size > 500 * 1024 * 1024) {
++        if (newTotalSize + fileInfo.size > 500 * 1024 * 1024) {
+           setError('文件总大小不能超过500MB');
+           break;
+         }
+ 
+         newFiles.push({
+           id: Math.random().toString(36).substring(2, 9),
+-          name: file.name,
+-          size: file.size,
+-          file,
++          name: fileInfo.name,
++          size: fileInfo.size,
++          path: fileInfo.path,
+           status: validation.valid ? 'ready' : 'invalid',
+           error: validation.error
+         });
+ 
+-        newTotalSize += file.size;
++        newTotalSize += fileInfo.size;
+       }
+ 
+       setFiles(prev => [...prev, ...newFiles]);
+       setError(null);
++    } catch (err) {
++      console.error('选择文件失败:', err);
++      setError('选择文件失败');
+     }
+   };
+ 
++
++
+   const removeFile = (id: string) => {
+     setFiles(prev => prev.filter(file => file.id !== id));
+   };
+@@ -196,8 +181,21 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+     setFiles([]);
+     setOutputFileName('merged-document.pdf');
+     setError(null);
+-    setSuccess(null);
+     setProgress(0);
++    setCurrentFile('');
++  };
++
++  const selectSavePath = async () => {
++    try {
++      const result = await window.electronAPI?.selectSavePath();
++      if (result) {
++        setOutputPath(result.directory);
++        setOutputFileName(result.fileName);
++      }
++    } catch (err) {
++      console.error('选择保存路径失败:', err);
++      setError('选择保存路径失败');
++    }
+   };
+ 
+   const handleMerge = async () => {
+@@ -207,23 +205,75 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+       return;
+     }
+ 
++    if (!outputPath) {
++      setError('请选择保存位置');
++      return;
++    }
++
+     setIsProcessing(true);
+     setProgress(0);
++    setCurrentFile('');
+     setError(null);
+-    setSuccess(null);
+-
+-    // 模拟处理进度
+-    const interval = setInterval(() => {
+-      setProgress(prev => {
+-        if (prev >= 100) {
+-          clearInterval(interval);
+-          setIsProcessing(false);
+-          setSuccess(`PDF文件已成功合并为 "${outputFileName}"`);
+-          return 100;
+-        }
+-        return prev + 10;
++
++    try {
++      // 设置进度监听
++      const cleanupProgress = window.electronAPI?.onMergeProgress((progressData) => {
++        setProgress(progressData.progress);
++        setCurrentFile(progressData.currentFile);
++      });
++
++      // 获取文件路径
++      const filePaths = validFiles.map(f => f.path);
++
++      // 调用主进程合并PDF
++      const result = await window.electronAPI?.mergePdfs({
++        filePaths,
++        outputPath,
++        outputFileName
+       });
+-    }, 300);
++
++      // 清理进度监听
++      cleanupProgress?.();
++
++      if (result?.success) {
++        // 更新文件状态为完成
++        setFiles(prev => prev.map(f => 
++          f.status === 'ready' ? { ...f, status: 'done' as const } : f
++        ));
++        setProgress(100);
++
++        // 显示成功 Toast
++        toast.success('PDF合并完成！', {
++          description: `${outputFileName} 已成功保存`,
++          duration: 5000
++        });
++
++        // 立即重置表单
++        setTimeout(() => {
++          resetForm();
++        }, 500); // 稍微延迟一点让用户看到完成状态
++      } else {
++        throw new Error(result?.error || '合并失败');
++      }
++    } catch (err) {
++      console.error('PDF合并错误:', err);
++      const errorMessage = err instanceof Error ? err.message : '合并PDF时发生未知错误';
++      setError(errorMessage);
++      
++      // 显示错误 Toast
++      toast.error('PDF合并失败', {
++        description: errorMessage,
++        duration: 5000
++      });
++      
++      // 更新文件状态为错误
++      setFiles(prev => prev.map(f => 
++        f.status === 'ready' ? { ...f, status: 'error' as const } : f
++      ));
++    } finally {
++      setIsProcessing(false);
++      setCurrentFile('');
++    }
+   };
+ 
+   const cancelProcessing = () => {
+@@ -271,50 +321,25 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+           </div>
+         )}
+         
+-        {success && (
+-          <div className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-xl">
+-            <CheckCircle className="h-5 w-5 text-green-500" />
+-            <span className="text-green-700">{success}</span>
+-          </div>
+-        )}
+ 
+-        {/* 文件拖拽区域 */}
+-        <div
+-          className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 ${
+-            isDragOver 
+-              ? 'border-gray-900 bg-gray-50' 
+-              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+-          }`}
+-          onDrop={handleDrop}
+-          onDragOver={(e) => {
+-            e.preventDefault();
+-            setIsDragOver(true);
+-          }}
+-          onDragLeave={() => setIsDragOver(false)}
+-        >
++
++        {/* 文件选择区域 */}
++        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+           <div className="flex flex-col items-center space-y-4">
+             <div className="p-4 bg-gray-100 rounded-2xl">
+               <FolderOpen className="h-8 w-8 text-gray-600" />
+             </div>
+             <div className="space-y-2">
+-              <p className="font-medium text-gray-900">拖拽PDF文件到此处，或</p>
++              <p className="font-medium text-gray-900">选择PDF文件进行合并</p>
+               <p className="text-sm text-gray-500">支持最多10个PDF文件，单个文件不超过100MB，总大小不超过500MB</p>
+             </div>
+-            <input
+-              ref={fileInputRef}
+-              type="file"
+-              accept=".pdf"
+-              multiple
+-              onChange={handleFileSelect}
+-              className="hidden"
+-              id="pdf-input"
+-            />
+-            <label
+-              htmlFor="pdf-input"
+-              className="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 cursor-pointer transition-colors duration-200"
++            <button
++              onClick={handleSelectFiles}
++              className="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors duration-200"
++              disabled={isProcessing}
+             >
+               选择文件
+-            </label>
++            </button>
+           </div>
+         </div>
+ 
+@@ -378,6 +403,11 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+               <span>合并进度</span>
+               <span>{progress}%</span>
+             </div>
++            {currentFile && (
++              <div className="text-sm text-gray-600">
++                正在处理: {currentFile}
++              </div>
++            )}
+             <div className="w-full bg-gray-200 rounded-full h-2">
+               <div 
+                 className="bg-gray-900 h-2 rounded-full transition-all duration-300"
+@@ -405,11 +435,12 @@ function PdfMergerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
+             <div className="flex space-x-3">
+               <input
+                 type="text"
+-                value="默认下载目录"
++                value={outputPath || '选择保存位置...'}
+                 readOnly
+                 className="flex-1 border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-600"
+               />
+               <button 
++                onClick={selectSavePath}
+                 className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200 whitespace-nowrap"
+                 disabled={isProcessing}
+               >
+@@ -720,6 +751,14 @@ export default function App() {
+           isOpen={activeModal === 'image-compressor'}
+           onClose={() => setActiveModal(null)}
+         />
++        
++        {/* Toast 通知组件 */}
++        <Toaster 
++          position="top-right"
++          richColors
++          expand={true}
++          duration={4000}
++        />
+       </div>
+     </div>
+   );

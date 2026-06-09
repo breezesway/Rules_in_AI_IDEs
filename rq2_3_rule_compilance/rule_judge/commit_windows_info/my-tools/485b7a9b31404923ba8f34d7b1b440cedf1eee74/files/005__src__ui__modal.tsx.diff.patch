@@ -1,0 +1,65 @@
+diff --git a/src/ui/modal.tsx b/src/ui/modal.tsx
+index 8d7cf19..b31d24f 100644
+--- a/src/ui/modal.tsx
++++ b/src/ui/modal.tsx
+@@ -1,4 +1,4 @@
+-import React from 'react';
++import React, { useEffect } from 'react';
+ import { X } from 'lucide-react';
+ 
+ interface ModalProps {
+@@ -7,14 +7,51 @@ interface ModalProps {
+   title: string;
+   children?: React.ReactNode;
+   footer?: React.ReactNode;
++  size?: 'default' | 'large' | 'extra-large';
++  zIndex?: number;
+ }
+ 
+-export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) {
++export function Modal({ isOpen, onClose, title, children, footer, size = 'default', zIndex = 50 }: ModalProps) {
++  // ESC键关闭模态框
++  useEffect(() => {
++    const handleEscapeKey = (event: KeyboardEvent) => {
++      if (event.key === 'Escape' && isOpen) {
++        onClose();
++      }
++    };
++
++    if (isOpen) {
++      document.addEventListener('keydown', handleEscapeKey);
++      // 防止背景滚动
++      document.body.style.overflow = 'hidden';
++    }
++
++    return () => {
++      document.removeEventListener('keydown', handleEscapeKey);
++      document.body.style.overflow = 'unset';
++    };
++  }, [isOpen, onClose]);
++
+   if (!isOpen) return null;
+ 
++  // 点击遮罩关闭模态框
++  const handleOverlayClick = (e: React.MouseEvent) => {
++    if (e.target === e.currentTarget) {
++      onClose();
++    }
++  };
++
+   return (
+-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-80 flex items-center justify-center z-50 p-4">
+-      <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 ring-1 ring-gray-900/5 dark:ring-gray-100/10 w-full max-w-3xl max-h-[90vh] flex flex-col">
++    <div 
++      className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-80 flex items-center justify-center p-4"
++      style={{ zIndex }}
++      onClick={handleOverlayClick}
++    >
++      <div className={`bg-white dark:bg-gray-700 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 ring-1 ring-gray-900/5 dark:ring-gray-100/10 w-full max-h-[90vh] flex flex-col ${
++        size === 'extra-large' ? 'max-w-6xl' : 
++        size === 'large' ? 'max-w-5xl' : 
++        'max-w-3xl'
++      }`}>
+         {/* 固定顶部标题栏 */}
+         <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h2>

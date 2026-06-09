@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tic Tac Toe</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 2px;
+            background: #333;
+            width: fit-content;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+        }
+        .cell:not(:disabled):hover {
+            background: #f0f0f0;
+        }
+        .cell:not(:disabled):active {
+            background: #e0e0e0;
+        }
+        .cell:disabled {
+            cursor: not-allowed;
+            background: #f8f8f8;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="content"></div>
+    <div class="board" id="board"></div>
+    
+    <script src="wasm_exec.js"></script>
+    <script>
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = ''; // Clear the board
+            const cells = game.board();
+            cells.forEach((cell, index) => {
+                const button = document.createElement('button');
+                button.className = 'cell';
+                button.textContent = cell || '';
+                button.disabled = cell !== ''; // Disable if cell is occupied
+                button.onclick = () => {
+                    game.makeMove(index);
+                    renderBoard(); // Re-render after move
+                    updateTurnText(); // Update turn text after move
+                };
+                board.appendChild(button);
+            });
+        }
+
+        function updateTurnText() {
+            const content = document.getElementById('content');
+            content.textContent = game.text(); // Update the turn text
+        }
+
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+            .then((result) => {
+                go.run(result.instance);
+                updateTurnText();
+                renderBoard();
+            });
+    </script>
+</body>
+</html> 

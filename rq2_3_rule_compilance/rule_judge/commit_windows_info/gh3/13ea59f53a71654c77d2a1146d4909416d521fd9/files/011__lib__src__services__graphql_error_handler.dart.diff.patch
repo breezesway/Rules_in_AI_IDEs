@@ -1,0 +1,47 @@
+diff --git a/lib/src/services/graphql_error_handler.dart b/lib/src/services/graphql_error_handler.dart
+index 213d9cc..6598c3c 100644
+--- a/lib/src/services/graphql_error_handler.dart
++++ b/lib/src/services/graphql_error_handler.dart
+@@ -44,13 +44,13 @@ class GraphQLErrorHandler {
+         'No internet connection - please check your network',
+       );
+     }
+-    
++
+     // GraphQL errors - treat as failures (no partial data)
+     final graphqlErrors = response.graphqlErrors;
+     if (graphqlErrors != null && graphqlErrors.isNotEmpty) {
+       final firstError = graphqlErrors.first;
+       final fieldErrors = <String>[];
+-      
++
+       // Extract field errors from extensions if available
+       if (firstError.extensions != null &&
+           firstError.extensions!['field_errors'] != null) {
+@@ -59,16 +59,16 @@ class GraphQLErrorHandler {
+           fieldErrors.addAll(errors.cast<String>());
+         }
+       }
+-      
++
+       return GraphQLValidationError(
+         firstError.message,
+         fieldErrors: fieldErrors,
+       );
+     }
+-    
++
+     return const GraphQLValidationError('Unknown error occurred');
+   }
+-  
++
+   static String getErrorMessage(dynamic error) {
+     if (error is GraphQLError) {
+       return error.message;
+@@ -83,4 +83,4 @@ class GraphQLErrorHandler {
+     }
+     return error?.toString() ?? 'Unknown error occurred';
+   }
+-}
+\ No newline at end of file
++}

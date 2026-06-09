@@ -1,0 +1,288 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Merge pull request #37 from Hineven/master
+
+a0.5.1
+- Changed Files List: 
+public/changelog.md	+15	-0	after_lines=160
+src/assets/common.css	+12	-1	after_lines=27
+src/components/AbilityRewardPanel.vue	+24	-55	after_lines=228
+src/components/ActionPanel.vue	+25	-7	after_lines=140
+src/components/ActionPointsBar.vue	+26	-1	after_lines=120
+src/components/BreakthroughRewardPanel.vue	+3	-35	after_lines=66
+src/components/BurntSkillsIcon.vue	+112	-0	after_lines=112
+src/components/CardsDisplayOverlayPanel.vue	+118	-0	after_lines=118
+src/components/DeckIcon.vue	+19	-0	after_lines=137
+src/components/DeckOverlayPanel.vue	+0	-116	after_lines=0
+src/components/EffectIcon.vue	+3	-12	after_lines=117
+src/components/HurtAnimationWrapper.vue	+54	-106	after_lines=359
+src/components/ManaBar.vue	+26	-1	after_lines=120
+src/components/MoneyRewardPanel.vue	+4	-36	after_lines=60
+src/components/PlayerBasicStats.vue	+26	-1	after_lines=183
+src/components/PlayerStatusPanel.vue	+1	-1	after_lines=216
+src/components/RestControlPanel.vue	+42	-4	after_lines=93
+src/components/RestScreen.vue	+44	-93	after_lines=267
+src/components/ShopPanel.vue	+1	-33	after_lines=220
+src/components/SkillCard.vue	+18	-2	after_lines=228
+src/components/SkillRewardPanel.vue	+12	-44	after_lines=96
+src/components/SkillsHand.vue	+1	-0	after_lines=393
+src/data/animationInstructionHelpers.js	+42	-4	after_lines=503
+src/data/battle.js	+4	-2	after_lines=432
+src/data/battleUtils.js	+26	-5	after_lines=239
+src/data/gameState.js	+3	-0	after_lines=77
+src/data/player.js	+4	-1	after_lines=178
+src/data/rest.js	+53	-2	after_lines=194
+src/data/skills/fireAssist.js	+4	-11	after_lines=565
+src/game.js	+5	-2	after_lines=113
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── BurntSkillsIcon.vue
+│   │   ├── CardsDisplayOverlayPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationInstructionHelpers.js
+│   │   ├── animationSequencer.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: public/changelog.md ---
+
+--- FILE: src/assets/common.css ---
+
+--- FILE: src/components/AbilityRewardPanel.vue ---
+
+--- FILE: src/components/ActionPanel.vue ---
+
+--- FILE: src/components/ActionPointsBar.vue ---
+
+--- FILE: src/components/BreakthroughRewardPanel.vue ---
+
+--- FILE: src/components/BurntSkillsIcon.vue ---
+
+--- FILE: src/components/CardsDisplayOverlayPanel.vue ---
+
+--- FILE: src/components/DeckIcon.vue ---
+
+--- FILE: src/components/DeckOverlayPanel.vue ---
+
+--- FILE: src/components/EffectIcon.vue ---
+
+--- FILE: src/components/HurtAnimationWrapper.vue ---
+
+--- FILE: src/components/ManaBar.vue ---
+
+--- FILE: src/components/MoneyRewardPanel.vue ---
+
+--- FILE: src/components/PlayerBasicStats.vue ---
+
+--- FILE: src/components/PlayerStatusPanel.vue ---
+
+--- FILE: src/components/RestControlPanel.vue ---
+
+--- FILE: src/components/RestScreen.vue ---
+
+--- FILE: src/components/ShopPanel.vue ---
+
+--- FILE: src/components/SkillCard.vue ---
+
+--- FILE: src/components/SkillRewardPanel.vue ---
+
+--- FILE: src/components/SkillsHand.vue ---
+
+--- FILE: src/data/animationInstructionHelpers.js ---
+
+--- FILE: src/data/battle.js ---
+
+--- FILE: src/data/battleUtils.js ---
+
+--- FILE: src/data/gameState.js ---
+
+--- FILE: src/data/player.js ---
+
+--- FILE: src/data/rest.js ---
+
+--- FILE: src/data/skills/fireAssist.js ---
+
+--- FILE: src/game.js ---
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

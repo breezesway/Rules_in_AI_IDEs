@@ -1,0 +1,1439 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/unit-tests.mdc
+- Change Type: added
+- Target Rule Content:
+This project uses pytest for unit testing.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Python dependency configuration files (e.g., requirements.txt, pyproject.toml, setup.py), and test source code files (e.g., test_*.py, *_test.py).
+- Suggested Logic: 1. Search for 'pytest' in dependency files like 'requirements.txt', 'pyproject.toml', or 'setup.py'. 2. Check for the existence of 'conftest.py' files. 3. Scan Python test files for 'import pytest' statements or pytest-specific decorators such as '@pytest.mark.parametrize' or '@pytest.fixture'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: First semi working version of random quizzes
+- Changed Files List: 
+src/app/app.py	+177	-32	after_lines=265
+src/app/game/game_config.py	+7	-1	after_lines=107
+src/data/equation_difficulties.json	+86	-0	after_lines=86
+src/data/quizzes.json	+10	-10	after_lines=107
+src/static/css/style.css	+118	-58	after_lines=553
+src/templates/new_exercise.html	+11	-5	after_lines=25
+src/templates/quiz.html	+370	-125	after_lines=410
+
+- Project Directory Tree (Snapshot after commit):
+├── .cloudbuild
+│   └── infrastructure.yaml
+├── .cursor
+│   └── rules
+│       └── unit-tests.mdc
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── README.MD
+├── cloudbuild.yaml
+├── docker-compose.debug.yml
+├── docker-compose.yml
+├── infrastructure
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── pytest.ini
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── equations
+│   │   │   ├── __init__.py
+│   │   │   ├── equations_generator.py
+│   │   │   └── equations_tests.py
+│   │   └── game
+│   │       ├── __init__.py
+│   │       ├── game_config.py
+│   │       ├── game_manager.py
+│   │       ├── quiz_engine.py
+│   │       └── session_manager.py
+│   ├── data
+│   │   ├── equation_difficulties.json
+│   │   └── quizzes.json
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── images
+│   │       ├── bulbasaur.png
+│   │       ├── charmander.png
+│   │       ├── favicon.svg
+│   │       ├── mew.png
+│   │       ├── pikachu.png
+│   │       ├── pokeball-1.gif
+│   │       ├── psyduck_wonder.gif
+│   │       └── squirtle.png
+│   └── templates
+│       ├── all_exercises.html
+│       ├── base.html
+│       ├── index.html
+│       ├── new_exercise.html
+│       ├── profile.html
+│       └── quiz.html
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── data
+    │   └── quizzes.json
+    └── unit
+        ├── __init__.py
+        ├── test_equations_generator.py
+        ├── test_game_manager.py
+        ├── test_quiz_data.py
+        ├── test_quiz_engine.py
+        └── test_session_manager.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/app.py ---
+diff --git a/src/app/app.py b/src/app/app.py
+index d9a5e69..d020365 100644
+--- a/src/app/app.py
++++ b/src/app/app.py
+@@ -1,38 +1,53 @@
+-from flask import Flask, render_template, request, redirect, url_for, jsonify
++from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+ from pathlib import Path
+-from src.app.game.game_config import load_game_config
++from src.app.game.game_config import load_game_config, load_equation_difficulties
+ from src.app.game.game_manager import GameManager
++from src.app.equations.equations_generator import MathEquationGenerator
+ import os
++import uuid
++import random
+ 
+ # Create Flask app with correct template and static folders
+-app = Flask(__name__, 
++app = Flask(__name__,
+             template_folder=str(Path(__file__).parent.parent / 'templates'),
+             static_folder=str(Path(__file__).parent.parent / 'static'))
+ app.secret_key = 'your-secret-key-here'  # Required for session management
+ 
+ # Load quiz data at startup - this is shared across all sessions
+ # and doesn't need to be stored in each user's session
+-QUIZ_DATA = load_game_config(Path(__file__).parent.parent / 'data' / 'quizzes.json')
++GAME_CONFIG = load_game_config(Path(__file__).parent.parent / 'data' / 'quizzes.json')
++
++EQUATION_DIFFICULTIES = load_equation_difficulties(Path(__file__).parent.parent / 'data' / 'equation_difficulties.json')
++
++# Create equation generator
++EQUATION_GENERATOR = MathEquationGenerator()
++
++# Get Pokemon images from the game configuration
++POKEMON_IMAGES = [pokemon.image_path for pokemon in GAME_CONFIG.pokemons.values()]
++
+ 
+ def get_version_info():
+     return {
+         'version': os.environ.get('COMMIT_SHA', 'development')
+     }
+ 
++
+ def get_quiz_session() -> GameManager:
+     """
+     Get a GameManager instance with session data loaded from Flask session.
+     """
+     # We don't provide a session_manager here, so it will be loaded from Flask session
+-    return GameManager.start_session(QUIZ_DATA)
++    return GameManager.start_session(GAME_CONFIG)
++
+ 
+ @app.route('/')
+ def index():
+     """
+     Display the home page with welcome message.
+     """
+-    return render_template('index.html', 
+-                         version_info=get_version_info())
++    return render_template('index.html',
++                           version_info=get_version_info())
++
+ 
+ @app.route('/exercises')
+ def all_exercises():
+@@ -40,10 +55,11 @@ def all_exercises():
+     Display all available exercises.
+     """
+     quiz_session = get_quiz_session()
+-    return render_template('all_exercises.html', 
+-                         sections=QUIZ_DATA.sections,
+-                         solved_quizzes=quiz_session.solved_quizzes,
+-                         version_info=get_version_info())
++    return render_template('all_exercises.html',
++                           sections=GAME_CONFIG.sections,
++                           solved_quizzes=quiz_session.solved_quizzes,
++                           version_info=get_version_info())
++
+ 
+ @app.route('/profile')
+ def profile():
+@@ -54,58 +70,186 @@ def profile():
+     solved_count = len(quiz_session.solved_quizzes)
+     # Each solved quiz is worth 1 point
+     points = solved_count
+-    
++
+     return render_template('profile.html',
+-                          points=points,
+-                          solved_count=solved_count,
+-                          version_info=get_version_info())
++                           points=points,
++                           solved_count=solved_count,
++                           version_info=get_version_info())
++
+ 
+ @app.route('/new-exercise')
+ def new_exercise():
+     """
+-    Placeholder for future random exercise generation feature.
++    Display difficulty selection screen for random exercise generation.
+     """
+     return render_template('new_exercise.html',
+-                          version_info=get_version_info())
++                           difficulties=EQUATION_DIFFICULTIES,
++                           version_info=get_version_info())
++
++
++@app.route('/generate-random-exercise/<difficulty_id>')
++def generate_random_exercise(difficulty_id):
++    """
++    Generate a random equation based on the selected difficulty.
++    """
++    # Find the selected difficulty
++    selected_difficulty = next((d for d in EQUATION_DIFFICULTIES if d['id'] == difficulty_id), None)
++
++    if not selected_difficulty:
++        return "Difficulty not found", 404
++
++    # Generate a random equation using the MathEquationGenerator
++    quiz = EQUATION_GENERATOR.generate_quiz(**selected_difficulty['params'])
++
++    # Store the generated quiz in the session
++    random_quiz_id = f"random_{uuid.uuid4().hex[:8]}"
++
++    if 'random_quizzes' not in session:
++        session['random_quizzes'] = {}
++
++    # Create Pokemon variable mappings for the random variables
++    pokemon_vars = {}
++    available_pokemon_images = {name: pokemon.image_path for name, pokemon in GAME_CONFIG.pokemons.items()}
++
++    for var in quiz.solution.human_readable.keys():
++        # Select a random Pokemon image from the game configuration
++        random_pokemon_name = random.choice(list(available_pokemon_images.keys()))
++        pokemon_vars[var] = available_pokemon_images[random_pokemon_name]
++
++    # Format equations to ensure consistent variable format
++    formatted_equations = []
++    for eq in quiz.equations:
++        formatted_eq = eq.formatted
++        formatted_equations.append(formatted_eq)
++
++    # Store the equations and solution in the session
++    session['random_quizzes'][random_quiz_id] = {
++        'equations': formatted_equations,
++        'solution': {var: str(val) for var, val in quiz.solution.human_readable.items()},
++        'difficulty': selected_difficulty,
++        'pokemon_vars': pokemon_vars
++    }
++    session.modified = True
++
++    # Redirect to the quiz page
++    return redirect(url_for('random_quiz', quiz_id=random_quiz_id))
++
++
++@app.route('/random-quiz/<quiz_id>', methods=['GET', 'POST'])
++def random_quiz(quiz_id):
++    """
++    Display a randomly generated quiz.
++    """
++    # Get the stored quiz from the session
++    if 'random_quizzes' not in session or quiz_id not in session['random_quizzes']:
++        return "Quiz not found", 404
++
++    stored_quiz = session['random_quizzes'][quiz_id]
++
++    if request.method == 'POST':
++        # Filter out empty inputs
++        user_answers = {
++            key: int(value)
++            for key, value in request.form.items()
++            if value.strip() and key in stored_quiz['solution']  # Only include non-empty values for solution variables
++        }
++
++        # Check the answers
++        correct_answers = {}
++        all_correct = True
++        all_answered = len(user_answers) == len(stored_quiz['solution'])
++
++        for var, expected in stored_quiz['solution'].items():
++            if var in user_answers:
++                is_correct = user_answers[var] == int(float(expected))
++                correct_answers[var] = is_correct
++                if not is_correct:
++                    all_correct = False
++            else:
++                all_answered = False
++
++        # Count correct answers
++        correct_count = sum(1 for is_correct in correct_answers.values() if is_correct)
++        total_count = len(stored_quiz['solution'])
++
++        result = {
++            'correct': all_correct and all_answered,
++            'correct_answers': correct_answers,
++            'all_answered': all_answered,
++            'correct_count': correct_count,
++            'total_count': total_count
++        }
++
++        # If it's an AJAX request, return JSON
++        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
++            return jsonify(result)
++
++        # For regular form submissions (fallback)
++        return render_template('quiz.html',
++                               is_random=True,
++                               quiz_id=quiz_id,
++                               equations=stored_quiz['equations'],
++                               solution=stored_quiz['solution'],
++                               difficulty=stored_quiz['difficulty'],
++                               pokemon_vars=stored_quiz['pokemon_vars'],
++                               result=result,
++                               user_answers=user_answers,
++                               version_info=get_version_info())
++
++    # GET request - just display the quiz
++    return render_template('quiz.html',
++                           is_random=True,
++                           quiz_id=quiz_id,
++                           equations=stored_quiz['equations'],
++                           solution=stored_quiz['solution'],
++                           difficulty=stored_quiz['difficulty'],
++                           pokemon_vars=stored_quiz['pokemon_vars'],
++                           result=None,
++                           user_answers={},
++                           version_info=get_version_info())
++
+ 
+ @app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
+ def quiz(quiz_id):
+     quiz_session = get_quiz_session()
+     quiz_state = quiz_session.get_quiz_state(quiz_id)
+-    
++
+     if not quiz_state:
+         return "Quiz not found", 404
+ 
+     if request.method == 'POST':
+         # Filter out empty inputs
+         user_answers = {
+-            key: int(value) 
++            key: int(value)
+             for key, value in request.form.items()
+             if value.strip()  # Only include non-empty values
+         }
+-        
++
+         result = quiz_session.check_answers(quiz_id, user_answers)
+         # Save the updated session state
+         quiz_session.save_session()
+-        
++
+         # If it's an AJAX request, return JSON
+         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+             return jsonify(result)
+-            
++
+         # For regular form submissions (fallback)
+         return render_template('quiz.html',
+-                             quiz=quiz_state['quiz'],
+-                             pokemon_vars=quiz_state['pokemon_vars'],
+-                             result=result,
+-                             user_answers=user_answers,
+-                             version_info=get_version_info())
++                               is_random=False,
++                               quiz=quiz_state['quiz'],
++                               pokemon_vars=quiz_state['pokemon_vars'],
++                               result=result,
++                               user_answers=user_answers,
++                               version_info=get_version_info())
+ 
+     return render_template('quiz.html',
+-                         quiz=quiz_state['quiz'],
+-                         pokemon_vars=quiz_state['pokemon_vars'],
+-                         result=None,
+-                         user_answers={},
+-                         version_info=get_version_info())
++                           is_random=False,
++                           quiz=quiz_state['quiz'],
++                           pokemon_vars=quiz_state['pokemon_vars'],
++                           result=None,
++                           user_answers={},
++                           version_info=get_version_info())
++
+ 
+ @app.route('/reset_progress', methods=['POST'])
+ def reset_progress():
+@@ -115,6 +259,7 @@ def reset_progress():
+     quiz_session.save_session()
+     return redirect(url_for('index'))
+ 
++
+ if __name__ == '__main__':
+     # For local development
+     app.run(debug=True, host='0.0.0.0')
+
+--- FILE: src/app/game/game_config.py ---
+diff --git a/src/app/game/game_config.py b/src/app/game/game_config.py
+index 93ae4e7..eb5e0ab 100644
+--- a/src/app/game/game_config.py
++++ b/src/app/game/game_config.py
+@@ -98,4 +98,10 @@ def load_game_config(data_file: Path) -> GameConfig:
+         pokemons=pokemons,
+         sections=sections,
+         quizzes_by_id=quizzes_by_id
+-    ) 
+\ No newline at end of file
++    )
++
++
++def load_equation_difficulties(file_path):
++    with open(file_path) as f:
++        difficulties = json.load(f)
++    return difficulties
+
+--- FILE: src/data/equation_difficulties.json ---
+diff --git a/src/data/equation_difficulties.json b/src/data/equation_difficulties.json
+new file mode 100644
+index 0000000..9cf2f76
+--- /dev/null
++++ b/src/data/equation_difficulties.json
+@@ -0,0 +1,86 @@
++[
++  {
++    "id": "grade_1_2_easy",
++    "name": "Very Simple (Grade 1-2)",
++    "difficulty": 1,
++    "params": {
++      "num_unknowns": 1,
++      "num_equations": 1,
++      "max_elements": 1,
++      "very_simple": true,
++      "ensure_operation": false
++    }
++  },
++  {
++    "id": "grade_1_2_medium",
++    "name": "Very Simple 2 (Grade 1-2)",
++    "difficulty": 2,
++    "params": {
++      "num_unknowns": 1,
++      "num_equations": 1,
++      "max_elements": 2,
++      "very_simple": true,
++      "ensure_operation": true
++    }
++  },
++  {
++    "id": "grade_1_2_hard",
++    "name": "Very Simple 3 (Grade 1-2)",
++    "difficulty": 3,
++    "params": {
++      "num_unknowns": 1,
++      "num_equations": 2,
++      "max_elements": 2,
++      "very_simple": true,
++      "ensure_operation": true
++    }
++  },
++  {
++    "id": "grade_1_2_expert",
++    "name": "Very Simple 4 (Grade 1-2)",
++    "difficulty": 4,
++    "params": {
++      "num_unknowns": 1,
++      "num_equations": 2,
++      "max_elements": 3,
++      "very_simple": true,
++      "ensure_operation": true
++    }
++  },
++  {
++    "id": "grade_3_4_easy",
++    "name": "Basic (Grade 3-4)",
++    "difficulty": 5,
++    "params": {
++      "num_unknowns": 2,
++      "num_equations": 3,
++      "max_elements": 3,
++      "very_simple": true,
++      "ensure_operation": true
++    }
++  },
++  {
++    "id": "grade_3_4_medium",
++    "name": "Basic 2 (Grade 3-4)",
++    "difficulty": 6,
++    "params": {
++      "num_unknowns": 2,
++      "num_equations": 3,
++      "max_elements": 3,
++      "very_simple": false,
++      "ensure_operation": true
++    }
++  },
++  {
++    "id": "grade_3_4_hard",
++    "name": "Intermediate (Grade 3-4)",
++    "difficulty": 7,
++    "params": {
++      "num_unknowns": 2,
++      "num_equations": 2,
++      "max_elements": 3,
++      "very_simple": false,
++      "ensure_operation": true
++    }
++  }
++] 
+\ No newline at end of file
+
+--- FILE: src/data/quizzes.json ---
+diff --git a/src/data/quizzes.json b/src/data/quizzes.json
+index 8f4bb0f..f350210 100644
+--- a/src/data/quizzes.json
++++ b/src/data/quizzes.json
+@@ -17,7 +17,7 @@
+             "title": "Simple Addition with One Unknown",
+             "description": "Solve for the unknown variable.",
+             "equations": [
+-              "3 + {pikachu} = 7"
++              "3 + pikachu = 7"
+             ],
+             "answer": {
+               "pikachu": 4
+@@ -28,7 +28,7 @@
+             "title": "Simple Subtraction with One Unknown",
+             "description": "Find the missing number.",
+             "equations": [
+-              "10 - {bulbasaur} = 4"
++              "10 - bulbasaur = 4"
+             ],
+             "answer": {
+               "bulbasaur": 6
+@@ -39,8 +39,8 @@
+             "title": "Repeated Addition with Two Unknowns",
+             "description": "Solve for the unknowns using repeated addition instead of multiplication.",
+             "equations": [
+-              "{pikachu} + {pikachu} = 4",  
+-              "{pikachu} + {pikachu} + {bulbasaur} = 10"
++              "pikachu + pikachu = 4",  
++              "pikachu + pikachu + bulbasaur = 10"
+             ],
+             "answer": {
+               "pikachu": 2,
+@@ -59,7 +59,7 @@
+             "title": "Simple Addition with One Unknown (Variant)", 
+             "description": "Solve the addition equation.",
+             "equations": [
+-              "5 + {charmander} = 12"
++              "5 + charmander = 12"
+             ],
+             "answer": {
+               "charmander": 7
+@@ -70,8 +70,8 @@
+             "title": "Multi-Step Problem",
+             "description": "Solve this two-step problem using multiple Pokemon variables.",
+             "equations": [
+-              "{pikachu} + {bulbasaur} = 10",
+-              "{bulbasaur} - {charmander} = 2"
++              "pikachu + bulbasaur = 10",
++              "bulbasaur - charmander = 2"
+             ],
+             "answer": {
+               "pikachu": 6,
+@@ -91,9 +91,9 @@
+             "title": "Random Pokemon Variables",
+             "description": "Solve equations with randomly assigned Pokemon!",
+             "equations": [
+-              "{x} + {y} = 10",
+-              "{y} - {z} = 3",
+-              "{x} + {z} = 7"
++              "x + y = 10",
++              "y - z = 3",
++              "x + z = 7"
+             ],
+             "answer": {
+               "x": 5,
+
+--- FILE: src/static/css/style.css ---
+diff --git a/src/static/css/style.css b/src/static/css/style.css
+index 3a5e9c2..d67ff87 100644
+--- a/src/static/css/style.css
++++ b/src/static/css/style.css
+@@ -102,10 +102,36 @@ header h1 {
+     margin-top: var(--spacing-lg);
+ }
+ 
+-.button-green {
+-    background-color: var(--pokemon-green);
++/* Button Styling */
++.button-base {
++    display: inline-block;
++    padding: 0.8rem 2rem;
++    border-radius: var(--border-radius-pill);
++    font-size: 1.2rem;
++    font-family: inherit;
++    font-weight: 500;
++    text-decoration: none;
++    text-align: center;
++    transition: all 0.3s ease;
++    box-shadow: var(--shadow-md);
++    color: white;
++    border: none;
++    cursor: pointer;
++    min-width: 160px;
++    line-height: 1.5;
++}
++
++.button-base:hover {
++    transform: scale(1.05);
++    box-shadow: var(--shadow-lg);
+ }
+ 
++.button-blue { background-color: var(--pokemon-blue); }
++.button-dark { background-color: var(--pokemon-dark); }
++.button-red { background-color: var(--pokemon-red); }
++.button-green { background-color: var(--pokemon-green); }
++.button-yellow { background-color: var(--pokemon-yellow); }
++
+ /* Profile Page */
+ .profile-container {
+     max-width: 800px;
+@@ -171,6 +197,31 @@ header h1 {
+     margin-bottom: var(--spacing-md);
+ }
+ 
++/* Difficulty Selection Styles */
++.difficulty-selection {
++    margin: var(--spacing-lg) 0;
++    padding: var(--spacing-lg);
++    background-color: #f5f5f5;
++    border-radius: var(--border-radius-lg);
++    text-align: center;
++}
++
++.difficulty-buttons {
++    display: flex;
++    flex-wrap: wrap;
++    justify-content: center;
++    gap: var(--spacing-md);
++    margin-top: var(--spacing-lg);
++}
++
++.difficulty-tag {
++    background-color: var(--pokemon-green);
++    color: white;
++    padding: var(--spacing-sm) var(--spacing-md);
++    border-radius: var(--border-radius-lg);
++    font-weight: bold;
++}
++
+ /* Quiz Components */
+ .quiz-section {
+     margin-bottom: var(--spacing-xl);
+@@ -210,47 +261,56 @@ header h1 {
+ }
+ 
+ /* Quiz Content */
+-.quiz-content {
++.quiz-content, .quiz-container {
+     max-width: 800px;
+     margin: 0 auto;
+ }
+ 
+-.equations-section {
+-    margin-bottom: var(--spacing-xl);
+-}
+-
+-.equation-content {
+-    font-size: 1.2em;
+-    margin: var(--spacing-sm) 0;
++.quiz-header {
++    display: flex;
++    justify-content: space-between;
++    align-items: center;
++    margin-bottom: var(--spacing-lg);
+ }
+ 
+-.equation {
++.equations-section, .equations-container {
+     background-color: white;
+     padding: var(--spacing-lg);
+     border-radius: var(--border-radius-lg);
+-    margin: var(--spacing-md) 0;
++    margin-bottom: var(--spacing-lg);
+     box-shadow: var(--shadow-sm);
++}
++
++.equation-content, .equation {
+     font-size: 1.4rem;
++    margin: var(--spacing-sm) 0;
++    font-family: monospace;
+ }
+ 
+-.answers-section {
++.answers-section, .solution-container {
+     background-color: white;
+-    padding: var(--spacing-xl);
++    padding: var(--spacing-lg);
+     border-radius: var(--border-radius-lg);
+     box-shadow: var(--shadow-sm);
+-    margin-bottom: var(--spacing-xl);
++    margin-bottom: var(--spacing-lg);
+ }
+ 
+-.answer-group {
++.answer-group, .input-group {
+     display: flex;
+-    align-items: center;
+-    gap: var(--spacing-md);
++    flex-direction: column;
+     margin-bottom: var(--spacing-md);
+ }
+ 
+-.answer-input {
++.answer-inputs {
+     display: flex;
+-    align-items: center;
++    flex-wrap: wrap;
++    gap: var(--spacing-md);
++}
++
++.button-container {
++    display: flex;
++    gap: var(--spacing-md);
++    margin-top: var(--spacing-lg);
+ }
+ 
+ /* Form Elements */
+@@ -270,34 +330,16 @@ input[type="number"]::-webkit-inner-spin-button {
+     margin: 0;
+ }
+ 
+-/* Button Styling */
+-.button-base {
+-    display: inline-block;
+-    padding: 0.8rem 2rem;
+-    border-radius: var(--border-radius-pill);
+-    font-size: 1.2rem;
+-    font-family: inherit;
+-    font-weight: 500;
+-    text-decoration: none;
+-    text-align: center;
+-    transition: all 0.3s ease;
+-    box-shadow: var(--shadow-md);
+-    color: white;
+-    border: none;
+-    cursor: pointer;
+-    min-width: 160px;
+-    line-height: 1.5;
++input.correct {
++    border-color: var(--pokemon-green);
++    background-color: rgba(76, 175, 80, 0.1);
+ }
+ 
+-.button-base:hover {
+-    transform: scale(1.05);
+-    box-shadow: var(--shadow-lg);
++input.incorrect {
++    border-color: var(--pokemon-red);
++    background-color: rgba(244, 67, 54, 0.1);
+ }
+ 
+-.button-blue { background-color: var(--pokemon-blue); }
+-.button-dark { background-color: var(--pokemon-dark); }
+-.button-red { background-color: var(--pokemon-red); }
+-
+ .quiz-controls {
+     margin: var(--spacing-xl) 0;
+     display: flex;
+@@ -307,26 +349,40 @@ input[type="number"]::-webkit-inner-spin-button {
+ }
+ 
+ /* Result Messages */
+-.result-correct, .result-incorrect, .result-partial {
+-    color: white;
++.result-container, .result-correct, .result-incorrect, .result-partial {
++    margin-top: var(--spacing-lg);
+     padding: var(--spacing-md);
+     border-radius: var(--border-radius-lg);
+     text-align: center;
+-    margin-top: var(--spacing-xl);
+     font-size: 1.4rem;
+ }
+ 
+-.result-correct {
+-    background-color: var(--pokemon-success);
++.result-correct, .result-container.correct {
++    background-color: rgba(76, 175, 80, 0.1);
++    border: 1px solid var(--pokemon-green);
++    color: var(--pokemon-dark);
+ }
+ 
+-.result-incorrect {
+-    background-color: var(--pokemon-red);
++.result-incorrect, .result-container.incorrect {
++    background-color: rgba(244, 67, 54, 0.1);
++    border: 1px solid var(--pokemon-red);
++    color: var(--pokemon-dark);
+ }
+ 
+ .result-partial {
+-    background-color: var(--pokemon-yellow);
+-    color: var(--pokemon-dark); /* Dark text for better contrast on yellow */
++    background-color: rgba(255, 215, 51, 0.1);
++    border: 1px solid var(--pokemon-yellow);
++    color: var(--pokemon-dark);
++}
++
++.score {
++    font-size: 1.5rem;
++    margin: var(--spacing-sm) 0;
++    font-weight: bold;
++}
++
++.congratulations {
++    margin-top: var(--spacing-md);
+ }
+ 
+ /* Pokemon Images */
+@@ -403,17 +459,17 @@ input[type="number"]::-webkit-inner-spin-button {
+         min-width: 140px;
+     }
+ 
+-    .quiz-controls {
++    .quiz-controls, .button-container {
+         flex-direction: column;
+         gap: var(--spacing-sm);
+         width: 100%;
+     }
+ 
+-    .quiz-controls .button-base {
++    .quiz-controls .button-base, .button-container .button-base {
+         width: 100%;
+     }
+ 
+-    .result-correct, .result-incorrect, .result-partial {
++    .result-correct, .result-incorrect, .result-partial, .result-container {
+         font-size: 1.2rem;
+         padding: var(--spacing-sm);
+     }
+@@ -427,6 +483,10 @@ input[type="number"]::-webkit-inner-spin-button {
+         flex-direction: column;
+         gap: var(--spacing-md);
+     }
++    
++    .difficulty-buttons {
++        flex-direction: column;
++    }
+ }
+ 
+ @media (max-width: 480px) {
+@@ -438,7 +498,7 @@ input[type="number"]::-webkit-inner-spin-button {
+         font-size: 1.1rem;
+     }
+ 
+-    .answers-section {
++    .answers-section, .solution-container {
+         padding: var(--spacing-md);
+     }
+ 
+@@ -490,4 +550,4 @@ footer {
+ 
+ .version-info {
+     color: #666;
+-} 
+\ No newline at end of file
++}
+
+--- FILE: src/templates/new_exercise.html ---
+diff --git a/src/templates/new_exercise.html b/src/templates/new_exercise.html
+index 22db5d2..3cb94d1 100644
+--- a/src/templates/new_exercise.html
++++ b/src/templates/new_exercise.html
+@@ -5,11 +5,17 @@
+   <div class="new-exercise-container">
+     <h2>New Random Exercise</h2>
+     
+-    <div class="coming-soon">
+-      <img src="{{ url_for('static', filename='images/pokeball-1.gif') }}" alt="Pokeball" class="pokeball-gif">
+-      <h3>Coming Soon!</h3>
+-      <p>Our Pokemon trainers are working hard to create random exercises for you!</p>
+-      <p>This feature will be available in a future update. Check back soon!</p>
++    <div class="difficulty-selection">
++      <h3>Select Difficulty Level</h3>
++      <p>Choose a difficulty level to generate a random math exercise:</p>
++      
++      <div class="difficulty-buttons">
++        {% for difficulty in difficulties %}
++          <a href="{{ url_for('generate_random_exercise', difficulty_id=difficulty.id) }}" class="button-base button-{{ 'green' if difficulty.difficulty < 3 else 'yellow' if difficulty.difficulty < 6 else 'red' }}">
++            {{ difficulty.name }}
++          </a>
++        {% endfor %}
++      </div>
+     </div>
+     
+     <div class="action-buttons">
+
+--- FILE: src/templates/quiz.html ---
+diff --git a/src/templates/quiz.html b/src/templates/quiz.html
+index 010e480..0fae27a 100644
+--- a/src/templates/quiz.html
++++ b/src/templates/quiz.html
+@@ -1,165 +1,410 @@
+ {% extends "base.html" %}
++{% block title %}{% if is_random %}Random Exercise{% else %}{{ quiz.title }}{% endif %} - Pokemath!{% endblock %}
++
+ {% block content %}
+   <!-- Debug info (hidden) -->
+-  <div class="debug-info">
+-    <p>Quiz: {{ quiz }}</p>
+-    <p>Pokemon vars: {{ pokemon_vars }}</p>
++  <div class="debug-info" style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; display: block;">
++    <h4>Debug Information</h4>
++    {% if is_random %}
++      <p>Random Quiz ID: {{ quiz_id }}</p>
++      <p>Difficulty: {{ difficulty.name }}</p>
++      <p>Equations (raw): {{ equations }}</p>
++      <p>Pokemon Variables: {{ pokemon_vars }}</p>
++      <p>Solution: {{ solution }}</p>
++      
++      <h5>Equation Replacement Debug:</h5>
++      {% for equation in equations %}
++        <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px;">
++          <p>Original equation: {{ equation }}</p>
++          <p>After replacement:</p>
++          {% set ns = namespace(equation=equation) %}
++          {% for var, image_file in pokemon_vars.items() %}
++            <p>Checking for variable: {{ var }}</p>
++            <!-- Try both direct variable name and {var} format -->
++            {% if var in ns.equation %}
++              <p>✅ Found direct match for {{ var }}</p>
++              {% set ns.equation = ns.equation | replace(var, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
++            {% else %}
++              {% set placeholder = "{" ~ var ~ "}" %}
++              {% if placeholder in ns.equation %}
++                <p>✅ Found placeholder match for {{ placeholder }}</p>
++                {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
++              {% else %}
++                <p>❌ Variable {{ var }} not found in equation (tried both {{ var }} and {{ placeholder }})</p>
++              {% endif %}
++            {% endif %}
++          {% endfor %}
++          <p>Final equation: {{ ns.equation | safe }}</p>
++        </div>
++      {% endfor %}
++    {% else %}
++      <p>Quiz: {{ quiz }}</p>
++      <p>Pokemon vars: {{ pokemon_vars }}</p>
++    {% endif %}
+   </div>
+ 
+   <article class="quiz-content">
+-    <h2>{{ quiz.title }}</h2>
+-    <p>{{ quiz.description }}</p>
++    {% if is_random %}
++      <div class="quiz-header">
++        <h2>Random Exercise</h2>
++        <div class="difficulty-tag">{{ difficulty.name }}</div>
++      </div>
++    {% else %}
++      <h2>{{ quiz.title }}</h2>
++      <p>{{ quiz.description }}</p>
++    {% endif %}
+ 
+-    <form id="quizForm" method="POST">
++    <form id="quizForm" method="POST" action="{% if is_random %}{{ url_for('random_quiz', quiz_id=quiz_id) }}{% endif %}">
+       <div class="equations-section">
+-        {% for equation in quiz.equations %}
+-          {% set ns = namespace(equation=equation) %}
+-          {% for pokemon_name, image_file in pokemon_vars.items() %}
+-            {% set placeholder = "{" ~ pokemon_name ~ "}" %}
+-            {% if placeholder in ns.equation %}
+-              {% set ns.equation = ns.equation | replace(
+-                placeholder,
+-                '<img src="/static/images/' ~ image_file ~ 
+-                '" class="pokemon-var" alt="' ~ pokemon_name ~ '">'
+-              ) %}
+-            {% endif %}
++        {% if is_random %}
++          {% for equation in equations %}
++            {% set ns = namespace(equation=equation) %}
++            {% for var, image_file in pokemon_vars.items() %}
++              <!-- Try both direct variable name and {var} format -->
++              {% if var in ns.equation %}
++                {% set ns.equation = ns.equation | replace(var, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
++              {% else %}
++                {% set placeholder = "{" ~ var ~ "}" %}
++                {% if placeholder in ns.equation %}
++                  {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ var ~ '">') %}
++                {% endif %}
++              {% endif %}
++            {% endfor %}
++            <div class="equation">
++              <div class="equation-content">{{ ns.equation | safe }}</div>
++            </div>
+           {% endfor %}
+-          <div class="equation">
+-            <div class="equation-content">{{ ns.equation | safe }}</div>
+-          </div>
+-        {% endfor %}
++        {% else %}
++          {% for equation in quiz.equations %}
++            {% set ns = namespace(equation=equation) %}
++            {% for pokemon_name, image_file in pokemon_vars.items() %}
++              <!-- Try both direct variable name and {var} format -->
++              {% if pokemon_name in ns.equation %}
++                {% set ns.equation = ns.equation | replace(pokemon_name, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ pokemon_name ~ '">') %}
++              {% else %}
++                {% set placeholder = "{" ~ pokemon_name ~ "}" %}
++                {% if placeholder in ns.equation %}
++                  {% set ns.equation = ns.equation | replace(placeholder, '<img src="/static/images/' ~ image_file ~ '" class="pokemon-var" alt="' ~ pokemon_name ~ '">') %}
++                {% endif %}
++              {% endif %}
++            {% endfor %}
++            <div class="equation">
++              <div class="equation-content">{{ ns.equation | safe }}</div>
++            </div>
++          {% endfor %}
++        {% endif %}
+       </div>
+ 
+       <div class="answers-section">
+         <h3>Your Answers</h3>
+-        {% for unknown, correct_value in quiz.answer.values.items() %}
+-          <div class="answer-group">
+-            <div class="answer-input">
+-              <label for="{{ unknown }}">
+-                <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}">
+-              </label>
+-              <span class="equals-sign">=</span>
+-              <input type="number" 
+-                     name="{{ unknown }}" 
+-                     id="{{ unknown }}" 
+-                     value="{{ user_answers[unknown] if unknown in user_answers else '' }}">
+-            </div>
+-            <div class="celebration-gif" id="celebration-{{ unknown }}">
+-              <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
+-            </div>
+-            <div class="incorrect-gif" id="incorrect-{{ unknown }}">
+-              <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
+-            </div>
++        {% if is_random %}
++          <div class="answer-inputs">
++            {% for var, _ in solution.items() %}
++              <div class="input-group">
++                <div class="answer-input">
++                  <label for="{{ var }}">
++                    <img src="/static/images/{{ pokemon_vars[var] }}" class="pokemon-var" alt="{{ var }}">
++                  </label>
++                  <span class="equals-sign">=</span>
++                  <input 
++                    type="number" 
++                    name="{{ var }}" 
++                    id="{{ var }}" 
++                    value="{{ user_answers[var] if var in user_answers else '' }}"
++                    {% if result and var in result.correct_answers %}
++                      class="{{ 'correct' if result.correct_answers[var] else 'incorrect' }}"
++                    {% endif %}
++                    required
++                  >
++                </div>
++                <div class="celebration-gif" id="celebration-{{ var }}" {% if result and var in result.correct_answers and result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
++                  <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
++                </div>
++                <div class="incorrect-gif" id="incorrect-{{ var }}" {% if result and var in result.correct_answers and not result.correct_answers[var] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
++                  <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
++                </div>
++              </div>
++            {% endfor %}
++          </div>
++        {% else %}
++          <div class="answer-inputs">
++            {% for unknown, correct_value in quiz.answer.values.items() %}
++              <div class="input-group">
++                <div class="answer-input">
++                  <label for="{{ unknown }}">
++                    <img src="/static/images/{{ pokemon_vars[unknown] }}" class="pokemon-var" alt="{{ unknown }}">
++                  </label>
++                  <span class="equals-sign">=</span>
++                  <input 
++                    type="number" 
++                    name="{{ unknown }}" 
++                    id="{{ unknown }}" 
++                    value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
++                    {% if result and unknown in result.correct_answers %}
++                      class="{{ 'correct' if result.correct_answers[unknown] else 'incorrect' }}"
++                    {% endif %}
++                    required
++                  >
++                </div>
++                <div class="celebration-gif" id="celebration-{{ unknown }}" {% if result and unknown in result.correct_answers and result.correct_answers[unknown] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
++                  <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
++                </div>
++                <div class="incorrect-gif" id="incorrect-{{ unknown }}" {% if result and unknown in result.correct_answers and not result.correct_answers[unknown] %}style="display: block;"{% else %}style="display: none;"{% endif %}>
++                  <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
++                </div>
++              </div>
++            {% endfor %}
+           </div>
+-        {% endfor %}
++        {% endif %}
+       </div>
+ 
+       <div class="quiz-controls">
+-        <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
+-        <button type="submit" id="submitBtn" class="button-base button-blue">Check Answers</button>
+-        {% if quiz.next_quiz_id %}
+-          <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz">Next Question →</a>
++        {% if is_random %}
++          <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Back to Difficulty Selection</a>
++          <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
++        {% else %}
++          <a href="{{ url_for('index') }}" class="button-base button-dark">Back to List</a>
++          <button type="submit" id="submitBtn" class="button-base button-green">Check Answers</button>
++          {% if quiz.next_quiz_id %}
++            <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue" id="nextQuiz" {% if not result or not result.correct %}style="display: none;"{% endif %}>Next Question →</a>
++          {% endif %}
+         {% endif %}
+       </div>
+     </form>
+ 
+-    <div id="quiz-results"></div>
++    {% if is_random and result %}
++      <div class="result-container {{ 'correct' if result.correct else 'incorrect' }}">
++        <h3>{{ "Correct!" if result.correct else "Not quite right..." }}</h3>
++        <div class="score">{{ result.correct_count }} / {{ result.total_count }} correct</div>
++        
++        {% if result.correct %}
++        <div class="congratulations">
++          <p>Congratulations! You solved the random equation!</p>
++          <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
++        </div>
++        {% endif %}
++      </div>
++    {% elif not is_random and result %}
++      <div class="result-container {{ 'correct' if result.correct else 'incorrect' }}">
++        <h3>{{ "Correct!" if result.correct else "Not quite right..." }}</h3>
++        <div class="score">{{ result.correct_count }} / {{ result.total_count }} correct</div>
++        
++        {% if result.correct %}
++        <div class="congratulations">
++          <p>Congratulations! You solved the equation!</p>
++          {% if quiz.next_quiz_id %}
++            <a href="{{ url_for('quiz', quiz_id=quiz.next_quiz_id) }}" class="button-base button-blue">Next Question →</a>
++          {% endif %}
++        </div>
++        {% endif %}
++      </div>
++    {% else %}
++      <div id="quiz-results"></div>
++    {% endif %}
+   </article>
+ 
++  {% if is_random %}
+   <script>
+-    document.getElementById('quizForm').addEventListener('submit', function(e) {
+-      e.preventDefault();
++    // Script for random quiz - make it use AJAX like the non-random quizzes
++    document.addEventListener('DOMContentLoaded', function() {
++      const form = document.getElementById('quizForm');
+       
+-      const formData = new FormData(this);
+-      fetch(window.location.pathname, {
+-        method: 'POST',
+-        headers: {
+-          'X-Requested-With': 'XMLHttpRequest'
+-        },
+-        body: formData
+-      })
+-      .then(response => response.json())
+-      .then(data => {
+-        const resultsDiv = document.getElementById('quiz-results');
+-        const nextButton = document.getElementById('nextQuiz');
+-        const submitButton = document.getElementById('submitBtn');
+-        
+-        // Hide all celebration and incorrect gifs first
+-        document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
+-          gif.style.display = 'none';
+-        });
++      form.addEventListener('submit', function(e) {
++        e.preventDefault();
+         
+-        // Show appropriate gifs for each answer
+-        Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
+-          // Only show gifs for answers that were provided
+-          if (formData.has(pokemon) && formData.get(pokemon).trim() !== '') {
+-            if (isCorrect) {
+-              // Show pokeball for correct answers
+-              const celebrationGif = document.getElementById(`celebration-${pokemon}`);
+-              if (celebrationGif) {
+-                celebrationGif.style.display = 'block';
+-              }
+-            } else {
+-              // Show psyduck for incorrect answers
+-              const incorrectGif = document.getElementById(`incorrect-${pokemon}`);
+-              if (incorrectGif) {
+-                incorrectGif.style.display = 'block';
++        const formData = new FormData(this);
++        fetch(window.location.pathname, {
++          method: 'POST',
++          headers: {
++            'X-Requested-With': 'XMLHttpRequest'
++          },
++          body: formData
++        })
++        .then(response => response.json())
++        .then(data => {
++          // Hide all celebration and incorrect gifs first
++          document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
++            gif.style.display = 'none';
++          });
++          
++          // Update input classes for correct/incorrect answers
++          Object.entries(data.correct_answers).forEach(([variable, isCorrect]) => {
++            const input = document.getElementById(variable);
++            if (input) {
++              input.className = isCorrect ? 'correct' : 'incorrect';
++            }
++            
++            // Only show gifs for answers that were provided
++            if (formData.has(variable) && formData.get(variable).trim() !== '') {
++              if (isCorrect) {
++                // Show pokeball for correct answers
++                const celebrationGif = document.getElementById(`celebration-${variable}`);
++                if (celebrationGif) {
++                  celebrationGif.style.display = 'block';
++                }
++              } else {
++                // Show psyduck for incorrect answers
++                const incorrectGif = document.getElementById(`incorrect-${variable}`);
++                if (incorrectGif) {
++                  incorrectGif.style.display = 'block';
++                }
+               }
+             }
++          });
++          
++          // Update the result container based on the result
++          const resultContainer = document.querySelector('.result-container');
++          if (resultContainer) {
++            resultContainer.className = `result-container ${data.correct ? 'correct' : 'incorrect'}`;
++            
++            const heading = resultContainer.querySelector('h3');
++            if (heading) {
++              heading.textContent = data.correct ? 'Correct!' : 'Not quite right...';
++            }
++            
++            const score = resultContainer.querySelector('.score');
++            if (score) {
++              score.textContent = `${data.correct_count} / ${data.total_count} correct`;
++            }
++            
++            const congratsDiv = resultContainer.querySelector('.congratulations');
++            if (congratsDiv) {
++              congratsDiv.style.display = data.correct ? 'block' : 'none';
++            }
++          } else {
++            // If result container doesn't exist yet, create it
++            const newResultContainer = document.createElement('div');
++            newResultContainer.className = `result-container ${data.correct ? 'correct' : 'incorrect'}`;
++            newResultContainer.innerHTML = `
++              <h3>${data.correct ? 'Correct!' : 'Not quite right...'}</h3>
++              <div class="score">${data.correct_count} / ${data.total_count} correct</div>
++              ${data.correct ? `
++                <div class="congratulations">
++                  <p>Congratulations! You solved the random equation!</p>
++                  <a href="{{ url_for('new_exercise') }}" class="button-base button-blue">Try Another Exercise</a>
++                </div>
++              ` : ''}
++            `;
++            
++            // Insert after the form
++            form.parentNode.insertBefore(newResultContainer, form.nextSibling);
+           }
++        })
++        .catch(error => {
++          console.error('Error:', error);
+         });
++      });
++    });
++  </script>
++  {% else %}
++  <script>
++    // Script for non-random quiz - uses AJAX form submission
++    document.addEventListener('DOMContentLoaded', function() {
++      const form = document.getElementById('quizForm');
++      
++      form.addEventListener('submit', function(e) {
++        e.preventDefault();
+         
+-        if (data.correct) {
+-          // All answers are correct and all questions were answered
+-          resultsDiv.innerHTML = `
+-            <div class="result-correct">
+-              <h3>All Correct!</h3>
+-              <p>Great job! You can move on to the next question.</p>
+-            </div>
+-          `;
+-          submitButton.style.display = 'none';
+-          if (nextButton) {
+-            nextButton.style.display = 'inline-block';
+-            nextButton.focus();
+-          }
+-        } else {
+-          // Not all correct or not all answered
+-          if (data.correct_count > 0) {
+-            // Some answers are correct
+-            resultsDiv.innerHTML = `
+-              <div class="result-partial">
+-                <h3>Making Progress!</h3>
+-                <p>You have ${data.correct_count} out of ${data.total_count} correct answers.</p>
+-                ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
+-              </div>
+-            `;
+-          } else if (!data.all_answered && data.correct_count === 0) {
+-            // No answers or all wrong
++        const formData = new FormData(this);
++        fetch(window.location.pathname, {
++          method: 'POST',
++          headers: {
++            'X-Requested-With': 'XMLHttpRequest'
++          },
++          body: formData
++        })
++        .then(response => response.json())
++        .then(data => {
++          const resultsDiv = document.getElementById('quiz-results');
++          const nextButton = document.getElementById('nextQuiz');
++          const submitButton = document.getElementById('submitBtn');
++          
++          // Hide all celebration and incorrect gifs first
++          document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
++            gif.style.display = 'none';
++          });
++          
++          // Update input classes for correct/incorrect answers
++          Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
++            const input = document.getElementById(pokemon);
++            if (input) {
++              input.className = isCorrect ? 'correct' : 'incorrect';
++            }
++            
++            // Only show gifs for answers that were provided
++            if (formData.has(pokemon) && formData.get(pokemon).trim() !== '') {
++              if (isCorrect) {
++                // Show pokeball for correct answers
++                const celebrationGif = document.getElementById(`celebration-${pokemon}`);
++                if (celebrationGif) {
++                  celebrationGif.style.display = 'block';
++                }
++              } else {
++                // Show psyduck for incorrect answers
++                const incorrectGif = document.getElementById(`incorrect-${pokemon}`);
++                if (incorrectGif) {
++                  incorrectGif.style.display = 'block';
++                }
++              }
++            }
++          });
++          
++          if (data.correct) {
++            // All answers are correct and all questions were answered
+             resultsDiv.innerHTML = `
+-              <div class="result-incorrect">
+-                <h3>Keep trying!</h3>
+-                <p>Fill in your answers and try again.</p>
++              <div class="result-container correct">
++                <h3>Correct!</h3>
++                <div class="score">${data.correct_count} / ${data.total_count} correct</div>
++                <div class="congratulations">
++                  <p>Congratulations! You solved the equation!</p>
++                </div>
+               </div>
+             `;
++            submitButton.style.display = 'none';
++            if (nextButton) {
++              nextButton.style.display = 'inline-block';
++              nextButton.focus();
++            }
+           } else {
+-            // All answered but all wrong
+-            resultsDiv.innerHTML = `
+-              <div class="result-incorrect">
+-                <h3>Keep trying!</h3>
+-                <p>None of your answers are correct yet.</p>
+-              </div>
+-            `;
+-          }
+-          
+-          submitButton.style.display = 'inline-block';
+-          if (nextButton) {
+-            nextButton.style.display = 'none';
++            // Not all correct or not all answered
++            if (data.correct_count > 0) {
++              // Some answers are correct
++              resultsDiv.innerHTML = `
++                <div class="result-container incorrect">
++                  <h3>Making Progress!</h3>
++                  <div class="score">${data.correct_count} / ${data.total_count} correct</div>
++                  ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
++                </div>
++              `;
++            } else if (!data.all_answered && data.correct_count === 0) {
++              // No answers or all wrong
++              resultsDiv.innerHTML = `
++                <div class="result-container incorrect">
++                  <h3>Keep trying!</h3>
++                  <p>Fill in your answers and try again.</p>
++                </div>
++              `;
++            } else {
++              // All answered but all wrong
++              resultsDiv.innerHTML = `
++                <div class="result-container incorrect">
++                  <h3>Keep trying!</h3>
++                  <p>None of your answers are correct yet.</p>
++                </div>
++              `;
++            }
++            
++            submitButton.style.display = 'inline-block';
++            if (nextButton) {
++              nextButton.style.display = 'none';
++            }
+           }
+-        }
+-      })
+-      .catch(error => {
+-        console.error('Error:', error);
++        })
++        .catch(error => {
++          console.error('Error:', error);
++        });
+       });
+     });
+   </script>
++  {% endif %}
+ {% endblock %}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,500 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-
+-youtube-notion-integration/
+-├── src/
+-│ └── youtube_notion/ # Main package
+-│ ├── __init__.py
+-│ ├── main.py # Application entry point
+-│ ├── config/ # Configuration and example data
+-│ │ ├── __init__.py
+-│ │ └── example_data.py
+-│ ├── notion_db/ # Notion database operations
+-│ │ ├── __init__.py
+-│ │ └── operations.py
+-│ └── utils/ # Utility modules
+-│ ├── __init__.py
+-│ └── markdown_converter.py
+-├── tests/ # Comprehensive test suite
+-├── youtube_notion_cli.py # Command-line entry point
+-├── pyproject.toml # Modern Python packaging
+-├── setup.py # Package setup
+-└── requirements.txt # Dependencies
+-
++
++youtube-notion-integration/
++├── src/youtube_notion/ # Main package (importable)
++│ ├── __init__.py
++│ ├── main.py # Application entry point
++│ ├── config/ # Configuration and example data
++│ │ ├── __init__.py
++│ │ └── example_data.py
++│ ├── notion_db/ # Notion database operations
++│ │ ├── __init__.py
++│ │ └── operations.py
++│ ├── processors/ # Video processing logic
++│ │ └── youtube_processor.py
++│ └── utils/ # Utility modules
++│ ├── __init__.py
++│ └── markdown_converter.py
++├── tests/ # Comprehensive test suite
++├── youtube_notion_cli.py # CLI entry point script
++├── run_tests.py # Test runner with path setup
++├── pyproject.toml # Modern Python packaging
++├── setup.py # Package setup
++└── requirements.txt # Dependencies
++
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and project root files.
+- Suggested Logic: Verify the existence of the following specific file paths: 'src/youtube_notion/processors/youtube_processor.py' and 'run_tests.py' in the project root. Additionally, ensure the structural integrity of the 'src/youtube_notion/' package including 'main.py', 'config/', 'notion_db/', and 'utils/' subdirectories as defined in the rule.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: timestamps
+- Changed Files List: 
+README.md	+3	-1	after_lines=232
+run_tests.py	+2	-1	after_lines=53
+src/utils/markdown_converter.py	+76	-19	after_lines=283
+tests/test_end_to_end_timestamps.py	+128	-0	after_lines=128
+tests/test_markdown_converter.py	+63	-0	after_lines=369
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── README.md
+├── config
+│   ├── __init__.py
+│   └── example_data.py
+├── main.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   ├── __init__.py
+│   ├── notion_db
+│   │   ├── __init__.py
+│   │   └── operations.py
+│   └── utils
+│       ├── __init__.py
+│       └── markdown_converter.py
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── test_end_to_end_timestamps.py
+    ├── test_integration.py
+    ├── test_markdown_converter.py
+    ├── test_notion_operations.py
+    └── test_timestamp_enrichment.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index d4fa0f9..226d7be 100644
+--- a/README.md
++++ b/README.md
+@@ -10,7 +10,7 @@ A Python application that automatically adds YouTube video summaries to a Notion
+ - 📝 **Markdown to Notion**: Converts markdown summaries to Notion's rich text format
+ - 🎨 **Rich Formatting**: Supports headers, bullet points, numbered lists, bold, and italic text
+ - 🖼️ **Cover Images**: Automatically adds video thumbnails as page covers
+-- 🧪 **Comprehensive Testing**: 40+ unit tests ensuring reliable functionality
++- 🧪 **Comprehensive Testing**: 50+ unit tests ensuring reliable functionality
+ - 📁 **Professional Structure**: Organized, maintainable codebase following Python best practices
+ 
+ ## Project Structure
+@@ -152,6 +152,7 @@ The application automatically detects and enhances timestamps in your markdown c
+ 2. **Parsing**: Converts time to seconds (supports MM:SS and HH:MM:SS)
+ 3. **Linking**: Creates YouTube URLs with `&t=XXXs` parameter
+ 4. **Integration**: Works with both standard and short YouTube URLs
++5. **Rich Text**: Timestamps become clickable links in all contexts (headers, paragraphs, lists)
+ 
+ ### Example
+ ```markdown
+@@ -188,6 +189,7 @@ The markdown converter supports:
+   - H3+ (`###`, `####`, etc.) → Notion Heading 3 (Notion only supports 3 levels)
+ - **Lists**: `- item` and `1. item` → Notion list blocks
+ - **Formatting**: `**bold**` and `*italic*` → Notion rich text
++- **Links**: `[text](url)` → Clickable Notion links (supports formatting within links)
+ - **Timestamps**: `[8:05]`, `[8:05-8:24]`, `[0:01-0:07, 0:56-1:21]` → Clickable YouTube timestamp links
+ - **Paragraphs**: Regular text → Notion paragraph blocks
+
+--- FILE: run_tests.py ---
+diff --git a/run_tests.py b/run_tests.py
+index 8b2a358..c132bfb 100644
+--- a/run_tests.py
++++ b/run_tests.py
+@@ -36,7 +36,8 @@ def run_tests():
+             'tests/test_markdown_converter.py',
+             'tests/test_integration.py',
+             'tests/test_notion_operations.py',
+-            'tests/test_timestamp_enrichment.py'
++            'tests/test_timestamp_enrichment.py',
++            'tests/test_end_to_end_timestamps.py'
+         ]
+         
+         for test_file in test_files:
+
+--- FILE: src/utils/markdown_converter.py ---
+diff --git a/src/utils/markdown_converter.py b/src/utils/markdown_converter.py
+index 4cde8f0..73147af 100644
+--- a/src/utils/markdown_converter.py
++++ b/src/utils/markdown_converter.py
+@@ -8,36 +8,93 @@ from urllib.parse import urlparse, parse_qs
+ 
+ 
+ def parse_rich_text(text):
+-    """Parse text with markdown formatting to Notion rich text format."""
+-    rich_text = []
++    """Parse text with markdown formatting to Notion rich text format.
+     
+-    # Simple regex patterns for bold and italic
+-    parts = re.split(r'(\*\*.*?\*\*|\*.*?\*)', text)
++    Supports:
++    - Links: [text](url)
++    - Bold: **text**
++    - Italic: *text*
++    """
++    rich_text = []
++    i = 0
+     
+-    for part in parts:
+-        if not part:
+-            continue
++    while i < len(text):
++        # Look for markdown link pattern [text](url)
++        link_match = re.match(r'\[([^\]]+)\]\(([^)]+)\)', text[i:])
++        if link_match:
++            link_text = link_match.group(1)
++            link_url = link_match.group(2)
++            
++            # Check if link text has formatting
++            if '**' in link_text and link_text.startswith('**') and link_text.endswith('**'):
++                # Bold link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text[2:-2], "link": {"url": link_url}},
++                    "annotations": {"bold": True}
++                })
++            elif '*' in link_text and link_text.startswith('*') and link_text.endswith('*'):
++                # Italic link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text[1:-1], "link": {"url": link_url}},
++                    "annotations": {"italic": True}
++                })
++            else:
++                # Regular link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text, "link": {"url": link_url}}
++                })
+             
+-        if part.startswith('**') and part.endswith('**'):
+-            # Bold text
++            i += link_match.end()
++            continue
++        
++        # Look for bold text **text**
++        bold_match = re.match(r'\*\*([^*]+)\*\*', text[i:])
++        if bold_match:
+             rich_text.append({
+                 "type": "text",
+-                "text": {"content": part[2:-2]},
++                "text": {"content": bold_match.group(1)},
+                 "annotations": {"bold": True}
+             })
+-        elif part.startswith('*') and part.endswith('*'):
+-            # Italic text
++            i += bold_match.end()
++            continue
++        
++        # Look for italic text *text*
++        italic_match = re.match(r'\*([^*]+)\*', text[i:])
++        if italic_match:
+             rich_text.append({
+-                "type": "text", 
+-                "text": {"content": part[1:-1]},
++                "type": "text",
++                "text": {"content": italic_match.group(1)},
+                 "annotations": {"italic": True}
+             })
++            i += italic_match.end()
++            continue
++        
++        # Regular character - find the next special character or end of string
++        next_special = len(text)
++        for pattern in [r'\[', r'\*\*', r'\*']:
++            match = re.search(pattern, text[i:])
++            if match:
++                next_special = min(next_special, i + match.start())
++        
++        if next_special > i:
++            # Add regular text
++            regular_text = text[i:next_special]
++            if regular_text:
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": regular_text}
++                })
++            i = next_special
+         else:
+-            # Regular text
++            # Single character that didn't match any pattern
+             rich_text.append({
+                 "type": "text",
+-                "text": {"content": part}
++                "text": {"content": text[i]}
+             })
++            i += 1
+     
+     return rich_text
+ 
+@@ -72,7 +129,7 @@ def markdown_to_notion_blocks(markdown_text):
+                     "object": "block",
+                     "type": "heading_1",
+                     "heading_1": {
+-                        "rich_text": [{"type": "text", "text": {"content": header_text}}]
++                        "rich_text": parse_rich_text(header_text)
+                     }
+                 })
+             elif header_level == 2:
+@@ -80,7 +137,7 @@ def markdown_to_notion_blocks(markdown_text):
+                     "object": "block",
+                     "type": "heading_2", 
+                     "heading_2": {
+-                        "rich_text": [{"type": "text", "text": {"content": header_text}}]
++                        "rich_text": parse_rich_text(header_text)
+                     }
+                 })
+             elif header_level >= 3:
+@@ -89,7 +146,7 @@ def markdown_to_notion_blocks(markdown_text):
+                     "object": "block",
+                     "type": "heading_3",
+                     "heading_3": {
+-                        "rich_text": [{"type": "text", "text": {"content": header_text}}]
++                        "rich_text": parse_rich_text(header_text)
+                     }
+                 })
+         # Handle bullet points
+
+--- FILE: tests/test_end_to_end_timestamps.py ---
+diff --git a/tests/test_end_to_end_timestamps.py b/tests/test_end_to_end_timestamps.py
+new file mode 100644
+index 0000000..7f11900
+--- /dev/null
++++ b/tests/test_end_to_end_timestamps.py
+@@ -0,0 +1,128 @@
++"""
++End-to-end tests for timestamp enrichment and markdown conversion.
++Tests the complete flow from timestamp enrichment to Notion blocks.
++"""
++
++import unittest
++from utils.markdown_converter import enrich_timestamps_with_links, markdown_to_notion_blocks
++
++
++class TestEndToEndTimestamps(unittest.TestCase):
++    """Test cases for complete timestamp processing flow."""
++    
++    def setUp(self):
++        self.video_url = "https://www.youtube.com/watch?v=pMSXPgAUq_k"
++    
++    def test_timestamp_enrichment_to_notion_blocks(self):
++        """Test complete flow from timestamp enrichment to Notion blocks."""
++        # Original markdown with timestamps
++        markdown = "#### The High Cost of Bad Chunking [0:01-0:07, 0:56-1:21]\n\nThis section covers important concepts at [8:05]."
++        
++        # Step 1: Enrich timestamps
++        enriched = enrich_timestamps_with_links(markdown, self.video_url)
++        
++        # Step 2: Convert to Notion blocks
++        blocks = markdown_to_notion_blocks(enriched)
++        
++        # Verify we have the expected blocks
++        self.assertEqual(len(blocks), 2)  # Header and paragraph
++        
++        # Check header block
++        header_block = blocks[0]
++        self.assertEqual(header_block["type"], "heading_3")
++        
++        # Check that header has rich text with links
++        header_rich_text = header_block["heading_3"]["rich_text"]
++        self.assertGreater(len(header_rich_text), 1)  # Should have multiple parts
++        
++        # Find the link parts
++        link_parts = [part for part in header_rich_text if "link" in part.get("text", {})]
++        self.assertEqual(len(link_parts), 2)  # Should have 2 timestamp links
++        
++        # Verify first timestamp link
++        first_link = link_parts[0]
++        self.assertEqual(first_link["text"]["content"], "0:01-0:07")
++        self.assertEqual(first_link["text"]["link"]["url"], "https://www.youtube.com/watch?v=pMSXPgAUq_k&t=1s")
++        
++        # Verify second timestamp link
++        second_link = link_parts[1]
++        self.assertEqual(second_link["text"]["content"], "0:56-1:21")
++        self.assertEqual(second_link["text"]["link"]["url"], "https://www.youtube.com/watch?v=pMSXPgAUq_k&t=56s")
++        
++        # Check paragraph block
++        paragraph_block = blocks[1]
++        self.assertEqual(paragraph_block["type"], "paragraph")
++        
++        # Check that paragraph has rich text with link
++        paragraph_rich_text = paragraph_block["paragraph"]["rich_text"]
++        paragraph_link_parts = [part for part in paragraph_rich_text if "link" in part.get("text", {})]
++        self.assertEqual(len(paragraph_link_parts), 1)  # Should have 1 timestamp link
++        
++        # Verify paragraph timestamp link
++        paragraph_link = paragraph_link_parts[0]
++        self.assertEqual(paragraph_link["text"]["content"], "8:05")
++        self.assertEqual(paragraph_link["text"]["link"]["url"], "https://www.youtube.com/watch?v=pMSXPgAUq_k&t=485s")
++    
++    def test_mixed_formatting_with_timestamps(self):
++        """Test timestamps with other markdown formatting."""
++        markdown = "**Important**: See [8:05] for *key insights*."
++        
++        # Enrich and convert
++        enriched = enrich_timestamps_with_links(markdown, self.video_url)
++        blocks = markdown_to_notion_blocks(enriched)
++        
++        # Should have one paragraph block
++        self.assertEqual(len(blocks), 1)
++        paragraph_block = blocks[0]
++        self.assertEqual(paragraph_block["type"], "paragraph")
++        
++        # Check rich text parts
++        rich_text = paragraph_block["paragraph"]["rich_text"]
++        
++        # Should have: "Important" (bold), ": See ", "8:05" (link), " for ", "key insights" (italic), "."
++        self.assertEqual(len(rich_text), 6)
++        
++        # Check bold part
++        bold_part = rich_text[0]
++        self.assertEqual(bold_part["text"]["content"], "Important")
++        self.assertTrue(bold_part["annotations"]["bold"])
++        
++        # Check link part
++        link_part = rich_text[2]
++        self.assertEqual(link_part["text"]["content"], "8:05")
++        self.assertEqual(link_part["text"]["link"]["url"], "https://www.youtube.com/watch?v=pMSXPgAUq_k&t=485s")
++        
++        # Check italic part
++        italic_part = rich_text[4]
++        self.assertEqual(italic_part["text"]["content"], "key insights")
++        self.assertTrue(italic_part["annotations"]["italic"])
++    
++    def test_no_timestamps_unchanged(self):
++        """Test that content without timestamps works normally."""
++        markdown = "# Regular Header\n\nThis is **bold** and *italic* text."
++        
++        # Enrich (should be unchanged)
++        enriched = enrich_timestamps_with_links(markdown, self.video_url)
++        self.assertEqual(enriched, markdown)
++        
++        # Convert to blocks
++        blocks = markdown_to_notion_blocks(enriched)
++        
++        # Should have header and paragraph
++        self.assertEqual(len(blocks), 2)
++        self.assertEqual(blocks[0]["type"], "heading_1")
++        self.assertEqual(blocks[1]["type"], "paragraph")
++        
++        # Check that formatting is preserved
++        paragraph_rich_text = blocks[1]["paragraph"]["rich_text"]
++        bold_parts = [part for part in paragraph_rich_text if part.get("annotations", {}).get("bold")]
++        italic_parts = [part for part in paragraph_rich_text if part.get("annotations", {}).get("italic")]
++        
++        self.assertEqual(len(bold_parts), 1)
++        self.assertEqual(len(italic_parts), 1)
++        self.assertEqual(bold_parts[0]["text"]["content"], "bold")
++        self.assertEqual(italic_parts[0]["text"]["content"], "italic")
++
++
++if __name__ == '__main__':
++    unittest.main()
+\ No newline at end of file
+
+--- FILE: tests/test_markdown_converter.py ---
+diff --git a/tests/test_markdown_converter.py b/tests/test_markdown_converter.py
+index f4ed660..cf23e23 100644
+--- a/tests/test_markdown_converter.py
++++ b/tests/test_markdown_converter.py
+@@ -63,6 +63,69 @@ class TestParseRichText(unittest.TestCase):
+             {"type": "text", "text": {"content": " bold"}}
+         ]
+         self.assertEqual(result, expected)
++    
++    def test_link_text(self):
++        """Test parsing markdown links."""
++        result = parse_rich_text("Check out [this link](https://example.com) for more info")
++        expected = [
++            {"type": "text", "text": {"content": "Check out "}},
++            {"type": "text", "text": {"content": "this link", "link": {"url": "https://example.com"}}},
++            {"type": "text", "text": {"content": " for more info"}}
++        ]
++        self.assertEqual(result, expected)
++    
++    def test_multiple_links(self):
++        """Test parsing multiple links."""
++        result = parse_rich_text("Visit [Google](https://google.com) and [GitHub](https://github.com)")
++        expected = [
++            {"type": "text", "text": {"content": "Visit "}},
++            {"type": "text", "text": {"content": "Google", "link": {"url": "https://google.com"}}},
++            {"type": "text", "text": {"content": " and "}},
++            {"type": "text", "text": {"content": "GitHub", "link": {"url": "https://github.com"}}},
++        ]
++        self.assertEqual(result, expected)
++    
++    def test_bold_link(self):
++        """Test parsing bold text within links."""
++        result = parse_rich_text("Click [**bold link**](https://example.com) here")
++        expected = [
++            {"type": "text", "text": {"content": "Click "}},
++            {"type": "text", "text": {"content": "bold link", "link": {"url": "https://example.com"}}, "annotations": {"bold": True}},
++            {"type": "text", "text": {"content": " here"}}
++        ]
++        self.assertEqual(result, expected)
++    
++    def test_italic_link(self):
++        """Test parsing italic text within links."""
++        result = parse_rich_text("Click [*italic link*](https://example.com) here")
++        expected = [
++            {"type": "text", "text": {"content": "Click "}},
++            {"type": "text", "text": {"content": "italic link", "link": {"url": "https://example.com"}}, "annotations": {"italic": True}},
++            {"type": "text", "text": {"content": " here"}}
++        ]
++        self.assertEqual(result, expected)
++    
++    def test_mixed_formatting_with_links(self):
++        """Test parsing mixed formatting including links."""
++        result = parse_rich_text("**Bold** text with [link](https://example.com) and *italic*")
++        expected = [
++            {"type": "text", "text": {"content": "Bold"}, "annotations": {"bold": True}},
++            {"type": "text", "text": {"content": " text with "}},
++            {"type": "text", "text": {"content": "link", "link": {"url": "https://example.com"}}},
++            {"type": "text", "text": {"content": " and "}},
++            {"type": "text", "text": {"content": "italic"}, "annotations": {"italic": True}}
++        ]
++        self.assertEqual(result, expected)
++    
++    def test_timestamp_link(self):
++        """Test parsing timestamp links (like those generated by timestamp enrichment)."""
++        result = parse_rich_text("See [8:05](https://youtube.com/watch?v=test&t=485s) for details")
++        expected = [
++            {"type": "text", "text": {"content": "See "}},
++            {"type": "text", "text": {"content": "8:05", "link": {"url": "https://youtube.com/watch?v=test&t=485s"}}},
++            {"type": "text", "text": {"content": " for details"}}
++        ]
++        self.assertEqual(result, expected)
+ 
+ 
+ class TestMarkdownToNotionBlocks(unittest.TestCase):
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

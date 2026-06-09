@@ -1,0 +1,55 @@
+diff --git a/lib/src/screens/app/gh3_app.dart b/lib/src/screens/app/gh3_app.dart
+index 3a203a0..bf4e220 100644
+--- a/lib/src/screens/app/gh3_app.dart
++++ b/lib/src/screens/app/gh3_app.dart
+@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart';
+ import 'package:gh3/src/screens/home_screen/home_screen.dart';
+ import 'package:gh3/src/screens/home_screen/home_viewmodel.dart';
++import 'package:gh3/src/screens/home_screen/home_route.dart';
+ import 'package:gh3/src/screens/loading_screen/loading_screen.dart';
++import 'package:gh3/src/screens/loading_screen/loading_route.dart';
+ import 'package:gh3/src/screens/login_screen/login_screen.dart';
+ import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
++import 'package:gh3/src/screens/login_screen/login_route.dart';
+ import 'package:gh3/src/screens/user_details/user_details_screen.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+ import 'package:gh3/src/services/github_auth_client.dart';
+@@ -26,10 +29,15 @@ class Gh3App extends StatelessWidget {
+ 
+   @override
+   Widget build(BuildContext context) {
++    // Create route instances for type-safe navigation
++    final homeRoute = HomeRoute();
++    final loginRoute = LoginRoute();
++    final loadingRoute = LoadingRoute();
++
+     // Configure GoRouter
+     final router = GoRouter(
+       refreshListenable: authViewModel,
+-      initialLocation: '/loading',
++      initialLocation: loadingRoute.path,
+       routes: [
+         GoRoute(
+           path: '/loading',
+@@ -61,14 +69,15 @@ class Gh3App extends StatelessWidget {
+       ],
+       redirect: (context, state) {
+         if (authViewModel.loading) {
+-          return '/loading';
++          return loadingRoute.path;
+         }
+         final loc = state.uri.path;
+-        if (!authViewModel.loggedIn && loc != '/login') {
+-          return '/login';
++        if (!authViewModel.loggedIn && loc != loginRoute.path) {
++          return loginRoute.path;
+         }
+-        if (authViewModel.loggedIn && (loc == '/login' || loc == '/loading')) {
+-          return '/';
++        if (authViewModel.loggedIn &&
++            (loc == loginRoute.path || loc == loadingRoute.path)) {
++          return homeRoute.path;
+         }
+         return null;
+       },

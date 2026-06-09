@@ -1,0 +1,45 @@
+diff --git a/src/preload.ts b/src/preload.ts
+index 5e9d369..e64d4de 100644
+--- a/src/preload.ts
++++ b/src/preload.ts
+@@ -1,2 +1,38 @@
+-// See the Electron documentation for details on how to use preload scripts:
+-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
++import { contextBridge, ipcRenderer } from 'electron';
++
++// 暴露PDF合并相关的API给渲染进程
++contextBridge.exposeInMainWorld('electronAPI', {
++  // PDF合并
++  mergePdfs: (options: {
++    filePaths: string[];
++    outputPath: string;
++    outputFileName: string;
++  }) => ipcRenderer.invoke('merge-pdfs', options),
++  
++  // 监听合并进度
++  onMergeProgress: (callback: (progress: {
++    current: number;
++    total: number;
++    currentFile: string;
++    progress: number;
++  }) => void) => {
++    const listener = (_event: any, progress: any) => callback(progress);
++    ipcRenderer.on('merge-progress', listener);
++    
++    // 返回清理函数
++    return () => {
++      ipcRenderer.removeListener('merge-progress', listener);
++    };
++  },
++  
++  // 选择保存位置
++  selectSavePath: () => ipcRenderer.invoke('select-save-path'),
++  
++  // 获取默认下载目录
++  getDownloadsPath: () => ipcRenderer.invoke('get-downloads-path'),
++  
++  // 选择PDF文件
++  selectPdfFiles: () => ipcRenderer.invoke('select-pdf-files'),
++  
++  openFileLocation: (filePath: string) => ipcRenderer.invoke('open-file-location', filePath),
++});

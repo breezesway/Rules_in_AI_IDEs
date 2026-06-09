@@ -1,0 +1,873 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Production start: npm run start:prod
++ Production start: pnpm run start:prod
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json), CI/CD pipeline definitions (e.g., .github/workflows/*.yml, Jenkinsfile, gitlab-ci.yml), containerization files (Dockerfile), and lock files (pnpm-lock.yaml).
+- Suggested Logic: 1. Verify the existence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' or 'yarn.lock'.
+2. Check 'package.json' to ensure the 'scripts' section contains 'start:prod'.
+3. Scan CI/CD configuration files and Dockerfiles to ensure that the command executed for production deployment/startup is 'pnpm run start:prod' and NOT 'npm run start:prod'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: 📝 Add taptik build command specifications
+- Changed Files List: 
+.kiro/specs/taptik-build-command/design.md	+355	-0	after_lines=355
+.kiro/specs/taptik-build-command/requirements.md	+110	-0	after_lines=110
+.kiro/specs/taptik-build-command/tasks.md	+148	-0	after_lines=148
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/design.md ---
+diff --git a/.kiro/specs/taptik-build-command/design.md b/.kiro/specs/taptik-build-command/design.md
+new file mode 100644
+index 0000000..c6dc548
+--- /dev/null
++++ b/.kiro/specs/taptik-build-command/design.md
+@@ -0,0 +1,355 @@
++# Design Document
++
++## Overview
++
++The `taptik build` command is designed as a NestJS-based CLI command that provides an interactive interface for collecting and packaging AI IDE settings from Kiro into a standardized format. The design follows a modular architecture with clear separation of concerns between user interaction, data collection, transformation, and output generation.
++
++The command operates in four main phases:
++1. **Interactive Selection**: Platform and category selection through CLI prompts
++2. **Data Collection**: Scanning and gathering settings from local and global Kiro directories
++3. **Data Transformation**: Converting collected data to taptik standard specification format
++4. **Output Generation**: Creating timestamped build directory with organized output files
++
++## Architecture
++
++### High-Level Architecture
++
++```mermaid
++graph TD
++    A[CLI Entry Point] --> B[Build Command]
++    B --> C[Interactive Service]
++    B --> D[Collection Service]
++    B --> E[Transformation Service]
++    B --> F[Output Service]
++    
++    C --> G[Platform Selection]
++    C --> H[Category Selection]
++    
++    D --> I[Local Settings Scanner]
++    D --> J[Global Settings Scanner]
++    
++    E --> K[Personal Context Converter]
++    E --> L[Project Context Converter]
++    E --> M[Prompt Templates Converter]
++    
++    F --> N[File Writer]
++    F --> O[Manifest Generator]
++    F --> P[Progress Reporter]
++```
++
++### Module Structure
++
++Following the established NestJS architecture pattern:
++
++```
++src/modules/build/
++├── build.module.ts
++├── commands/
++│   └── build.command.ts
++├── services/
++│   ├── interactive.service.ts
++│   ├── collection.service.ts
++│   ├── transformation.service.ts
++│   └── output.service.ts
++├── interfaces/
++│   ├── build-config.interface.ts
++│   ├── settings-data.interface.ts
++│   └── taptik-format.interface.ts
++└── dto/
++    └── build-options.dto.ts
++```
++
++## Components and Interfaces
++
++### Core Interfaces
++
++#### BuildConfig Interface
++```typescript
++interface BuildConfig {
++  platform: 'kiro' | 'cursor' | 'claude-code';
++  categories: BuildCategory[];
++  outputPath: string;
++  timestamp: Date;
++}
++
++interface BuildCategory {
++  name: 'personal-context' | 'project-context' | 'prompt-templates';
++  enabled: boolean;
++}
++```
++
++#### SettingsData Interface
++```typescript
++interface SettingsData {
++  personalContext?: PersonalContextData;
++  projectContext?: ProjectContextData;
++  promptTemplates?: PromptTemplateData[];
++}
++
++interface PersonalContextData {
++  userPreferences: Record<string, any>;
++  globalSettings: Record<string, any>;
++  sourceFiles: string[];
++}
++
++interface ProjectContextData {
++  contextFiles: FileData[];
++  steeringFiles: FileData[];
++  hookFiles: FileData[];
++  sourceFiles: string[];
++}
++
++interface PromptTemplateData {
++  name: string;
++  content: string;
++  metadata: Record<string, any>;
++}
++```
++
++#### TaptikFormat Interface
++```typescript
++interface TaptikManifest {
++  build_id: string;
++  source_platform: string;
++  categories: string[];
++  created_at: string;
++  taptik_version: string;
++  source_files: string[];
++}
++
++interface TaptikPersonalContext {
++  version: string;
++  user_preferences: Record<string, any>;
++  global_settings: Record<string, any>;
++  metadata: {
++    source_platform: string;
++    collected_at: string;
++  };
++}
++
++interface TaptikProjectContext {
++  version: string;
++  project_settings: Record<string, any>;
++  steering_rules: SteeringRule[];
++  hooks: HookDefinition[];
++  metadata: {
++    source_platform: string;
++    project_path: string;
++    collected_at: string;
++  };
++}
++```
++
++### Service Components
++
++#### InteractiveService
++**Responsibility**: Handle user interaction and input collection
++- Platform selection with timeout handling
++- Multi-select category interface
++- Input validation and error handling
++- Progress indication during user interaction
++
++**Key Methods**:
++```typescript
++async selectPlatform(): Promise<string>
++async selectCategories(): Promise<string[]>
++async confirmSelection(config: BuildConfig): Promise<boolean>
++```
++
++#### CollectionService
++**Responsibility**: Scan and collect settings from file system
++- Local Kiro settings scanning (`.kiro/` directory)
++- Global Kiro settings scanning (`~/.kiro/` directory)
++- File existence validation and error handling
++- Security filtering for sensitive data
++
++**Key Methods**:
++```typescript
++async collectLocalSettings(): Promise<ProjectContextData>
++async collectGlobalSettings(): Promise<PersonalContextData>
++async collectPromptTemplates(): Promise<PromptTemplateData[]>
++private filterSensitiveData(data: any): any
++```
++
++#### TransformationService
++**Responsibility**: Convert collected data to taptik standard format
++- Data mapping and transformation
++- Schema validation
++- Error handling for conversion failures
++- Format compliance verification
++
++**Key Methods**:
++```typescript
++async transformPersonalContext(data: PersonalContextData): Promise<TaptikPersonalContext>
++async transformProjectContext(data: ProjectContextData): Promise<TaptikProjectContext>
++async transformPromptTemplates(data: PromptTemplateData[]): Promise<TaptikPromptTemplates>
++async validateOutput(data: any, schema: string): Promise<boolean>
++```
++
++#### OutputService
++**Responsibility**: Generate output files and directory structure
++- Timestamped directory creation
++- JSON file generation
++- Manifest creation
++- Progress reporting and summary display
++
++**Key Methods**:
++```typescript
++async createOutputDirectory(): Promise<string>
++async writeOutputFiles(data: SettingsData, outputPath: string): Promise<void>
++async generateManifest(config: BuildConfig, outputPath: string): Promise<void>
++async displaySummary(outputPath: string): Promise<void>
++```
++
++## Data Models
++
++### File System Scanning Strategy
++
++#### Local Settings Scanning
++- **Target Directory**: `./kiro/` (current working directory)
++- **Files to Collect**:
++  - `settings/context.md`
++  - `settings/user-preferences.md`
++  - `settings/project-spec.md`
++  - `steering/*.md` (all markdown files)
++  - `hooks/*.kiro.hook` (all hook files)
++
++#### Global Settings Scanning
++- **Target Directory**: `~/.kiro/` (user home directory)
++- **Files to Collect**:
++  - User configuration files
++  - Global prompt templates
++  - User preferences
++- **Security Filtering**: Exclude API keys, tokens, and sensitive credentials
++
++### Data Transformation Pipeline
++
++#### Personal Context Transformation
++```typescript
++// Input: PersonalContextData
++// Output: TaptikPersonalContext
++{
++  version: "1.0.0",
++  user_preferences: {
++    // Mapped from Kiro user preferences
++    theme: "dark",
++    editor_settings: {...},
++    shortcuts: {...}
++  },
++  global_settings: {
++    // Mapped from global Kiro settings
++    default_templates: [...],
++    global_hooks: [...]
++  },
++  metadata: {
++    source_platform: "kiro",
++    collected_at: "2025-01-04T10:30:00Z"
++  }
++}
++```
++
++#### Project Context Transformation
++```typescript
++// Input: ProjectContextData
++// Output: TaptikProjectContext
++{
++  version: "1.0.0",
++  project_settings: {
++    // Mapped from project-specific settings
++    context_files: [...],
++    project_config: {...}
++  },
++  steering_rules: [
++    {
++      name: "rule_name",
++      content: "rule_content",
++      conditions: {...}
++    }
++  ],
++  hooks: [
++    {
++      name: "hook_name",
++      trigger: "trigger_type",
++      action: "action_definition"
++    }
++  ],
++  metadata: {
++    source_platform: "kiro",
++    project_path: "/path/to/project",
++    collected_at: "2025-01-04T10:30:00Z"
++  }
++}
++```
++
++## Error Handling
++
++### Error Categories and Strategies
++
++#### File System Errors
++- **Permission Denied**: Display clear error message with suggested resolution
++- **File Not Found**: Log info message and continue with available files
++- **Directory Not Accessible**: Log warning and continue with empty data
++
++#### Data Processing Errors
++- **JSON Parsing Failures**: Log specific file and error details, skip corrupted files
++- **Conversion Failures**: Continue with other categories, report partial success
++- **Schema Validation Failures**: Log validation errors, exclude invalid data
++
++#### User Interaction Errors
++- **Timeout Handling**: Exit gracefully after 30 seconds of inactivity
++- **Invalid Selection**: Re-prompt user with error message
++- **Interrupt Handling**: Cleanup partial files on Ctrl+C
++
++### Error Recovery Mechanisms
++
++```typescript
++interface ErrorHandler {
++  handleFileSystemError(error: Error, context: string): void;
++  handleConversionError(error: Error, category: string): void;
++  handleUserInterruptError(): Promise<void>;
++  displayErrorSummary(errors: Error[]): void;
++}
++```
++
++## Testing Strategy
++
++### Unit Testing Approach
++- **Service Testing**: Mock file system operations and test business logic
++- **Command Testing**: Test CLI argument parsing and command execution flow
++- **Transformation Testing**: Verify data mapping and format compliance
++- **Error Handling Testing**: Test all error scenarios and recovery mechanisms
++
++### Integration Testing
++- **File System Integration**: Test actual file reading and writing operations
++- **End-to-End Workflow**: Test complete build process with real data
++- **Interactive Testing**: Test user interaction flows with mocked inputs
++
++### Test Data Strategy
++- **Fixture Files**: Create sample Kiro configuration files for testing
++- **Mock Data**: Generate test data for various scenarios
++- **Error Scenarios**: Create test cases for all error conditions
++
++### Testing Structure
++```
++src/modules/build/
++├── commands/
++│   ├── build.command.ts
++│   └── build.command.spec.ts
++├── services/
++│   ├── interactive.service.ts
++│   ├── interactive.service.spec.ts
++│   ├── collection.service.ts
++│   ├── collection.service.spec.ts
++│   ├── transformation.service.ts
++│   ├── transformation.service.spec.ts
++│   ├── output.service.ts
++│   └── output.service.spec.ts
++└── __tests__/
++    ├── fixtures/
++    │   ├── sample-kiro-settings/
++    │   └── expected-outputs/
++    └── integration/
++        └── build-workflow.integration.spec.ts
++```
++
++This design provides a robust, maintainable, and testable implementation that addresses all requirements while following established architectural patterns and best practices.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/taptik-build-command/requirements.md ---
+diff --git a/.kiro/specs/taptik-build-command/requirements.md b/.kiro/specs/taptik-build-command/requirements.md
+new file mode 100644
+index 0000000..1644a47
+--- /dev/null
++++ b/.kiro/specs/taptik-build-command/requirements.md
+@@ -0,0 +1,110 @@
++# Requirements Document
++
++## Introduction
++
++The `taptik build` command is a core feature of the taptik CLI tool that enables users to collect and package their AI IDE settings from Kiro into a standardized format for migration and synchronization. This command provides an interactive interface for users to select which platform and categories of settings they want to build, then processes and converts these settings into the taptik standard specification format.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a developer using Kiro, I want to interactively select my source platform, so that I can build settings from the correct AI IDE.
++
++#### Acceptance Criteria
++
++1. WHEN the user runs `npx taptik build` THEN the system SHALL display an interactive platform selection menu
++2. WHEN the platform selection menu is displayed THEN the system SHALL show "Kiro", "Cursor", and "Claude Code" options
++3. WHEN the user selects "Kiro" THEN the system SHALL proceed to category selection
++4. WHEN the user selects "Cursor" or "Claude Code" THEN the system SHALL display "Comming soon" message and exit gracefully
++5. IF no platform is selected within 30 seconds THEN the system SHALL timeout and exit with appropriate message
++
++### Requirement 2
++
++**User Story:** As a developer, I want to select multiple categories of settings to build, so that I can control which types of configurations are included in my build.
++
++#### Acceptance Criteria
++
++1. WHEN platform selection is completed THEN the system SHALL display a multi-select category menu
++2. WHEN the category menu is displayed THEN the system SHALL show "Personal Context", "Project Context", and "Prompt Templates" options
++3. WHEN the user selects categories using spacebar THEN the system SHALL toggle selection state visually
++4. WHEN the user presses 'a' THEN the system SHALL toggle all categories
++5. WHEN the user confirms selection THEN the system SHALL proceed with building only selected categories
++6. IF no categories are selected THEN the system SHALL display error message and return to category selection
++
++### Requirement 3
++
++**User Story:** As a Kiro user, I want the system to collect my local project settings, so that my project-specific configurations are included in the build.
++
++#### Acceptance Criteria
++
++1. WHEN "Project Context" is selected THEN the system SHALL scan the current project's `.kiro/` directory
++2. WHEN scanning local settings THEN the system SHALL collect `settings/context.md`, `settings/user-preferences.md`, `settings/project-spec.md`
++3. WHEN scanning local settings THEN the system SHALL collect all files from `steerng/*.md` directory
++4. WHEN scanning local settings THEN the system SHALL collect all files from `hooks/*.kiro.hook` directory
++5. IF `.kiro/` directory does not exist THEN the system SHALL log warning and continue with empty local settings
++6. IF individual setting files are missing THEN the system SHALL log info message and skip those files
++
++### Requirement 4
++
++**User Story:** As a Kiro user, I want the system to collect my global Kiro settings, so that my user-wide preferences are included in the build.
++
++#### Acceptance Criteria
++
++1. WHEN "Personal Context" is selected THEN the system SHALL scan the user's home directory for Kiro global settings
++2. WHEN scanning global settings THEN the system SHALL collect files from `~/.kiro/` directory
++3. WHEN scanning global settings THEN the system SHALL collect user configuration files, global prompt templates, and user preferences
++4. WHEN scanning global settings THEN the system SHALL exclude security-sensitive information like API keys and tokens
++5. IF global Kiro directory does not exist THEN the system SHALL log warning and continue with empty global settings
++6. IF access to home directory is denied THEN the system SHALL display error message and continue without global settings
++
++### Requirement 5
++
++**User Story:** As a developer, I want my collected settings to be converted to taptik standard format, so that they can be used for migration and synchronization.
++
++#### Acceptance Criteria
++
++1. WHEN settings collection is complete THEN the system SHALL convert collected data to taptik standard specification format
++2. WHEN converting Personal Context THEN the system SHALL map Kiro user preferences to personal-context.json format
++3. WHEN converting Project Context THEN the system SHALL map Kiro project settings to project-context.json format  
++4. WHEN converting Prompt Templates THEN the system SHALL map Kiro prompts to prompt-templates.json format
++5. WHEN conversion fails for any category THEN the system SHALL log error and exclude that category from build
++6. WHEN conversion is successful THEN the system SHALL validate output against taptik specification schema
++
++### Requirement 6
++
++**User Story:** As a user, I want to see real-time progress during the build process, so that I understand what the system is doing and can track completion.
++
++#### Acceptance Criteria
++
++1. WHEN build process starts THEN the system SHALL display progress indicators with descriptive messages
++2. WHEN scanning local settings THEN the system SHALL show "✓ Scanning local Kiro settings..." with spinner
++3. WHEN scanning global settings THEN the system SHALL show "✓ Scanning global Kiro settings..." with spinner
++4. WHEN converting categories THEN the system SHALL show "✓ [Category] Complete Conversion!" for each completed category
++5. WHEN build completes THEN the system SHALL display summary with output directory and file sizes
++6. IF any step fails THEN the system SHALL display error message with clear indication of what failed
++
++### Requirement 7
++
++**User Story:** As a developer, I want my build output organized in a timestamped directory, so that I can manage multiple builds and avoid conflicts.
++
++#### Acceptance Criteria
++
++1. WHEN build process completes THEN the system SHALL create output directory with format `./taptik-build-YYYYMMDD-HHMMSS/`
++2. WHEN creating output directory THEN the system SHALL generate `manifest.json` with build metadata
++3. WHEN creating output files THEN the system SHALL create separate JSON files for each selected category
++4. WHEN creating manifest THEN the system SHALL include build_id, source_platform, categories, created_at, taptik_version, and source_files
++5. IF output directory already exists THEN the system SHALL append incremental number to avoid conflicts
++6. WHEN build completes THEN the system SHALL display output directory path and file summary
++
++### Requirement 8
++
++**User Story:** As a developer, I want the command to handle errors gracefully, so that I can understand what went wrong and how to fix it.
++
++#### Acceptance Criteria
++
++1. WHEN file system access fails THEN the system SHALL display clear error message with suggested resolution
++2. WHEN JSON parsing fails THEN the system SHALL log specific file and error details
++3. WHEN conversion fails THEN the system SHALL continue with other categories and report partial success
++4. WHEN critical errors occur THEN the system SHALL exit with appropriate error code (non-zero)
++5. WHEN warnings occur THEN the system SHALL continue execution and display warning summary at end
++6. IF user interrupts process (Ctrl+C) THEN the system SHALL cleanup partial files and exit gracefully
+\ No newline at end of file
+
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+new file mode 100644
+index 0000000..27bc6e7
+--- /dev/null
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -0,0 +1,148 @@
++# Implementation Plan
++
++- [ ] 1. Set up build module structure and core interfaces
++  - Create build module directory structure following NestJS patterns
++  - Define TypeScript interfaces for BuildConfig, SettingsData, and TaptikFormat
++  - Set up module registration and dependency injection
++  - _Requirements: 1.1, 2.1_
++
++- [ ] 2. Implement interactive user interface service
++  - [ ] 2.1 Create InteractiveService with platform selection functionality
++    - Implement platform selection menu with "Kiro", "Cursor", "Claude Code" options
++    - Add timeout handling for 30-second inactivity
++    - Handle "Coming soon" message for Cursor and Claude Code
++    - Write unit tests for platform selection logic
++    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
++
++  - [ ] 2.2 Implement category selection with multi-select interface
++    - Create multi-select menu for "Personal Context", "Project Context", "Prompt Templates"
++    - Add spacebar toggle functionality and 'a' key for toggle all
++    - Implement validation to prevent empty category selection
++    - Write unit tests for category selection and validation
++    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
++
++- [ ] 3. Implement data collection service
++  - [ ] 3.1 Create CollectionService with local settings scanning
++    - Implement scanning of `.kiro/` directory for project settings
++    - Collect `settings/context.md`, `settings/user-preferences.md`, `settings/project-spec.md`
++    - Scan `steering/*.md` and `hooks/*.kiro.hook` directories
++    - Handle missing directories and files gracefully with appropriate logging
++    - Write unit tests with mocked file system operations
++    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
++
++  - [ ] 3.2 Implement global settings scanning functionality
++    - Add scanning of `~/.kiro/` directory for user-wide settings
++    - Collect user configuration files, global prompt templates, and preferences
++    - Implement security filtering to exclude API keys and sensitive tokens
++    - Handle permission denied and missing directory scenarios
++    - Write unit tests for global settings collection and security filtering
++    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
++
++- [ ] 4. Implement data transformation service
++  - [ ] 4.1 Create TransformationService with personal context conversion
++    - Implement mapping from Kiro user preferences to personal-context.json format
++    - Add metadata generation with source platform and timestamp
++    - Include error handling for conversion failures
++    - Write unit tests for personal context transformation
++    - _Requirements: 5.1, 5.2, 5.5_
++
++  - [ ] 4.2 Implement project context transformation
++    - Create mapping from Kiro project settings to project-context.json format
++    - Transform steering files and hooks into taptik standard format
++    - Add project metadata including source path and collection timestamp
++    - Write unit tests for project context transformation
++    - _Requirements: 5.1, 5.3, 5.5_
++
++  - [ ] 4.3 Add prompt templates transformation
++    - Implement conversion of Kiro prompts to prompt-templates.json format
++    - Handle prompt metadata and content mapping
++    - Add validation against taptik specification schema
++    - Write unit tests for prompt template transformation
++    - _Requirements: 5.1, 5.4, 5.6_
++
++- [ ] 5. Implement output generation service
++  - [ ] 5.1 Create OutputService with timestamped directory creation
++    - Implement directory creation with format `./taptik-build-YYYYMMDD-HHMMSS/`
++    - Add conflict resolution with incremental numbering
++    - Handle file system permissions and creation errors
++    - Write unit tests for directory creation and conflict handling
++    - _Requirements: 7.1, 7.5_
++
++  - [ ] 5.2 Implement JSON file generation and manifest creation
++    - Create separate JSON files for each selected category
++    - Generate manifest.json with build metadata including build_id, source_platform, categories
++    - Include created_at, taptik_version, and source_files in manifest
++    - Write unit tests for file generation and manifest creation
++    - _Requirements: 7.2, 7.3, 7.4_
++
++- [ ] 6. Implement progress reporting and user feedback
++  - [ ] 6.1 Add progress indicators for build process
++    - Implement spinner and progress messages for scanning operations
++    - Show "✓ Scanning local Kiro settings..." and "✓ Scanning global Kiro settings..."
++    - Display "✓ [Category] Complete Conversion!" for each completed category
++    - Write unit tests for progress reporting functionality
++    - _Requirements: 6.1, 6.2, 6.3, 6.4_
++
++  - [ ] 6.2 Create build summary and completion reporting
++    - Display final summary with output directory path and file sizes
++    - Show completion status and any warnings or errors encountered
++    - Write unit tests for summary generation and display
++    - _Requirements: 6.5, 7.6_
++
++- [ ] 7. Implement comprehensive error handling
++  - [ ] 7.1 Add file system error handling
++    - Handle permission denied errors with clear messages and suggested resolutions
++    - Manage file not found scenarios with appropriate logging
++    - Implement graceful handling of directory access issues
++    - Write unit tests for all file system error scenarios
++    - _Requirements: 8.1, 8.5_
++
++  - [ ] 7.2 Implement data processing error handling
++    - Add JSON parsing error handling with specific file and error details
++    - Handle conversion failures while continuing with other categories
++    - Implement partial success reporting for failed conversions
++    - Write unit tests for data processing error scenarios
++    - _Requirements: 8.2, 8.3_
++
++  - [ ] 7.3 Add user interruption and critical error handling
++    - Implement Ctrl+C handling with cleanup of partial files
++    - Add critical error handling with appropriate exit codes
++    - Create warning summary display for non-critical issues
++    - Write unit tests for interruption and critical error handling
++    - _Requirements: 8.4, 8.6_
++
++- [ ] 8. Create build command integration
++  - [ ] 8.1 Implement BuildCommand class with nest-commander integration
++    - Create command class that orchestrates all services
++    - Implement proper dependency injection for all services
++    - Add command registration in build module
++    - Write unit tests for command orchestration
++    - _Requirements: 1.1, 2.1_
++
++  - [ ] 8.2 Wire up complete build workflow
++    - Integrate interactive selection, data collection, transformation, and output services
++    - Implement proper error propagation and handling across services
++    - Add logging and monitoring throughout the build process
++    - Write integration tests for complete build workflow
++    - _Requirements: All requirements_
++
++- [ ] 9. Add comprehensive testing suite
++  - [ ] 9.1 Create test fixtures and mock data
++    - Generate sample Kiro configuration files for testing
++    - Create expected output files for validation
++    - Set up mock file system operations for unit tests
++    - _Requirements: All requirements_
++
++  - [ ] 9.2 Implement integration and end-to-end tests
++    - Create integration tests for file system operations
++    - Add end-to-end tests for complete build process
++    - Test error scenarios and recovery mechanisms
++    - Validate output format compliance with taptik specification
++    - _Requirements: All requirements_
++
++- [ ] 10. Update module registration and CLI integration
++  - Update AppModule to include BuildModule
++  - Register build command in CLI application
++  - Add build command to package.json scripts for testing
++  - Update documentation with build command usage
++  - _Requirements: 1.1_
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

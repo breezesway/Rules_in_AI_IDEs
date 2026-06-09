@@ -1,0 +1,25 @@
+diff --git a/src/services/message-router.service.ts b/src/services/message-router.service.ts
+new file mode 100644
+index 0000000..e06fb3f
+--- /dev/null
++++ b/src/services/message-router.service.ts
+@@ -0,0 +1,19 @@
++import * as vscode from "vscode";
++
++export type WebviewContext = {
++  revealGraphView: () => void;
++  log: (s: string) => void;
++  postMessage?: (message: any) => void;
++  extensionContext: vscode.ExtensionContext;
++  openFile: (path: string) => Promise<void>;
++  triggerScan: () => Promise<void>;
++};
++
++export function configureGraphMessaging(webview: vscode.Webview, ctx: WebviewContext) {
++  return webview.onDidReceiveMessage((msg) => {
++    import('./messenger.service.js').then(({ handleWebviewMessage }) =>
++      handleWebviewMessage(msg, ctx)
++    ).catch(() => { /* ignore */ });
++  });
++}
++

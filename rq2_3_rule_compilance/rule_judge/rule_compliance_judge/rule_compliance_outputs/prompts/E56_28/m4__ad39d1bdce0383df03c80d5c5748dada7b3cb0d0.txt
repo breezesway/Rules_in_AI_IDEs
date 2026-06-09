@@ -1,0 +1,292 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- interfaces/: Abstract base classes defining component contracts
+ - Storage: Interface for data persistence backends
+ - SummaryWriter: Interface for AI summary generation
+- extractors/video_metadata_extractor.py: YouTube URL validation, video ID extraction, and metadata retrieval
+- writers/gemini_summary_writer.py: Google Gemini AI integration with streaming and retry logic
+- storage/notion_storage.py: Notion database operations with rich text conversion
+- processors/video_processor.py: Main orchestrator coordinating all components
+- config/factory.py: Dependency injection and component creation
+- config/settings.py: Environment configuration and validation
+- utils/exceptions.py: Structured exception hierarchy for error handling
+- utils/chat_logger.py: Conversation logging with automatic cleanup
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code artifacts (imports, class definitions, and file paths).
+- Suggested Logic: 1. Verify the existence of the specific directory paths and files mentioned (e.g., 'interfaces/', 'extractors/video_metadata_extractor.py', 'config/factory.py').
+2. In 'interfaces/', use AST parsing to confirm the presence of Abstract Base Classes or Interface definitions named 'Storage' and 'SummaryWriter'.
+3. In 'writers/gemini_summary_writer.py', check for the import of Gemini-related SDKs and the presence of retry decorators (e.g., 'tenacity') or blocks.
+4. In 'utils/exceptions.py', check for a hierarchy of classes inheriting from the base 'Exception' class.
+5. In 'storage/notion_storage.py', check for Notion-specific library imports.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: steering
+- Changed Files List: 
+.kiro/steering/product.md	+27	-2	after_lines=109
+.kiro/steering/structure.md	+31	-6	after_lines=198
+.kiro/steering/tech.md	+20	-7	after_lines=133
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   └── markdown_converter.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       └── test_video_processor.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index fe4f574..4c0a055 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -77,8 +77,33 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - **Test-Friendly**: Automatically detect test environments and cap delays to prevent hangs
+ 
+ ### Testing Standards
+-- **Unit Test Speed**: Unit tests complete in under 10 seconds using mock implementations
++- **Development Focus**: Unit tests are primary tool for daily development (478 tests in ~6 seconds)
++- **Unit Test Speed**: Complete in under 10 seconds using comprehensive mock implementations
++- **Integration Validation**: Integration tests for end-of-cycle validation (13 tests in ~90 seconds)
+ - **Integration Safety**: Integration tests use dedicated test database and `.env-test` configuration
+ - **Mock Completeness**: All interfaces have corresponding mock implementations for testing
+ - **Test Isolation**: Unit tests don't perform I/O operations or call external APIs
+-- **Component Testing**: Each component can be tested independently through its interface
+\ No newline at end of file
++- **Component Testing**: Each component can be tested independently through its interface
++- **Workflow**: Run unit tests frequently, integration tests before releases
++
++## Current Product Status
++
++### ✅ Architecture Restructure Complete
++The YouTube-to-Notion integration has successfully completed a comprehensive architecture restructure:
++
++- **Component-Based Design**: Clean separation between metadata extraction, summary generation, and storage
++- **Interface-Driven**: Abstract interfaces enable pluggable implementations for different AI providers and storage backends
++- **Factory Pattern**: `ComponentFactory` handles dependency injection and component configuration
++- **Comprehensive Testing**: 478 unit tests (6s) + 13 integration tests (90s) with full mock implementations
++- **Backward Compatibility**: All existing functionality preserved with identical external behavior
++
++### ✅ Quality Assurance
++- **Error Handling**: Structured exception hierarchy with intelligent retry logic and graceful fallbacks
++- **Performance**: Optimized for development workflow with fast unit tests
++- **Reliability**: Comprehensive error handling with quota management and API fallbacks
++- **Maintainability**: Clear component boundaries and extensive test coverage
++
++### ✅ Development Workflow
++- **Daily Development**: Focus on unit tests for rapid feedback and validation
++- **Release Validation**: Integration tests ensure end-to-end functionality with real APIs
++- **Component Isolation**: Each component can be developed and tested independently
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index b66520f..a536db3 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -138,16 +138,19 @@ from .utils.markdown_converter import parse_rich_text
+ 
+ ### Testing Structure
+ 
+-- **Unit Tests** (`tests/unit/`): Fast, isolated tests using mock implementations
++- **Unit Tests** (`tests/unit/`): Primary focus for daily development
++  - 478 tests run in ~6 seconds with comprehensive mock implementations
+   - Individual component functionality with dependency injection
+   - Mock implementations from `tests/fixtures/mock_implementations.py`
+-  - Complete in under 10 seconds total, no I/O operations
+-- **Integration Tests** (`tests/integration/`): Tests with external dependencies
++  - No I/O operations, external APIs, or log file creation
++  - Run frequently during development with `python run_tests.py`
++- **Integration Tests** (`tests/integration/`): End-of-cycle validation
++  - 13 tests run in ~90 seconds with real external APIs
+   - Use `.env-test` configuration exclusively
+   - Test database "YT Summaries [TEST]" for safe testing
+-  - API interactions with real services
++  - Run before releases or when validating complete system
+ - **Test Configuration**: Separate `conftest.py` files for unit and integration tests
+-- **Test Runner**: `run_tests.py` handles PYTHONPATH automatically
++- **Test Runner**: `run_tests.py` handles PYTHONPATH automatically (unit tests only)
+ - **Mock Implementations**: Comprehensive mocks for all interfaces in `tests/fixtures/`
+ 
+ ### Configuration Management
+@@ -170,4 +173,26 @@ from .utils.markdown_converter import parse_rich_text
+ - **Argument Validation**: Clear error messages for invalid combinations
+ - **Help Documentation**: Comprehensive usage examples including batch operations
+ - **Progress Indicators**: Real-time progress feedback for batch processing
+-- **Output Control**: Verbose vs concise output modes based on operation type
+\ No newline at end of file
++- **Output Control**: Verbose vs concise output modes based on operation type
++
++## Architecture Restructure Status
++
++The project has successfully completed a comprehensive architecture restructure:
++
++### ✅ Implementation Complete
++- **Component Boundaries**: Clear separation with single responsibilities
++- **Pluggable Interfaces**: Abstract base classes for `SummaryWriter` and `Storage`
++- **Dependency Injection**: `ComponentFactory` pattern for component creation
++- **Error Handling**: Structured exception hierarchy with graceful fallbacks
++- **Testing Architecture**: Fast unit tests (478 in ~6s) + integration tests (13 in ~90s)
++
++### ✅ Quality Metrics
++- **Backward Compatibility**: All existing functionality preserved
++- **Test Coverage**: Comprehensive unit and integration test suites
++- **Mock Implementations**: Complete mock implementations for all interfaces
++- **Performance**: Unit tests optimized for development workflow speed
++
++### ✅ Development Workflow
++- **Primary**: Unit tests for daily development (`python run_tests.py`)
++- **Secondary**: Integration tests for release validation (`python -m pytest tests/integration/`)
++- **Architecture**: Component-based design with clear interfaces and factory pattern
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 95f043d..d4fafd4 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -32,14 +32,17 @@ inclusion: always
+ - **Integration Tests**: Use `.env-test` configuration and test database "YT Summaries [TEST]"
+ 
+ ### Test-Driven Development Standards
++- **PRIMARY FOCUS**: Unit tests for regular development work (478 tests run in ~6 seconds)
+ - **MANDATORY**: Write proper unit tests for every functionality change
+ - **NEVER**: Use print statements or quick checks for validation
+-- **ALWAYS**: Run full test suite after any code changes
++- **DAILY WORKFLOW**: Run unit tests frequently during development (`python run_tests.py`)
++- **INTEGRATION TESTS**: Run only at end of development cycle or before releases (slow, ~90 seconds)
+ - **REQUIRED**: Review and update existing tests when functionality changes
+-- **PREFER**: Unit tests over integration tests (faster execution)
++- **PREFER**: Unit tests over integration tests (faster execution, no external dependencies)
+ - **STRUCTURE**: Follow existing test patterns in `tests/` directory
+-- **COVERAGE**: Ensure new code paths are covered by tests
+-- **VALIDATION**: Tests must pass before considering changes complete
++- **COVERAGE**: Ensure new code paths are covered by unit tests
++- **VALIDATION**: Unit tests must pass before considering changes complete
++- **MOCK USAGE**: Use comprehensive mock implementations from `tests/fixtures/mock_implementations.py`
+ 
+ ### Error Handling Standards
+ - Return boolean success indicators from main functions
+@@ -109,12 +112,22 @@ from notion_client import Client
+ pip install -e .
+ cp .env.example .env
+ 
+-# Testing (preferred method)
+-python run_tests.py
++# Testing (primary development workflow)
++python run_tests.py                    # Unit tests only (fast, ~6 seconds)
++python -m pytest tests/integration/   # Integration tests (slow, ~90 seconds, run at end)
+ 
+ # Running application
+ python youtube_notion_cli.py --example-data  # Default mode
+ python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"  # YouTube mode
+ python youtube_notion_cli.py --batch --urls url1 url2 url3  # Batch mode
+ python youtube_notion_cli.py --batch --file urls.txt  # Batch from file
+-```
+\ No newline at end of file
++```
++
++## Current Architecture Status
++
++The project has been successfully restructured with a component-based architecture:
++
++- **✅ Complete**: All 6 architecture requirements implemented
++- **✅ Tested**: 478 unit tests + 13 integration tests, all passing
++- **✅ Operational**: Full backward compatibility maintained
++- **✅ Quality**: Comprehensive error handling and mock implementations
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

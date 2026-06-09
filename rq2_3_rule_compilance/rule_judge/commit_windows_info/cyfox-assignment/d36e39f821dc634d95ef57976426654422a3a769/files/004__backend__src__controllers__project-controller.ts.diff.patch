@@ -1,0 +1,40 @@
+diff --git a/backend/src/controllers/project-controller.ts b/backend/src/controllers/project-controller.ts
+index eec352b..1f2a7cf 100644
+--- a/backend/src/controllers/project-controller.ts
++++ b/backend/src/controllers/project-controller.ts
+@@ -8,7 +8,7 @@ import { CreateProjectRequest } from '../models/project';
+  * Get all projects
+  * GET /api/projects
+  */
+-export const getAllProjects = asyncHandler(async (req: Request, res: Response) => {
++export const getAllProjects = asyncHandler(async (_req: Request, res: Response) => {
+   const projects = await projectService.getAllProjects();
+   
+   sendSuccess(res, projects, `Retrieved ${projects.length} projects`);
+@@ -19,7 +19,7 @@ export const getAllProjects = asyncHandler(async (req: Request, res: Response) =
+  * GET /api/projects/:id
+  */
+ export const getProjectById = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   const project = await projectService.getProjectById(projectId);
+   
+   sendSuccess(res, project);
+@@ -41,7 +41,7 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
+  * PUT /api/projects/:id
+  */
+ export const updateProject = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   const updates: Partial<CreateProjectRequest> = req.body;
+   
+   const project = await projectService.updateProject(projectId, updates);
+@@ -54,7 +54,7 @@ export const updateProject = asyncHandler(async (req: Request, res: Response) =>
+  * DELETE /api/projects/:id
+  */
+ export const deleteProject = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   
+   await projectService.deleteProject(projectId);
+   

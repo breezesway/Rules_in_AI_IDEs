@@ -1,0 +1,129 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- npm run clean # Remove out/ directory
+- npm run clean:web # Remove web build artifacts
+- npm run lint # ESLint on src/
+- npm run test # Run VS Code extension tests
++ npm run clean # Remove out/ directory using rimraf
++ npm run clean:web # Remove web build artifacts (.js, .js.map files)
++ npm run lint # ESLint on src/ directory
++ npm run test # Run VS Code extension tests (runs pretest first)
++ npm run pretest # Compile and lint before testing
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The `package.json` file, specifically the `scripts` object.
+- Suggested Logic: 1. Parse the `package.json` file.
+2. Verify `scripts.clean` contains the command `rimraf` and targets the `out` directory.
+3. Verify `scripts['clean:web']` contains commands to remove `.js` and `.js.map` files (e.g., via `rm` or `rimraf`).
+4. Verify `scripts.lint` executes `eslint` on the `src/` directory.
+5. Verify `scripts.pretest` exists and includes commands for compilation (e.g., `tsc`) and linting.
+6. Verify `scripts.test` exists (npm's native behavior ensures `pretest` runs before `test`).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Modify git ignore
+- Changed Files List: 
+.gitignore	+1	-0	after_lines=5
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── server-extension-mcp.md
+│       ├── structure.md
+│       ├── tech.md
+│       └── web-ui-preact.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── message-bus.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcp-stdio.server.ts
+│   │   └── mcp.provider.ts
+│   ├── services
+│   │   ├── http-bridge.service.ts
+│   │   └── message-bus.service.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── message-bus.service.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index e6b3087..d36dc14 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -2,3 +2,4 @@ node_modules/
+ out/
+ *.vsix
+ .vscode-test/
++.github
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

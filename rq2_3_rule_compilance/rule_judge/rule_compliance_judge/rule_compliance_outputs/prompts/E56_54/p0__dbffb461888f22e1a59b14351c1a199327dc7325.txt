@@ -1,0 +1,249 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+Directory tree and responsibility table updated to include utils/video_utils.py.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and project documentation files (e.g., README.md, PROJECT_STRUCTURE.md, or docs/ directory).
+- Suggested Logic: 1. Verify the existence of the file 'utils/video_utils.py' in the repository.
+2. Perform a text search/regex check in documentation files (like README.md) to confirm that 'utils/video_utils.py' is listed in the directory tree or responsibility table section.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: steering
+- Changed Files List: 
+.kiro/steering/product.md	+12	-3	after_lines=80
+.kiro/steering/structure.md	+4	-0	after_lines=227
+.kiro/steering/tech.md	+12	-0	after_lines=145
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   ├── markdown_converter.py
+│       │   └── video_utils.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_property_based_markdown_converter.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       ├── test_video_processor.py
+│       └── test_video_utils.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index f39a0f2..ba0b6f8 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -31,9 +31,10 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ ### AI Summary Requirements
+ - Use `GeminiSummaryWriter` for structured summaries
+ - **CRITICAL**: Pass YouTube URLs as FileData to Gemini API (not text prompts)
++- **Long Video Processing**: Automatically split videos >45 minutes into overlapping chunks
+ - Support streaming responses with progress indicators
+ - Handle markdown: headers (H1-H3), lists, bold, italic, **nested formatting in tables**
+-- Automatic conversation logging to `chat_logs/` directory
++- Automatic conversation logging to `chat_logs/` directory (including chunk-specific logs)
+ 
+ ### Advanced Markdown Processing
+ - **Table Support**: Full table parsing with nested formatting (bold, italic, links)
+@@ -48,6 +49,13 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - Cap retry delays to 5 seconds during testing
+ - Use concise output in batch mode
+ 
++### Long Video Processing
++- **Automatic Detection**: Videos >45 minutes (`MAX_VIDEO_DURATION_SECONDS = 2700`) are automatically split
++- **Smart Chunking**: 45-minute chunks with 5-minute overlaps, 20-minute minimum chunks
++- **Contextual Processing**: Each chunk receives context from previous summaries
++- **Progress Tracking**: Clear indication of chunk processing ("Processing chunk 2/4...")
++- **Duration Extraction**: Parse video duration from YouTube API and web scraping fallback
++
+ ## Quality Standards
+ 
+ ### Error Handling
+@@ -67,5 +75,6 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - **CRITICAL**: Implement block batching for summaries >100 blocks
+ - Automatically discover target databases by name
+ - Check for duplicates before creating pages
+-- Map video metadata to Notion page properties
+-- Handle Notion's 100-block limit with automatic batching (first 100 blocks + append remaining)
+\ No newline at end of file
++- Map video metadata to Notion page properties (including duration)
++- Handle Notion's 100-block limit with automatic batching (first 100 blocks + append remaining)
++- Support long-form content from chunked video processing
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 4481c6e..b1f027c 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -29,6 +29,7 @@ src/youtube_notion/              # Main package (use relative imports)
+ └── utils/                       # Shared utilities
+     ├── exceptions.py            # Exception hierarchy
+     ├── chat_logger.py           # Conversation logging
++    ├── video_utils.py           # Video processing utilities
+     └── markdown_converter.py
+ ```
+ 
+@@ -67,6 +68,7 @@ success = processor.process_video(url)
+ | `config/factory.py` | Dependency injection | Creates and configures components based on environment |
+ | `utils/exceptions.py` | Error handling | Structured exception hierarchy |
+ | `utils/chat_logger.py` | Conversation logging | Automatic cleanup and structured logging |
++| `utils/video_utils.py` | Video processing | Duration parsing, video splitting for long content |
+ 
+ ### Import Conventions
+ 
+@@ -87,6 +89,7 @@ from .processors.video_processor import VideoProcessor
+ from .config.factory import ComponentFactory
+ from .config.example_data import EXAMPLE_DATA
+ from .utils.exceptions import VideoProcessingError, ConfigurationError
++from .utils.video_utils import parse_iso8601_duration, calculate_video_splits
+ from .utils.markdown_converter import parse_rich_text
+ 
+ # External dependencies (absolute imports)
+@@ -124,6 +127,7 @@ tests/
+ │   ├── test_component_factory.py
+ │   ├── test_main.py
+ │   ├── test_property_based_markdown_converter.py  # Property-based tests
++│   ├── test_video_utils.py      # Video processing utilities tests
+ │   └── utils/
+ │       ├── test_exceptions.py
+ │       ├── test_chat_logger.py
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 744016b..d68712c 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -13,6 +13,7 @@ inclusion: always
+ - `google-genai>=0.1.0` - Google Gemini AI integration with FileData support
+ - `google-api-python-client>=2.0.0` - YouTube Data API access
+ - `requests>=2.25.0` - HTTP requests and web scraping fallback
++- `beautifulsoup4` - Enhanced HTML parsing for metadata extraction
+ - `pytest` - Primary testing framework (unified across all tests)
+ - `hypothesis` - Property-based testing for robust validation
+ 
+@@ -68,6 +69,9 @@ from notion_client import Client
+ ### Gemini API Best Practices
+ - **CRITICAL**: Use `types.Part(file_data=...)` for YouTube URLs, not text prompts
+ - Pass video URLs as FileData objects to align with Gemini documentation
++- **Long Video Processing**: Videos >45 minutes automatically split into overlapping chunks
++- Use `start_offset` and `end_offset` parameters for precise chunk processing
++- Build cumulative summaries by passing previous parts as context
+ - This ensures reliable video processing and proper API usage
+ 
+ ### Notion API Optimization
+@@ -94,15 +98,23 @@ from notion_client import Client
+ - **Notion Batching**: Automatic handling of 100+ block summaries with batching
+ - **Nested Table Formatting**: Rich markdown support within table cells
+ 
++### Long Video Processing (Latest)
++- **Automatic Video Splitting**: Videos >45 minutes split into overlapping chunks
++- **Duration Extraction**: Parse ISO 8601 duration from YouTube API and web scraping
++- **Chunked Processing**: Sequential processing with contextual prompts
++- **Enhanced Chat Logging**: Separate logs for each video chunk with timing info
++
+ ### Testing Enhancements
+ - **Property-Based Testing**: Added Hypothesis for robust markdown validation
+ - **Unified pytest**: All tests now use pytest framework consistently
+ - **Enhanced Coverage**: 478 unit tests with comprehensive edge case testing
++- **Video Utils Testing**: Comprehensive tests for duration parsing and video splitting
+ 
+ ### Code Quality Improvements
+ - **Consolidated Processing**: Streamlined main.py logic (reduced by 184 lines)
+ - **Better Error Handling**: Enhanced API integration with proper fallbacks
+ - **Rich Content Support**: Tables with nested bold, italic, links formatting
++- **Modular Video Utils**: Extracted video processing utilities to separate module
+ 
+ ## Development Commands
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,134 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+- **dicom_criterion/**: Main package containing all source code
++ **dicomcriterion/**: Main package containing all source code
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and file paths within the repository.
+- Suggested Logic: Verify that the directory 'dicomcriterion/' exists and contains the project's source code, and check that the old directory name 'dicom_criterion/' has been renamed or removed.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Fixes flake8 errors
+- Changed Files List: 
+dicomcriterion/criterion.py	+3	-1	after_lines=317
+examples/advanced_usage.py	+4	-4	after_lines=427
+tests/test_integration.py	+1	-1	after_lines=1208
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── ISSUE_TEMPLATE.md
+│   └── workflows
+│       └── build.yml
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── dicom-criterion-class
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── package-rename-refactor
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .pre-commit-config.yaml
+├── LICENSE
+├── README.md
+├── dicomcriterion
+│   ├── __init__.py
+│   ├── criterion.py
+│   ├── exceptions.py
+│   ├── functions.py
+│   └── symbol.py
+├── examples
+│   ├── advanced_usage.py
+│   └── basic_usage.py
+├── pyproject.toml
+├── setup.cfg
+└── tests
+    ├── test_criterion.py
+    ├── test_exceptions.py
+    ├── test_function_registry.py
+    ├── test_functions.py
+    ├── test_integration.py
+    └── test_symbol.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: dicomcriterion/criterion.py ---
+diff --git a/dicomcriterion/criterion.py b/dicomcriterion/criterion.py
+index dc2d288..5a0ae2e 100644
+--- a/dicomcriterion/criterion.py
++++ b/dicomcriterion/criterion.py
+@@ -192,7 +192,9 @@ class Criterion:
+                 else:
+                     # This shouldn't happen if our implementation is correct
+                     raise ValueError(
+-                        f"Symbol {symbol_key} not found in " f"symbol mapping"
++                        f"Symbol {symbol_key} not found "
++                        f"in "
++                        f"symbol mapping"  # noqa E713
+                     )
+ 
+             # Evaluate the boolean expression using the symbol values
+
+--- FILE: examples/advanced_usage.py ---
+diff --git a/examples/advanced_usage.py b/examples/advanced_usage.py
+index 69069ad..eb01d3a 100644
+--- a/examples/advanced_usage.py
++++ b/examples/advanced_usage.py
+@@ -198,7 +198,7 @@ def example_multiple_datasets():
+     }
+ 
+     # Evaluate each rule against each dataset
+-    print(f"{'Dataset':<15} {'Rule':<20} {'Result'}")
++    print(f"{'Dataset': <15} {'Rule': <20} {'Result'}")
+     print("-" * 50)
+ 
+     for dataset_name, dataset in datasets.items():
+@@ -206,9 +206,9 @@ def example_multiple_datasets():
+             try:
+                 criterion = Criterion(rule_expression)
+                 result = criterion.evaluate(dataset)
+-                print(f"{dataset_name:<15} {rule_name:<20} {result}")
++                print(f"{dataset_name: <15} {rule_name: <20} {result}")
+             except Exception as e:
+-                print(f"{dataset_name:<15} {rule_name:<20} ERROR: {e}")
++                print(f"{dataset_name: <15} {rule_name: <20} ERROR: {e}")
+ 
+     print()
+ 
+@@ -390,7 +390,7 @@ def example_real_world_workflows():
+     print("=" * 60)
+ 
+     for study_name, dataset in studies.items():
+-        print(f"\n{study_name}:")
++        print(f"\n{study_name}: ")
+         print(f"  Patient: {getattr(dataset, 'PatientName', 'N/A')}")
+         print(f"  Study: {getattr(dataset, 'StudyDescription', 'N/A')}")
+         print("  Workflow Assignments:")
+
+--- FILE: tests/test_integration.py ---
+diff --git a/tests/test_integration.py b/tests/test_integration.py
+index 9a62b4b..bcc80a8 100644
+--- a/tests/test_integration.py
++++ b/tests/test_integration.py
+@@ -1146,7 +1146,7 @@ class TestUsageExamples:
+         for i in range(10):
+             dataset = Dataset()
+             dataset.PatientName = f"Patient {i}"
+-            dataset.PatientID = f"ID{i:03d}"
++            dataset.PatientID = f"ID{i: 03d}"
+             dataset.StudyDescription = f"Study {i} - {'MRI' if i % 2 == 0 else 'CT'}"
+             dataset.Modality = "MR" if i % 2 == 0 else "CT"
+             datasets.append(dataset)
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

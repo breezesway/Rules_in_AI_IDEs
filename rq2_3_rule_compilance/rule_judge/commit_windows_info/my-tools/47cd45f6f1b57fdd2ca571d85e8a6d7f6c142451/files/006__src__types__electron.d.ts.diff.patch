@@ -1,0 +1,47 @@
+diff --git a/src/types/electron.d.ts b/src/types/electron.d.ts
+index 54ce02f..4b98340 100644
+--- a/src/types/electron.d.ts
++++ b/src/types/electron.d.ts
+@@ -83,6 +83,42 @@ export interface ElectronAPI {
+     error?: string;
+   }>;
+   
++  generateImagePreview: (
++    filePath: string,
++    settings: {
++      method: string;
++      quality?: number;
++      targetSize?: number;
++      maxDimension?: number;
++      outputFormat?: string;
++    }
++  ) => Promise<{
++    success: boolean;
++    preview?: {
++      originalPath: string;
++      previewPath: string;
++      originalBase64: string;
++      compressedBase64: string;
++      original: {
++        size: number;
++        width: number;
++        height: number;
++        format: string;
++      };
++      compressed: {
++        size: number;
++        width: number;
++        height: number;
++        format: string;
++      };
++      compressionRatio: number;
++      sizeDifference: number;
++    };
++    error?: string;
++  }>;
++  
++  cleanupImagePreview: (previewPath: string) => Promise<{ success: boolean }>;
++  
+   onCompressionProgress: (callback: (progress: {
+     currentFile: string;
+     currentIndex: number;

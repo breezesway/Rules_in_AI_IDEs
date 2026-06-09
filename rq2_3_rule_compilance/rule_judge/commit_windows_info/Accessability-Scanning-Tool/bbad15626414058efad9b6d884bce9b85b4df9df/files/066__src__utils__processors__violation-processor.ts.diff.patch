@@ -1,0 +1,42 @@
+diff --git a/src/utils/processors/violation-processor.ts b/src/utils/processors/violation-processor.ts
+index 6d2d8e9..7903a15 100644
+--- a/src/utils/processors/violation-processor.ts
++++ b/src/utils/processors/violation-processor.ts
+@@ -1,8 +1,8 @@
+ import { Page } from '@playwright/test';
+ import { AxeResults, Result as AxeViolation, NodeResult } from 'axe-core';
+-import { Pa11yResult } from '../runners/pa11y-test-runner';
+-import { ConfigurationService } from '../services/configuration-service';
+-import { ErrorHandlerService } from '../services/error-handler-service';
++import { Pa11yResult } from '@/utils/runners/pa11y-test-runner';
++import { ConfigurationService } from '@/utils/services/configuration-service';
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
+ import { ServiceResult, ViolationTarget } from '@/core/types/common';
+ 
+ // Extend NodeResult to include relatedNodes property
+@@ -108,8 +108,10 @@ export class ViolationProcessor {
+         if (!node) continue;
+         const element: ProcessedViolation['elements'][0] = {
+           html: node.html,
+-          // TODO: Fix this type error
+-          target: node.target as any,
++          // Fixed: Properly type the target based on axe-core NodeResult
++          target: {
++            selector: Array.isArray(node.target) ? node.target.join(', ') : String(node.target),
++          },
+           failureSummary: node.failureSummary || violation.description,
+           selector: Array.isArray(node.target) ? node.target.join(', ') : String(node.target),
+           relatedNodes: (node as ExtendedNodeResult).relatedNodes ?? [],
+@@ -183,8 +185,10 @@ export class ViolationProcessor {
+     for (const issue of issues) {
+       const element: ProcessedViolation['elements'][0] = {
+         html: issue.context,
+-        // TODO: Fix this type error
+-        target: issue.selector as any,
++        // Fixed: Properly type the target for pa11y selector
++        target: {
++          selector: typeof issue.selector === 'string' ? issue.selector : '',
++        },
+         failureSummary: issue.message,
+         selector: typeof issue.selector === 'string' ? issue.selector : '',
+       };

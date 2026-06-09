@@ -1,0 +1,266 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Refactor color handling in graph styles service for improved CSS variable resolution
+- Changed Files List: 
+webview-ui/src/services/graph-styles.service.ts	+59	-21	after_lines=153
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 02-cytoscape-graph-visualization
+│   │   │   ├── cytoscape-graph-initial-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── 03-graph-view-layout
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── graph-ui.png
+├── graph-view-layout-prd.md
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   ├── GraphCanvas.tsx
+    │   │   ├── GraphDashboard.tsx
+    │   │   └── GraphToolbar.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   ├── extension-config.service.ts
+    │   │   ├── file-type.service.ts
+    │   │   ├── graph-styles.service.ts
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: webview-ui/src/services/graph-styles.service.ts ---
+diff --git a/webview-ui/src/services/graph-styles.service.ts b/webview-ui/src/services/graph-styles.service.ts
+index f8e94bf..7bcaeca 100644
+--- a/webview-ui/src/services/graph-styles.service.ts
++++ b/webview-ui/src/services/graph-styles.service.ts
+@@ -5,24 +5,53 @@
+ import type { FileType } from './file-type.service';
+ 
+ /**
+- * CSS variable mapping for file type colors
++ * Default hex colors for file types (used if CSS vars are absent)
+  */
+-export const FILE_TYPE_COLORS: Record<FileType, string> = {
+-  ts: 'var(--kiro-node-ts, #569CD6)',
+-  tsx: 'var(--kiro-node-tsx, #4FC1FF)',
+-  js: 'var(--kiro-node-js, #E3D300)',
+-  jsx: 'var(--kiro-node-jsx, #FFBD45)',
+-  json: 'var(--kiro-node-json, #8DC891)',
+-  other: 'var(--kiro-node-other, #B180D7)'
++const DEFAULT_FILE_TYPE_COLORS: Record<FileType, string> = {
++  ts: '#569CD6',
++  tsx: '#4FC1FF',
++  js: '#E3D300',
++  jsx: '#FFBD45',
++  json: '#8DC891',
++  other: '#B180D7'
+ };
+ 
+ /**
+- * Get the color for a specific file type
+- * @param fileType - The file type
+- * @returns CSS color value (CSS variable with fallback)
++ * CSS variable names for file types, resolved at runtime from global.css
++ */
++const FILE_TYPE_VAR_NAMES: Record<FileType, string> = {
++  ts: '--kiro-node-ts',
++  tsx: '--kiro-node-tsx',
++  js: '--kiro-node-js',
++  jsx: '--kiro-node-jsx',
++  json: '--kiro-node-json',
++  other: '--kiro-node-other'
++};
++
++/**
++ * Resolve a CSS variable from :root with a fallback. If execution environment
++ * cannot access document (e.g., SSR), returns the fallback.
++ */
++function resolveCssVar(varName: string, fallback: string): string {
++  try {
++    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
++      const styles = getComputedStyle(document.documentElement);
++      const value = styles.getPropertyValue(varName).trim();
++      return value || fallback;
++    }
++  } catch {
++    /* ignore */
++  }
++  return fallback;
++}
++
++/**
++ * Get the concrete color for a specific file type (hex string).
+  */
+ export function getFileTypeColor(fileType: FileType): string {
+-  return FILE_TYPE_COLORS[fileType] || FILE_TYPE_COLORS.other;
++  const varName = FILE_TYPE_VAR_NAMES[fileType] ?? FILE_TYPE_VAR_NAMES.other;
++  const fallback = DEFAULT_FILE_TYPE_COLORS[fileType] ?? DEFAULT_FILE_TYPE_COLORS.other;
++  return resolveCssVar(varName, fallback);
+ }
+ 
+ /**
+@@ -32,7 +61,16 @@ export function getFileTypeColor(fileType: FileType): string {
+  */
+ export function generateGraphStylesheet(nodeCount: number = 0) {
+   const isLargeGraph = nodeCount > 500;
+-  const isMediumGraph = nodeCount > 200;
++
++  // Resolve concrete colors once per stylesheet build
++  const colors: Record<FileType, string> = {
++    ts: getFileTypeColor('ts'),
++    tsx: getFileTypeColor('tsx'),
++    js: getFileTypeColor('js'),
++    jsx: getFileTypeColor('jsx'),
++    json: getFileTypeColor('json'),
++    other: getFileTypeColor('other')
++  };
+ 
+   // Base styles
+   const baseStyles = [
+@@ -41,20 +79,20 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
+       selector: 'node',
+       style: {
+         'label': 'data(label)',
+-        'color': 'var(--vscode-foreground, #CCCCCC)',
++        'color': '#CCCCCC',
+         'font-size': isLargeGraph ? '10px' : '12px',
+         'text-valign': 'center',
+         'text-halign': 'center',
+         'width': isLargeGraph ? '20px' : '30px',
+         'height': isLargeGraph ? '20px' : '30px',
+-        'background-color': FILE_TYPE_COLORS.other // Default fallback
++        'background-color': colors.other // Default fallback
+       }
+     },
+     // Edge styles
+     {
+       selector: 'edge',
+       style: {
+-        'line-color': 'var(--vscode-foreground, #666666)',
++        'line-color': '#666666',
+         'width': isLargeGraph ? 1 : 2,
+         'opacity': isLargeGraph ? 0.4 : 0.6,
+         'curve-style': 'bezier'
+@@ -65,17 +103,17 @@ export function generateGraphStylesheet(nodeCount: number = 0) {
+       selector: 'node:selected',
+       style: {
+         'border-width': 3,
+-        'border-color': 'var(--vscode-focusBorder, #007FD4)',
+-        'background-color': 'var(--vscode-charts-orange, #FF8C00)'
++        'border-color': '#007FD4',
++        'background-color': '#FF8C00'
+       }
+     }
+   ];
+ 
+   // File type specific styles
+-  const fileTypeStyles = Object.entries(FILE_TYPE_COLORS).map(([fileType, color]) => ({
++  const fileTypeStyles = (Object.keys(colors) as FileType[]).map((fileType) => ({
+     selector: `node[ext = "${fileType}"]`,
+     style: {
+-      'background-color': color
++      'background-color': colors[fileType]
+     }
+   }));
+ 
+@@ -112,4 +150,4 @@ export function getFileTypeLabel(fileType: FileType): string {
+     default:
+       return 'Unknown';
+   }
+-}
+\ No newline at end of file
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

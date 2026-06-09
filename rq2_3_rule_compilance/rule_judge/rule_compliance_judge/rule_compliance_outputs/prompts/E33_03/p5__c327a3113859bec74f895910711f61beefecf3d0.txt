@@ -1,0 +1,245 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Environment Configuration
+- Rule File Path: pkg/config/.cursor/rules/config.mdc
+- Change Type: added
+- Target Rule Content:
+// Database defaults
+v.SetDefault("database.host", "localhost")
+v.SetDefault("database.port", 5432)
+v.SetDefault("database.name", "mtsg")
+v.SetDefault("database.user", "mtsg_user")
+v.SetDefault("database.password", "")
+v.SetDefault("database.sslmode", "disable")
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically configuration initialization files (e.g., Go files using the Viper library).
+- Suggested Logic: Verify the presence of specific function calls: `v.SetDefault` with the exact key-value pairs specified in the rule (e.g., 'database.host' as 'localhost', 'database.port' as 5432, 'database.name' as 'mtsg', etc.).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: perf: remove redundant JSON marshalling in token service
+
+- Remove duplicate json.Marshal() call in token.Generate() method
+  - Eliminate redundant marshalling before Redis.Set() call
+  - Let Redis adapter handle JSON serialization internally
+  - Remove unused encoding/json import
+
+- Improve performance by eliminating double marshalling:
+  - Before: json.Marshal(claims) → redis.Set(data) → json.Marshal(data)
+  - After: redis.Set(claims) → json.Marshal(claims) once
+
+- All tests pass, confirming no functional changes
+- Maintains backward compatibility and existing behavior
+- Follows single responsibility principle - let Redis adapter handle serialization
+- Changed Files List: 
+pkg/token/service.go	+2	-9	after_lines=93
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── global.mdc
+│       └── mock.mdc
+├── .env.example
+├── .gitignore
+├── .mockery.yml
+├── Makefile
+├── README.md
+├── cmd
+│   └── main.go
+├── config
+│   └── config.yaml
+├── docker-compose.yml
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+├── go.sum
+├── internal
+│   ├── .cursor
+│   │   └── rules
+│   │       └── dependency-injection.mdc
+│   ├── di
+│   │   ├── README.md
+│   │   ├── di_test.go
+│   │   ├── provider
+│   │   │   ├── container.go
+│   │   │   ├── pkg.go
+│   │   │   └── usecase.go
+│   │   ├── wire.go
+│   │   └── wire_gen.go
+│   ├── domain
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── entity.mdc
+│   │   │       ├── generic-types.mdc
+│   │   │       └── unit-test.mdc
+│   │   ├── authentication
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── credential.mdc
+│   │   │   │       └── session.mdc
+│   │   │   ├── authentication_test.go
+│   │   │   ├── credential.go
+│   │   │   ├── error.go
+│   │   │   └── session.go
+│   │   ├── project
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── project.mdc
+│   │   │   └── project.go
+│   │   ├── tenant
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── tenant.mdc
+│   │   │   └── tenant.go
+│   │   └── user
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── datatypes.mdc
+│   │       │       └── user.mdc
+│   │       ├── datatypes.go
+│   │       ├── datatypes_test.go
+│   │       └── user.go
+│   ├── presentation
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── presentation.mdc
+│   │   ├── dto
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── authentication.mdc
+│   │   │   │       └── dto.mdc
+│   │   │   ├── auth.go
+│   │   │   ├── auth_test.go
+│   │   │   ├── common.go
+│   │   │   └── common_test.go
+│   │   └── http
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── errorhandler.mdc
+│   │       │       ├── middleware.mdc
+│   │       │       ├── server.mdc
+│   │       │       └── swagger.mdc
+│   │       ├── docs
+│   │       │   ├── docs.go
+│   │       │   ├── swagger.json
+│   │       │   └── swagger.yaml
+│   │       ├── handler
+│   │       │   ├── .cursor
+│   │       │   │   └── rules
+│   │       │   │       └── authentication.mdc
+│   │       │   ├── auth.go
+│   │       │   ├── handlers.go
+│   │       │   └── ping.go
+│   │       ├── middleware
+│   │       │   ├── auth.go
+│   │       │   ├── container.go
+│   │       │   ├── cors.go
+│   │       │   ├── error.go
+│   │       │   ├── factory.go
+│   │       │   ├── logging.go
+│   │       │   ├── rate_limit.go
+│   │       │   ├── recovery.go
+│   │       │   └── validation.go
+│   │       └── server.go
+│   ├── repository
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── repository.mdc
+│   │   │       └── user.mdc
+│   │   └── user.go
+│   └── usecase
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── authentication.mdc
+│       │       └── usecase.mdc
+│       ├── authentication.go
+│       └── authentication_test.go
+├── pkg
+│   ├── .cursor
+│   │   └── rules
+│   │       └── pkg.mdc
+│   ├── config
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── config.mdc
+│   │   ├── README.md
+│   │   ├── config.go
+│   │   └── config_test.go
+│   ├── error
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── http.mdc
+│   │   │       └── stacktraceable.mdc
+│   │   ├── http.go
+│   │   ├── http_test.go
+│   │   ├── stackerror.go
+│   │   └── stackerror_test.go
+│   ├── redis
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── redis.mdc
+│   │   └── redis.go
+│   └── token
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── service.mdc
+│       │       └── token.mdc
+│       ├── service.go
+│       ├── service_test.go
+│       └── token.go
+└── testmock
+    ├── AdapterRepository_mock.go
+    ├── Authentication_mock.go
+    ├── GeneratorRepository_mock.go
+    ├── UserRepository_mock.go
+    └── mock_redis_adapter.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: pkg/token/service.go ---
+diff --git a/pkg/token/service.go b/pkg/token/service.go
+index 41cc2a6..7a842e0 100644
+--- a/pkg/token/service.go
++++ b/pkg/token/service.go
+@@ -6,7 +6,6 @@ import (
+ 	"crypto/rand"
+ 	"crypto/sha256"
+ 	"encoding/base64"
+-	"encoding/json"
+ 	"errors"
+ 	"fmt"
+ 	"time"
+@@ -60,20 +59,14 @@ func (g *generator) Generate(ctx context.Context, claims Claims) (Token, error)
+ 		claims.JTI = uuid.New()
+ 	}
+ 
+-	// Marshal claims to JSON
+-	data, err := json.Marshal(claims)
+-	if err != nil {
+-		return "", fmt.Errorf("failed to marshal claims: %w", err)
+-	}
+-
+ 	// Calculate TTL (expiration)
+ 	ttl := time.Until(time.Unix(claims.EXP, 0))
+ 	if ttl <= 0 {
+ 		return "", errors.New("claims.EXP must be in the future")
+ 	}
+ 
+-	// Store in Redis
+-	if err := g.redis.Set(ctx, tokenStr, data, ttl); err != nil {
++	// Store claims directly in Redis (Redis adapter handles JSON marshalling)
++	if err := g.redis.Set(ctx, tokenStr, claims, ttl); err != nil {
+ 		return "", fmt.Errorf("failed to store token in redis: %w", err)
+ 	}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

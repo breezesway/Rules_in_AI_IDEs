@@ -1,0 +1,55 @@
+diff --git a/src/utils/runners/pa11y-test-runner.ts b/src/utils/runners/pa11y-test-runner.ts
+index 5dcfe3b..6f1cb61 100644
+--- a/src/utils/runners/pa11y-test-runner.ts
++++ b/src/utils/runners/pa11y-test-runner.ts
+@@ -63,16 +63,33 @@ export class Pa11yTestRunner {
+ 
+     // Run Pa11y analysis
+     const startTime = Date.now();
+-    const results = await Promise.race([
+-      pa11y(this.page.url(), pa11yOptions),
+-      new Promise((_, reject) => {
+-        setTimeout(() => {
+-          reject(new Error(`Pa11y analysis timed out after ${config.timeout}ms`));
+-        }, config.timeout);
+-      }),
+-    ]);
+ 
+-    const duration = Date.now() - startTime;
++    // Create a timeout promise that can be cleaned up
++    let timeoutId: NodeJS.Timeout | undefined;
++    const timeoutPromise = new Promise<never>((_, reject) => {
++      timeoutId = setTimeout(() => {
++        reject(new Error(`Pa11y analysis timed out after ${config.timeout}ms`));
++      }, config.timeout);
++    });
++
++    let results: any;
++    try {
++      results = await Promise.race([
++        pa11y(this.page.url(), pa11yOptions),
++        timeoutPromise,
++      ]);
++
++      // Clear the timeout if the promise resolves
++      if (timeoutId) {
++        clearTimeout(timeoutId);
++      }
++    } catch (error) {
++      // Clear the timeout if there's an error
++      if (timeoutId) {
++        clearTimeout(timeoutId);
++      }
++      throw error;
++    }
+ 
+     if (!results || typeof results !== 'object') {
+       throw new Error('Pa11y returned invalid results');
+@@ -80,6 +97,7 @@ export class Pa11yTestRunner {
+ 
+     // Process results
+     const pa11yResults = results as Pa11yResult;
++    const duration = Date.now() - startTime;
+ 
+     // Filter out notices if we have too many issues to keep output focused
+     if (pa11yResults.issues && pa11yResults.issues.length > 500) {

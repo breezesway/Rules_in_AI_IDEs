@@ -1,0 +1,457 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Version Control
+- Rule File Path: .cursor/rules/instruction-compliance.mdc
+- Change Type: added
+- Target Rule Content:
+User: "Create git ignore and Basic Readme"
+
+output: 
+ ✅ Add to Prompt.md:
+ #### Prompt X: Git Ignore and Basic Readme
+ User: "Create git ignore and Basic Readme"
+ Context: User wants .gitignore and README.md files
+ Outcome: Created .gitignore and README.md
+ 
+ ✅ Commit changes:
+ git add .gitignore README.md Prompt.md
+ git commit -m "docs(root): add .gitignore and basic README"
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system (existence of .gitignore and README.md), source code (Prompt.md content), and Git history (commit messages).
+- Suggested Logic: 1. Check if the files '.gitignore' and 'README.md' exist in the repository root.
+2. Scan 'Prompt.md' for the specific text header '#### Prompt X: Git Ignore and Basic Readme' and its associated metadata.
+3. Execute a git log command to verify if a commit exists with the exact message 'docs(root): add .gitignore and basic README'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: feat(project): setup Go project directory structure following system architecture
+- Changed Files List: 
+cmd/server/main.go	+105	-0	after_lines=105
+internal/config/config.go	+197	-0	after_lines=197
+internal/observability/logging/logger.go	+56	-0	after_lines=56
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── README.md
+│       ├── development
+│       │   ├── README.md
+│       │   ├── code-quality.mdc
+│       │   ├── performance-guidelines.mdc
+│       │   └── testing-standards.mdc
+│       ├── instruction-compliance.mdc
+│       ├── quality
+│       │   ├── README.md
+│       │   └── documentation-standards.mdc
+│       ├── security
+│       │   ├── README.md
+│       │   └── security-best-practices.mdc
+│       └── workflow
+│           ├── README.md
+│           ├── conventional-commits.mdc
+│           └── cursor-rules-location.mdc
+├── .gitignore
+├── Prompt.md
+├── README.md
+├── SPECS.md
+├── cmd
+│   └── server
+│       └── main.go
+├── internal
+│   ├── config
+│   │   └── config.go
+│   └── observability
+│       └── logging
+│           └── logger.go
+├── product-ideas.md
+└── specs
+    ├── database-design.md
+    ├── opentelemetry-integration.md
+    └── system-architecture.md
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: cmd/server/main.go ---
+diff --git a/cmd/server/main.go b/cmd/server/main.go
+new file mode 100644
+index 0000000..4860349
+--- /dev/null
++++ b/cmd/server/main.go
+@@ -0,0 +1,105 @@
++package main
++
++import (
++	"context"
++	"fmt"
++	"net/http"
++	"os"
++	"os/signal"
++	"syscall"
++	"time"
++
++	"github.com/gin-gonic/gin"
++	"go.opentelemetry.io/otel"
++	"go.uber.org/zap"
++
++	"fiscaflow/internal/api/server"
++	"fiscaflow/internal/config"
++	"fiscaflow/internal/observability/logging"
++	"fiscaflow/internal/observability/tracing"
++)
++
++func main() {
++	// Initialize logger
++	logger := logging.NewLogger()
++	defer logger.Sync()
++
++	logger.Info("Starting FiscaFlow application...")
++
++	// Load configuration
++	cfg, err := config.Load()
++	if err != nil {
++		logger.Fatal("Failed to load configuration", zap.Error(err))
++	}
++
++	// Initialize OpenTelemetry tracer
++	tracer, err := tracing.InitTracer(cfg.OpenTelemetry.Endpoint)
++	if err != nil {
++		logger.Fatal("Failed to initialize tracer", zap.Error(err))
++	}
++	defer tracer.Shutdown(context.Background())
++
++	// Set global tracer
++	otel.SetTracerProvider(tracer)
++
++	// Create Gin router
++	router := gin.New()
++
++	// Add middleware
++	router.Use(gin.Recovery())
++	router.Use(logging.GinLogger(logger))
++
++	// Initialize and setup API server
++	apiServer := server.New(cfg, logger)
++	apiServer.SetupRoutes(router)
++
++	// Health check endpoint
++	router.GET("/health", func(c *gin.Context) {
++		c.JSON(http.StatusOK, gin.H{
++			"status":    "healthy",
++			"timestamp": time.Now().UTC(),
++			"service":   "fiscaflow",
++			"version":   "1.0.0",
++		})
++	})
++
++	// Ready check endpoint
++	router.GET("/ready", func(c *gin.Context) {
++		c.JSON(http.StatusOK, gin.H{
++			"status":    "ready",
++			"timestamp": time.Now().UTC(),
++		})
++	})
++
++	// Start server
++	srv := &http.Server{
++		Addr:    fmt.Sprintf(":%d", cfg.Server.Port),
++		Handler: router,
++	}
++
++	// Start server in a goroutine
++	go func() {
++		logger.Info("Starting HTTP server", zap.String("address", srv.Addr))
++		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
++			logger.Fatal("Failed to start server", zap.Error(err))
++		}
++	}()
++
++	// Wait for interrupt signal to gracefully shutdown the server
++	quit := make(chan os.Signal, 1)
++	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
++	<-quit
++
++	logger.Info("Shutting down server...")
++
++	// Create a deadline for server shutdown
++	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
++	defer cancel()
++
++	// Attempt graceful shutdown
++	if err := srv.Shutdown(ctx); err != nil {
++		logger.Fatal("Server forced to shutdown", zap.Error(err))
++	}
++
++	logger.Info("Server exited")
++}
+
+--- FILE: internal/config/config.go ---
+diff --git a/internal/config/config.go b/internal/config/config.go
+new file mode 100644
+index 0000000..4849467
+--- /dev/null
++++ b/internal/config/config.go
+@@ -0,0 +1,197 @@
++package config
++
++import (
++	"fmt"
++	"os"
++	"strconv"
++	"time"
++
++	"github.com/joho/godotenv"
++)
++
++// Config holds all configuration for the application
++type Config struct {
++	Server        ServerConfig
++	Database      DatabaseConfig
++	Redis         RedisConfig
++	OpenTelemetry OpenTelemetryConfig
++	JWT           JWTConfig
++	Elasticsearch ElasticsearchConfig
++	MinIO         MinIOConfig
++	RabbitMQ      RabbitMQConfig
++}
++
++// ServerConfig holds server configuration
++type ServerConfig struct {
++	Port         int
++	Host         string
++	ReadTimeout  time.Duration
++	WriteTimeout time.Duration
++	IdleTimeout  time.Duration
++}
++
++// DatabaseConfig holds database configuration
++type DatabaseConfig struct {
++	Host            string
++	Port            int
++	User            string
++	Password        string
++	DBName          string
++	SSLMode         string
++	MaxOpenConns    int
++	MaxIdleConns    int
++	ConnMaxLifetime time.Duration
++}
++
++// RedisConfig holds Redis configuration
++type RedisConfig struct {
++	Host     string
++	Port     int
++	Password string
++	DB       int
++}
++
++// OpenTelemetryConfig holds OpenTelemetry configuration
++type OpenTelemetryConfig struct {
++	Endpoint       string
++	ServiceName    string
++	ServiceVersion string
++}
++
++// JWTConfig holds JWT configuration
++type JWTConfig struct {
++	Secret            string
++	Expiration        time.Duration
++	RefreshExpiration time.Duration
++}
++
++// ElasticsearchConfig holds Elasticsearch configuration
++type ElasticsearchConfig struct {
++	URL      string
++	Username string
++	Password string
++}
++
++// MinIOConfig holds MinIO configuration
++type MinIOConfig struct {
++	Endpoint        string
++	AccessKeyID     string
++	SecretAccessKey string
++	UseSSL          bool
++}
++
++// RabbitMQConfig holds RabbitMQ configuration
++type RabbitMQConfig struct {
++	URL      string
++	Username string
++	Password string
++}
++
++// Load loads configuration from environment variables
++func Load() (*Config, error) {
++	// Load .env file if it exists
++	if err := godotenv.Load(); err != nil {
++		// .env file is optional, so we don't return error
++	}
++
++	config := &Config{
++		Server: ServerConfig{
++			Port:         getEnvAsInt("SERVER_PORT", 8080),
++			Host:         getEnv("SERVER_HOST", "0.0.0.0"),
++			ReadTimeout:  getEnvAsDuration("SERVER_READ_TIMEOUT", 15*time.Second),
++			WriteTimeout: getEnvAsDuration("SERVER_WRITE_TIMEOUT", 15*time.Second),
++			IdleTimeout:  getEnvAsDuration("SERVER_IDLE_TIMEOUT", 60*time.Second),
++		},
++		Database: DatabaseConfig{
++			Host:            getEnv("DATABASE_HOST", "localhost"),
++			Port:            getEnvAsInt("DATABASE_PORT", 5432),
++			User:            getEnv("DATABASE_USER", "postgres"),
++			Password:        getEnv("DATABASE_PASSWORD", "password"),
++			DBName:          getEnv("DATABASE_NAME", "fiscaflow"),
++			SSLMode:         getEnv("DATABASE_SSL_MODE", "disable"),
++			MaxOpenConns:    getEnvAsInt("DATABASE_MAX_OPEN_CONNS", 25),
++			MaxIdleConns:    getEnvAsInt("DATABASE_MAX_IDLE_CONNS", 5),
++			ConnMaxLifetime: getEnvAsDuration("DATABASE_CONN_MAX_LIFETIME", 5*time.Minute),
++		},
++		Redis: RedisConfig{
++			Host:     getEnv("REDIS_HOST", "localhost"),
++			Port:     getEnvAsInt("REDIS_PORT", 6379),
++			Password: getEnv("REDIS_PASSWORD", ""),
++			DB:       getEnvAsInt("REDIS_DB", 0),
++		},
++		OpenTelemetry: OpenTelemetryConfig{
++			Endpoint:       getEnv("OTEL_ENDPOINT", "http://localhost:4317"),
++			ServiceName:    getEnv("OTEL_SERVICE_NAME", "fiscaflow"),
++			ServiceVersion: getEnv("OTEL_SERVICE_VERSION", "1.0.0"),
++		},
++		JWT: JWTConfig{
++			Secret:            getEnv("JWT_SECRET", "your-secret-key"),
++			Expiration:        getEnvAsDuration("JWT_EXPIRATION", 15*time.Minute),
++			RefreshExpiration: getEnvAsDuration("JWT_REFRESH_EXPIRATION", 7*24*time.Hour),
++		},
++		Elasticsearch: ElasticsearchConfig{
++			URL:      getEnv("ELASTICSEARCH_URL", "http://localhost:9200"),
++			Username: getEnv("ELASTICSEARCH_USERNAME", ""),
++			Password: getEnv("ELASTICSEARCH_PASSWORD", ""),
++		},
++		MinIO: MinIOConfig{
++			Endpoint:        getEnv("MINIO_ENDPOINT", "localhost:9000"),
++			AccessKeyID:     getEnv("MINIO_ACCESS_KEY_ID", "minioadmin"),
++			SecretAccessKey: getEnv("MINIO_SECRET_ACCESS_KEY", "minioadmin"),
++			UseSSL:          getEnvAsBool("MINIO_USE_SSL", false),
++		},
++		RabbitMQ: RabbitMQConfig{
++			URL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
++			Username: getEnv("RABBITMQ_USERNAME", "guest"),
++			Password: getEnv("RABBITMQ_PASSWORD", "guest"),
++		},
++	}
++
++	return config, nil
++}
++
++// GetDSN returns the database connection string
++func (c *DatabaseConfig) GetDSN() string {
++	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
++		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode)
++}
++
++// GetRedisAddr returns the Redis address
++func (c *RedisConfig) GetAddr() string {
++	return fmt.Sprintf("%s:%d", c.Host, c.Port)
++}
++
++// Helper functions
++func getEnv(key, defaultValue string) string {
++	if value := os.Getenv(key); value != "" {
++		return value
++	}
++	return defaultValue
++}
++
++func getEnvAsInt(key string, defaultValue int) int {
++	if value := os.Getenv(key); value != "" {
++		if intValue, err := strconv.Atoi(value); err == nil {
++			return intValue
++		}
++	}
++	return defaultValue
++}
++
++func getEnvAsBool(key string, defaultValue bool) bool {
++	if value := os.Getenv(key); value != "" {
++		if boolValue, err := strconv.ParseBool(value); err == nil {
++			return boolValue
++		}
++	}
++	return defaultValue
++}
++
++func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
++	if value := os.Getenv(key); value != "" {
++		if duration, err := time.ParseDuration(value); err == nil {
++			return duration
++		}
++	}
++	return defaultValue
++}
+
+--- FILE: internal/observability/logging/logger.go ---
+diff --git a/internal/observability/logging/logger.go b/internal/observability/logging/logger.go
+new file mode 100644
+index 0000000..1506bc7
+--- /dev/null
++++ b/internal/observability/logging/logger.go
+@@ -0,0 +1,56 @@
++package logging
++
++import (
++	"github.com/gin-gonic/gin"
++	"go.uber.org/zap"
++	"go.uber.org/zap/zapcore"
++)
++
++// NewLogger creates a new configured logger
++func NewLogger() *zap.Logger {
++	config := zap.NewProductionConfig()
++	config.EncoderConfig.TimeKey = "timestamp"
++	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
++	config.EncoderConfig.StacktraceKey = "stacktrace"
++	config.EncoderConfig.MessageKey = "message"
++	config.EncoderConfig.LevelKey = "level"
++	config.EncoderConfig.CallerKey = "caller"
++
++	logger, err := config.Build()
++	if err != nil {
++		panic("Failed to initialize logger: " + err.Error())
++	}
++
++	return logger
++}
++
++// GinLogger returns a gin.HandlerFunc for logging HTTP requests
++func GinLogger(logger *zap.Logger) gin.HandlerFunc {
++	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
++		logger.Info("HTTP Request",
++			zap.String("method", param.Method),
++			zap.String("path", param.Path),
++			zap.Int("status", param.StatusCode),
++			zap.Duration("latency", param.Latency),
++			zap.String("client_ip", param.ClientIP),
++			zap.String("user_agent", param.Request.UserAgent()),
++			zap.Time("timestamp", param.TimeStamp),
++		)
++		return ""
++	})
++}
++
++// WithTraceID adds trace ID to logger context
++func WithTraceID(logger *zap.Logger, traceID string) *zap.Logger {
++	return logger.With(zap.String("trace_id", traceID))
++}
++
++// WithUserID adds user ID to logger context
++func WithUserID(logger *zap.Logger, userID string) *zap.Logger {
++	return logger.With(zap.String("user_id", userID))
++}
++
++// WithRequestID adds request ID to logger context
++func WithRequestID(logger *zap.Logger, requestID string) *zap.Logger {
++	return logger.With(zap.String("request_id", requestID))
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

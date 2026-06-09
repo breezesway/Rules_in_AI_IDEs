@@ -1,0 +1,569 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .cursor/rules/unit-tests.mdc
+- Change Type: added
+- Target Rule Content:
+1. Place them in the appropriate directory (`tests/unit/` for unit tests)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and file paths of newly added or modified source code files.
+- Suggested Logic: Identify files that contain unit tests (e.g., files containing test library imports like 'unittest', 'pytest', 'jest', or 'mocha' and follow naming conventions like '*test*' or '*.spec*') and verify that their file path includes the 'tests/unit/' directory.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Fixed bug in equations generation
+- Changed Files List: 
+src/app/equations/equations.py	+32	-108	after_lines=487
+src/app/equations/equations_tests.py	+94	-0	after_lines=94
+tests/unit/test_equations.py	+147	-0	after_lines=147
+
+- Project Directory Tree (Snapshot after commit):
+├── .cloudbuild
+│   └── infrastructure.yaml
+├── .cursor
+│   └── rules
+│       └── unit-tests.mdc
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── README.MD
+├── cloudbuild.yaml
+├── docker-compose.debug.yml
+├── docker-compose.yml
+├── infrastructure
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── pytest.ini
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── equations
+│   │   │   ├── __init__.py
+│   │   │   ├── equations.py
+│   │   │   └── equations_tests.py
+│   │   └── game
+│   │       ├── __init__.py
+│   │       ├── game_config.py
+│   │       ├── game_manager.py
+│   │       ├── quiz_engine.py
+│   │       └── session_manager.py
+│   ├── data
+│   │   └── quizzes.json
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── images
+│   │       ├── bulbasaur.png
+│   │       ├── charmander.png
+│   │       ├── favicon.svg
+│   │       ├── mew.png
+│   │       ├── pikachu.png
+│   │       ├── pokeball-1.gif
+│   │       ├── psyduck_wonder.gif
+│   │       └── squirtle.png
+│   └── templates
+│       ├── all_exercises.html
+│       ├── base.html
+│       ├── index.html
+│       ├── new_exercise.html
+│       ├── profile.html
+│       └── quiz.html
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── data
+    │   └── quizzes.json
+    └── unit
+        ├── __init__.py
+        ├── test_equations.py
+        ├── test_game_manager.py
+        ├── test_quiz_data.py
+        ├── test_quiz_engine.py
+        └── test_session_manager.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/equations/equations.py ---
+diff --git a/src/app/equations/equations.py b/src/app/equations/equations.py
+index cc565db..2cc6ce6 100644
+--- a/src/app/equations/equations.py
++++ b/src/app/equations/equations.py
+@@ -156,7 +156,11 @@ class MathEquationGenerator:
+             # Ensure at least two terms for the first variable to guarantee an operation
+             if len(var_symbols) == 1:
+                 # If only one variable, make sure to have at least 2 terms
+-                coef = random.randint(2, max_per_var)
++                # But if max_per_var is less than 2, use max_per_var to avoid ValueError
++                if max_per_var < 2:
++                    coef = max_per_var  # Use the max possible value
++                else:
++                    coef = random.randint(2, max_per_var)
+             else:
+                 coef = random.randint(1, max_per_var)
+ 
+@@ -386,120 +390,85 @@ class MathEquationGenerator:
+ if __name__ == "__main__":
+     generator = MathEquationGenerator()
+ 
+-    # Define different difficulty configurations
+-    configrations_simple = [
++    # TODO: review the num_helper_equations parameter - how it affects the generation and do we need it
++    # TODO: review the "complexity" parameter as above
++
++    configurations_simple = [
+         {
+             "name": "Very Simple (Grade 1-2)",
++            "difficulty": 1,
+             "params": {
+                 "num_unknowns": 1,
+-                "complexity": 1,
+                 "num_equations": 1,
+-                "max_elements": 3,
+-                "allow_fractions": False,
+-                "allow_division": False,
++                "max_elements": 1,
+                 "very_simple": True,
+                 "ensure_operation": False
+             }
+         },
+         {
+             "name": "Very Simple 2 (Grade 1-2)",
++            "difficulty": 2,
+             "params": {
+                 "num_unknowns": 1,
+                 "num_equations": 1,
+-                "max_elements": 3,
+-                "complexity": 1,
+-                "allow_fractions": False,
+-                "allow_division": False,
++                "max_elements": 2,
+                 "very_simple": True,
+-                "ensure_operation": True
+             }
+         },
+         {
+             "name": "Very Simple 3 (Grade 1-2)",
++            "difficulty": 3,
+             "params": {
+                 "num_unknowns": 1,
+                 "num_equations": 2,
+-                "max_elements": 3,
+-                "complexity": 1,
+-                "allow_fractions": False,
+-                "allow_division": False,
++                "max_elements": 2,
+                 "very_simple": True,
+-                "ensure_operation": True
+             }
+         },
+         {
+             "name": "Very Simple 4 (Grade 1-2)",
++            "difficulty": 4,
+             "params": {
+                 "num_unknowns": 1,
+                 "num_equations": 2,
+-                "complexity": 1,
+-                "allow_fractions": False,
+-                "allow_division": False,
+-                "very_simple": True,
+                 "max_elements": 3,
+-                "ensure_operation": True
++                "very_simple": True,
+             }
+         },
+         {
+             "name": "Basic (Grade 3-4)",
++            "difficulty": 5,
+             "params": {
+                 "num_unknowns": 2,
+-                "num_equations": 2,
+-                "complexity": 1,
+-                "allow_fractions": False,
+-                "allow_division": False,
+-                "very_simple": False,
++                "num_equations": 3,
+                 "max_elements": 3,
+-                "ensure_operation": True
+-            }
+-        }
+-    ]
+-
+-    configrations_advanced = [
+-        {
+-            "name": "Intermediate (Grade 5-6)",
+-            "params": {
+-                "num_unknowns": 1,
+-                "num_equations": 2,
+-                "complexity": 2,
+-                "allow_fractions": True,
+-                "allow_division": False,
+-                "very_simple": False,
+-                "max_elements": 5,  # Limit to 5 elements for intermediate equations
+-                "ensure_operation": True  # Ensure at least one operation
+-            }
++                "very_simple": True,
++            },
+         },
+         {
+-            "name": "Advanced (Grade 7-8)",
++            "name": "Basic 2 (Grade 3-4)",
++            "difficulty": 6,
+             "params": {
+                 "num_unknowns": 2,
+-                "num_equations": 2,
+-                "complexity": 2,
+-                "allow_fractions": True,
+-                "allow_division": True,
++                "num_equations": 3,
++                "max_elements": 3,
+                 "very_simple": False,
+-                "max_elements": 6,  # Limit to 6 elements for advanced equations
+-                "ensure_operation": True  # Ensure at least one operation
+             }
+         },
+         {
+-            "name": "Challenge (Grade 9+)",
++            "name": "Basic 2 (Grade 3-4)",
++            "difficulty": 7,
+             "params": {
+-                "num_unknowns": 3,
+-                "num_equations": 3,
+-                "complexity": 3,
+-                "allow_fractions": True,
+-                "allow_division": True,
++                "num_unknowns": 2,
++                "num_equations": 2,
++                "max_elements": 3,
+                 "very_simple": False,
+-                "num_helper_equations": 1,
+-                "max_elements": 8, # Limit to 8 elements for challenge equations
+-                "ensure_operation": True  # Ensure at least one operation
+             }
+         }
+     ]
+ 
+     # Generate and print examples for each difficulty level
+-    for config in configrations_simple:
++    for config in configurations_simple:
+         print(f"\n{'=' * 60}")
+         print(f"DIFFICULTY LEVEL: {config['name']}")
+         print(f"Settings: {config['params']}")
+@@ -515,49 +484,4 @@ if __name__ == "__main__":
+             print("\nSolution:")
+             for var, val in quiz.solution.human_readable.items():
+                 print(f"{var} = {val}")
+-            print(f"{'-' * 40}")
+-
+-    # Test for single-variable equations to ensure they have operations
+-    print("\nTESTING SINGLE VARIABLE EQUATIONS WITH OPERATION REQUIREMENT:")
+-    for i in range(5):
+-        test_simple = generator.generate_quiz(
+-            num_unknowns=1,
+-            complexity=1,
+-            ensure_operation=True
+-        )
+-        print(f"Test {i + 1}:")
+-        for j, eq in enumerate(test_simple.equations, 1):
+-            print(f"Equation {j}: {eq.formatted}")
+-    print("-" * 40)
+-
+-    # Test for a specific issue with duplicate equations
+-    print("\nTESTING SYSTEM OF EQUATIONS FOR UNIQUENESS:")
+-    test_system = generator.generate_quiz(
+-        num_unknowns=2,
+-        num_equations=2,
+-        complexity=2,
+-        max_elements=5  # Test with element limit
+-    )
+-    print("Equations:")
+-    for j, eq in enumerate(test_system.equations, 1):
+-        print(f"Equation {j}: {eq.formatted}")
+-    print("\nSolution:")
+-    for var, val in test_system.solution.human_readable.items():
+-        print(f"{var} = {val}")
+-    print("-" * 40)
+-
+-    # Test with very simple equations and element limit
+-    print("\nTESTING VERY SIMPLE EQUATIONS WITH ELEMENT LIMIT:")
+-    test_simple = generator.generate_quiz(
+-        num_unknowns=2,
+-        complexity=1,
+-        very_simple=True,
+-        max_elements=3  # Limit to 3 elements total
+-    )
+-    print("Equations:")
+-    for j, eq in enumerate(test_simple.equations, 1):
+-        print(f"Equation {j}: {eq.formatted}")
+-    print("\nSolution:")
+-    for var, val in test_simple.solution.human_readable.items():
+-        print(f"{var} = {val}")
+-    print("-" * 40)
+\ No newline at end of file
++            print(f"{'-' * 40}")
+\ No newline at end of file
+
+--- FILE: src/app/equations/equations_tests.py ---
+diff --git a/src/app/equations/equations_tests.py b/src/app/equations/equations_tests.py
+new file mode 100644
+index 0000000..2687fed
+--- /dev/null
++++ b/src/app/equations/equations_tests.py
+@@ -0,0 +1,94 @@
++from src.app.equations.equations import generator, MathEquationGenerator
++
++configurations_advanced = [
++    {
++        "name": "Intermediate (Grade 5-6)",
++        "params": {
++            "num_unknowns": 1,
++            "num_equations": 2,
++            "complexity": 2,
++            "allow_fractions": True,
++            "allow_division": False,
++            "very_simple": False,
++            "max_elements": 5,  # Limit to 5 elements for intermediate equations
++            "ensure_operation": True  # Ensure at least one operation
++        }
++    },
++    {
++        "name": "Advanced (Grade 7-8)",
++        "params": {
++            "num_unknowns": 2,
++            "num_equations": 2,
++            "complexity": 2,
++            "allow_fractions": True,
++            "allow_division": True,
++            "very_simple": False,
++            "max_elements": 6,  # Limit to 6 elements for advanced equations
++            "ensure_operation": True  # Ensure at least one operation
++        }
++    },
++    {
++        "name": "Challenge (Grade 9+)",
++        "params": {
++            "num_unknowns": 3,
++            "num_equations": 3,
++            "complexity": 3,
++            "allow_fractions": True,
++            "allow_division": True,
++            "very_simple": False,
++            "num_helper_equations": 1,
++            "max_elements": 8,  # Limit to 8 elements for challenge equations
++            "ensure_operation": True  # Ensure at least one operation
++        }
++    }
++]
++
++def run_tests():
++    global i, j, eq, var, val
++    # Test for single-variable equations to ensure they have operations
++    print("\nTESTING SINGLE VARIABLE EQUATIONS WITH OPERATION REQUIREMENT:")
++    for i in range(5):
++        test_simple = generator.generate_quiz(
++            num_unknowns=1,
++            complexity=1,
++            ensure_operation=True
++        )
++        print(f"Test {i + 1}:")
++        for j, eq in enumerate(test_simple.equations, 1):
++            print(f"Equation {j}: {eq.formatted}")
++    print("-" * 40)
++    # Test for a specific issue with duplicate equations
++    print("\nTESTING SYSTEM OF EQUATIONS FOR UNIQUENESS:")
++    test_system = generator.generate_quiz(
++        num_unknowns=2,
++        num_equations=2,
++        complexity=2,
++        max_elements=5  # Test with element limit
++    )
++    print("Equations:")
++    for j, eq in enumerate(test_system.equations, 1):
++        print(f"Equation {j}: {eq.formatted}")
++    print("\nSolution:")
++    for var, val in test_system.solution.human_readable.items():
++        print(f"{var} = {val}")
++    print("-" * 40)
++    # Test with very simple equations and element limit
++    print("\nTESTING VERY SIMPLE EQUATIONS WITH ELEMENT LIMIT:")
++    test_simple = generator.generate_quiz(
++        num_unknowns=2,
++        complexity=1,
++        very_simple=True,
++        max_elements=3  # Limit to 3 elements total
++    )
++    print("Equations:")
++    for j, eq in enumerate(test_simple.equations, 1):
++        print(f"Equation {j}: {eq.formatted}")
++    print("\nSolution:")
++    for var, val in test_simple.solution.human_readable.items():
++        print(f"{var} = {val}")
++    print("-" * 40)
++
++if __name__ == "__main__":
++    generator = MathEquationGenerator()
++
++    run_tests()
+\ No newline at end of file
+
+--- FILE: tests/unit/test_equations.py ---
+diff --git a/tests/unit/test_equations.py b/tests/unit/test_equations.py
+new file mode 100644
+index 0000000..14d83b9
+--- /dev/null
++++ b/tests/unit/test_equations.py
+@@ -0,0 +1,147 @@
++import pytest
++from fractions import Fraction
++
++# Import the module to test
++from src.app.equations.equations import MathEquationGenerator
++
++
++@pytest.fixture
++def generator():
++    """Create a MathEquationGenerator instance for tests."""
++    return MathEquationGenerator()
++
++
++def test_basic_generation(generator):
++    """Test that basic equation generation works."""
++    quiz = generator.generate_quiz(num_unknowns=1, num_equations=1)
++    
++    # Basic assertions
++    assert len(quiz.equations) == 1
++    assert len(quiz.solution.human_readable) == 1
++    assert quiz.equations[0].formatted is not None
++    assert quiz.equations[0].symbolic is not None
++
++
++def test_very_simple_config(generator):
++    """Test the very simple configuration works properly."""
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        complexity=1,
++        num_equations=1,
++        max_elements=3,
++        allow_fractions=False,
++        allow_division=False,
++        very_simple=True,
++        ensure_operation=False
++    )
++    
++    # Assertions for very simple mode
++    assert len(quiz.equations) == 1
++    equation_text = quiz.equations[0].formatted
++    assert 'x' in equation_text  # Should use 'x' variable
++    
++    # Solution should be a positive integer for very_simple mode
++    x_value = quiz.solution.human_readable['x']
++    assert isinstance(x_value, int)
++    assert x_value > 0
++
++
++def test_very_simple_with_small_max_elements(generator):
++    """Test very simple mode with small max_elements (bug reproduction)."""
++    # Test with max_elements=2 (should still work)
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        complexity=1,
++        num_equations=1,
++        max_elements=2,
++        allow_fractions=False,
++        allow_division=False,
++        very_simple=True,
++        ensure_operation=False
++    )
++    assert len(quiz.equations) == 1
++    
++    # Test with max_elements=1 (should still work)
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        complexity=1,
++        num_equations=1,
++        max_elements=1,
++        allow_fractions=False,
++        allow_division=False,
++        very_simple=True,
++        ensure_operation=False
++    )
++    assert len(quiz.equations) == 1
++    
++    # Test with max_elements=0 (edge case)
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        complexity=1,
++        num_equations=1,
++        max_elements=0,
++        allow_fractions=False,
++        allow_division=False,
++        very_simple=True,
++        ensure_operation=False
++    )
++    assert len(quiz.equations) == 1
++
++
++def test_multiple_unknowns(generator):
++    """Test generation with multiple unknown variables."""
++    quiz = generator.generate_quiz(
++        num_unknowns=2,
++        num_equations=2,
++        complexity=1
++    )
++    assert len(quiz.equations) == 2
++    assert len(quiz.solution.human_readable) == 2
++
++
++def test_allow_fractions(generator):
++    """Test that fractions are allowed in solutions when specified."""
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        allow_fractions=True,
++        complexity=2
++    )
++    # At least one value should be a fraction (but this is random so not guaranteed)
++    # We'll check the type is correct even if the random generation sometimes gives integers
++    for val in quiz.solution.human_readable.values():
++        assert isinstance(val, (int, Fraction))
++
++
++@pytest.mark.parametrize("max_elements", [0, 1, 2, 3])
++def test_very_simple_with_parameterized_max_elements(generator, max_elements):
++    """Test very simple mode with different max_elements values using pytest parametrization."""
++    quiz = generator.generate_quiz(
++        num_unknowns=1,
++        complexity=1,
++        num_equations=1,
++        max_elements=max_elements,
++        allow_fractions=False,
++        allow_division=False,
++        very_simple=True,
++        ensure_operation=False
++    )
++    assert len(quiz.equations) == 1
++    # Verify that the solution is valid
++    assert len(quiz.solution.human_readable) == 1
++    assert 'x' in quiz.solution.human_readable
++
++
++def test_worksheet_generation(generator):
++    """Test generation of a worksheet with multiple problems."""
++    num_problems = 5
++    worksheet = generator.generate_quiz_worksheet(
++        num_problems=num_problems,
++        num_unknowns=1,
++        complexity=1
++    )
++    assert len(worksheet) == num_problems
++    
++    # Check each quiz in the worksheet
++    for quiz in worksheet:
++        assert len(quiz.equations) == 1
++        assert len(quiz.solution.human_readable) == 1 
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

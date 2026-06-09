@@ -1,0 +1,37 @@
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index fa281f3..6782a1e 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -95,15 +95,25 @@ Mirrors the `lib/` structure:
+ - **Business Logic Separation**: Complex logic moved from screen widgets into ViewModels
+ - **Dependency Injection**: Use `@injectable` annotations, avoid direct `getIt` calls
+ 
+-### Dependency Flow
+-1. **Services** - Registered with `@injectable` in DI container
+-2. **ViewModels** - Injected with service dependencies, contain business logic
+-3. **Screens** - Focus on UI, delegate complex logic to ViewModels
+-4. **Widgets** - Receive data through parameters, minimal business logic
++### Hybrid Dependency Injection Pattern
++1. **Services** - Registered with `@injectable`/`@lazySingleton` in DI container
++2. **ViewModel Factories** - Registered with `@injectable`, create ViewModels with explicit dependencies
++3. **ViewModels** - Manually instantiated by factories, extend `DisposableViewModel` for lifecycle management
++4. **RouteProviders** - Registered with `@injectable`, create routes with ViewModel factory integration
++5. **Screens** - Receive ViewModels through constructor parameters, focus on UI
++6. **Widgets** - Receive data through parameters, minimal business logic
++
++### ViewModel Lifecycle Management
++- **Manual Creation**: ViewModels created by factories, not DI container
++- **Explicit Dependencies**: All dependencies injected through constructors
++- **Resource Disposal**: ViewModels extend `DisposableViewModel` with `onDispose()` hook
++- **State Management**: ViewModels extend `ChangeNotifier` for UI reactivity
+ 
+ ### File Naming Conventions
+-- `*_service.dart` - Business logic services
+-- `*_viewmodel.dart` - UI state management
++- `*_service.dart` - Business logic services (registered with DI)
++- `*_viewmodel.dart` - UI state management (manually instantiated)
++- `*_viewmodel_factory.dart` - ViewModel factory classes (registered with DI)
++- `*_route_provider.dart` - Route provider classes (registered with DI)
+ - `*_screen.dart` - Full screen widgets
+ - `*_route.dart` - Typed route classes for navigation
+ - `*_test.dart` - Test files

@@ -1,0 +1,54 @@
+diff --git a/src/components/ResultsSection.ts b/src/components/ResultsSection.ts
+index b065b7b..acecc58 100644
+--- a/src/components/ResultsSection.ts
++++ b/src/components/ResultsSection.ts
+@@ -1,3 +1,5 @@
++import { renderDetailedResultsSection, DetailedResultsSectionProps } from './DetailedResultsSection';
++
+ export interface ScanResult {
+     title: string;
+     stats?: {
+@@ -11,11 +13,13 @@ export interface ScanResult {
+         url?: string;
+         class?: string;
+     }[];
++    detailedResults?: any; // Add support for detailed results
+ }
+ 
+ export interface ResultsSectionProps {
+     result?: ScanResult;
+     visible?: boolean;
++    showDetailedResults?: boolean;
+ }
+ 
+ export function renderResultsSection(props: ResultsSectionProps = {}): string {
+@@ -39,7 +43,8 @@ export function renderResultsSection(props: ResultsSectionProps = {}): string {
+                 }
+             ]
+         },
+-        visible = false
++        visible = false,
++        showDetailedResults = false
+     } = props;
+ 
+     const renderStats = (stats: any): string => {
+@@ -83,8 +88,18 @@ export function renderResultsSection(props: ResultsSectionProps = {}): string {
+         `;
+     };
+ 
++    // If detailed results are requested and available, render the detailed results section
++    if (showDetailedResults && result.detailedResults) {
++        return renderDetailedResultsSection({
++            report: result.detailedResults,
++            visible: visible,
++            showHeader: false, // Don't show header since it's embedded in results section
++            showBackButton: false
++        });
++    }
++
+     return `
+-        <section class="results-section" id="resultsSection" aria-labelledby="results-heading" hidden>
++        <section class="results-section" id="resultsSection" aria-labelledby="results-heading" ${visible ? '' : 'hidden'}>
+             <h2 id="results-heading" class="section-heading">Scan Results</h2>
+             <div class="results-container" id="resultsContainer">
+                 <div class="result-item">

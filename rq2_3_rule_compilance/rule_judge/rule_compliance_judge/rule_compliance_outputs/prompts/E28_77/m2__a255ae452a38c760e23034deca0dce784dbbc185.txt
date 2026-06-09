@@ -1,0 +1,656 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Project Documentation
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - web/vite.config.ts: Vite build with manifest generation
+- - eslint.config.mjs: ESLint configuration
++ - web/vite.config.ts: Vite build with manifest generation and Preact preset
++ - eslint.config.mjs: ESLint configuration with TypeScript parser
++ - package.json: Project configuration with VS Code extension metadata
++ - .vscodeignore: Files to exclude from extension package
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Configuration files: web/vite.config.ts, eslint.config.mjs, package.json, and .vscodeignore.
+- Suggested Logic: 1. Search 'web/vite.config.ts' for Preact-related plugins or presets (e.g., '@preact/preset-vite').
+2. Search 'eslint.config.mjs' for TypeScript parser definitions (e.g., 'ts-eslint/parser' or '@typescript-eslint/parser').
+3. Inspect 'package.json' for VS Code extension keys (e.g., 'publisher', 'engines.vscode', 'contributes').
+4. Verify the existence of the '.vscodeignore' file in the repository.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: docs: update documentation for bundle architecture, events, lifecycle, and message bus
+- Changed Files List: 
+docs/bundle-architecture.md	+37	-125	after_lines=62
+docs/events.md	+13	-36	after_lines=20
+docs/index.md	+8	-15	after_lines=19
+docs/lifecycle.md	+17	-36	after_lines=26
+docs/message-bus.md	+44	-0	after_lines=44
+docs/recipes.md	+20	-58	after_lines=39
+package.json	+2	-2	after_lines=88
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── message-bus.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcp-stdio.server.ts
+│   │   └── mcp.provider.ts
+│   ├── services
+│   │   ├── http-bridge.service.ts
+│   │   └── message-bus.service.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── message-bus.service.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: docs/bundle-architecture.md ---
+diff --git a/docs/bundle-architecture.md b/docs/bundle-architecture.md
+index f44a8b7..fa349ba 100644
+--- a/docs/bundle-architecture.md
++++ b/docs/bundle-architecture.md
+@@ -1,150 +1,62 @@
+-# Bundle Architecture
++# Bundle & Build
+ 
+-This document explains how the extension is built in development vs production, how the Web UI and MCP server are bundled, and what files are produced.
+-
+-## TL;DR
+-
+-- Web UI (Preact) is built by Vite into `out/` with a manifest file.
+-- Extension code (TypeScript) is compiled by `tsc` into `out/`.
+-- MCP stdio server is bundled into a single CommonJS file with esbuild at `out/mcp/mcpStdioServer.cjs`.
+-- Dev watch builds all three in the background; packaged builds do a clean, one-shot compile.
+-- If the VS Code MCP API isn’t available (e.g., in Kiro IDE), the extension falls back to writing a workspace config at `.kiro/settings/mcp.json` that points to the bundled server.
++How the extension, web UI, and MCP server are produced in dev and prod.
+ 
+ ## Source layout
+ 
+-- Extension (Node/VS Code host): `src/**/*.ts`
+-- MCP server (stdio): `src/mcp/mcpStdioServer.ts`
++- Extension host: `src/**/*.ts`
++- MCP stdio server: `src/mcp/mcp-stdio.server.ts`
+ - Web UI (webviews): `web/src/**/*.tsx`
+ 
+-## Outputs
+-
+-All build products go to `out/`:
+-
+-- Extension host JS: `out/extension.js` (+ maps)
+-- MCP server bundle: `out/mcp/mcpStdioServer.cjs`
+-- Web UI bundles:
+-  - `out/sidebar.js`, `out/sidebar.css`
+-  - `out/dashboard.js`, `out/dashboard.css`
+-  - Vite manifest: `out/.vite/manifest.json`
+-
+-## MCP setup (VS Code vs Kiro)
+-
+-The extension supports two ways to expose the MCP stdio server:
+-
+-- VS Code (with MCP API): Registers a provider using `vscode.lm.registerMcpServerDefinitionProvider` and `McpStdioServerDefinition`. The server is launched by the host using the resolved Node executable and the bundled entrypoint. Provider id: `kiro-constellation`.
+-- Kiro IDE or missing MCP API: Falls back to writing a workspace-local config at `.kiro/settings/mcp.json`. Kiro reads this file and starts the MCP server directly.
+-
+-Example of the written `mcp.json`:
+-
+-```json
+-{
+-  "mcpServers": {
+-    "kiro-constellation": {
+-      "command": "/path/to/node",
+-      "args": ["/path/to/workspace/out/mcp/mcpStdioServer.cjs"],
+-      "disabled": false
+-    }
+-  }
+-}
+-```
+-
+-Notes:
+-- Writes are idempotent: the file is only updated if `command`, first `args` entry (the script path), or `disabled` differ.
+-- Logs are prefixed with `[Kiro MCP]` to make diagnosis easy.
+-- The config directory can be overridden with `KIRO_MCP_CONFIG_DIR` (relative to the first workspace folder). Default: `.kiro/settings`.
+-- The Node binary can be overridden with `KIRO_MCP_NODE`.
+-
+-## Development build (watch)
++## Outputs (out/)
+ 
+-Command: `npm run watch`
++- `out/extension.js` (+ maps)
++- `out/mcp/mcpStdioServer.cjs`
++- Web assets via Vite (+ `out/.vite/manifest.json`)
+ 
+-What runs concurrently:
++## Dev (watch)
+ 
+-- `vite build --watch --config web/vite.config.ts` – builds web assets to `out/` and updates on change
+-- `tsc -watch -p ./` – compiles TypeScript in `src/` to `out/`
+-- `esbuild ... --watch` – bundles the MCP server to `out/mcp/mcpStdioServer.cjs`
++`npm run watch` runs:
+ 
+-The extension is launched in Debug (F5). When you interact with MCP features, the provider resolves the server script file and spawns it via the VS Code MCP API.
++- Vite watch → builds web assets to `out/`
++- TSC watch → compiles extension to `out/`
++- esbuild watch → bundles MCP to `out/mcp/mcpStdioServer.cjs`
+ 
+-### Runtime server path resolution
++Providers resolve the server script from: `.cjs` → `.js` → `.mjs`. See `src/mcp/mcp.provider.ts`.
+ 
+-The provider (`src/mcp/mcpProvider.ts`) resolves the server script from these candidates in order:
++## Prod (package)
+ 
+-1. `out/mcp/mcpStdioServer.cjs`
+-2. `out/mcp/mcpStdioServer.js`
+-3. `out/mcp/mcpStdioServer.mjs`
++`npm run package` → `npm run build`:
+ 
+-This makes debug resilient even if you built the server a different way. During watch, the `.cjs` bundle is produced continuously, so option 1 should exist.
++1) Clean `out/` and stale web files
++2) Vite build (web) → `out/`
++3) TSC build (extension) → `out/`
++4) esbuild bundle (MCP) → `out/mcp/mcpStdioServer.cjs`
+ 
+-The same resolution is used when writing the Kiro fallback `mcp.json` if the MCP API is unavailable.
++The MCP bundle is a single CJS file (no node_modules at runtime).
+ 
+-### Web assets in dev
++## MCP setup
+ 
+-- Vite also emits `out/.vite/manifest.json`. The helper `src/ui-providers/asset-manifest.ts` reads this to inject correct JS/CSS into the webviews.
+-- If the manifest is temporarily missing (e.g., first run), the helper falls back to predictable names like `out/sidebar.js` and `out/sidebar.css`.
++- VS Code with MCP API: registers provider (`id: kiro-constellation`) via `vscode.lm.registerMcpServerDefinitionProvider`. Launches Node with args `[out/mcp/mcpStdioServer.cjs]`.
++- No MCP API (e.g., Kiro IDE): writes `.kiro/settings/mcp.json` under the first workspace folder with:
+ 
+-## Production build (packaging)
++  - `command`: Node path (can override via `KIRO_MCP_NODE`)
++  - `args[0]`: server script path (resolved at runtime)
++  - Writes only if changed; logs prefixed with `[Kiro MCP]`
++  - Config dir override: `KIRO_MCP_CONFIG_DIR` (default `.kiro/settings`)
+ 
+-Command: `npm run package` (which runs `vscode:prepublish` → `npm run build`).
++## Scripts (package.json)
+ 
+-`npm run build` performs:
+-
+-1. `npm run clean` – removes `out/`
+-2. `npm run clean:web` – removes old web JS/CSS artifacts under `web/`
+-3. `npm run compile` – runs, in sequence:
+-   - `vite build --config web/vite.config.ts` – outputs web assets to `out/`
+-   - `tsc -p ./` – compiles extension TS into `out/`
+-   - `npm run bundle:mcp` – bundles the MCP server to `out/mcp/mcpStdioServer.cjs`
+-
+-The packaged `.vsix` contains the minimal `out/` tree and does not include `node_modules` for the MCP server. The MCP server is self-contained in a single `.cjs` file (~500 KB) that includes the MCP SDK and any transitive code needed at runtime.
+-
+-## Why the MCP server is bundled
+-
+-- Avoids shipping a large `node_modules` inside the `.vsix`.
+-- Ensures the MCP entrypoint can be launched by Node without resolving ESM/CJS ambiguities or requiring local dependencies.
+-- Keeps the dev and prod behavior aligned (same single-file entrypoint).
+-
+-Build command (referenced by scripts):
+-
+-```
+-esbuild src/mcp/mcpStdioServer.ts \
+-  --bundle \
+-  --platform=node \
+-  --format=cjs \
+-  --target=node18 \
+-  --outfile=out/mcp/mcpStdioServer.cjs
+-```
+-
+-## Scripts overview (package.json)
+-
+-- `watch`: runs Vite watch, tsc watch, and esbuild watch
+-- `compile`: one-shot Vite build, tsc build, then MCP bundle
+-- `build`: clean + compile
+-- `package`: creates the `.vsix`
+-- `bundle:mcp`: one-shot MCP bundle
+-- `watch:mcp`: MCP bundle in watch mode
++- `watch`, `compile`, `build`, `package`, `bundle:mcp`, `watch:mcp`
+ 
+ ## Troubleshooting
+ 
+-- Error: `Cannot find module '.../out/mcp/mcpStdioServer.cjs'`
+-  - Ensure `npm run watch` is running (which includes `watch:mcp`), or run `npm run bundle:mcp` once before launching debug.
+-  - Check the resolved path in the log: "Kiro MCP server script resolved to: ...".
+-
+-- Webview shows missing CSS/JS in dev:
+-  - Make sure Vite watch is running (it’s part of `npm run watch`).
+-  - If the manifest is missing on first run, the asset helper falls back to predictable names; a quick restart after the first Vite emit may help.
+-
+-- `mcp.json` is not created in Kiro:
+-  - Ensure a workspace folder is open (the file is written under the first workspace root).
+-  - Check the logs for `[Kiro MCP]` messages indicating why the write was skipped or failed.
+-  - If you want a different location, set `KIRO_MCP_CONFIG_DIR` (e.g., `export KIRO_MCP_CONFIG_DIR=".kiro/settings"`).
+-  - Verify write permissions in the workspace directory.
+-
+-- Kiro is launching Node from an unexpected path:
+-  - Set `KIRO_MCP_NODE` to point to the desired Node binary (e.g., `/opt/homebrew/bin/node`).
++- Missing `mcpStdioServer.cjs`: run `npm run watch` or `npm run bundle:mcp`.
++- Webview assets missing: ensure Vite watch is running; first build may require a reload.
++- `mcp.json` not created: need an open workspace; check `[Kiro MCP]` logs; verify write permissions; override paths via env.
++- Wrong Node binary: set `KIRO_MCP_NODE`.
+ 
+-## Notes on Node targets
++## Node targets
+ 
+-- Extension TS compiles to ES2022 with `module` set to `Node16` (see `tsconfig.json`).
+-- MCP server bundle targets Node 18 for broad compatibility with VS Code’s runtime, but works on newer versions as well. We use `--format=cjs` so it can be executed directly via the host Node (`process.execPath`).
+-  - At runtime, the extension resolves Node in this order: `KIRO_MCP_NODE` env → `process.execPath` if it’s Node → common system paths → `node`.
++- Extension TS → ES2022 (`module: Node16`)
++- MCP bundle → Node 18 CJS (exec via host Node)
+
+--- FILE: docs/events.md ---
+diff --git a/docs/events.md b/docs/events.md
+index 9eeebc5..fbc123a 100644
+--- a/docs/events.md
++++ b/docs/events.md
+@@ -1,43 +1,20 @@
+-# Events and Message Contracts
++# Events and contracts
+ 
+-All event names and payloads are centralized in `src/shared/events.ts` to avoid hard-coded strings and ensure type safety on both extension and webview sides.
++All events are centralized in `src/shared/events.ts` for type safety across extension and webviews.
+ 
+-## Declaring events
++Define events
+ 
+-Edit `src/shared/events.ts`:
++- Add name in `Events`
++- Add payload type in `EventPayloads`
++- `BusEvent` ties `type` to payload
+ 
+-- Add the event name to the `Events` const.
+-- Add the payload type in `EventPayloads`.
+-- The generic `BusEvent` ties `type` to the specific payload.
++Usage
+ 
+-Example:
++- Extension: `messageBus.broadcast({ type: Events.X, payload })`
++- Webview: `messageBus.emit(Events.X, payload)`
+ 
+-```ts
+-export const Events = {
+-  OpenDashboard: "openDashboard",
+-  UiEmitToast: "ui:emitToast",
+-  DashboardOpened: "dashboard:opened",
+-  DashboardClosed: "dashboard:closed",
+-} as const;
++Sticky
+ 
+-export type EventPayloads = {
+-  [Events.OpenDashboard]: undefined;
+-  [Events.UiEmitToast]: { text: string };
+-  [Events.DashboardOpened]: { via: "commandPalette" | "other" };
+-  [Events.DashboardClosed]: undefined;
+-};
+-```
+-
+-## Usage patterns
+-
+-- Extension side: `messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'commandPalette' } })`.
+-- Webview side: `messageBus.emit(Events.UiEmitToast, { text: 'hello' })`.
+-
+-## Sticky events
+-
+-Some events represent state that late-joining webviews should receive immediately. The extension bus maintains a sticky map for these events.
+-
+-- Currently sticky: `Events.DashboardOpened`.
+-- When `Events.DashboardClosed` is broadcast, the sticky `DashboardOpened` state is cleared so newly registered webviews do not show stale state.
+-
+-To add another sticky event, extend `stickyTypes` in `src/services/messageBus.ts`.
++- Sticky events replay to late-joining webviews
++- Current: `Events.DashboardOpened` (cleared by `Events.DashboardClosed`)
++- To add one, extend `stickyTypes` in `src/services/message-bus.service.ts`
+
+--- FILE: docs/index.md ---
+diff --git a/docs/index.md b/docs/index.md
+index 0fc3b31..cf79aac 100644
+--- a/docs/index.md
++++ b/docs/index.md
+@@ -1,26 +1,19 @@
+-# Kiro IDE Constellation Docs
++# Kiro IDE Constellation
+ 
+-A developer-focused guide to the extension architecture, message bus, and UI/webview patterns.
+-
+-- Getting started
+-- Events and message contracts
+-- Extension-side message bus
+-- Webview-side message bus
+-- Webview provider lifecycle
+-- Recipes
++Short, developer-focused docs for the extension architecture, message bus, and webviews.
+ 
+ ## Overview
+ 
+-Kiro IDE Constellation provides a Sidebar webview and a Dashboard webview built with Preact + Vite. Communication between the extension (Node/VS Code host) and the webviews (browser sandbox) uses a small, typed message bus.
++Two webviews (Sidebar, Dashboard) built with Preact + Vite. Extension ↔ Webviews communicate via a small, typed message bus.
+ 
+-- Shared events live in `src/shared/events.ts` (no hard-coded strings).
+-- Extension bus implementation in `src/services/messageBus.ts`.
+-- Webview bus wrapper in `web/src/services/messageBus.ts`.
++- Events live in `src/shared/events.ts` (no magic strings)
++- Extension bus: `src/services/message-bus.service.ts`
++- Webview bus: `web/src/services/message-bus.service.ts`
+ 
+ ## Contents
+ 
+ - [Events and message contracts](./events.md)
+-- [Extension-side message bus](./extension-bus.md)
+-- [Webview-side message bus](./webview-bus.md)
++- [Message bus (extension, webview, HTTP bridge)](./message-bus.md)
+ - [Webview provider lifecycle](./lifecycle.md)
++- [Bundle/build architecture](./bundle-architecture.md)
+ - [Recipes](./recipes.md)
+
+--- FILE: docs/lifecycle.md ---
+diff --git a/docs/lifecycle.md b/docs/lifecycle.md
+index 6df9fe4..3ced322 100644
+--- a/docs/lifecycle.md
++++ b/docs/lifecycle.md
+@@ -1,45 +1,26 @@
+ # Webview Provider Lifecycle
+ 
+-Providers are responsible for:
++Responsibilities
+ 
+-1. Configuring webview options (CSP, localResourceRoots, etc.).
+-2. Producing HTML that loads the built JS/CSS via `getEntryUris`.
+-3. Registering the webview with the central message bus.
+-4. Forwarding messages from the webview to the bus.
+-5. Disposing of resources when the webview is destroyed.
++1) Configure webview options (CSP, localResourceRoots)
++2) Render HTML that loads built JS/CSS via `getEntryUris`
++3) Register the webview with the message bus
++4) Forward messages from the webview to the bus
++5) Dispose everything on webview destroy
+ 
+-## Helper
++Helper
+ 
+-Use the helper to reduce boilerplate:
++- `src/shared/utils/event-bus-register.utils.ts`
++- `registerWebviewWithBus(id, webview, onDispose?) => Disposable`
++  - Registers with the bus, wires `onDidReceiveMessage` → `messageBus.receive(id, msg)`
++  - Disposes wiring and registration
+ 
+-- File: `src/ui-providers/registerWithBus.ts`
+-- API: `registerWebviewWithBus(id, webview, onDispose?) => Disposable`
+-  - Registers with the bus
+-  - Forwards `onDidReceiveMessage` to `messageBus.receive(id, msg)`
+-  - Disposes both registration and forwarding when disposed
++Examples
+ 
+-## Sidebar example
++- Sidebar: `registerWebviewWithBus('sidebar', webview)` and dispose on `webviewView.onDidDispose`
++- Dashboard: `registerWebviewWithBus('dashboard', panel.webview)`; on dispose you may broadcast `Events.DashboardClosed` so other UIs update
+ 
+-```ts
+-const registration = registerWebviewWithBus("sidebar", webview);
+-webviewView.onDidDispose(() => registration.dispose());
+-```
++Sticky events
+ 
+-## Dashboard example
+-
+-```ts
+-const registration = registerWebviewWithBus("dashboard", currentPanel.webview);
+-currentPanel.onDidDispose(() => {
+-  registration.dispose();
+-  // If applicable, broadcast a close event so other UIs can update
+-  void messageBus.broadcast({
+-    type: Events.DashboardClosed,
+-    payload: undefined,
+-  });
+-});
+-```
+-
+-## Sticky events and late joiners
+-
+-- Some events (like `DashboardOpened`) are sticky; newly registered webviews receive them immediately.
+-- When `DashboardClosed` is broadcast, the sticky state for `DashboardOpened` is cleared.
++- `Events.DashboardOpened` is sticky and replays to late joiners
++- Cleared by `Events.DashboardClosed`
+
+--- FILE: docs/message-bus.md ---
+diff --git a/docs/message-bus.md b/docs/message-bus.md
+new file mode 100644
+index 0000000..82954fb
+--- /dev/null
++++ b/docs/message-bus.md
+@@ -0,0 +1,44 @@
++# Message Bus
++
++Single, typed message bus connecting the extension host, webviews, and external processes.
++
++- Extension bus: `src/services/message-bus.service.ts`
++- Webview bus: `web/src/services/message-bus.service.ts`
++- HTTP bridge: `src/services/http-bridge.service.ts`
++- Register helper: `src/shared/utils/event-bus-register.utils.ts`
++- Event contracts: `src/shared/events.ts`
++
++## Core API (extension bus)
++
++- `register(id, webview) => Disposable` — adds/replaces a webview and replays sticky events.
++- `broadcast({ type, payload })` — send to all registered webviews. Stores sticky events.
++- `sendTo(id, { type, payload })` — target a single webview.
++- `on(type, handler)` — subscribe to inbound events (from webviews/bridge).
++- `receive(source, { type, payload })` — inbound path that triggers `on(...)` handlers.
++
++Notes
++
++- Sources include: `sidebar`, `dashboard`, `http-bridge`.
++- Sticky events: `Events.DashboardOpened` (cleared by `Events.DashboardClosed`).
++
++## Webview bus
++
++`web/src/services/message-bus.service.ts` wraps `acquireVsCodeApi` with `on/emit`:
++
++- `on(type, handler) => off` — listen to messages from extension.
++- `emit(type, payload)` — post a message to extension.
++
++## HTTP bridge (external → extension)
++
++`startHttpBridge(context)` exposes a tiny local server for external emitters (e.g., MCP stdio):
++
++- POST `http://127.0.0.1:39237/events` with JSON `{ type, payload? }`.
++- Validates `type` against `Events` and calls `messageBus.receive('http-bridge', { ... })`.
++- Env: `KIRO_MCP_BRIDGE_HOST`, `KIRO_MCP_BRIDGE_PORT`.
++
++## Add a new event
++
++1. Declare in `src/shared/events.ts` (name in `Events`, payload in `EventPayloads`).
++2. Extension-side handler (if needed): `messageBus.on(Events.X, (e) => { ... })`.
++3. Webview emit: `messageBus.emit(Events.X, payload)`.
++4. External process: POST to the bridge with `{ type: Events.X, payload }`.
+
+--- FILE: docs/recipes.md ---
+diff --git a/docs/recipes.md b/docs/recipes.md
+index c637fc1..859a294 100644
+--- a/docs/recipes.md
++++ b/docs/recipes.md
+@@ -1,77 +1,39 @@
+ # Recipes
+ 
+-## Show a VS Code toast from a webview
++Keep examples short; see code for full context.
+ 
+-- Webview emits an event:
+-
+-```ts
+-messageBus.emit(events.UiEmitToast, { text: "Hello from UI" });
+-```
+-
+-- Extension listens globally (in `activate`):
+-
+-```ts
+-context.subscriptions.push(
+-  messageBus.on(Events.UiEmitToast, async (e) => {
+-    await vscode.window.showInformationMessage(e.payload?.text ?? "Hello");
+-  })
+-);
+-```
+-
+-## Open a panel from a webview, with provenance
+-
+-- Webview emits request to open:
++Open dashboard from webview (and mark provenance)
+ 
+ ```ts
++// webview
+ messageBus.emit(events.OpenDashboard, undefined);
+-```
+-
+-- Extension opens and broadcasts provenance:
+ 
+-```ts
+-context.subscriptions.push(
+-  messageBus.on(Events.OpenDashboard, async () => {
+-    showHealthDashboard(context);
+-    await messageBus.broadcast({
+-      type: Events.DashboardOpened,
+-      payload: { via: "other" },
+-    });
+-  })
+-);
+-```
+-
+-- Command palette path:
+-
+-```ts
+-vscode.commands.registerCommand(OPEN_DASHBOARD_COMMAND, async () => {
++// extension
++messageBus.on(Events.OpenDashboard, async () => {
+   showHealthDashboard(context);
+-  await messageBus.broadcast({
+-    type: Events.DashboardOpened,
+-    payload: { via: "commandPalette" },
+-  });
++  await messageBus.broadcast({ type: Events.DashboardOpened, payload: { via: 'other' } });
+ });
+ ```
+ 
+-## Keep UI hints in sync with panel lifecycle
+-
+-- On panel dispose:
++VS Code toast from webview
+ 
+ ```ts
+-currentPanel.onDidDispose(() => {
+-  void messageBus.broadcast({
+-    type: Events.DashboardClosed,
+-    payload: undefined,
+-  });
++// webview
++messageBus.emit(events.UiEmitToast, { text: 'Hello from UI' });
++
++// extension
++messageBus.on(Events.UiEmitToast, async (e) => {
++  await vscode.window.showInformationMessage(e.payload?.text ?? 'Hello');
+ });
+ ```
+ 
+-- Sidebar listens:
++Panel lifecycle → UI hint
+ 
+ ```ts
+-messageBus.on(events.DashboardOpened, (e) => {
+-  setHint(e.payload?.via === "commandPalette");
+-});
+-messageBus.on(events.DashboardClosed, () => {
+-  setHint(false);
+-});
++// extension (on panel dispose)
++void messageBus.broadcast({ type: Events.DashboardClosed, payload: undefined });
++
++// webview (sidebar)
++messageBus.on(events.DashboardOpened, (e) => setHint(e.payload?.via === 'commandPalette'));
++messageBus.on(events.DashboardClosed, () => setHint(false));
+ ```
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 2efd6ea..e57833c 100644
+--- a/package.json
++++ b/package.json
+@@ -62,8 +62,8 @@
+     "clean:web": "find ./web -type f -name '*.js' -delete && find ./web -type f -name '*.js.map' -delete",
+     "build": "npm run clean && npm run clean:web && npm run compile",
+     "package": "vsce package",
+-    "bundle:mcp": "esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs",
+-    "watch:mcp": "esbuild src/mcp/mcpStdioServer.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs --watch"
++    "bundle:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs",
++    "watch:mcp": "esbuild src/mcp/mcp-stdio.server.ts --bundle --platform=node --format=cjs --target=node18 --outfile=out/mcp/mcpStdioServer.cjs --watch"
+   },
+   "devDependencies": {
+     "@preact/preset-vite": "^2.10.2",
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

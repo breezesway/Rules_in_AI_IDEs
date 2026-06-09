@@ -1,0 +1,656 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+#### Direct getIt Usage Exceptions
+Direct `getIt` calls are **only** acceptable in these specific locations:
+
+**Application Bootstrapping:**
+- `lib/main.dart` - Root application setup and initial dependency resolution
+
+**Integration Test Setup:**
+- `test/integration/*` - Test harness configuration and mock dependency setup
+
+**Generated Code:**
+- `*.g.dart` files - Code generation outputs (exempt from this rule)
+- `*.config.dart` files - Generated DI configuration files
+
+**Current Exception Locations in Codebase:**
+- `lib/main.dart:13-14` - `AuthService` and `RouteCollectionService` resolution for app bootstrap
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (.dart), file paths, and file names.
+- Suggested Logic: Scan all .dart files in the repository for the identifier or function call 'getIt'. Flag any occurrence found in files that do NOT match the following criteria: 1) The file is 'lib/main.dart', 2) The file path starts with 'test/integration/', 3) The file name ends with '.g.dart', or 4) The file name ends with '.config.dart'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: refactor: remove caching strategy from GitHub GraphQL Ferry specification
+
+- Remove all cache-related content from design document to simplify implementation
+- Update Ferry client configuration to exclude cache setup
+- Eliminate cache invalidation, persistence, and offline-first strategies
+- Simplify error handling flow by removing cache checks
+- Update testing strategy to focus on error injection without cache testing
+- Create user_details_viewmodel.graphql with GetUserDetails and GetUserRepositories queries
+- Add queries_glob configuration to build.yaml for proper GraphQL file detection
+- Mark GraphQL Operations and Code Generation tasks as completed
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+- Changed Files List: 
+.kiro/specs/github-graphql-ferry/design.md	+6	-133	after_lines=1107
+.kiro/specs/github-graphql-ferry/tasks.md	+10	-13	after_lines=122
+build.yaml	+1	-0	after_lines=12
+lib/src/screens/user_details/user_details_viewmodel.graphql	+22	-0	after_lines=22
+
+- Project Directory Tree (Snapshot after commit):
+├── .claude
+│   └── settings.local.json
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── kiro-lessons.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── CLAUDE.md
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── base_viewmodel.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_route_provider.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   └── home_viewmodel_factory.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   ├── loading_route_provider.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_route_provider.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   └── user_details
+│       │       ├── user_details_route.dart
+│       │       ├── user_details_route_provider.dart
+│       │       ├── user_details_screen.dart
+│       │       ├── user_details_viewmodel.dart
+│       │       ├── user_details_viewmodel.graphql
+│       │       └── user_details_viewmodel_factory.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── integration
+    │   ├── auth_integration_test.dart
+    │   ├── auth_integration_test.mocks.dart
+    │   ├── di_factory_integration_test.dart
+    │   ├── di_factory_integration_test.mocks.dart
+    │   ├── modular_architecture_test.dart
+    │   └── modular_architecture_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── app
+    │   │   ├── auth_viewmodel_test.dart
+    │   │   └── auth_viewmodel_test.mocks.dart
+    │   ├── base_viewmodel_test.dart
+    │   ├── home_screen
+    │   │   ├── home_route_provider_test.dart
+    │   │   ├── home_route_provider_test.mocks.dart
+    │   │   ├── home_route_test.dart
+    │   │   ├── home_screen_test.dart
+    │   │   ├── home_screen_test.mocks.dart
+    │   │   ├── home_viewmodel_factory_test.dart
+    │   │   ├── home_viewmodel_factory_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   └── home_viewmodel_test.mocks.dart
+    │   ├── loading_screen
+    │   │   ├── loading_route_provider_test.dart
+    │   │   ├── loading_route_provider_test.mocks.dart
+    │   │   ├── loading_route_test.dart
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   ├── login_screen
+    │   │   ├── login_route_provider_test.dart
+    │   │   ├── login_route_provider_test.mocks.dart
+    │   │   ├── login_route_test.dart
+    │   │   ├── login_screen_test.dart
+    │   │   ├── login_screen_test.mocks.dart
+    │   │   ├── login_viewmodel_factory_test.dart
+    │   │   ├── login_viewmodel_factory_test.mocks.dart
+    │   │   ├── login_viewmodel_test.dart
+    │   │   └── login_viewmodel_test.mocks.dart
+    │   └── user_details
+    │       ├── user_details_route_provider_test.dart
+    │       ├── user_details_route_provider_test.mocks.dart
+    │       ├── user_details_route_test.dart
+    │       ├── user_details_screen_test.dart
+    │       ├── user_details_screen_test.mocks.dart
+    │       ├── user_details_viewmodel_factory_test.dart
+    │       └── user_details_viewmodel_test.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/github-graphql-ferry/design.md ---
+diff --git a/.kiro/specs/github-graphql-ferry/design.md b/.kiro/specs/github-graphql-ferry/design.md
+index a5b777b..1dd0fb4 100644
+--- a/.kiro/specs/github-graphql-ferry/design.md
++++ b/.kiro/specs/github-graphql-ferry/design.md
+@@ -52,9 +52,8 @@ graph TB
+         REPO_FRAG_CODE[repository_card.graphql.dart]
+     end
+     
+-    subgraph "Ferry Client & Cache"
+-        FERRY[Ferry Client] --> CACHE[Ferry Cache]
+-        FERRY --> GITHUB_GQL[GitHub GraphQL API]
++    subgraph "Ferry Client"
++        FERRY[Ferry Client] --> GITHUB_GQL[GitHub GraphQL API]
+     end
+     
+     HOME_SCREEN --> HOME_VM
+@@ -84,7 +83,6 @@ graph LR
+         FERRY_CLIENT[Ferry Client]
+         AUTH_LINK[Auth Link]
+         HTTP_LINK[HTTP Link]
+-        CACHE_STORE[Cache Store]
+     end
+     
+     subgraph "ViewModels"
+@@ -177,9 +175,8 @@ lib/src/widgets/
+   - Handle client lifecycle and automatic token updates on authentication changes
+ - **Dependencies**: `ITokenStorage` (injected), `http.Client` (injected)
+ - **Key Methods**:
+-  - `createClient()`: Initialize Ferry client with GitHub endpoint, auth link, and cache
++  - `createClient()`: Initialize Ferry client with GitHub endpoint and auth link
+   - `updateAuthToken(String token)`: Automatically update authentication headers
+-  - `clearCache()`: Clear GraphQL cache on logout
+   - `dispose()`: Clean up resources and subscriptions
+ 
+ ```dart
+@@ -206,7 +203,6 @@ class FerryClientService {
+     
+     return Client(
+       link: link,
+-      cache: Cache(store: InMemoryStore()),
+     );
+   }
+ }
+@@ -220,16 +216,6 @@ class FerryClientService {
+   - Provide error handling for authentication failures
+ - **Integration**: Custom Ferry Link implementation
+ 
+-#### Cache Configuration
+-- **Purpose**: Configure Ferry's caching behavior
+-- **Responsibilities**:
+-  - Set cache policies for different operation types
+-  - Configure cache persistence options
+-  - Handle cache invalidation strategies
+-- **Options**:
+-  - In-memory cache for development
+-  - Persistent cache for production
+-  - Custom cache keys for user-specific data
+ 
+ ### GraphQL Operations
+ 
+@@ -802,14 +788,12 @@ graph TD
+     AUTH_HANDLER --> LOGOUT[Logout User]
+     RATE_HANDLER --> WAIT[Wait for Reset]
+     GQL_HANDLER --> NO_PARTIAL[No Partial Data - Treat as Failure]
+-    OFFLINE_HANDLER --> CACHE_CHECK[Check Cache]
++    OFFLINE_HANDLER --> OFFLINE_MESSAGE[Show Offline Message]
+     
+     RETRY -->|Yes| QUERY
+     RETRY -->|No| FALLBACK[Use REST API]
+     WAIT --> QUERY
+     NO_PARTIAL --> USER_FEEDBACK[Show Error Message]
+-    CACHE_CHECK -->|Available| CACHED_DATA[Show Cached Data]
+-    CACHE_CHECK -->|None| OFFLINE_MESSAGE[Show Offline Message]
+ ```
+ 
+ #### Error Processing in ViewModels
+@@ -858,56 +842,6 @@ class GraphQLErrorHandler {
+   }
+ }
+ 
+-## Caching Strategy
+-
+-### Cache Policies
+-
+-#### Query-Specific Policies
+-- **User Profiles**: Cache for 5 minutes, background refresh
+-- **Repository Data**: Cache for 2 minutes, aggressive refresh
+-- **Following Lists**: Cache for 10 minutes, manual refresh
+-- **Search Results**: Cache for 1 minute, no background refresh
+-
+-#### Cache Invalidation
+-```dart
+-class CacheInvalidationService {
+-  final Client _ferryClient;
+-  
+-  // Invalidate user-related caches when user data changes
+-  void invalidateUserCache(String login) {
+-    _ferryClient.cache.evict(
+-      typename: 'User',
+-      id: login,
+-    );
+-  }
+-  
+-  // Invalidate repository caches when repository changes
+-  void invalidateRepositoryCache(String owner, String name) {
+-    _ferryClient.cache.evict(
+-      typename: 'Repository', 
+-      id: '$owner/$name',
+-    );
+-  }
+-}
+-```
+-
+-### Offline Support
+-
+-#### Cache Persistence
+-- Use Ferry's built-in cache persistence
+-- Store critical data for offline access
+-- Implement cache warming strategies
+-- Handle cache size limits gracefully
+-
+-#### Offline-First Queries
+-```dart
+-// Configure queries for offline-first behavior
+-final userQuery = GetUserQuery(
+-  variables: GetUserArguments(login: login),
+-  fetchPolicy: FetchPolicy.cacheFirst,
+-  errorPolicy: ErrorPolicy.all, // Return partial data with errors
+-);
+-```
+ 
+ ## Performance Optimizations
+ 
+@@ -916,7 +850,6 @@ final userQuery = GetUserQuery(
+ #### Field Selection
+ - Request only necessary fields in GraphQL queries
+ - Use fragments to avoid duplication
+-- Implement field-level caching where appropriate
+ 
+ #### Pagination Strategy
+ ```graphql
+@@ -967,7 +900,7 @@ class GraphQLViewModel extends ChangeNotifier {
+ 
+ ## Testing Strategy (Requirement 5)
+ 
+-**Complete Testability**: Ferry operations support mocking responses, error injection, cache inspection, and simulated network conditions.
++**Complete Testability**: Ferry operations support mocking responses, error injection, and simulated network conditions.
+ 
+ ### Unit Testing GraphQL Operations
+ 
+@@ -1127,66 +1060,6 @@ group('GraphQL Schema Integration Tests', () {
+ });
+ ```
+ 
+-#### Cache Testing with Inspection
+-```dart
+-group('Ferry Cache Testing', () {
+-  late Client ferryClient;
+-  late Cache cache;
+-  
+-  setUp(() {
+-    cache = Cache(store: InMemoryStore());
+-    ferryClient = Client(
+-      link: MockLink(),
+-      cache: cache,
+-    );
+-  });
+-  
+-  test('should cache query results correctly', () async {
+-    // Test cache hit/miss scenarios
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    // First request - cache miss
+-    await ferryClient.request(query).first;
+-    
+-    // Verify data was cached
+-    final cachedData = cache.readQuery(query);
+-    expect(cachedData, isNotNull);
+-    
+-    // Second request - cache hit  
+-    final result = await ferryClient.request(query).first;
+-    expect(result.source, equals(QueryResultSource.cache));
+-  });
+-  
+-  test('should handle cache invalidation', () {
+-    // Test cache eviction and invalidation logic
+-    cache.evict(typename: 'User', id: 'testuser');
+-    
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    final cachedData = cache.readQuery(query);
+-    expect(cachedData, isNull);
+-  });
+-  
+-  test('should support offline behavior with cached data', () async {
+-    // Pre-populate cache
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    cache.writeQuery(query, {
+-      'user': {'login': 'testuser', 'name': 'Test User'}
+-    });
+-    
+-    // Test offline access
+-    final result = await ferryClient.request(query, fetchPolicy: FetchPolicy.cacheOnly).first;
+-    expect(result.data?.user?.login, equals('testuser'));
+-    expect(result.source, equals(QueryResultSource.cache));
+-  });
+-});
+ 
+ ## Migration Strategy
+ 
+@@ -1231,4 +1104,4 @@ group('Ferry Cache Testing', () {
+ ### Data Privacy
+ - Respect GitHub's API rate limits and terms
+ - Implement proper data retention policies
+-- Handle sensitive data appropriately in caches
+\ No newline at end of file
++- Handle sensitive data appropriately
+\ No newline at end of file
+
+--- FILE: .kiro/specs/github-graphql-ferry/tasks.md ---
+diff --git a/.kiro/specs/github-graphql-ferry/tasks.md b/.kiro/specs/github-graphql-ferry/tasks.md
+index fab9e46..eb7afe6 100644
+--- a/.kiro/specs/github-graphql-ferry/tasks.md
++++ b/.kiro/specs/github-graphql-ferry/tasks.md
+@@ -1,7 +1,7 @@
+ # Implementation Plan
+ 
+ - [ ] 1. Ferry Setup and Configuration
+-  - [ ] 1.1 Configure Ferry dependencies
++  - [x] 1.1 Configure Ferry dependencies
+     - Add ferry, gql_http_link to dependencies
+     - Add ferry_generator, build_runner to dev_dependencies  
+     - Configure build.yaml with ferry_generator settings
+@@ -13,7 +13,6 @@
+     - Configure HTTP link with GitHub GraphQL endpoint (https://api.github.com/graphql)
+     - Set up authentication link with automatic token injection from ITokenStorage
+     - Register Ferry client with Injectable dependency injection
+-    - Create initial cache configuration
+     - _Requirements: 1, 3_
+ 
+   - [ ] 1.3 Implement authentication integration
+@@ -23,29 +22,29 @@
+     - Implement authentication error handling for GraphQL operations
+     - _Requirements: 1, 4_
+ 
+-- [ ] 2. GraphQL Operations and Code Generation
+-  - [ ] 2.1 Set up colocated GraphQL structure
++- [x] 2. GraphQL Operations and Code Generation
++  - [x] 2.1 Set up colocated GraphQL structure
+     - Configure ferry_builder to find .graphql files in lib/**/*.graphql
+     - Set up code generation to create .graphql.dart files next to .graphql files
+     - Create screen-level and widget-level colocation pattern
+     - Test build process with flutter packages pub run build_runner build
+     - _Requirements: 2_
+ 
+-  - [ ] 2.2 Create HomeViewModel GraphQL operations
++  - [x] 2.2 Create HomeViewModel GraphQL operations
+     - Create lib/src/screens/home_screen/home_viewmodel.graphql
+     - Define GetFollowing query with pagination support
+     - Include UserCardFragment for UI component data needs
+     - Generate home_viewmodel.graphql.dart with ferry_builder
+     - _Requirements: 2_
+ 
+-  - [ ] 2.3 Create UserDetailsViewModel GraphQL operations
+-    - Create lib/src/screens/user_details_screen/user_details_viewmodel.graphql
++  - [x] 2.3 Create UserDetailsViewModel GraphQL operations
++    - Create lib/src/screens/user_details/user_details_viewmodel.graphql
+     - Define GetUserDetails and GetUserRepositories queries
+     - Include UserProfileFragment and RepositoryCardFragment
+     - Generate user_details_viewmodel.graphql.dart
+     - _Requirements: 2_
+ 
+-  - [ ] 2.4 Create UI component fragments
++  - [x] 2.4 Create UI component fragments
+     - Create lib/src/widgets/user_card/user_card.graphql with UserCardFragment
+     - Create lib/src/widgets/repository_card/repository_card.graphql with RepositoryCardFragment
+     - Create lib/src/widgets/user_profile/user_profile.graphql with UserProfileFragment
+@@ -116,10 +115,8 @@
+     - Test authentication link integration with ITokenStorage
+     - _Requirements: 5_
+ 
+-  - [ ] 5.3 Add cache testing capabilities
+-    - Test cache hit/miss scenarios with QueryResult sources
+-    - Test cache invalidation with evict operations
+-    - Test offline behavior with FetchPolicy.cacheOnly
+-    - Implement cache inspection for debugging
++  - [ ] 5.3 Add error injection testing capabilities
+     - Test simulated network conditions and error injection
++    - Test offline behavior scenarios
++    - Implement error scenario debugging
+     - _Requirements: 5_
+\ No newline at end of file
+
+--- FILE: build.yaml ---
+diff --git a/build.yaml b/build.yaml
+index 9b02d10..840c01c 100644
+--- a/build.yaml
++++ b/build.yaml
+@@ -5,6 +5,7 @@ targets:
+         enabled: true
+         options:
+           schema: gh3|lib/github_schema.graphql
++          queries_glob: lib/**/*.graphql
+       ferry_generator|serializer_builder:
+         enabled: true
+         options:
+
+--- FILE: lib/src/screens/user_details/user_details_viewmodel.graphql ---
+diff --git a/lib/src/screens/user_details/user_details_viewmodel.graphql b/lib/src/screens/user_details/user_details_viewmodel.graphql
+new file mode 100644
+index 0000000..ae72c58
+--- /dev/null
++++ b/lib/src/screens/user_details/user_details_viewmodel.graphql
+@@ -0,0 +1,22 @@
++#import "../../widgets/user_profile/user_profile.graphql"
++#import "../../widgets/repository_card/repository_card.graphql"
++
++query GetUserDetails($login: String!) {
++  user(login: $login) {
++    ...UserProfileFragment
++  }
++}
++
++query GetUserRepositories($login: String!, $first: Int!, $after: String) {
++  user(login: $login) {
++    repositories(first: $first, after: $after, orderBy: {field: UPDATED_AT, direction: DESC}) {
++      nodes {
++        ...RepositoryCardFragment
++      }
++      pageInfo {
++        hasNextPage
++        endCursor
++      }
++    }
++  }
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

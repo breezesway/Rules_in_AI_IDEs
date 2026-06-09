@@ -1,0 +1,28 @@
+diff --git a/web/static/index.html b/web/static/index.html
+index 3b999af..6ce935a 100644
+--- a/web/static/index.html
++++ b/web/static/index.html
+@@ -50,16 +50,22 @@
+                 button.onclick = () => {
+                     game.makeMove(index);
+                     renderBoard(); // Re-render after move
++                    updateTurnText(); // Update turn text after move
+                 };
+                 board.appendChild(button);
+             });
+         }
+ 
++        function updateTurnText() {
++            const content = document.getElementById('content');
++            content.textContent = game.text(); // Update the turn text
++        }
++
+         const go = new Go();
+         WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+             .then((result) => {
+                 go.run(result.instance);
+-                document.getElementById('content').textContent = game.text();
++                updateTurnText();
+                 renderBoard();
+             });
+     </script>

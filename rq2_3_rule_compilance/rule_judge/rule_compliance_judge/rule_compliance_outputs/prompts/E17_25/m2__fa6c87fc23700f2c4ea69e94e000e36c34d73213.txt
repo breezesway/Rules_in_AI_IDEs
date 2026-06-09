@@ -1,0 +1,66 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - In table-driven tests, use "test" instead of "tt" for the test case variable
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically test files (e.g., *_test.go in Go or similar test files in other languages).
+- Suggested Logic: Scan test files for table-driven test patterns (typically loops iterating over a collection of test cases, such as 'for ... range' in Go). Use Abstract Syntax Tree (AST) parsing to identify the variable name assigned to the individual test case within these loops. Flag instances where the variable is named 'tt' and verify if it is named 'test'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: Winner test passes
+- Changed Files List: 
+game/tictactoe.go	+18	-1	after_lines=65
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── go.sum
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: game/tictactoe.go ---
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+index 88795ae..2a86617 100644
+--- a/game/tictactoe.go
++++ b/game/tictactoe.go
+@@ -44,5 +44,22 @@ func (g *Game) Board() [9]string {
+ }
+ 
+ func (g *Game) Winner() string {
+-	return ""
++	winningCombinations := [][3]int{
++		{0, 1, 2}, // Top row
++		{3, 4, 5}, // Middle row
++		{6, 7, 8}, // Bottom row
++		{0, 3, 6}, // Left column
++		{1, 4, 7}, // Middle column
++		{2, 5, 8}, // Right column
++		{0, 4, 8}, // Diagonal \
++		{2, 4, 6}, // Diagonal /
++	}
++
++	for _, combo := range winningCombinations {
++		if g.board[combo[0]] != "" && g.board[combo[0]] == g.board[combo[1]] && g.board[combo[1]] == g.board[combo[2]] {
++			return g.board[combo[0]] // Return the winner ("X" or "O")
++		}
++	}
++
++	return "" // No winner
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,141 @@
+diff --git a/src/core/utils/browser-manager.ts b/src/core/utils/browser-manager.ts
+index ca3cf6c..5b332cc 100644
+--- a/src/core/utils/browser-manager.ts
++++ b/src/core/utils/browser-manager.ts
+@@ -5,8 +5,8 @@ import {
+   Page,
+   BrowserContextOptions as PlaywrightBrowserContextOptions,
+ } from 'playwright';
+-import { ErrorHandlerService } from '../../utils/services/error-handler-service';
+-import { ConfigurationService } from '../../utils/services/configuration-service';
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++import { ConfigurationService } from '@/utils/services/configuration-service';
+ 
+ export interface CustomBrowserContextOptions {
+   viewport?: { width: number; height: number };
+@@ -219,6 +219,29 @@ export class BrowserManager {
+     }
+   }
+ 
++  /**
++   * Gets the current user agent string used by the browser
++   * @returns Promise<string> The user agent string
++   */
++  async getUserAgent(): Promise<string> {
++    if (!this.browser || !this.isInitialized) {
++      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
++    }
++
++    try {
++      // Create a temporary context to get the user agent
++      const testContext = await this.browser.newContext();
++      const testPage = await testContext.newPage();
++      const userAgent = await testPage.evaluate(() => navigator.userAgent);
++      await testPage.close();
++      await testContext.close();
++      return userAgent;
++    } catch (error) {
++      this.errorHandler.logWarning('Failed to get user agent, using default', { error });
++      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
++    }
++  }
++
+   async closePage(sessionId: string, pageId: string = 'default'): Promise<void> {
+     const pageKey = `${sessionId}:${pageId}`;
+     const page = this.pages.get(pageKey);
+@@ -309,16 +332,87 @@ export class BrowserManager {
+   ): Promise<Page> {
+     const { waitUntil = 'domcontentloaded', timeout = 30000, pageId = 'default' } = options;
+ 
+-    const page = await this.getPage(sessionId, pageId);
++    try {
++      const page = await this.getPage(sessionId, pageId);
++
++      this.errorHandler.logInfo(`Navigating to: ${url}`, {
++        sessionId,
++        pageId,
++        waitUntil,
++        timeout
++      });
+ 
+-    await page.goto(url, {
+-      waitUntil,
+-      timeout,
+-    });
++      // Try to navigate with error handling
++      try {
++        await page.goto(url, {
++          waitUntil,
++          timeout,
++        });
++
++        // Wait for page to stabilize
++        await page.waitForTimeout(1000);
++
++        this.errorHandler.logSuccess(`Successfully navigated to: ${url}`);
++        return page;
++      } catch (navigationError: unknown) {
++        const errorMessage = navigationError instanceof Error ? navigationError.message : String(navigationError);
++
++        // Handle specific navigation errors
++        if (errorMessage.includes('net::ERR_ABORTED')) {
++          this.errorHandler.logWarning(`Navigation aborted for ${url} - this may be due to redirects or blocked content`, {
++            error: errorMessage,
++            url,
++            sessionId
++          });
++
++          // Try to get the current URL to see if we ended up somewhere else
++          try {
++            const currentUrl = page.url();
++            if (currentUrl !== url) {
++              this.errorHandler.logInfo(`Page redirected to: ${currentUrl}`);
++              return page;
++            }
++          } catch (urlError: unknown) {
++            const urlErrorMessage = urlError instanceof Error ? urlError.message : String(urlError);
++            this.errorHandler.logWarning('Could not determine current URL after navigation error', { error: urlErrorMessage });
++          }
++        }
+ 
+-    // Wait for page to stabilize
+-    await page.waitForTimeout(1000);
++        // For other errors, try a more lenient approach
++        this.errorHandler.logWarning(`Navigation failed for ${url}, trying with more lenient settings`, {
++          error: errorMessage,
++          url,
++          sessionId
++        });
+ 
+-    return page;
++        try {
++          await page.goto(url, {
++            waitUntil: 'domcontentloaded',
++            timeout: 15000,
++          });
++
++          this.errorHandler.logSuccess(`Successfully navigated to ${url} with lenient settings`);
++          return page;
++        } catch (retryError: unknown) {
++          const retryErrorMessage = retryError instanceof Error ? retryError.message : String(retryError);
++          this.errorHandler.logError(`Failed to navigate to ${url} even with lenient settings`, {
++            originalError: errorMessage,
++            retryError: retryErrorMessage,
++            url,
++            sessionId
++          });
++          throw retryError;
++        }
++      }
++    } catch (error: unknown) {
++      const errorMessage = error instanceof Error ? error.message : String(error);
++      this.errorHandler.logError(`Navigation failed for ${url}`, {
++        error: errorMessage,
++        url,
++        sessionId,
++        pageId
++      });
++      throw error;
++    }
+   }
+ }

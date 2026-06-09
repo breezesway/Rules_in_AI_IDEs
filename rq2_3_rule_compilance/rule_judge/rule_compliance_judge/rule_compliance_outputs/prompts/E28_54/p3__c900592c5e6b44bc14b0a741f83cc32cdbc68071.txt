@@ -1,0 +1,1243 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Project Documentation
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+## Data Output Structure (.constellation/)
+- data/codebase-dependencies.json: Dependency-cruiser scan results
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and specifically the presence of the file '.constellation/data/codebase-dependencies.json'.
+- Suggested Logic: Verify that the file path '.constellation/data/codebase-dependencies.json' exists in the repository. Optionally, verify that the file content is valid JSON.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Update spec files
+- Changed Files List: 
+.kiro/specs/01-dependency-cruiser-integration/depency-cruiser-implmentation-prd.md	+148	-0	after_lines=148
+.kiro/specs/01-dependency-cruiser-integration/design.md	+224	-0	after_lines=224
+.kiro/specs/01-dependency-cruiser-integration/requirements.md	+62	-0	after_lines=62
+.kiro/specs/01-dependency-cruiser-integration/tasks.md	+102	-0	after_lines=102
+.kiro/specs/dependency-cruiser-integration/design.md	+0	-224	after_lines=0
+.kiro/specs/dependency-cruiser-integration/requirements.md	+0	-62	after_lines=0
+.kiro/specs/dependency-cruiser-integration/tasks.md	+0	-102	after_lines=0
+depency-cruiser-implmentation.md	+0	-148	after_lines=0
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   └── styles
+    │       └── global.css
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/01-dependency-cruiser-integration/depency-cruiser-implmentation-prd.md ---
+diff --git a/.kiro/specs/01-dependency-cruiser-integration/depency-cruiser-implmentation-prd.md b/.kiro/specs/01-dependency-cruiser-integration/depency-cruiser-implmentation-prd.md
+new file mode 100644
+index 0000000..48fa459
+--- /dev/null
++++ b/.kiro/specs/01-dependency-cruiser-integration/depency-cruiser-implmentation-prd.md
+@@ -0,0 +1,148 @@
++# Dependency Cruiser – initial implementation plan
++
++Goal
++- Add a background scan of the user’s currently opened workspace using Dependency Cruiser and write its results to:
++  - ./.constellation/data/codebase-dependencies.json
++- A single exported function runScan() in src/services/depency-cruiser.service.ts
++- Trigger runScan() automatically on extension activation (non-blocking).
++
++Scope (v1)
++- Read-only analysis. No UI yet beyond existing side panel.
++- Single workspace focus (first workspace folder if multiple). No-workspace = no-op.
++- JS/TS projects primarily. Other file types are ignored by dependency-cruiser by default.
++
++Deliverables
++- New service file: src/services/depency-cruiser.service.ts with:
++  - export async function runScan(context: vscode.ExtensionContext): Promise<void>
++- Activation call: invoked in the background in activate(), reusing the existing non-blocking pattern.
++- Output file: .constellation/data/codebase-dependencies.json in the first workspace folder.
++
++High-level design
++1) Dependency Cruiser integration
++   - Use the CLI that ships with the dependency-cruiser package to avoid ESM/CommonJS interop friction.
++   - Spawn a child process: node <extensionPath>/node_modules/dependency-cruiser/bin/depcruise.js
++   - Arguments:
++     - scan target: the workspace root path
++     - --output-type json (print JSON to stdout)
++     - --exclude "node_modules|dist|out|build|coverage|\.git|\.vscode|\.constellation" (trim noise)
++     - Optionally add --ts-config <path> if a tsconfig.json exists at the workspace root
++     - Disable progress to keep output clean if necessary (--progress false if supported)
++
++2) Output format (file)
++   - Write the raw dependency-cruiser JSON under a thin envelope so we can version and add metadata later:
++   {
++     "version": 1,
++     "generatedAt": "2025-..",
++     "workspaceRoot": "/abs/path",
++     "depcruise": { /* full tool output (graph + summary) */ }
++   }
++
++3) UX & performance
++   - Fire-and-forget in the background so activation/UI is never blocked.
++   - Soft timeout (e.g., 45–60s). Kill process if it runs too long.
++   - File I/O: ensure ./.constellation/data exists (mkdir -p) and write pretty JSON.
++
++4) Error handling
++   - If dependency-cruiser is unavailable or the process fails, log a warning and continue (no user-facing error toast in v1).
++   - If there’s no workspace open, no-op.
++
++Implementation steps
++1) Add runtime dependency
++   - package.json → dependencies: "dependency-cruiser": "^16.x" (or latest).
++   - Rationale: Needed at runtime inside the installed extension, not only for development.
++
++2) Service: src/services/depency-cruiser.service.ts (kebab-case .ts)
++   - Responsibilities:
++     - Resolve workspace root (vscode.workspace.workspaceFolders?.[0])
++     - Resolve CLI path: <context.extensionUri.fsPath>/node_modules/dependency-cruiser/bin/depcruise.js
++     - Optionally detect a tsconfig.json in the workspace root
++     - Spawn: node [depcruise.js, "--output-type", "json", "--exclude", PATTERN, ... , workspaceRoot]
++     - Collect stdout, parse JSON, wrap with metadata, and write to ./.constellation/data/codebase-dependencies.json
++     - Return void; never throw synchronously (catch and log)
++
++   - Pseudocode (illustrative):
++   ```ts
++   import * as vscode from 'vscode'
++   import * as fs from 'node:fs/promises'
++   import * as path from 'node:path'
++   import { spawn } from 'node:child_process'
++
++   export async function runScan(context: vscode.ExtensionContext): Promise<void> {
++     const ws = vscode.workspace.workspaceFolders?.[0]
++     if (!ws) return
++     const wsRoot = ws.uri.fsPath
++
++     const cli = path.join(context.extensionUri.fsPath, 'node_modules', 'dependency-cruiser', 'bin', 'depcruise.js')
++
++     const tsconfig = path.join(wsRoot, 'tsconfig.json')
++     const tsExists = await fs.access(tsconfig).then(() => true).catch(() => false)
++
++     const args = [
++       cli,
++       '--output-type', 'json',
++       '--exclude', 'node_modules|dist|out|build|coverage|\\.git|\\.vscode|\\.constellation',
++       ...(tsExists ? ['--ts-config', tsconfig] : []),
++       wsRoot
++     ]
++
++     const child = spawn('node', args, { stdio: ['ignore', 'pipe', 'pipe'] })
++
++     const out: string[] = []
++     child.stdout.on('data', (d) => out.push(String(d)))
++
++     const result = await new Promise<string>((resolve, reject) => {
++       const to = setTimeout(() => { try { child.kill() } catch {} ; reject(new Error('depcruise timeout')) }, 60000)
++       child.on('error', reject)
++       child.on('close', (code) => { clearTimeout(to); code === 0 ? resolve(out.join('')) : reject(new Error('depcruise exit ' + code)) })
++     })
++
++     const parsed = JSON.parse(result)
++
++     const dir = path.join(wsRoot, '.constellation', 'data')
++     await fs.mkdir(dir, { recursive: true })
++     const file = path.join(dir, 'codebase-dependencies.json')
++
++     const payload = {
++       version: 1,
++       generatedAt: new Date().toISOString(),
++       workspaceRoot: wsRoot,
++       depcruise: parsed,
++     }
++
++     await fs.writeFile(file, JSON.stringify(payload, null, 2), 'utf8')
++   }
++   ```
++
++3) Wire into activation (non-blocking)
++   - In src/extension.ts:
++     - import { runScan } from './services/depency-cruiser.service.js'
++     - Inside the existing background IIFE (where MCP setup runs), call: void runScan(context)
++     - Keep this behind try/catch to avoid disrupting activation.
++
++4) (Optional) Setting flag to control scan
++   - constellation.scanOnActivate (boolean, default true). Not required for v1, but easy to add if desired.
++
++5) (Optional) Command to run on demand
++   - Command id: constellation.scanDependencies
++   - Useful for re-scans without reloading the window.
++
++Testing
++- Open a small TS/JS workspace with imports and run F5.
++- Verify ./.constellation/data/codebase-dependencies.json exists and contains a large JSON graph.
++- Test a large workspace for timeout behavior (ensure it doesn’t block UI).
++
++Future iterations
++- Graph rendering in the side panel (Preact):
++  - Add a model/adapter that converts dependency-cruiser output to a graph format consumable by GraphDashboard.tsx.
++  - Provide filters (by folder, package.json name, circulars, or orphaned).
++  - Streaming/worker to keep the UI responsive for large graphs.
++- Incremental scans / cache: only rescan on git changes.
++- Multi-root workspaces: scan each root and write multiple files (or one merged with roots array).
++- Add unit tests to parse a snapshot of a known repo and validate the output envelope.
++
++Risks & mitigations
++- Performance on large repos: mitigate with timeout + async background execution.
++- CLI availability: we vend dependency-cruiser in dependencies and call the JS CLI directly via node.
++- Path escaping on Windows: spawn node with explicit JS path avoids .cmd wrappers.
++- Output size: could be big; consider gzip in the future; for now, plain JSON for readability.
++
+
+--- FILE: .kiro/specs/01-dependency-cruiser-integration/design.md ---
+diff --git a/.kiro/specs/01-dependency-cruiser-integration/design.md b/.kiro/specs/01-dependency-cruiser-integration/design.md
+new file mode 100644
+index 0000000..acd238c
+--- /dev/null
++++ b/.kiro/specs/01-dependency-cruiser-integration/design.md
+@@ -0,0 +1,224 @@
++# Design Document
++
++## Overview
++
++The Dependency Cruiser integration adds automated codebase analysis capabilities to the Kiro Constellation VS Code extension. The system uses the dependency-cruiser CLI tool to generate comprehensive dependency graphs of JavaScript/TypeScript projects, storing results in a structured JSON format for future consumption by UI components or other analysis tools.
++
++## Architecture
++
++### High-Level Architecture
++
++```mermaid
++graph TB
++    A[Extension Activation] --> B[Background Scan Trigger]
++    B --> C[Dependency Cruiser Service]
++    C --> D[CLI Process Spawn]
++    D --> E[dependency-cruiser CLI]
++    E --> F[JSON Output Processing]
++    F --> G[File System Write]
++    G --> H[.constellation/data/codebase-dependencies.json]
++    
++    I[Manual Command] --> C
++    
++    subgraph "Error Handling"
++        J[Timeout Handler]
++        K[Process Error Handler]
++        L[File I/O Error Handler]
++    end
++    
++    C --> J
++    D --> K
++    G --> L
++```
++
++### Service Layer Integration
++
++The dependency cruiser functionality integrates into the existing service layer pattern:
++
++- `src/services/dependency-cruiser.service.ts` - New service following kebab-case naming convention
++- Follows the same async/non-blocking pattern as existing MCP configuration services
++- Integrates with VS Code's extension context for path resolution
++
++## Components and Interfaces
++
++### Core Service Interface
++
++```typescript
++// src/services/dependency-cruiser.service.ts
++export async function runScan(context: vscode.ExtensionContext): Promise<void>
++```
++
++### CLI Integration Strategy
++
++**Process Spawning Approach:**
++- Use Node.js `child_process.spawn()` to execute dependency-cruiser CLI
++- Avoids ESM/CommonJS interop issues by calling the CLI directly
++- Provides better control over process lifecycle and timeout handling
++
++**CLI Path Resolution:**
++```typescript
++const cliPath = path.join(
++  context.extensionUri.fsPath, 
++  'node_modules', 
++  'dependency-cruiser', 
++  'bin', 
++  'depcruise.js'
++)
++```
++
++**Command Arguments:**
++```bash
++node depcruise.js \
++  --output-type json \
++  --exclude "node_modules|dist|out|build|coverage|\.git|\.vscode|\.constellation" \
++  [--ts-config tsconfig.json] \
++  <workspace-root>
++```
++
++### Output Data Structure
++
++**File Location:** `.constellation/data/codebase-dependencies.json`
++
++**Envelope Format:**
++```typescript
++interface DependencyAnalysisResult {
++  version: 1;
++  generatedAt: string; // ISO timestamp
++  workspaceRoot: string; // Absolute path
++  depcruise: any; // Raw dependency-cruiser output
++}
++```
++
++**Rationale for Envelope:**
++- Version field enables future schema evolution
++- Metadata provides context for consumers
++- Raw tool output preservation maintains full fidelity
++
++## Data Models
++
++### Workspace Detection
++
++```typescript
++interface WorkspaceInfo {
++  root: string; // Absolute path to workspace root
++  hasTsConfig: boolean; // Whether tsconfig.json exists
++}
++```
++
++### Process Management
++
++```typescript
++interface ScanProcess {
++  child: ChildProcess;
++  timeout: NodeJS.Timeout;
++  stdout: string[];
++  promise: Promise<string>;
++}
++```
++
++### Configuration Detection
++
++The service will detect and utilize existing TypeScript configuration:
++
++1. Check for `tsconfig.json` in workspace root
++2. If present, add `--ts-config` argument to CLI invocation
++3. This improves analysis accuracy for TypeScript projects
++
++## Error Handling
++
++### Timeout Management
++
++- **Timeout Duration:** 60 seconds maximum
++- **Timeout Behavior:** Kill child process gracefully, log warning, continue
++- **Rationale:** Prevents hanging on large repositories while allowing reasonable scan time
++
++### Process Error Handling
++
++```typescript
++// Error scenarios and responses:
++1. CLI not found -> Log warning, continue (no user notification)
++2. Process spawn failure -> Log error, continue
++3. Non-zero exit code -> Log warning with exit code, continue
++4. JSON parse failure -> Log error, continue
++5. File I/O failure -> Log error, continue
++```
++
++### Graceful Degradation
++
++- All errors are logged but do not surface to users in v1
++- Extension continues normal operation if dependency scanning fails
++- No blocking behavior or error toasts that disrupt workflow
++
++## Testing Strategy
++
++### Unit Testing Approach
++
++1. **Service Function Testing:**
++   - Mock `vscode.workspace.workspaceFolders`
++   - Mock file system operations
++   - Test CLI argument construction
++   - Test timeout behavior
++
++2. **Integration Testing:**
++   - Test with real small TypeScript project
++   - Verify output file creation and format
++   - Test error scenarios (missing CLI, invalid workspace)
++
++3. **Performance Testing:**
++   - Test timeout behavior with long-running mock process
++   - Verify non-blocking activation behavior
++
++### Test Data Requirements
++
++- Sample TypeScript project with known dependency structure
++- Expected dependency-cruiser output for validation
++- Mock scenarios for error conditions
++
++## Implementation Phases
++
++### Phase 1: Core Service Implementation
++- Create `dependency-cruiser.service.ts`
++- Implement basic CLI spawning and output capture
++- Add timeout and error handling
++- Write output file with envelope format
++
++### Phase 2: Extension Integration
++- Add dependency to `package.json`
++- Wire service into extension activation
++- Add manual command registration
++- Ensure non-blocking background execution
++
++### Phase 3: Configuration and Polish
++- Add optional settings for scan control
++- Improve error logging and diagnostics
++- Add file system error handling
++- Validate cross-platform compatibility
++
++## Security Considerations
++
++### Process Execution Safety
++- CLI path is resolved relative to extension installation
++- No user input is passed to CLI arguments
++- Workspace path is validated before use
++
++### File System Access
++- Output directory creation uses recursive mkdir
++- File writes are atomic (writeFile operation)
++- No sensitive data exposure in output files
++
++## Performance Considerations
++
++### Background Execution
++- Scan runs asynchronously without blocking UI
++- Uses fire-and-forget pattern for activation integration
++- Timeout prevents indefinite resource consumption
++
++### Resource Management
++- Child process cleanup on timeout or completion
++- Stdout buffering with reasonable limits
++- File I/O uses efficient Node.js APIs
++
++### Scalability Factors
++- Scan time scales with project size
++- Memory usage scales with dependency graph complexity
++- Timeout provides upper bound on resource consumption
+\ No newline at end of file
+
+--- FILE: .kiro/specs/01-dependency-cruiser-integration/requirements.md ---
+diff --git a/.kiro/specs/01-dependency-cruiser-integration/requirements.md b/.kiro/specs/01-dependency-cruiser-integration/requirements.md
+new file mode 100644
+index 0000000..fe05b6f
+--- /dev/null
++++ b/.kiro/specs/01-dependency-cruiser-integration/requirements.md
+@@ -0,0 +1,62 @@
++# Requirements Document
++
++## Introduction
++
++This feature adds automated dependency analysis to the Kiro Constellation VS Code extension using Dependency Cruiser. The system will scan the user's workspace in the background to analyze code dependencies and generate a comprehensive dependency graph that can be used for codebase understanding and visualization.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a developer using Kiro Constellation, I want the extension to automatically analyze my workspace dependencies when it activates, so that I have up-to-date dependency information available without manual intervention.
++
++#### Acceptance Criteria
++
++1. WHEN the extension activates THEN the system SHALL trigger a background dependency scan of the current workspace
++2. WHEN multiple workspace folders exist THEN the system SHALL scan the first workspace folder only
++3. WHEN no workspace is open THEN the system SHALL perform no operation and continue normally
++4. WHEN the scan is running THEN the system SHALL NOT block the extension activation or UI responsiveness
++5. WHEN the scan completes THEN the system SHALL write results to `./.constellation/data/codebase-dependencies.json`
++
++### Requirement 2
++
++**User Story:** As a developer working with JavaScript/TypeScript projects, I want the dependency analysis to focus on relevant code files and exclude build artifacts, so that the analysis is clean and meaningful.
++
++#### Acceptance Criteria
++
++1. WHEN scanning a workspace THEN the system SHALL exclude `node_modules`, `dist`, `out`, `build`, `coverage`, `.git`, `.vscode`, and `.constellation` directories
++2. WHEN a `tsconfig.json` file exists in the workspace root THEN the system SHALL use it for TypeScript configuration
++3. WHEN the workspace contains non-JS/TS files THEN the system SHALL ignore them per dependency-cruiser defaults
++4. WHEN the scan encounters large repositories THEN the system SHALL timeout after 60 seconds to prevent hanging
++
++### Requirement 3
++
++**User Story:** As a developer who needs reliable dependency information, I want the scan results to be properly formatted and versioned, so that I can trust the data structure and handle future changes gracefully.
++
++#### Acceptance Criteria
++
++1. WHEN writing scan results THEN the system SHALL wrap the raw dependency-cruiser output in a versioned envelope
++2. WHEN creating the output file THEN the system SHALL include metadata: version number, generation timestamp, and workspace root path
++3. WHEN writing to the filesystem THEN the system SHALL ensure the `.constellation/data` directory exists
++4. WHEN formatting the output THEN the system SHALL write pretty-printed JSON for readability
++
++### Requirement 4
++
++**User Story:** As a developer using the extension, I want dependency scanning to be robust and non-disruptive, so that scan failures don't impact my development workflow.
++
++#### Acceptance Criteria
++
++1. WHEN dependency-cruiser is unavailable THEN the system SHALL log a warning and continue without user-facing errors
++2. WHEN the scan process fails THEN the system SHALL catch errors and not disrupt extension functionality
++3. WHEN the scan times out THEN the system SHALL kill the process gracefully and log the timeout
++4. WHEN file I/O operations fail THEN the system SHALL handle errors gracefully without crashing
++
++### Requirement 5
++
++**User Story:** As a developer who wants control over when scans occur, I want the ability to manually trigger dependency scans, so that I can refresh the analysis when my codebase changes significantly.
++
++#### Acceptance Criteria
++
++1. WHEN I invoke the scan command THEN the system SHALL run a new dependency analysis
++2. WHEN a manual scan is triggered THEN the system SHALL overwrite the existing results file
++3. WHEN the command is executed THEN the system SHALL provide the same error handling as automatic scans
+\ No newline at end of file
+
+--- FILE: .kiro/specs/01-dependency-cruiser-integration/tasks.md ---
+diff --git a/.kiro/specs/01-dependency-cruiser-integration/tasks.md b/.kiro/specs/01-dependency-cruiser-integration/tasks.md
+new file mode 100644
+index 0000000..b1b41d8
+--- /dev/null
++++ b/.kiro/specs/01-dependency-cruiser-integration/tasks.md
+@@ -0,0 +1,102 @@
++# Implementation Plan
++
++- [x] 1. Add dependency-cruiser runtime dependency
++  - Add `dependency-cruiser` to the `dependencies` section of `package.json` with version `^16.x` or latest
++  - Install the dependency to ensure it's available at runtime within the extension
++  - _Requirements: 1.1, 2.1, 4.1_
++
++- [x] 2. Create dependency cruiser service implementation
++  - [x] 2.1 Create service file structure and basic exports
++    - Create `src/services/dependency-cruiser.service.ts` following kebab-case naming convention
++    - Implement the main `runScan(context: vscode.ExtensionContext): Promise<void>` export function
++    - Add necessary imports for vscode, fs, path, and child_process modules
++    - _Requirements: 1.1, 1.4_
++
++  - [x] 2.2 Implement workspace detection and validation
++    - Add logic to detect the first workspace folder from `vscode.workspace.workspaceFolders`
++    - Implement no-op behavior when no workspace is open
++    - Add TypeScript config detection by checking for `tsconfig.json` in workspace root
++    - _Requirements: 1.2, 1.3, 2.2_
++
++  - [x] 2.3 Implement CLI path resolution and argument construction
++    - Resolve dependency-cruiser CLI path using extension context URI
++    - Build CLI arguments array with output type, exclusion patterns, and optional tsconfig
++    - Implement proper path handling for cross-platform compatibility
++    - _Requirements: 2.1, 2.2_
++
++  - [x] 2.4 Implement child process spawning and management
++    - Create child process using `spawn()` with proper stdio configuration
++    - Implement stdout data collection and buffering
++    - Add process lifecycle management with proper cleanup
++    - _Requirements: 1.1, 2.3_
++
++  - [x] 2.5 Add timeout and error handling mechanisms
++    - Implement 60-second timeout with graceful process termination
++    - Add comprehensive error handling for spawn failures, exit codes, and JSON parsing
++    - Ensure all errors are logged but don't disrupt extension functionality
++    - _Requirements: 2.3, 4.1, 4.2, 4.3_
++
++  - [x] 2.6 Implement output processing and file writing
++    - Parse dependency-cruiser JSON output from stdout
++    - Create versioned envelope structure with metadata (version, timestamp, workspace root)
++    - Ensure `.constellation/data` directory exists using recursive mkdir
++    - Write formatted JSON output to `codebase-dependencies.json`
++    - _Requirements: 3.1, 3.2, 3.3, 4.4_
++
++- [x] 3. Integrate service into extension activation
++  - [x] 3.1 Wire dependency scanning into extension activation
++    - Import the `runScan` function in `src/extension.ts`
++    - Add non-blocking call to `runScan(context)` in the existing background activation pattern
++    - Wrap the call in try-catch to prevent activation disruption
++    - _Requirements: 1.1, 1.4, 4.2_
++
++  - [x] 3.2 Add manual scan command registration
++    - Register a new command `constellation.scanDependencies` in the extension activation
++    - Implement command handler that calls `runScan(context)` with proper error handling
++    - Add command contribution to `package.json` for VS Code command palette access
++    - _Requirements: 5.1, 5.2, 5.3_
++
++- [ ] 4. Create comprehensive unit tests for the service
++  - [ ] 4.1 Test workspace detection and validation logic
++    - Mock `vscode.workspace.workspaceFolders` for various scenarios (no workspace, single workspace, multiple workspaces)
++    - Test TypeScript config detection with and without `tsconfig.json`
++    - Verify no-op behavior when no workspace is available
++    - _Requirements: 1.2, 1.3, 2.2_
++
++  - [ ] 4.2 Test CLI argument construction and path resolution
++    - Test CLI path resolution using mock extension context
++    - Verify argument array construction with and without TypeScript config
++    - Test exclusion pattern formatting and workspace root handling
++    - _Requirements: 2.1, 2.2_
++
++  - [ ] 4.3 Test process management and timeout behavior
++    - Mock child process spawning and test timeout scenarios
++    - Verify graceful process termination on timeout
++    - Test stdout data collection and buffering
++    - _Requirements: 2.3, 4.3_
++
++  - [ ] 4.4 Test output processing and error handling
++    - Test JSON parsing with valid and invalid dependency-cruiser output
++    - Verify envelope structure creation with proper metadata
++    - Test file system operations and directory creation
++    - Test comprehensive error scenarios (CLI not found, process failures, file I/O errors)
++    - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 4.4_
++
++- [ ] 5. Integration testing and validation
++  - [ ] 5.1 Test extension activation with dependency scanning
++    - Create test workspace with TypeScript files and dependencies
++    - Verify extension activates without blocking and scan runs in background
++    - Confirm output file is created with expected structure and content
++    - _Requirements: 1.1, 1.4, 3.1, 3.2, 3.3_
++
++  - [ ] 5.2 Test manual command execution
++    - Verify command appears in VS Code command palette
++    - Test manual scan execution and file overwriting behavior
++    - Confirm error handling works the same as automatic scans
++    - _Requirements: 5.1, 5.2, 5.3_
++
++  - [ ] 5.3 Validate cross-platform compatibility and performance
++    - Test on different operating systems (Windows, macOS, Linux)
++    - Verify timeout behavior with large repositories
++    - Confirm non-blocking behavior doesn't impact extension responsiveness
++    - _Requirements: 1.4, 2.3, 4.3_
+\ No newline at end of file
+
+--- FILE: .kiro/specs/dependency-cruiser-integration/design.md ---
+diff --git a/.kiro/specs/dependency-cruiser-integration/design.md b/.kiro/specs/dependency-cruiser-integration/design.md
+deleted file mode 100644
+index acd238c..0000000
+--- a/.kiro/specs/dependency-cruiser-integration/design.md
++++ /dev/null
+@@ -1,224 +0,0 @@
+-# Design Document
+-
+-## Overview
+-
+-The Dependency Cruiser integration adds automated codebase analysis capabilities to the Kiro Constellation VS Code extension. The system uses the dependency-cruiser CLI tool to generate comprehensive dependency graphs of JavaScript/TypeScript projects, storing results in a structured JSON format for future consumption by UI components or other analysis tools.
+-
+-## Architecture
+-
+-### High-Level Architecture
+-
+-```mermaid
+-graph TB
+-    A[Extension Activation] --> B[Background Scan Trigger]
+-    B --> C[Dependency Cruiser Service]
+-    C --> D[CLI Process Spawn]
+-    D --> E[dependency-cruiser CLI]
+-    E --> F[JSON Output Processing]
+-    F --> G[File System Write]
+-    G --> H[.constellation/data/codebase-dependencies.json]
+-    
+-    I[Manual Command] --> C
+-    
+-    subgraph "Error Handling"
+-        J[Timeout Handler]
+-        K[Process Error Handler]
+-        L[File I/O Error Handler]
+-    end
+-    
+-    C --> J
+-    D --> K
+-    G --> L
+-```
+-
+-### Service Layer Integration
+-
+-The dependency cruiser functionality integrates into the existing service layer pattern:
+-
+-- `src/services/dependency-cruiser.service.ts` - New service following kebab-case naming convention
+-- Follows the same async/non-blocking pattern as existing MCP configuration services
+-- Integrates with VS Code's extension context for path resolution
+-
+-## Components and Interfaces
+-
+-### Core Service Interface
+-
+-```typescript
+-// src/services/dependency-cruiser.service.ts
+-export async function runScan(context: vscode.ExtensionContext): Promise<void>
+-```
+-
+-### CLI Integration Strategy
+-
+-**Process Spawning Approach:**
+-- Use Node.js `child_process.spawn()` to execute dependency-cruiser CLI
+-- Avoids ESM/CommonJS interop issues by calling the CLI directly
+-- Provides better control over process lifecycle and timeout handling
+-
+-**CLI Path Resolution:**
+-```typescript
+-const cliPath = path.join(
+-  context.extensionUri.fsPath, 
+-  'node_modules', 
+-  'dependency-cruiser', 
+-  'bin', 
+-  'depcruise.js'
+-)
+-```
+-
+-**Command Arguments:**
+-```bash
+-node depcruise.js \
+-  --output-type json \
+-  --exclude "node_modules|dist|out|build|coverage|\.git|\.vscode|\.constellation" \
+-  [--ts-config tsconfig.json] \
+-  <workspace-root>
+-```
+-
+-### Output Data Structure
+-
+-**File Location:** `.constellation/data/codebase-dependencies.json`
+-
+-**Envelope Format:**
+-```typescript
+-interface DependencyAnalysisResult {
+-  version: 1;
+-  generatedAt: string; // ISO timestamp
+-  workspaceRoot: string; // Absolute path
+-  depcruise: any; // Raw dependency-cruiser output
+-}
+-```
+-
+-**Rationale for Envelope:**
+-- Version field enables future schema evolution
+-- Metadata provides context for consumers
+-- Raw tool output preservation maintains full fidelity
+-
+-## Data Models
+-
+-### Workspace Detection
+-
+-```typescript
+-interface WorkspaceInfo {
+-  root: string; // Absolute path to workspace root
+-  hasTsConfig: boolean; // Whether tsconfig.json exists
+-}
+-```
+-
+-### Process Management
+-
+-```typescript
+-interface ScanProcess {
+-  child: ChildProcess;
+-  timeout: NodeJS.Timeout;
+-  stdout: string[];
+-  promise: Promise<string>;
+-}
+-```
+-
+-### Configuration Detection
+-
+-The service will detect and utilize existing TypeScript configuration:
+-
+-1. Check for `tsconfig.json` in workspace root
+-2. If present, add `--ts-config` argument to CLI invocation
+-3. This improves analysis accuracy for TypeScript projects
+-
+-## Error Handling
+-
+-### Timeout Management
+-
+-- **Timeout Duration:** 60 seconds maximum
+-- **Timeout Behavior:** Kill child process gracefully, log warning, continue
+-- **Rationale:** Prevents hanging on large repositories while allowing reasonable scan time
+-
+-### Process Error Handling
+-
+-```typescript
+-// Error scenarios and responses:
+-1. CLI not found -> Log warning, continue (no user notification)
+-2. Process spawn failure -> Log error, continue
+-3. Non-zero exit code -> Log warning with exit code, continue
+-4. JSON parse failure -> Log error, continue
+-5. File I/O failure -> Log error, continue
+-```
+-
+-### Graceful Degradation
+-
+-- All errors are logged but do not surface to users in v1
+-- Extension continues normal operation if dependency scanning fails
+-- No blocking behavior or error toasts that disrupt workflow
+-
+-## Testing Strategy
+-
+-### Unit Testing Approach
+-
+-1. **Service Function Testing:**
+-   - Mock `vscode.workspace.workspaceFolders`
+-   - Mock file system operations
+-   - Test CLI argument construction
+-   - Test timeout behavior
+-
+-2. **Integration Testing:**
+-   - Test with real small TypeScript project
+-   - Verify output file creation and format
+-   - Test error scenarios (missing CLI, invalid workspace)
+-
+-3. **Performance Testing:**
+-   - Test timeout behavior with long-running mock process
+-   - Verify non-blocking activation behavior
+-
+-### Test Data Requirements
+-
+-- Sample TypeScript project with known dependency structure
+-- Expected dependency-cruiser output for validation
+-- Mock scenarios for error conditions
+-
+-## Implementation Phases
+-
+-### Phase 1: Core Service Implementation
+-- Create `dependency-cruiser.service.ts`
+-- Implement basic CLI spawning and output capture
+-- Add timeout and error handling
+-- Write output file with envelope format
+-
+-### Phase 2: Extension Integration
+-- Add dependency to `package.json`
+-- Wire service into extension activation
+-- Add manual command registration
+-- Ensure non-blocking background execution
+-
+-### Phase 3: Configuration and Polish
+-- Add optional settings for scan control
+-- Improve error logging and diagnostics
+-- Add file system error handling
+-- Validate cross-platform compatibility
+-
+-## Security Considerations
+-
+-### Process Execution Safety
+-- CLI path is resolved relative to extension installation
+-- No user input is passed to CLI arguments
+-- Workspace path is validated before use
+-
+-### File System Access
+-- Output directory creation uses recursive mkdir
+-- File writes are atomic (writeFile operation)
+-- No sensitive data exposure in output files
+-
+-## Performance Considerations
+-
+-### Background Execution
+-- Scan runs asynchronously without blocking UI
+-- Uses fire-and-forget pattern for activation integration
+-- Timeout prevents indefinite resource consumption
+-
+-### Resource Management
+-- Child process cleanup on timeout or completion
+-- Stdout buffering with reasonable limits
+-- File I/O uses efficient Node.js APIs
+-
+-### Scalability Factors
+-- Scan time scales with project size
+-- Memory usage scales with dependency graph complexity
+-- Timeout provides upper bound on resource consumption
+\ No newline at end of file
+
+--- FILE: .kiro/specs/dependency-cruiser-integration/requirements.md ---
+diff --git a/.kiro/specs/dependency-cruiser-integration/requirements.md b/.kiro/specs/dependency-cruiser-integration/requirements.md
+deleted file mode 100644
+index fe05b6f..0000000
+--- a/.kiro/specs/dependency-cruiser-integration/requirements.md
++++ /dev/null
+@@ -1,62 +0,0 @@
+-# Requirements Document
+-
+-## Introduction
+-
+-This feature adds automated dependency analysis to the Kiro Constellation VS Code extension using Dependency Cruiser. The system will scan the user's workspace in the background to analyze code dependencies and generate a comprehensive dependency graph that can be used for codebase understanding and visualization.
+-
+-## Requirements
+-
+-### Requirement 1
+-
+-**User Story:** As a developer using Kiro Constellation, I want the extension to automatically analyze my workspace dependencies when it activates, so that I have up-to-date dependency information available without manual intervention.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the extension activates THEN the system SHALL trigger a background dependency scan of the current workspace
+-2. WHEN multiple workspace folders exist THEN the system SHALL scan the first workspace folder only
+-3. WHEN no workspace is open THEN the system SHALL perform no operation and continue normally
+-4. WHEN the scan is running THEN the system SHALL NOT block the extension activation or UI responsiveness
+-5. WHEN the scan completes THEN the system SHALL write results to `./.constellation/data/codebase-dependencies.json`
+-
+-### Requirement 2
+-
+-**User Story:** As a developer working with JavaScript/TypeScript projects, I want the dependency analysis to focus on relevant code files and exclude build artifacts, so that the analysis is clean and meaningful.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN scanning a workspace THEN the system SHALL exclude `node_modules`, `dist`, `out`, `build`, `coverage`, `.git`, `.vscode`, and `.constellation` directories
+-2. WHEN a `tsconfig.json` file exists in the workspace root THEN the system SHALL use it for TypeScript configuration
+-3. WHEN the workspace contains non-JS/TS files THEN the system SHALL ignore them per dependency-cruiser defaults
+-4. WHEN the scan encounters large repositories THEN the system SHALL timeout after 60 seconds to prevent hanging
+-
+-### Requirement 3
+-
+-**User Story:** As a developer who needs reliable dependency information, I want the scan results to be properly formatted and versioned, so that I can trust the data structure and handle future changes gracefully.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN writing scan results THEN the system SHALL wrap the raw dependency-cruiser output in a versioned envelope
+-2. WHEN creating the output file THEN the system SHALL include metadata: version number, generation timestamp, and workspace root path
+-3. WHEN writing to the filesystem THEN the system SHALL ensure the `.constellation/data` directory exists
+-4. WHEN formatting the output THEN the system SHALL write pretty-printed JSON for readability
+-
+-### Requirement 4
+-
+-**User Story:** As a developer using the extension, I want dependency scanning to be robust and non-disruptive, so that scan failures don't impact my development workflow.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN dependency-cruiser is unavailable THEN the system SHALL log a warning and continue without user-facing errors
+-2. WHEN the scan process fails THEN the system SHALL catch errors and not disrupt extension functionality
+-3. WHEN the scan times out THEN the system SHALL kill the process gracefully and log the timeout
+-4. WHEN file I/O operations fail THEN the system SHALL handle errors gracefully without crashing
+-
+-### Requirement 5
+-
+-**User Story:** As a developer who wants control over when scans occur, I want the ability to manually trigger dependency scans, so that I can refresh the analysis when my codebase changes significantly.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN I invoke the scan command THEN the system SHALL run a new dependency analysis
+-2. WHEN a manual scan is triggered THEN the system SHALL overwrite the existing results file
+-3. WHEN the command is executed THEN the system SHALL provide the same error handling as automatic scans
+\ No newline at end of file
+
+--- FILE: .kiro/specs/dependency-cruiser-integration/tasks.md ---
+diff --git a/.kiro/specs/dependency-cruiser-integration/tasks.md b/.kiro/specs/dependency-cruiser-integration/tasks.md
+deleted file mode 100644
+index b1b41d8..0000000
+--- a/.kiro/specs/dependency-cruiser-integration/tasks.md
++++ /dev/null
+@@ -1,102 +0,0 @@
+-# Implementation Plan
+-
+-- [x] 1. Add dependency-cruiser runtime dependency
+-  - Add `dependency-cruiser` to the `dependencies` section of `package.json` with version `^16.x` or latest
+-  - Install the dependency to ensure it's available at runtime within the extension
+-  - _Requirements: 1.1, 2.1, 4.1_
+-
+-- [x] 2. Create dependency cruiser service implementation
+-  - [x] 2.1 Create service file structure and basic exports
+-    - Create `src/services/dependency-cruiser.service.ts` following kebab-case naming convention
+-    - Implement the main `runScan(context: vscode.ExtensionContext): Promise<void>` export function
+-    - Add necessary imports for vscode, fs, path, and child_process modules
+-    - _Requirements: 1.1, 1.4_
+-
+-  - [x] 2.2 Implement workspace detection and validation
+-    - Add logic to detect the first workspace folder from `vscode.workspace.workspaceFolders`
+-    - Implement no-op behavior when no workspace is open
+-    - Add TypeScript config detection by checking for `tsconfig.json` in workspace root
+-    - _Requirements: 1.2, 1.3, 2.2_
+-
+-  - [x] 2.3 Implement CLI path resolution and argument construction
+-    - Resolve dependency-cruiser CLI path using extension context URI
+-    - Build CLI arguments array with output type, exclusion patterns, and optional tsconfig
+-    - Implement proper path handling for cross-platform compatibility
+-    - _Requirements: 2.1, 2.2_
+-
+-  - [x] 2.4 Implement child process spawning and management
+-    - Create child process using `spawn()` with proper stdio configuration
+-    - Implement stdout data collection and buffering
+-    - Add process lifecycle management with proper cleanup
+-    - _Requirements: 1.1, 2.3_
+-
+-  - [x] 2.5 Add timeout and error handling mechanisms
+-    - Implement 60-second timeout with graceful process termination
+-    - Add comprehensive error handling for spawn failures, exit codes, and JSON parsing
+-    - Ensure all errors are logged but don't disrupt extension functionality
+-    - _Requirements: 2.3, 4.1, 4.2, 4.3_
+-
+-  - [x] 2.6 Implement output processing and file writing
+-    - Parse dependency-cruiser JSON output from stdout
+-    - Create versioned envelope structure with metadata (version, timestamp, workspace root)
+-    - Ensure `.constellation/data` directory exists using recursive mkdir
+-    - Write formatted JSON output to `codebase-dependencies.json`
+-    - _Requirements: 3.1, 3.2, 3.3, 4.4_
+-
+-- [x] 3. Integrate service into extension activation
+-  - [x] 3.1 Wire dependency scanning into extension activation
+-    - Import the `runScan` function in `src/extension.ts`
+-    - Add non-blocking call to `runScan(context)` in the existing background activation pattern
+-    - Wrap the call in try-catch to prevent activation disruption
+-    - _Requirements: 1.1, 1.4, 4.2_
+-
+-  - [x] 3.2 Add manual scan command registration
+-    - Register a new command `constellation.scanDependencies` in the extension activation
+-    - Implement command handler that calls `runScan(context)` with proper error handling
+-    - Add command contribution to `package.json` for VS Code command palette access
+-    - _Requirements: 5.1, 5.2, 5.3_
+-
+-- [ ] 4. Create comprehensive unit tests for the service
+-  - [ ] 4.1 Test workspace detection and validation logic
+-    - Mock `vscode.workspace.workspaceFolders` for various scenarios (no workspace, single workspace, multiple workspaces)
+-    - Test TypeScript config detection with and without `tsconfig.json`
+-    - Verify no-op behavior when no workspace is available
+-    - _Requirements: 1.2, 1.3, 2.2_
+-
+-  - [ ] 4.2 Test CLI argument construction and path resolution
+-    - Test CLI path resolution using mock extension context
+-    - Verify argument array construction with and without TypeScript config
+-    - Test exclusion pattern formatting and workspace root handling
+-    - _Requirements: 2.1, 2.2_
+-
+-  - [ ] 4.3 Test process management and timeout behavior
+-    - Mock child process spawning and test timeout scenarios
+-    - Verify graceful process termination on timeout
+-    - Test stdout data collection and buffering
+-    - _Requirements: 2.3, 4.3_
+-
+-  - [ ] 4.4 Test output processing and error handling
+-    - Test JSON parsing with valid and invalid dependency-cruiser output
+-    - Verify envelope structure creation with proper metadata
+-    - Test file system operations and directory creation
+-    - Test comprehensive error scenarios (CLI not found, process failures, file I/O errors)
+-    - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 4.4_
+-
+-- [ ] 5. Integration testing and validation
+-  - [ ] 5.1 Test extension activation with dependency scanning
+-    - Create test workspace with TypeScript files and dependencies
+-    - Verify extension activates without blocking and scan runs in background
+-    - Confirm output file is created with expected structure and content
+-    - _Requirements: 1.1, 1.4, 3.1, 3.2, 3.3_
+-
+-  - [ ] 5.2 Test manual command execution
+-    - Verify command appears in VS Code command palette
+-    - Test manual scan execution and file overwriting behavior
+-    - Confirm error handling works the same as automatic scans
+-    - _Requirements: 5.1, 5.2, 5.3_
+-
+-  - [ ] 5.3 Validate cross-platform compatibility and performance
+-    - Test on different operating systems (Windows, macOS, Linux)
+-    - Verify timeout behavior with large repositories
+-    - Confirm non-blocking behavior doesn't impact extension responsiveness
+-    - _Requirements: 1.4, 2.3, 4.3_
+\ No newline at end of file
+
+--- FILE: depency-cruiser-implmentation.md ---
+diff --git a/depency-cruiser-implmentation.md b/depency-cruiser-implmentation.md
+deleted file mode 100644
+index 48fa459..0000000
+--- a/depency-cruiser-implmentation.md
++++ /dev/null
+@@ -1,148 +0,0 @@
+-# Dependency Cruiser – initial implementation plan
+-
+-Goal
+-- Add a background scan of the user’s currently opened workspace using Dependency Cruiser and write its results to:
+-  - ./.constellation/data/codebase-dependencies.json
+-- A single exported function runScan() in src/services/depency-cruiser.service.ts
+-- Trigger runScan() automatically on extension activation (non-blocking).
+-
+-Scope (v1)
+-- Read-only analysis. No UI yet beyond existing side panel.
+-- Single workspace focus (first workspace folder if multiple). No-workspace = no-op.
+-- JS/TS projects primarily. Other file types are ignored by dependency-cruiser by default.
+-
+-Deliverables
+-- New service file: src/services/depency-cruiser.service.ts with:
+-  - export async function runScan(context: vscode.ExtensionContext): Promise<void>
+-- Activation call: invoked in the background in activate(), reusing the existing non-blocking pattern.
+-- Output file: .constellation/data/codebase-dependencies.json in the first workspace folder.
+-
+-High-level design
+-1) Dependency Cruiser integration
+-   - Use the CLI that ships with the dependency-cruiser package to avoid ESM/CommonJS interop friction.
+-   - Spawn a child process: node <extensionPath>/node_modules/dependency-cruiser/bin/depcruise.js
+-   - Arguments:
+-     - scan target: the workspace root path
+-     - --output-type json (print JSON to stdout)
+-     - --exclude "node_modules|dist|out|build|coverage|\.git|\.vscode|\.constellation" (trim noise)
+-     - Optionally add --ts-config <path> if a tsconfig.json exists at the workspace root
+-     - Disable progress to keep output clean if necessary (--progress false if supported)
+-
+-2) Output format (file)
+-   - Write the raw dependency-cruiser JSON under a thin envelope so we can version and add metadata later:
+-   {
+-     "version": 1,
+-     "generatedAt": "2025-..",
+-     "workspaceRoot": "/abs/path",
+-     "depcruise": { /* full tool output (graph + summary) */ }
+-   }
+-
+-3) UX & performance
+-   - Fire-and-forget in the background so activation/UI is never blocked.
+-   - Soft timeout (e.g., 45–60s). Kill process if it runs too long.
+-   - File I/O: ensure ./.constellation/data exists (mkdir -p) and write pretty JSON.
+-
+-4) Error handling
+-   - If dependency-cruiser is unavailable or the process fails, log a warning and continue (no user-facing error toast in v1).
+-   - If there’s no workspace open, no-op.
+-
+-Implementation steps
+-1) Add runtime dependency
+-   - package.json → dependencies: "dependency-cruiser": "^16.x" (or latest).
+-   - Rationale: Needed at runtime inside the installed extension, not only for development.
+-
+-2) Service: src/services/depency-cruiser.service.ts (kebab-case .ts)
+-   - Responsibilities:
+-     - Resolve workspace root (vscode.workspace.workspaceFolders?.[0])
+-     - Resolve CLI path: <context.extensionUri.fsPath>/node_modules/dependency-cruiser/bin/depcruise.js
+-     - Optionally detect a tsconfig.json in the workspace root
+-     - Spawn: node [depcruise.js, "--output-type", "json", "--exclude", PATTERN, ... , workspaceRoot]
+-     - Collect stdout, parse JSON, wrap with metadata, and write to ./.constellation/data/codebase-dependencies.json
+-     - Return void; never throw synchronously (catch and log)
+-
+-   - Pseudocode (illustrative):
+-   ```ts
+-   import * as vscode from 'vscode'
+-   import * as fs from 'node:fs/promises'
+-   import * as path from 'node:path'
+-   import { spawn } from 'node:child_process'
+-
+-   export async function runScan(context: vscode.ExtensionContext): Promise<void> {
+-     const ws = vscode.workspace.workspaceFolders?.[0]
+-     if (!ws) return
+-     const wsRoot = ws.uri.fsPath
+-
+-     const cli = path.join(context.extensionUri.fsPath, 'node_modules', 'dependency-cruiser', 'bin', 'depcruise.js')
+-
+-     const tsconfig = path.join(wsRoot, 'tsconfig.json')
+-     const tsExists = await fs.access(tsconfig).then(() => true).catch(() => false)
+-
+-     const args = [
+-       cli,
+-       '--output-type', 'json',
+-       '--exclude', 'node_modules|dist|out|build|coverage|\\.git|\\.vscode|\\.constellation',
+-       ...(tsExists ? ['--ts-config', tsconfig] : []),
+-       wsRoot
+-     ]
+-
+-     const child = spawn('node', args, { stdio: ['ignore', 'pipe', 'pipe'] })
+-
+-     const out: string[] = []
+-     child.stdout.on('data', (d) => out.push(String(d)))
+-
+-     const result = await new Promise<string>((resolve, reject) => {
+-       const to = setTimeout(() => { try { child.kill() } catch {} ; reject(new Error('depcruise timeout')) }, 60000)
+-       child.on('error', reject)
+-       child.on('close', (code) => { clearTimeout(to); code === 0 ? resolve(out.join('')) : reject(new Error('depcruise exit ' + code)) })
+-     })
+-
+-     const parsed = JSON.parse(result)
+-
+-     const dir = path.join(wsRoot, '.constellation', 'data')
+-     await fs.mkdir(dir, { recursive: true })
+-     const file = path.join(dir, 'codebase-dependencies.json')
+-
+-     const payload = {
+-       version: 1,
+-       generatedAt: new Date().toISOString(),
+-       workspaceRoot: wsRoot,
+-       depcruise: parsed,
+-     }
+-
+-     await fs.writeFile(file, JSON.stringify(payload, null, 2), 'utf8')
+-   }
+-   ```
+-
+-3) Wire into activation (non-blocking)
+-   - In src/extension.ts:
+-     - import { runScan } from './services/depency-cruiser.service.js'
+-     - Inside the existing background IIFE (where MCP setup runs), call: void runScan(context)
+-     - Keep this behind try/catch to avoid disrupting activation.
+-
+-4) (Optional) Setting flag to control scan
+-   - constellation.scanOnActivate (boolean, default true). Not required for v1, but easy to add if desired.
+-
+-5) (Optional) Command to run on demand
+-   - Command id: constellation.scanDependencies
+-   - Useful for re-scans without reloading the window.
+-
+-Testing
+-- Open a small TS/JS workspace with imports and run F5.
+-- Verify ./.constellation/data/codebase-dependencies.json exists and contains a large JSON graph.
+-- Test a large workspace for timeout behavior (ensure it doesn’t block UI).
+-
+-Future iterations
+-- Graph rendering in the side panel (Preact):
+-  - Add a model/adapter that converts dependency-cruiser output to a graph format consumable by GraphDashboard.tsx.
+-  - Provide filters (by folder, package.json name, circulars, or orphaned).
+-  - Streaming/worker to keep the UI responsive for large graphs.
+-- Incremental scans / cache: only rescan on git changes.
+-- Multi-root workspaces: scan each root and write multiple files (or one merged with roots array).
+-- Add unit tests to parse a snapshot of a known repo and validate the output envelope.
+-
+-Risks & mitigations
+-- Performance on large repos: mitigate with timeout + async background execution.
+-- CLI availability: we vend dependency-cruiser in dependencies and call the JS CLI directly via node.
+-- Path escaping on Windows: spawn node with explicit JS path avoids .cmd wrappers.
+-- Output size: could be big; consider gzip in the future; for now, plain JSON for readability.
+-
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

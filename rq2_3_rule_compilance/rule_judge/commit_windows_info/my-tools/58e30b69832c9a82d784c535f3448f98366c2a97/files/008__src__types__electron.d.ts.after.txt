@@ -1,0 +1,49 @@
+export interface ElectronAPI {
+  // PDF合并
+  mergePdfs: (options: {
+    filePaths: string[];
+    outputPath: string;
+    outputFileName: string;
+  }) => Promise<{
+    success: boolean;
+    outputPath?: string;
+    message?: string;
+    error?: string;
+  }>;
+  
+  // 监听合并进度
+  onMergeProgress: (callback: (progress: {
+    current: number;
+    total: number;
+    currentFile: string;
+    progress: number;
+  }) => void) => () => void;
+  
+  // 选择保存位置
+  selectSavePath: () => Promise<{
+    filePath: string;
+    directory: string;
+    fileName: string;
+  } | null>;
+  
+  // 获取默认下载目录
+  getDownloadsPath: () => Promise<string>;
+  
+  // 选择PDF文件
+  selectPdfFiles: () => Promise<{
+    path: string;
+    name: string;
+    size: number;
+  }[] | null>;
+  
+  // 打开文件位置
+  openFileLocation: (filePath: string) => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
+
+export {}; 

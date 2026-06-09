@@ -1,0 +1,107 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- Backend: Vitest for Workers
++ - Workers: Use Cloudflare Workers Vitest integration (@cloudflare/vitest-pool-workers)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json (dependencies/devDependencies) and Vitest configuration files (e.g., vitest.config.ts or vitest.config.js).
+- Suggested Logic: 1. Check package.json for the presence of the package '@cloudflare/vitest-pool-workers'. 2. Inspect the Vitest configuration file to ensure the 'test.pool' property is set to 'workers' or that the '@cloudflare/vitest-pool-workers' plugin/integration is correctly initialized.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Add debug logging to auth service expired token test
+
+- Added console.debug statement to log validation result in expired session test
+- Helps with debugging token expiration behavior during test execution
+- Changed Files List: 
+worker/src/services/auth.test.ts	+2	-0	after_lines=342
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── .env.example
+    ├── SETUP.md
+    ├── TESTING.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── handlers
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── index.ts
+    │   ├── integration.test.ts
+    │   ├── middleware
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── services
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── types
+    │   │   └── index.ts
+    │   └── utils
+    │       └── index.ts
+    ├── tsconfig.json
+    ├── vitest.config.ts
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/src/services/auth.test.ts ---
+diff --git a/worker/src/services/auth.test.ts b/worker/src/services/auth.test.ts
+index 40b724c..7d0a0c3 100644
+--- a/worker/src/services/auth.test.ts
++++ b/worker/src/services/auth.test.ts
+@@ -271,6 +271,8 @@ describe('AuthService', () => {
+       await new Promise(resolve => setTimeout(resolve, 100))
+       
+       const result = await shortExpiryAuthService.validateToken(token)
++      console.debug('Message:', result)
++
+       expect(result).toBeNull()
+     })
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

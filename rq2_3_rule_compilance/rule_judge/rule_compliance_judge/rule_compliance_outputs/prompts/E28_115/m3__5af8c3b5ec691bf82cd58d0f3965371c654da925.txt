@@ -1,0 +1,2127 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Initial graph layout improve ment
+- Changed Files List: 
+.kiro/specs/03-graph-view-layout/design.md	+226	-0	after_lines=226
+.kiro/specs/03-graph-view-layout/requirements.md	+80	-0	after_lines=80
+.kiro/specs/03-graph-view-layout/tasks.md	+61	-0	after_lines=61
+graph-ui.png	+-	--	after_lines=SKIPPED	skipped_reason=binary (numstat=-)
+graph-view-layout-prd.md	+182	-0	after_lines=182
+webview-ui/src/components/App.tsx	+2	-2	after_lines=13
+webview-ui/src/components/GraphCanvas.tsx	+192	-0	after_lines=192
+webview-ui/src/components/GraphDashboard.tsx	+146	-0	after_lines=146
+webview-ui/src/components/GraphToolbar.tsx	+104	-0	after_lines=104
+webview-ui/src/services/extension-config.service.ts	+67	-0	after_lines=67
+webview-ui/src/services/file-type.service.ts	+64	-0	after_lines=64
+webview-ui/src/services/graph-styles.service.ts	+115	-0	after_lines=115
+webview-ui/src/styles/global.css	+262	-0	after_lines=296
+webview-ui/src/views/GraphView.tsx	+0	-357	after_lines=0
+*(Note: The following files were modified but ignored because diff details are unavailable (e.g., binary/skipped in meta): graph-ui.png.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 02-cytoscape-graph-visualization
+│   │   │   ├── cytoscape-graph-initial-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── 03-graph-view-layout
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── graph-ui.png
+├── graph-view-layout-prd.md
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   ├── GraphCanvas.tsx
+    │   │   ├── GraphDashboard.tsx
+    │   │   └── GraphToolbar.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   ├── extension-config.service.ts
+    │   │   ├── file-type.service.ts
+    │   │   ├── graph-styles.service.ts
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/03-graph-view-layout/design.md ---
+diff --git a/.kiro/specs/03-graph-view-layout/design.md b/.kiro/specs/03-graph-view-layout/design.md
+new file mode 100644
+index 0000000..bc6ecde
+--- /dev/null
++++ b/.kiro/specs/03-graph-view-layout/design.md
+@@ -0,0 +1,226 @@
++# Design Document
++
++## Overview
++
++This design transforms the existing GraphView component into a modern, layout-focused interface with a comprehensive toolbar and file-type-based node colorization. The solution maintains all current functionality while introducing a professional UI shell that prepares for future graph features.
++
++The design follows a component-based architecture using Preact, with clear separation between layout orchestration (GraphDashboard), toolbar controls, canvas management, and styling services. All styling respects VS Code theme tokens for seamless integration.
++
++## Architecture
++
++### Component Hierarchy
++
++```
++GraphDashboard (new orchestrator)
++├── GraphToolbar (new)
++│   ├── Search Input (placeholder, read-only)
++│   ├── Action Buttons (Fit, Reset, Layout dropdown)
++│   ├── Filter Chips (file type filters)
++│   └── Re-scan Button (existing functionality)
++└── GraphCanvas (refactored wrapper)
++    └── Cytoscape Container (existing)
++```
++
++### Service Layer
++
++```
++Services/
++├── extension-config.service.ts (UI configuration)
++├── file-type.service.ts (extension detection)
++├── graph-styles.service.ts (Cytoscape styling)
++└── messenger.ts (existing, unchanged)
++```
++
++### Data Flow
++
++1. **Initialization**: GraphDashboard mounts and requests graph data via messenger
++2. **Data Processing**: File extensions are extracted and added to node data
++3. **Style Generation**: graph-styles.service generates Cytoscape stylesheet with color mappings
++4. **Rendering**: GraphCanvas applies styles and renders with performance optimizations
++5. **Interaction**: Toolbar actions (Re-scan) trigger existing messaging patterns
++
++## Components and Interfaces
++
++### GraphDashboard Component
++
++**Purpose**: Top-level orchestrator that manages layout and state coordination
++
++**Props**: None (receives data via messenger)
++
++**State**:
++- Graph data state (inherited from current GraphView)
++- UI configuration flags for toolbar placeholders
++
++**Layout**: Vertical flex container with:
++- Fixed-height toolbar at top
++- Flexible graph canvas area
++
++### GraphToolbar Component
++
++**Purpose**: Renders all toolbar controls with proper theming and accessibility
++
++**Props**:
++```typescript
++interface GraphToolbarProps {
++  onRescan: () => void
++  nodeCount?: number
++  edgeCount?: number
++  isOptimized?: boolean
++}
++```
++
++**Features**:
++- Search input (read-only, styled with VS Code tokens)
++- Action buttons (disabled placeholders with data-placeholder="true")
++- Re-scan button (fully functional)
++- Responsive layout with control wrapping
++
++### GraphCanvas Component
++
++**Purpose**: Manages Cytoscape instance with enhanced styling and cleanup
++
++**Props**:
++```typescript
++interface GraphCanvasProps {
++  data: GraphData
++  isRendering: boolean
++  onRenderingChange: (rendering: boolean) => void
++}
++```
++
++**Enhancements**:
++- File-type-aware node styling
++- Proper cleanup on unmount
++- Performance optimizations for large graphs
++
++
++
++## Data Models
++
++### Enhanced Node Interface
++
++```typescript
++interface Node {
++  id: string
++  label: string
++  path: string
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other'
++  ext?: string // Added during processing
++}
++```
++
++### UI Configuration
++
++```typescript
++interface UIConfig {
++  toolbar: {
++    searchEnabled: boolean // false for this iteration
++    fitEnabled: boolean    // false for this iteration
++    resetEnabled: boolean  // false for this iteration
++    layoutEnabled: boolean // false for this iteration
++    filtersEnabled: boolean // false for this iteration
++  }
++}
++```
++
++## Error Handling
++
++### File Type Detection
++- **Missing extension**: Falls back to 'other' type
++- **Invalid paths**: Graceful handling with console warnings
++- **Processing errors**: Continue with default styling
++
++### Toolbar Interactions
++- **Disabled controls**: Clear visual feedback with tooltips
++- **Re-scan failures**: Existing error handling maintained
++- **Responsive layout**: Graceful wrapping on narrow viewports
++
++### Cytoscape Integration
++- **Style application errors**: Fallback to default colors
++- **Large graph handling**: Existing performance optimizations maintained
++- **Memory management**: Enhanced cleanup procedures
++
++## Testing Strategy
++
++### Unit Testing
++- **File type detection**: Test extension extraction for various path formats
++- **Style generation**: Verify CSS variable usage and color mappings
++- **Component rendering**: Test toolbar layout and responsive behavior
++
++### Integration Testing
++- **Message flow**: Verify Re-scan functionality remains unchanged
++- **Theme integration**: Test with light/dark VS Code themes
++- **Performance**: Validate no regression in large graph rendering
++
++### Accessibility Testing
++- **Keyboard navigation**: Verify focus order through toolbar controls
++- **Screen readers**: Test aria-label and aria-disabled attributes
++- **Color contrast**: Validate theme token usage meets accessibility standards
++
++### Visual Testing
++- **Responsive layout**: Test toolbar wrapping at various viewport sizes
++- **Theme compatibility**: Verify appearance in light/dark/high-contrast themes
++- **File type colors**: Validate color mappings across different node types
++
++## Implementation Details
++
++### File Type Color Mapping
++
++```typescript
++const FILE_TYPE_COLORS = {
++  ts: 'var(--kiro-node-ts, #569CD6)',
++  tsx: 'var(--kiro-node-tsx, #4FC1FF)', 
++  js: 'var(--kiro-node-js, #E3D300)',
++  jsx: 'var(--kiro-node-jsx, #FFBD45)',
++  json: 'var(--kiro-node-json, #8DC891)',
++  other: 'var(--kiro-node-other, #B180D7)'
++}
++```
++
++### Cytoscape Style Integration
++
++```typescript
++// Enhanced node selector with file type support
++{
++  selector: 'node[ext = "ts"]',
++  style: {
++    'background-color': 'var(--kiro-node-ts, #569CD6)'
++  }
++}
++```
++
++### Responsive Toolbar Layout
++
++```css
++.toolbar {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 8px;
++  padding: 8px 12px;
++  background: var(--vscode-editorWidget-background);
++  border-bottom: 1px solid var(--vscode-widget-border);
++}
++
++@media (max-width: 1024px) {
++  .toolbar {
++    flex-direction: column;
++    gap: 4px;
++  }
++}
++```
++
++### Performance Considerations
++
++- **File type processing**: O(n) operation during data ingestion, cached in node data
++- **Style generation**: Computed once per data load, reused for all nodes
++- **Toolbar rendering**: Minimal re-renders using proper React/Preact patterns
++- **Memory usage**: Enhanced Cytoscape cleanup prevents memory leaks
++
++### Migration Strategy
++
++1. **Phase 1**: Create new components alongside existing GraphView
++2. **Phase 2**: Migrate GraphView logic into GraphCanvas wrapper
++3. **Phase 3**: Replace GraphView with GraphDashboard in App.tsx
++4. **Phase 4**: Remove old GraphView component
++
++This approach ensures no disruption to existing functionality while enabling incremental testing and validation.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/03-graph-view-layout/requirements.md ---
+diff --git a/.kiro/specs/03-graph-view-layout/requirements.md b/.kiro/specs/03-graph-view-layout/requirements.md
+new file mode 100644
+index 0000000..e7914e7
+--- /dev/null
++++ b/.kiro/specs/03-graph-view-layout/requirements.md
+@@ -0,0 +1,80 @@
++# Requirements Document
++
++## Introduction
++
++This feature enhances the existing Cytoscape.js graph visualization with a modern, layout-focused UI shell that includes a top toolbar with search input and action controls, plus file-type-based node colorization. The goal is to create a professional, VS Code-integrated interface that prepares the foundation for future graph features while maintaining all current functionality.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a developer using the graph view, I want a clean toolbar interface above the graph canvas, so that I can access graph controls in an organized, discoverable way.
++
++#### Acceptance Criteria
++
++1. WHEN the graph view loads THEN the system SHALL display a toolbar at the top of the graph container
++2. WHEN viewing the toolbar THEN the system SHALL show a search input field (visual placeholder, read-only)
++3. WHEN viewing the toolbar THEN the system SHALL display placeholder action buttons (Fit, Reset, Layout dropdown, Filter chips)
++4. WHEN viewing placeholder controls THEN the system SHALL mark them as disabled with data-placeholder="true" attributes
++5. WHEN the toolbar is displayed THEN the system SHALL maintain sticky positioning at the top of the view
++6. WHEN the viewport is resized THEN the system SHALL allow toolbar controls to wrap to a second row for widths below 1024px
++
++### Requirement 2
++
++**User Story:** As a developer, I want the existing Re-scan functionality to be integrated into the new toolbar, so that I can trigger dependency rescans from the organized control interface.
++
++#### Acceptance Criteria
++
++1. WHEN the toolbar renders THEN the system SHALL include the Re-scan button as an enabled control
++2. WHEN I click the Re-scan button THEN the system SHALL trigger the existing dependency scan behavior with no functional changes
++3. WHEN the Re-scan operation runs THEN the system SHALL maintain all current progress reporting and error handling
++
++### Requirement 3
++
++**User Story:** As a developer analyzing code dependencies, I want graph nodes to be colored by file type, so that I can quickly identify different types of files in the dependency structure.
++
++#### Acceptance Criteria
++
++1. WHEN nodes are rendered THEN the system SHALL apply colors based on file extension mapping
++2. WHEN a node represents a TypeScript file (.ts) THEN the system SHALL color it using var(--kiro-node-ts, #569CD6)
++3. WHEN a node represents a TSX file (.tsx) THEN the system SHALL color it using var(--kiro-node-tsx, #4FC1FF)
++4. WHEN a node represents a JavaScript file (.js) THEN the system SHALL color it using var(--kiro-node-js, #E3D300)
++5. WHEN a node represents a JSX file (.jsx) THEN the system SHALL color it using var(--kiro-node-jsx, #FFBD45)
++6. WHEN a node represents a JSON file (.json) THEN the system SHALL color it using var(--kiro-node-json, #8DC891)
++7. WHEN a node represents any other file type THEN the system SHALL color it using var(--kiro-node-other, #B180D7)
++8. WHEN file type colors are applied THEN the system SHALL use CSS variables that can be overridden by themes
++
++### Requirement 4
++
++**User Story:** As a developer, I want the graph canvas to efficiently use the available space below the toolbar, so that I can view the maximum amount of dependency information.
++
++#### Acceptance Criteria
++
++1. WHEN the toolbar is present THEN the system SHALL render the graph canvas in the remaining vertical space
++2. WHEN the graph view loads THEN the system SHALL maintain all existing Cytoscape interactions (select, double-click to open)
++3. WHEN the component unmounts THEN the system SHALL properly clean up Cytoscape instances to prevent memory leaks
++4. WHEN rendering performance is measured THEN the system SHALL show no regression compared to the current implementation
++
++### Requirement 5
++
++**User Story:** As a developer using VS Code themes, I want the toolbar and graph interface to respect my theme settings, so that the interface feels integrated with my development environment.
++
++#### Acceptance Criteria
++
++1. WHEN the toolbar renders THEN the system SHALL use VS Code theme tokens for all colors and styling
++2. WHEN using the toolbar background THEN the system SHALL apply var(--vscode-editorWidget-background)
++3. WHEN styling input fields THEN the system SHALL use var(--vscode-input-background) and var(--vscode-input-foreground)
++4. WHEN styling buttons THEN the system SHALL use var(--vscode-button-background) and var(--vscode-button-foreground)
++5. WHEN applying borders THEN the system SHALL use var(--vscode-widget-border)
++6. WHEN the theme changes THEN the system SHALL automatically update all interface colors
++
++### Requirement 6
++
++**User Story:** As a developer using assistive technology, I want the toolbar interface to be accessible, so that I can navigate and understand the graph controls effectively.
++
++#### Acceptance Criteria
++
++1. WHEN toolbar elements are rendered THEN the system SHALL provide appropriate aria-label attributes for all actionable elements
++2. WHEN placeholder controls are disabled THEN the system SHALL set aria-disabled="true"
++3. WHEN using keyboard navigation THEN the system SHALL maintain proper focus order through toolbar controls
++4. WHEN color contrast is measured THEN the system SHALL meet VS Code's default accessibility requirements
+
+--- FILE: .kiro/specs/03-graph-view-layout/tasks.md ---
+diff --git a/.kiro/specs/03-graph-view-layout/tasks.md b/.kiro/specs/03-graph-view-layout/tasks.md
+new file mode 100644
+index 0000000..8808356
+--- /dev/null
++++ b/.kiro/specs/03-graph-view-layout/tasks.md
+@@ -0,0 +1,61 @@
++# Implementation Plan
++
++- [x] 1. Create file type detection and styling services
++  - Create file-type.service.ts to extract file extensions from node paths
++  - Create graph-styles.service.ts to generate Cytoscape stylesheets with file type color mappings
++  - Create extension-config.service.ts for UI configuration management
++  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
++
++- [x] 2. Implement GraphToolbar component with VS Code theming
++  - Create GraphToolbar.tsx component with search input (read-only placeholder)
++  - Add action buttons (Fit, Reset, Layout dropdown) as disabled placeholders with data-placeholder="true"
++  - Add filter chips for file types as disabled placeholders
++  - Include functional Re-scan button using existing Button.tsx component
++  - Apply VS Code theme tokens for all styling and ensure responsive layout
++  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.1, 2.2, 2.3, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
++
++- [x] 3. Create GraphCanvas wrapper component
++  - Create GraphCanvas.tsx component to wrap existing Cytoscape functionality
++  - Integrate file type color mapping using graph-styles.service
++  - Enhance Cytoscape cleanup procedures to prevent memory leaks
++  - Maintain all existing interactions (select, double-click to open files)
++  - Ensure performance optimizations for large graphs remain intact
++  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4_
++
++- [x] 4. Implement GraphDashboard orchestrator component
++  - Create GraphDashboard.tsx as the main container component
++  - Implement vertical flex layout with toolbar at top and canvas below
++  - Migrate existing GraphView state management and messaging logic
++  - Integrate GraphToolbar and GraphCanvas components
++  - Ensure proper data flow and event handling between components
++  - _Requirements: 1.1, 1.5, 4.1, 4.2_
++
++- [x] 5. Update global CSS with toolbar styles and color variables
++  - Add toolbar-specific CSS classes using VS Code theme tokens
++  - Define CSS variables for file type node colors with fallback values
++  - Implement responsive layout styles for toolbar control wrapping
++  - Ensure proper spacing using 8px base grid system
++  - _Requirements: 1.6, 3.8, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
++
++- [x] 6. Add accessibility attributes and keyboard navigation
++  - Add aria-label attributes to all toolbar actionable elements
++  - Set aria-disabled="true" on placeholder controls
++  - Ensure proper focus order through toolbar controls
++  - Add data-testid attributes for future testing
++  - _Requirements: 6.1, 6.2, 6.3, 6.4_
++
++- [x] 7. Replace GraphView with GraphDashboard in App component
++  - Update App.tsx to use GraphDashboard instead of GraphView for graph route
++  - Ensure all existing functionality is preserved during the transition
++  - Remove the old GraphView component file
++  - Verify no breaking changes to existing messaging contracts
++  - _Requirements: 4.2, 4.4_
++
++- [x] 8. Test and validate the complete implementation
++  - Verify Re-scan functionality works identically to previous implementation
++  - Test file type colorization across different node types
++  - Validate responsive toolbar layout at various viewport sizes
++  - Confirm VS Code theme integration in light/dark modes
++  - Test accessibility features with keyboard navigation
++  - Verify performance with large graphs shows no regression
++  - _Requirements: 2.3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 1.6, 5.6, 6.3, 4.4_
+\ No newline at end of file
+
+--- FILE: graph-view-layout-prd.md ---
+diff --git a/graph-view-layout-prd.md b/graph-view-layout-prd.md
+new file mode 100644
+index 0000000..2241a64
+--- /dev/null
++++ b/graph-view-layout-prd.md
+@@ -0,0 +1,182 @@
++# Graph View Layout (Layout-first, UI-only) — PRD
++
++Owner: Constellation
++Status: Draft (ready for implementation)
++Target: Webview UI (Preact) in VS Code webview
++
++
++1) Summary
++- Goal: Ship a layout-focused shell for the Graph view that matches the provided inspiration. Add a top toolbar above the canvas with a non-functional search input and placeholders for upcoming actions. Implement node colors by file type. Do not add new graph features or behaviors beyond colorization.
++- Non-Goals: No minimap, no search/filtering logic, no new layouts, no new analytics. Keep all behavior the same as today, except the existing Re-scan button may be visually relocated into the new toolbar with no functional change.
++- Tech & conventions: Preact UI with a GraphDashboard.tsx orchestrator and a side panel layout container (collapsed/placeholder). Shared Button.tsx with styles via global.css using VS Code theme variables. New services/utilities in kebab-case .ts files, consolidating simple config into extension-config.service.ts where appropriate.
++
++
++2) Current state (baseline)
++- Cytoscape renders the dependency graph with existing interactions (select, open on double-click). A single Re-scan button exists. No toolbar/search. Styling uses VS Code theme tokens.
++
++
++3) Scope of this iteration
++- Add a top toolbar above the graph canvas.
++- Include a search input in the toolbar (visual only; no logic, disabled or readOnly).
++- Include placeholder controls for: Fit, Reset, Layout switch, Filters (chips), etc. Placeholders are disabled and tagged for future enablement.
++- Move the existing Re-scan action into the toolbar (no behavior change) or keep both temporarily if needed; final UI shows it inside the toolbar.
++- Implement node color mapping by file type in the graph styles.
++- Do not render a minimap.
++
++
++4) Layout overview (ASCII)
++```txt path=null start=null
+++---------------------------------------------------------------------------------+
++| GraphDashboard (full height, vertical stack)                                    |
++|---------------------------------------------------------------------------------|
++| Toolbar                                                                          |
++|  ├─ [Search input (placeholder, readOnly)] [Fit] [Reset] [Re-scan]               |
++|  └─ [Layout ▼] [Filter chips: ts tsx js jsx json other] (all disabled for now)   |
++|---------------------------------------------------------------------------------|
++| Graph Area                                                                       |
++|  ├─ Cytoscape Canvas (fills remaining space)                                     |
++|  └─ (No minimap)                                                                 |
++|---------------------------------------------------------------------------------|
++| Side Panel (collapsed placeholder container; hidden by default)                  |
+++---------------------------------------------------------------------------------+
++```
++Notes
++- Toolbar is always visible and sticky at the top of the graph view container.
++- The search input displays focus/hover states but cannot submit or filter.
++- All placeholder controls are disabled and marked with data-placeholder attributes for later wiring.
++
++
++5) Visual design and styling
++- Source of truth: global.css extended with toolbar rules. Respect VS Code theme tokens.
++- Key VS Code tokens used (examples):
++  - Foreground: var(--vscode-foreground)
++  - Background: var(--vscode-editor-background)
++  - Toolbar bg: var(--vscode-editorWidget-background)
++  - Button bg/fg: var(--vscode-button-background), var(--vscode-button-foreground)
++  - Input bg/fg: var(--vscode-input-background), var(--vscode-input-foreground)
++  - Border: var(--vscode-widget-border)
++- Spacing: Use 8px base grid (4/8/12 multiples). Toolbar height ~40px.
++- Typography: Inherit VS Code font; size 12–13px for controls.
++- Buttons: Use shared Button.tsx with global.css classes for size/variant.
++- Accessibility: All actionable elements have aria-label; disabled placeholders use aria-disabled="true".
++
++
++6) Node color mapping by file type (implemented)
++- Map node style based on file extension in the Cytoscape stylesheet. The mapping is driven by a utility and exposed as classes/data attributes assigned per node.
++- Default mapping (overridable via CSS variables in global.css):
++  - ts → var(--kiro-node-ts, #569CD6)
++  - tsx → var(--kiro-node-tsx, #4FC1FF)
++  - js → var(--kiro-node-js, #E3D300)
++  - jsx → var(--kiro-node-jsx, #FFBD45)
++  - json → var(--kiro-node-json, #8DC891)
++  - other → var(--kiro-node-other, #B180D7)
++- Implementation notes:
++  - During data ingestion, derive ext for each node id/path.
++  - Set a data attribute data.ext on nodes (e.g., data: { ext: "ts" }).
++  - Add Cytoscape style selectors like: node[ext = "ts"] { background-color: <token>; }.
++  - Keep edges unchanged.
++
++
++7) Components and files to add/update
++Adhere to Preact + kebab-case .ts services and shared Button.tsx. Location suggestions use existing structure.
++
++Components (tsx)
++- webview-ui/src/components/GraphDashboard.tsx
++  - Orchestrates toolbar + canvas + (placeholder) side panel; vertical flex layout.
++- webview-ui/src/components/graph-toolbar.tsx
++  - Renders search input (readOnly/disabled) and placeholder buttons (disabled). Contains the existing Re-scan as an enabled Button wired to current behavior.
++- webview-ui/src/components/graph-canvas.tsx (update if already present)
++  - Ensures Cytoscape container fills remaining space; injects style rules for node colors.
++- webview-ui/src/components/graph-side-panel.tsx (optional placeholder)
++  - Collapsed by default. Empty content for now. Presence ensures future growth without relayout.
++
++Hooks (ts)
++- webview-ui/src/hooks/use-graph-state.ts (minimal)
++  - Hold UI flags for toolbar placeholders (booleans only), persisted in webview state but unused in behavior.
++
++Services/Utilities (ts)
++- webview-ui/src/services/extension-config.service.ts
++  - Simple, consolidated place for UI flags and defaults (per user preference to simplify config).
++- webview-ui/src/services/graph-styles.service.ts
++  - Builds Cytoscape stylesheet fragments for node color by file type. Exports getFileTypeColor(ext).
++- webview-ui/src/services/file-type.service.ts
++  - Utility that extracts extension from node ids/paths: getFileExt(path): "ts" | "tsx" | ... | "other".
++
++Types (ts)
++- webview-ui/src/types/graph-types.ts (reuse existing shapes, add optional ext on node data if needed)
++
++CSS
++- webview-ui/src/styles/global.css (extend)
++  - .toolbar, .toolbar-row, .toolbar-input, .toolbar-chip, .toolbar-spacer
++  - Theme-aware backgrounds/borders using VS Code tokens
++  - Data attributes for placeholders: [data-placeholder="true"]
++
++
++8) Behaviors in this iteration
++- Toolbar appears; search input is visually functional (focus/clear) but does not filter, submit, or trigger canvas actions. It is readOnly/disabled by default.
++- Re-scan button retains its current behavior.
++- Fit/Reset/Layout/Filter chips are present but disabled (no handlers). They may render with tooltip “Coming soon”.
++- Node colors vary by file type. This is the only functional change to the graph visuals.
++- No minimap is rendered.
++
++
++9) Acceptance criteria
++Toolbar
++- Toolbar renders above the graph in all themes. Search input is visible and not interactive (readOnly or disabled). Placeholder controls are disabled and marked with data-placeholder="true".
++- Existing Re-scan action remains available and functional inside the toolbar.
++Graph & styles
++- Nodes are colorized per file extension mapping; unknown types fall back to “other”.
++- No minimap is present anywhere in the UI.
++Layout & responsiveness
++- Toolbar remains sticky; graph canvas flexes to fill available space. Works ≥ 1024px width and down to ~800px with controls wrapping to a second row.
++Theming & a11y
++- All colors derive from VS Code tokens or CSS variables. Contrast meets VS Code default requirements for text and icons. Disabled placeholders have proper aria-disabled.
++Performance
++- No regression versus current render time. Colorization is computed once per load and applied via selectors.
++
++
++10) Out of scope (explicit)
++- Search implementation, filtering, neighborhood/focus, new layouts, legend, context menus, hotkeys, pinning, details panel content, exporting, persistence beyond simple UI flags. No changes to extension messaging.
++
++
++11) Implementation plan
++Phase 1 — Layout shell and toolbar
++- Create GraphDashboard.tsx and place it as the top-level for the graph view. Flex column layout.
++- Add graph-toolbar.tsx with: Search input (disabled), Fit, Reset, Layout dropdown, Filter chips, Re-scan (enabled). Use Button.tsx for buttons. Add data-placeholder to non-functional controls.
++- Move/slot the current graph view into graph-canvas.tsx. Ensure canvas sizing and cleanup are intact.
++- Extend global.css with toolbar styles using VS Code tokens.
++
++Phase 2 — File-type colorization
++- Add file-type.service.ts to derive ext from node id/path during data load.
++- Add graph-styles.service.ts to produce stylesheet rules by ext and merge into Cytoscape style.
++- Verify colors theme correctly via CSS variables.
++
++Phase 3 — Polish
++- Ensure responsive wrapping for toolbar rows; add tooltips “Coming soon”.
++- Add a collapsed side panel placeholder component (hidden by default) to stabilize future layout.
++
++
++12) Risks & mitigations
++- Visual regressions in dark/light themes → Use tokens and test across themes.
++- Toolbar crowding on small widths → Allow control wrapping and use icon-only buttons as needed.
++- Color accessibility → Keep sufficient contrast; allow user overrides via CSS variables.
++
++
++13) Work breakdown (files)
++- webview-ui/src/components/GraphDashboard.tsx (new)
++- webview-ui/src/components/graph-toolbar.tsx (new)
++- webview-ui/src/components/graph-canvas.tsx (update/new wrapper)
++- webview-ui/src/components/graph-side-panel.tsx (new, placeholder)
++- webview-ui/src/components/Button.tsx (reuse)
++- webview-ui/src/services/extension-config.service.ts (new)
++- webview-ui/src/services/graph-styles.service.ts (new)
++- webview-ui/src/services/file-type.service.ts (new)
++- webview-ui/src/types/graph-types.ts (update for optional ext)
++- webview-ui/src/styles/global.css (update)
++
++
++14) Developer notes & conventions
++- Follow user preferences: Preact UI, GraphDashboard.tsx wrapper, shared Button.tsx styled by global CSS; services/utilities use kebab-case .ts file names and consolidate simple config into extension-config.service.ts.
++- Keep current extension messaging and data contracts intact.
++- Add data-testid attributes to toolbar elements for future tests.
++
+
+--- FILE: webview-ui/src/components/App.tsx ---
+diff --git a/webview-ui/src/components/App.tsx b/webview-ui/src/components/App.tsx
+index 687c9ce..af09585 100644
+--- a/webview-ui/src/components/App.tsx
++++ b/webview-ui/src/components/App.tsx
+@@ -1,12 +1,12 @@
+ import { SidePanelView } from '../views/SidePanelView'
+-import { GraphView } from '../views/GraphView'
++import { GraphDashboard } from './GraphDashboard'
+ 
+ export function App() {
+   const root = document.getElementById('root') as HTMLElement | null
+   const view = root?.dataset.view ?? 'sidepanel'
+ 
+   if (view === 'graph') {
+-    return <GraphView />
++    return <GraphDashboard />
+   }
+   return <SidePanelView />
+ }
+
+--- FILE: webview-ui/src/components/GraphCanvas.tsx ---
+diff --git a/webview-ui/src/components/GraphCanvas.tsx b/webview-ui/src/components/GraphCanvas.tsx
+new file mode 100644
+index 0000000..bdf0d88
+--- /dev/null
++++ b/webview-ui/src/components/GraphCanvas.tsx
+@@ -0,0 +1,192 @@
++import { useEffect, useRef, useState } from 'preact/hooks'
++import cytoscape, { Core } from 'cytoscape'
++import { messenger } from '../services/messenger'
++import { getFileExt } from '../services/file-type.service'
++import { generateGraphStylesheet } from '../services/graph-styles.service'
++
++interface Node {
++  id: string
++  label: string
++  path: string
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other'
++}
++
++interface Edge {
++  id: string
++  source: string
++  target: string
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown'
++}
++
++interface Meta {
++  generatedAt?: string
++  count: {
++    nodes: number
++    edges: number
++  }
++  performanceOptimized?: boolean
++}
++
++interface GraphData {
++  nodes: Node[]
++  edges: Edge[]
++  meta: Meta
++}
++
++interface GraphCanvasProps {
++  data: GraphData
++  isRendering: boolean
++  onRenderingChange: (rendering: boolean) => void
++}
++
++export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanvasProps) {
++  const containerRef = useRef<HTMLDivElement>(null)
++  const cyRef = useRef<Core | null>(null)
++
++  // Create/update Cytoscape instance when data changes
++  useEffect(() => {
++    if (data && containerRef.current) {
++      onRenderingChange(true)
++      
++      // Clean up previous instance to prevent memory leaks
++      if (cyRef.current) {
++        try {
++          // Remove all event listeners before destroying
++          cyRef.current.removeAllListeners()
++          cyRef.current.destroy()
++        } catch (error) {
++          console.warn('Error destroying previous Cytoscape instance:', error)
++        } finally {
++          cyRef.current = null
++        }
++      }
++
++      // Transform data for Cytoscape with file type detection
++      const elements = [
++        ...data.nodes.map(node => {
++          const ext = getFileExt(node.path)
++          return {
++            data: {
++              id: node.id,
++              label: node.label,
++              path: node.path,
++              language: node.language,
++              ext: ext // Add file extension for styling
++            }
++          }
++        }),
++        ...data.edges.map(edge => ({
++          data: {
++            id: edge.id,
++            source: edge.source,
++            target: edge.target,
++            kind: edge.kind
++          }
++        }))
++      ]
++
++      // Use setTimeout for large graphs to prevent UI blocking
++      const nodeCount = data.nodes.length
++      const renderDelay = nodeCount > 200 ? 50 : 0
++      
++      setTimeout(() => {
++        try {
++          // Create layout configuration with performance optimizations
++          const layoutConfig = nodeCount > 500 ? {
++            // Simplified layout for very large graphs
++            name: 'grid',
++            fit: true,
++            padding: 30
++          } : {
++            // Standard layout for smaller graphs
++            name: 'cose',
++            fit: true,
++            padding: 30,
++            nodeRepulsion: 400000,
++            idealEdgeLength: 100,
++            edgeElasticity: 100,
++            nestingFactor: 5,
++            gravity: 80,
++            numIter: nodeCount > 200 ? 500 : 1000, // Reduce iterations for large graphs
++            initialTemp: 200,
++            coolingFactor: 0.95,
++            minTemp: 1.0
++          }
++
++          // Generate stylesheet with file type colors
++          const stylesheet = generateGraphStylesheet(nodeCount)
++
++          cyRef.current = cytoscape({
++            container: containerRef.current,
++            elements,
++            style: stylesheet,
++            layout: layoutConfig
++          })
++
++          // Add event handlers for interactions
++          cyRef.current.on('tap', 'node', (evt) => {
++            // Single-click highlighting (node gets selected automatically by Cytoscape)
++            const node = evt.target
++            console.log('Node selected:', node.data('label'))
++          })
++
++          cyRef.current.on('dbltap', 'node', (evt) => {
++            // Double-click to open file
++            const node = evt.target
++            const path = node.data('path')
++            if (path) {
++              messenger.post('graph/open-file', { path })
++            }
++          })
++
++          // Handle layout completion for performance monitoring
++          cyRef.current.on('layoutstop', () => {
++            onRenderingChange(false)
++            console.log(`Graph layout completed for ${nodeCount} nodes`)
++          })
++
++        } catch (error) {
++          console.error('Error creating Cytoscape instance:', error)
++          onRenderingChange(false)
++        }
++      }, renderDelay)
++    }
++  }, [data, onRenderingChange])
++
++  // Enhanced cleanup on unmount
++  useEffect(() => {
++    return () => {
++      if (cyRef.current) {
++        try {
++          // Remove all event listeners before destroying
++          cyRef.current.removeAllListeners()
++          cyRef.current.destroy()
++        } catch (error) {
++          console.warn('Error during Cytoscape cleanup:', error)
++        } finally {
++          cyRef.current = null
++        }
++      }
++    }
++  }, [])
++
++  return (
++    <div className="graph-canvas">
++      {/* Rendering indicator */}
++      {isRendering && (
++        <div className="graph-canvas-overlay">
++          <div className="graph-canvas-indicator">
++            Rendering...
++          </div>
++        </div>
++      )}
++      
++      {/* Cytoscape container */}
++      <div 
++        ref={containerRef} 
++        className="graph-canvas-container"
++        data-testid="graph-canvas"
++      />
++    </div>
++  )
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/components/GraphDashboard.tsx ---
+diff --git a/webview-ui/src/components/GraphDashboard.tsx b/webview-ui/src/components/GraphDashboard.tsx
+new file mode 100644
+index 0000000..dc1ff56
+--- /dev/null
++++ b/webview-ui/src/components/GraphDashboard.tsx
+@@ -0,0 +1,146 @@
++import { useEffect, useState } from 'preact/hooks'
++import { messenger } from '../services/messenger'
++import { GraphToolbar } from './GraphToolbar'
++import { GraphCanvas } from './GraphCanvas'
++
++interface Node {
++  id: string
++  label: string
++  path: string
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other'
++}
++
++interface Edge {
++  id: string
++  source: string
++  target: string
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown'
++}
++
++interface Meta {
++  generatedAt?: string
++  count: {
++    nodes: number
++    edges: number
++  }
++  performanceOptimized?: boolean
++}
++
++interface GraphData {
++  nodes: Node[]
++  edges: Edge[]
++  meta: Meta
++}
++
++type ComponentState = 
++  | { type: 'loading' }
++  | { type: 'error'; message: string }
++  | { type: 'data'; data: GraphData }
++  | { type: 'scanning'; message: string }
++  | { type: 'rendering'; message: string }
++
++export function GraphDashboard() {
++  const [state, setState] = useState<ComponentState>({ type: 'loading' })
++  const [isRendering, setIsRendering] = useState(false)
++
++  // Initialize component and request graph data
++  useEffect(() => {
++    // Request graph data on mount
++    messenger.post('graph/load')
++
++    // Listen for messages from extension
++    const handleMessage = (msg: any) => {
++      switch (msg.type) {
++        case 'graph/data':
++          // Check if this is a large graph that needs rendering indication
++          const nodeCount = msg.payload.nodes.length
++          if (nodeCount > 200) {
++            setState({ type: 'rendering', message: `Rendering ${nodeCount} nodes...` })
++            // Use setTimeout to allow UI to update before heavy rendering
++            setTimeout(() => {
++              setState({ type: 'data', data: msg.payload })
++            }, 100)
++          } else {
++            setState({ type: 'data', data: msg.payload })
++          }
++          break
++        case 'graph/error':
++          setState({ type: 'error', message: msg.message })
++          break
++        case 'graph/status':
++          setState({ type: 'scanning', message: msg.message })
++          break
++      }
++    }
++
++    messenger.on(handleMessage)
++  }, [])
++
++  const handleRescan = () => {
++    // Reset rendering state when starting a new scan
++    setIsRendering(false)
++    messenger.post('graph/scan')
++  }
++
++  const handleRenderingChange = (rendering: boolean) => {
++    setIsRendering(rendering)
++  }
++
++  return (
++    <div className="graph-dashboard">
++      {/* Toolbar */}
++      <GraphToolbar
++        onRescan={handleRescan}
++        nodeCount={state.type === 'data' ? state.data.meta.count.nodes : undefined}
++        edgeCount={state.type === 'data' ? state.data.meta.count.edges : undefined}
++        isOptimized={state.type === 'data' ? state.data.meta.performanceOptimized : undefined}
++      />
++      
++      {/* Main Content Area */}
++      <div className="graph-dashboard-content">
++        {/* Loading State */}
++        {state.type === 'loading' && (
++          <div className="graph-dashboard-message">
++            <p>Loading graph...</p>
++          </div>
++        )}
++        
++        {/* Scanning State */}
++        {state.type === 'scanning' && (
++          <div className="graph-dashboard-message">
++            <p>{state.message}</p>
++          </div>
++        )}
++        
++        {/* Rendering State */}
++        {state.type === 'rendering' && (
++          <div className="graph-dashboard-message">
++            <p>{state.message}</p>
++          </div>
++        )}
++        
++        {/* Error State */}
++        {state.type === 'error' && (
++          <div className="graph-dashboard-message graph-dashboard-error">
++            <p>Error: {state.message}</p>
++            <button 
++              onClick={() => messenger.post('graph/load')}
++              className="graph-dashboard-retry"
++            >
++              Retry
++            </button>
++          </div>
++        )}
++        
++        {/* Graph Canvas */}
++        {state.type === 'data' && (
++          <GraphCanvas
++            data={state.data}
++            isRendering={isRendering}
++            onRenderingChange={handleRenderingChange}
++          />
++        )}
++      </div>
++    </div>
++  )
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/components/GraphToolbar.tsx ---
+diff --git a/webview-ui/src/components/GraphToolbar.tsx b/webview-ui/src/components/GraphToolbar.tsx
+new file mode 100644
+index 0000000..248e661
+--- /dev/null
++++ b/webview-ui/src/components/GraphToolbar.tsx
+@@ -0,0 +1,104 @@
++import { Button } from './Button'
++import { getPlaceholderAttributes, isToolbarFeatureEnabled } from '../services/extension-config.service'
++import { getSupportedFileTypes, getFileTypeLabel } from '../services/graph-styles.service'
++
++interface GraphToolbarProps {
++  onRescan: () => void
++  nodeCount?: number
++  edgeCount?: number
++  isOptimized?: boolean
++}
++
++export function GraphToolbar({ onRescan, nodeCount, edgeCount, isOptimized }: GraphToolbarProps) {
++  const fileTypes = getSupportedFileTypes()
++
++  return (
++    <div className="toolbar">
++      <div className="toolbar-row">
++        {/* Search Input - Placeholder only */}
++        <input
++          type="text"
++          className="toolbar-input"
++          placeholder="Search files by name or path..."
++          readOnly
++          aria-label="Search graph nodes (coming soon)"
++          {...getPlaceholderAttributes(isToolbarFeatureEnabled('searchEnabled'))}
++          data-testid="graph-search-input"
++        />
++        
++        {/* Action Buttons */}
++        <div className="toolbar-actions">
++          <button
++            className="toolbar-button"
++            title="Fit graph to view (coming soon)"
++            aria-label="Fit graph to view"
++            {...getPlaceholderAttributes(isToolbarFeatureEnabled('fitEnabled'))}
++            data-testid="graph-fit-button"
++          >
++            Fit
++          </button>
++          
++          <button
++            className="toolbar-button"
++            title="Reset graph layout (coming soon)"
++            aria-label="Reset graph layout"
++            {...getPlaceholderAttributes(isToolbarFeatureEnabled('resetEnabled'))}
++            data-testid="graph-reset-button"
++          >
++            Reset
++          </button>
++          
++          <div className="toolbar-dropdown">
++            <button
++              className="toolbar-button toolbar-dropdown-button"
++              title="Change graph layout (coming soon)"
++              aria-label="Change graph layout"
++              {...getPlaceholderAttributes(isToolbarFeatureEnabled('layoutEnabled'))}
++              data-testid="graph-layout-button"
++            >
++              Layout ▼
++            </button>
++          </div>
++          
++          {/* Re-scan Button - Functional */}
++          <Button onClick={onRescan} data-testid="graph-rescan-button">
++            Re-scan
++          </Button>
++        </div>
++      </div>
++      
++      <div className="toolbar-row">
++        {/* Filter Chips - Placeholders */}
++        <div className="toolbar-filters">
++          <span className="toolbar-label">Filters:</span>
++          {fileTypes.map((fileType) => (
++            <button
++              key={fileType}
++              className="toolbar-chip"
++              title={`Filter ${getFileTypeLabel(fileType)} files (coming soon)`}
++              aria-label={`Filter ${getFileTypeLabel(fileType)} files`}
++              {...getPlaceholderAttributes(isToolbarFeatureEnabled('filtersEnabled'))}
++              data-testid={`graph-filter-${fileType}`}
++            >
++              {fileType}
++            </button>
++          ))}
++        </div>
++        
++        {/* Graph Stats */}
++        {(nodeCount !== undefined && edgeCount !== undefined) && (
++          <div className="toolbar-stats">
++            <span className="toolbar-stat">
++              {nodeCount} nodes, {edgeCount} edges
++            </span>
++            {isOptimized && (
++              <span className="toolbar-stat toolbar-stat-optimized">
++                (optimized)
++              </span>
++            )}
++          </div>
++        )}
++      </div>
++    </div>
++  )
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/services/extension-config.service.ts ---
+diff --git a/webview-ui/src/services/extension-config.service.ts b/webview-ui/src/services/extension-config.service.ts
+new file mode 100644
+index 0000000..7bea5d1
+--- /dev/null
++++ b/webview-ui/src/services/extension-config.service.ts
+@@ -0,0 +1,67 @@
++/**
++ * Service for managing UI configuration and feature flags
++ */
++
++/**
++ * UI configuration interface
++ */
++export interface UIConfig {
++  toolbar: {
++    searchEnabled: boolean
++    fitEnabled: boolean
++    resetEnabled: boolean
++    layoutEnabled: boolean
++    filtersEnabled: boolean
++  }
++}
++
++/**
++ * Default UI configuration for this iteration
++ * All placeholder features are disabled
++ */
++export const DEFAULT_UI_CONFIG: UIConfig = {
++  toolbar: {
++    searchEnabled: false,    // Placeholder only
++    fitEnabled: false,       // Placeholder only
++    resetEnabled: false,     // Placeholder only
++    layoutEnabled: false,    // Placeholder only
++    filtersEnabled: false    // Placeholder only
++  }
++}
++
++/**
++ * Get current UI configuration
++ * @returns Current UI configuration
++ */
++export function getUIConfig(): UIConfig {
++  // For this iteration, return static config
++  // Future iterations can add persistence/user preferences
++  return DEFAULT_UI_CONFIG
++}
++
++/**
++ * Check if a toolbar feature is enabled
++ * @param feature - The toolbar feature to check
++ * @returns Whether the feature is enabled
++ */
++export function isToolbarFeatureEnabled(feature: keyof UIConfig['toolbar']): boolean {
++  const config = getUIConfig()
++  return config.toolbar[feature]
++}
++
++/**
++ * Get placeholder attributes for disabled controls
++ * @param enabled - Whether the control is enabled
++ * @returns Object with data attributes for disabled controls
++ */
++export function getPlaceholderAttributes(enabled: boolean) {
++  if (enabled) {
++    return {}
++  }
++  
++  return {
++    'data-placeholder': 'true',
++    'aria-disabled': true,
++    disabled: true
++  }
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/services/file-type.service.ts ---
+diff --git a/webview-ui/src/services/file-type.service.ts b/webview-ui/src/services/file-type.service.ts
+new file mode 100644
+index 0000000..aed035a
+--- /dev/null
++++ b/webview-ui/src/services/file-type.service.ts
+@@ -0,0 +1,64 @@
++/**
++ * Service for detecting file types from file paths and extensions
++ */
++
++export type FileType = 'ts' | 'tsx' | 'js' | 'jsx' | 'json' | 'other'
++
++/**
++ * Extract file extension from a file path
++ * @param path - File path (e.g., "src/components/App.tsx")
++ * @returns File extension without the dot (e.g., "tsx")
++ */
++export function getFileExt(path: string): FileType {
++  if (!path || typeof path !== 'string') {
++    return 'other'
++  }
++
++  // Extract extension from path
++  const lastDotIndex = path.lastIndexOf('.')
++  if (lastDotIndex === -1 || lastDotIndex === path.length - 1) {
++    return 'other'
++  }
++
++  const ext = path.substring(lastDotIndex + 1).toLowerCase()
++
++  // Map extensions to our supported file types
++  switch (ext) {
++    case 'ts':
++      return 'ts'
++    case 'tsx':
++      return 'tsx'
++    case 'js':
++      return 'js'
++    case 'jsx':
++      return 'jsx'
++    case 'json':
++      return 'json'
++    default:
++      return 'other'
++  }
++}
++
++/**
++ * Get a human-readable label for a file type
++ * @param fileType - The file type
++ * @returns Display label for the file type
++ */
++export function getFileTypeLabel(fileType: FileType): string {
++  switch (fileType) {
++    case 'ts':
++      return 'TypeScript'
++    case 'tsx':
++      return 'TSX'
++    case 'js':
++      return 'JavaScript'
++    case 'jsx':
++      return 'JSX'
++    case 'json':
++      return 'JSON'
++    case 'other':
++      return 'Other'
++    default:
++      return 'Unknown'
++  }
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/services/graph-styles.service.ts ---
+diff --git a/webview-ui/src/services/graph-styles.service.ts b/webview-ui/src/services/graph-styles.service.ts
+new file mode 100644
+index 0000000..f8e94bf
+--- /dev/null
++++ b/webview-ui/src/services/graph-styles.service.ts
+@@ -0,0 +1,115 @@
++/**
++ * Service for generating Cytoscape stylesheets with file type color mappings
++ */
++
++import type { FileType } from './file-type.service';
++
++/**
++ * CSS variable mapping for file type colors
++ */
++export const FILE_TYPE_COLORS: Record<FileType, string> = {
++  ts: 'var(--kiro-node-ts, #569CD6)',
++  tsx: 'var(--kiro-node-tsx, #4FC1FF)',
++  js: 'var(--kiro-node-js, #E3D300)',
++  jsx: 'var(--kiro-node-jsx, #FFBD45)',
++  json: 'var(--kiro-node-json, #8DC891)',
++  other: 'var(--kiro-node-other, #B180D7)'
++};
++
++/**
++ * Get the color for a specific file type
++ * @param fileType - The file type
++ * @returns CSS color value (CSS variable with fallback)
++ */
++export function getFileTypeColor(fileType: FileType): string {
++  return FILE_TYPE_COLORS[fileType] || FILE_TYPE_COLORS.other;
++}
++
++/**
++ * Generate Cytoscape stylesheet with file type color mappings
++ * @param nodeCount - Number of nodes for performance optimizations
++ * @returns Cytoscape stylesheet array
++ */
++export function generateGraphStylesheet(nodeCount: number = 0) {
++  const isLargeGraph = nodeCount > 500;
++  const isMediumGraph = nodeCount > 200;
++
++  // Base styles
++  const baseStyles = [
++    // Default node style
++    {
++      selector: 'node',
++      style: {
++        'label': 'data(label)',
++        'color': 'var(--vscode-foreground, #CCCCCC)',
++        'font-size': isLargeGraph ? '10px' : '12px',
++        'text-valign': 'center',
++        'text-halign': 'center',
++        'width': isLargeGraph ? '20px' : '30px',
++        'height': isLargeGraph ? '20px' : '30px',
++        'background-color': FILE_TYPE_COLORS.other // Default fallback
++      }
++    },
++    // Edge styles
++    {
++      selector: 'edge',
++      style: {
++        'line-color': 'var(--vscode-foreground, #666666)',
++        'width': isLargeGraph ? 1 : 2,
++        'opacity': isLargeGraph ? 0.4 : 0.6,
++        'curve-style': 'bezier'
++      }
++    },
++    // Selected node style
++    {
++      selector: 'node:selected',
++      style: {
++        'border-width': 3,
++        'border-color': 'var(--vscode-focusBorder, #007FD4)',
++        'background-color': 'var(--vscode-charts-orange, #FF8C00)'
++      }
++    }
++  ];
++
++  // File type specific styles
++  const fileTypeStyles = Object.entries(FILE_TYPE_COLORS).map(([fileType, color]) => ({
++    selector: `node[ext = "${fileType}"]`,
++    style: {
++      'background-color': color
++    }
++  }));
++
++  return [...baseStyles, ...fileTypeStyles];
++}
++
++/**
++ * Get all supported file types for filter UI
++ * @returns Array of file types
++ */
++export function getSupportedFileTypes(): FileType[] {
++  return ['ts', 'tsx', 'js', 'jsx', 'json', 'other'];
++}
++
++/**
++ * Get a human-readable label for a file type
++ * @param fileType - The file type
++ * @returns Display label for the file type
++ */
++export function getFileTypeLabel(fileType: FileType): string {
++  switch (fileType) {
++    case 'ts':
++      return 'TypeScript';
++    case 'tsx':
++      return 'TSX';
++    case 'js':
++      return 'JavaScript';
++    case 'jsx':
++      return 'JSX';
++    case 'json':
++      return 'JSON';
++    case 'other':
++      return 'Other';
++    default:
++      return 'Unknown';
++  }
++}
+\ No newline at end of file
+
+--- FILE: webview-ui/src/styles/global.css ---
+diff --git a/webview-ui/src/styles/global.css b/webview-ui/src/styles/global.css
+index 8e28e95..78c152e 100644
+--- a/webview-ui/src/styles/global.css
++++ b/webview-ui/src/styles/global.css
+@@ -1,6 +1,14 @@
+ /* Global styles for the webview UI */
+ :root {
+   color-scheme: light dark;
++  
++  /* File type node colors - can be overridden by themes */
++  --kiro-node-ts: #569CD6;
++  --kiro-node-tsx: #4FC1FF;
++  --kiro-node-js: #E3D300;
++  --kiro-node-jsx: #FFBD45;
++  --kiro-node-json: #8DC891;
++  --kiro-node-other: #B180D7;
+ }
+ 
+ html, body, #root {
+@@ -32,3 +40,257 @@ body {
+   background: var(--vscode-button-hoverBackground);
+ }
+ 
++/* Graph Dashboard Layout */
++.graph-dashboard {
++  height: 100%;
++  display: flex;
++  flex-direction: column;
++}
++
++.graph-dashboard-content {
++  flex: 1;
++  position: relative;
++  overflow: hidden;
++}
++
++.graph-dashboard-message {
++  position: absolute;
++  top: 50%;
++  left: 50%;
++  transform: translate(-50%, -50%);
++  text-align: center;
++  color: var(--vscode-foreground);
++}
++
++.graph-dashboard-error {
++  color: var(--vscode-errorForeground, #f48771);
++}
++
++.graph-dashboard-retry {
++  margin-top: 12px;
++  padding: 6px 12px;
++  font-size: 12px;
++  background: var(--vscode-button-background);
++  color: var(--vscode-button-foreground);
++  border: 1px solid var(--vscode-button-border, transparent);
++  border-radius: 4px;
++  cursor: pointer;
++}
++
++.graph-dashboard-retry:hover {
++  background: var(--vscode-button-hoverBackground);
++}
++
++/* Toolbar Styles */
++.toolbar {
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++  padding: 12px;
++  background: var(--vscode-editorWidget-background);
++  border-bottom: 1px solid var(--vscode-widget-border);
++  min-height: 40px;
++}
++
++.toolbar-row {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  flex-wrap: wrap;
++}
++
++.toolbar-input {
++  flex: 1;
++  min-width: 200px;
++  padding: 6px 8px;
++  font-size: 12px;
++  background: var(--vscode-input-background);
++  color: var(--vscode-input-foreground);
++  border: 1px solid var(--vscode-input-border, transparent);
++  border-radius: 4px;
++  outline: none;
++}
++
++.toolbar-input:focus {
++  border-color: var(--vscode-focusBorder);
++}
++
++.toolbar-input[data-placeholder="true"] {
++  opacity: 0.6;
++  cursor: not-allowed;
++}
++
++.toolbar-actions {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++}
++
++.toolbar-button {
++  padding: 6px 10px;
++  font-size: 12px;
++  background: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
++  color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
++  border: 1px solid var(--vscode-button-border, transparent);
++  border-radius: 4px;
++  cursor: pointer;
++  white-space: nowrap;
++}
++
++.toolbar-button:hover:not([data-placeholder="true"]) {
++  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
++}
++
++.toolbar-button[data-placeholder="true"] {
++  opacity: 0.6;
++  cursor: not-allowed;
++}
++
++.toolbar-dropdown {
++  position: relative;
++}
++
++.toolbar-dropdown-button {
++  display: flex;
++  align-items: center;
++  gap: 4px;
++}
++
++.toolbar-filters {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  flex-wrap: wrap;
++}
++
++.toolbar-label {
++  font-size: 12px;
++  color: var(--vscode-descriptionForeground);
++  font-weight: 500;
++}
++
++.toolbar-chip {
++  padding: 4px 8px;
++  font-size: 11px;
++  background: var(--vscode-badge-background);
++  color: var(--vscode-badge-foreground);
++  border: 1px solid var(--vscode-badge-background);
++  border-radius: 12px;
++  cursor: pointer;
++  white-space: nowrap;
++}
++
++.toolbar-chip:hover:not([data-placeholder="true"]) {
++  background: var(--vscode-button-hoverBackground);
++}
++
++.toolbar-chip[data-placeholder="true"] {
++  opacity: 0.6;
++  cursor: not-allowed;
++}
++
++.toolbar-stats {
++  margin-left: auto;
++  display: flex;
++  align-items: center;
++  gap: 8px;
++}
++
++.toolbar-stat {
++  font-size: 12px;
++  color: var(--vscode-descriptionForeground);
++}
++
++.toolbar-stat-optimized {
++  color: var(--vscode-charts-orange, #FF8C00);
++}
++
++/* Graph Canvas Styles */
++.graph-canvas {
++  width: 100%;
++  height: 100%;
++  position: relative;
++}
++
++.graph-canvas-container {
++  width: 100%;
++  height: 100%;
++}
++
++.graph-canvas-overlay {
++  position: absolute;
++  top: 0;
++  left: 0;
++  right: 0;
++  bottom: 0;
++  background: rgba(0, 0, 0, 0.1);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  z-index: 1000;
++}
++
++.graph-canvas-indicator {
++  background: var(--vscode-badge-background);
++  color: var(--vscode-badge-foreground);
++  padding: 8px 12px;
++  border-radius: 4px;
++  font-size: 12px;
++}
++
++/* Focus and Keyboard Navigation */
++.toolbar-input:focus,
++.toolbar-button:focus,
++.toolbar-chip:focus {
++  outline: 2px solid var(--vscode-focusBorder);
++  outline-offset: 2px;
++}
++
++.toolbar-button:focus-visible,
++.toolbar-chip:focus-visible {
++  outline: 2px solid var(--vscode-focusBorder);
++  outline-offset: 2px;
++}
++
++/* Disabled state styling */
++[data-placeholder="true"] {
++  opacity: 0.6;
++  cursor: not-allowed;
++}
++
++[data-placeholder="true"]:focus {
++  outline: 2px solid var(--vscode-descriptionForeground);
++  outline-offset: 2px;
++}
++
++/* Responsive Design */
++@media (max-width: 1024px) {
++  .toolbar-row {
++    flex-wrap: wrap;
++  }
++  
++  .toolbar-input {
++    min-width: 150px;
++  }
++  
++  .toolbar-actions {
++    flex-wrap: wrap;
++  }
++}
++
++@media (max-width: 768px) {
++  .toolbar {
++    padding: 8px;
++  }
++  
++  .toolbar-input {
++    min-width: 120px;
++  }
++  
++  .toolbar-stats {
++    margin-left: 0;
++    width: 100%;
++    justify-content: flex-start;
++  }
++}
++
+
+--- FILE: webview-ui/src/views/GraphView.tsx ---
+diff --git a/webview-ui/src/views/GraphView.tsx b/webview-ui/src/views/GraphView.tsx
+deleted file mode 100644
+index 39089a6..0000000
+--- a/webview-ui/src/views/GraphView.tsx
++++ /dev/null
+@@ -1,357 +0,0 @@
+-import { useEffect, useRef, useState } from 'preact/hooks'
+-import cytoscape, { Core } from 'cytoscape'
+-import { messenger } from '../services/messenger'
+-
+-interface Node {
+-  id: string
+-  label: string
+-  path: string
+-  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other'
+-}
+-
+-interface Edge {
+-  id: string
+-  source: string
+-  target: string
+-  kind?: 'import' | 'require' | 'dynamic' | 'unknown'
+-}
+-
+-interface Meta {
+-  generatedAt?: string
+-  count: {
+-    nodes: number
+-    edges: number
+-  }
+-  performanceOptimized?: boolean
+-}
+-
+-interface GraphData {
+-  nodes: Node[]
+-  edges: Edge[]
+-  meta: Meta
+-}
+-
+-type ComponentState = 
+-  | { type: 'loading' }
+-  | { type: 'error'; message: string }
+-  | { type: 'data'; data: GraphData }
+-  | { type: 'scanning'; message: string }
+-  | { type: 'rendering'; message: string }
+-
+-export function GraphView() {
+-  const containerRef = useRef<HTMLDivElement>(null)
+-  const cyRef = useRef<Core | null>(null)
+-  const [state, setState] = useState<ComponentState>({ type: 'loading' })
+-  const [isRendering, setIsRendering] = useState(false)
+-
+-  // Initialize component and request graph data
+-  useEffect(() => {
+-    // Request graph data on mount
+-    messenger.post('graph/load')
+-
+-    // Listen for messages from extension
+-    const handleMessage = (msg: any) => {
+-      switch (msg.type) {
+-        case 'graph/data':
+-          // Check if this is a large graph that needs rendering indication
+-          const nodeCount = msg.payload.nodes.length
+-          if (nodeCount > 200) {
+-            setState({ type: 'rendering', message: `Rendering ${nodeCount} nodes...` })
+-            // Use setTimeout to allow UI to update before heavy rendering
+-            setTimeout(() => {
+-              setState({ type: 'data', data: msg.payload })
+-            }, 100)
+-          } else {
+-            setState({ type: 'data', data: msg.payload })
+-          }
+-          break
+-        case 'graph/error':
+-          setState({ type: 'error', message: msg.message })
+-          break
+-        case 'graph/status':
+-          setState({ type: 'scanning', message: msg.message })
+-          break
+-      }
+-    }
+-
+-    messenger.on(handleMessage)
+-  }, [])
+-
+-  // Create/update Cytoscape instance when data changes
+-  useEffect(() => {
+-    if (state.type === 'data' && containerRef.current) {
+-      setIsRendering(true)
+-      
+-      // Clean up previous instance to prevent memory leaks
+-      if (cyRef.current) {
+-        try {
+-          cyRef.current.destroy()
+-        } catch (error) {
+-          console.warn('Error destroying previous Cytoscape instance:', error)
+-        }
+-        cyRef.current = null
+-      }
+-
+-      // Transform data for Cytoscape
+-      const elements = [
+-        ...state.data.nodes.map(node => ({
+-          data: {
+-            id: node.id,
+-            label: node.label,
+-            path: node.path,
+-            language: node.language
+-          }
+-        })),
+-        ...state.data.edges.map(edge => ({
+-          data: {
+-            id: edge.id,
+-            source: edge.source,
+-            target: edge.target,
+-            kind: edge.kind
+-          }
+-        }))
+-      ]
+-
+-      // Use setTimeout for large graphs to prevent UI blocking
+-      const nodeCount = state.data.nodes.length
+-      const renderDelay = nodeCount > 200 ? 50 : 0
+-      
+-      setTimeout(() => {
+-        try {
+-          // Create Cytoscape instance with performance optimizations for large graphs
+-          const layoutConfig = nodeCount > 500 ? {
+-            // Simplified layout for very large graphs
+-            name: 'grid',
+-            fit: true,
+-            padding: 30
+-          } : {
+-            // Standard layout for smaller graphs
+-            name: 'cose',
+-            fit: true,
+-            padding: 30,
+-            nodeRepulsion: 400000,
+-            idealEdgeLength: 100,
+-            edgeElasticity: 100,
+-            nestingFactor: 5,
+-            gravity: 80,
+-            numIter: nodeCount > 200 ? 500 : 1000, // Reduce iterations for large graphs
+-            initialTemp: 200,
+-            coolingFactor: 0.95,
+-            minTemp: 1.0
+-          }
+-
+-          cyRef.current = cytoscape({
+-            container: containerRef.current,
+-            elements,
+-            style: [
+-              {
+-                selector: 'node',
+-                style: {
+-                  'background-color': 'var(--vscode-charts-blue, #007ACC)',
+-                  'label': 'data(label)',
+-                  'color': 'var(--vscode-foreground, #CCCCCC)',
+-                  'font-size': nodeCount > 500 ? '10px' : '12px', // Smaller font for large graphs
+-                  'text-valign': 'center',
+-                  'text-halign': 'center',
+-                  'width': nodeCount > 500 ? '20px' : '30px', // Smaller nodes for large graphs
+-                  'height': nodeCount > 500 ? '20px' : '30px'
+-                }
+-              },
+-              {
+-                selector: 'edge',
+-                style: {
+-                  'line-color': 'var(--vscode-foreground, #666666)',
+-                  'width': nodeCount > 500 ? 1 : 2, // Thinner edges for large graphs
+-                  'opacity': nodeCount > 500 ? 0.4 : 0.6, // More transparent for large graphs
+-                  'curve-style': 'bezier'
+-                }
+-              },
+-              {
+-                selector: 'node:selected',
+-                style: {
+-                  'border-width': 3,
+-                  'border-color': 'var(--vscode-focusBorder, #007FD4)',
+-                  'background-color': 'var(--vscode-charts-orange, #FF8C00)'
+-                }
+-              }
+-            ],
+-            layout: layoutConfig
+-          })
+-
+-          // Add event handlers for interactions
+-          cyRef.current.on('tap', 'node', (evt) => {
+-            // Single-click highlighting (node gets selected automatically by Cytoscape)
+-            const node = evt.target
+-            console.log('Node selected:', node.data('label'))
+-          })
+-
+-          cyRef.current.on('dbltap', 'node', (evt) => {
+-            // Double-click to open file
+-            const node = evt.target
+-            const path = node.data('path')
+-            if (path) {
+-              messenger.post('graph/open-file', { path })
+-            }
+-          })
+-
+-          // Handle layout completion for performance monitoring
+-          cyRef.current.on('layoutstop', () => {
+-            setIsRendering(false)
+-            console.log(`Graph layout completed for ${nodeCount} nodes`)
+-          })
+-
+-        } catch (error) {
+-          console.error('Error creating Cytoscape instance:', error)
+-          setIsRendering(false)
+-        }
+-      }, renderDelay)
+-    }
+-  }, [state])
+-
+-  // Cleanup on unmount - ensure proper Cytoscape instance cleanup
+-  useEffect(() => {
+-    return () => {
+-      if (cyRef.current) {
+-        try {
+-          // Remove all event listeners before destroying
+-          cyRef.current.removeAllListeners()
+-          cyRef.current.destroy()
+-        } catch (error) {
+-          console.warn('Error during Cytoscape cleanup:', error)
+-        } finally {
+-          cyRef.current = null
+-        }
+-      }
+-    }
+-  }, [])
+-
+-  const handleRescan = () => {
+-    // Reset rendering state when starting a new scan
+-    setIsRendering(false)
+-    messenger.post('graph/scan')
+-  }
+-
+-  return (
+-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+-      <div style={{ padding: '10px', borderBottom: '1px solid var(--vscode-panel-border, #333)' }}>
+-        <h2 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Dependency Graph</h2>
+-        <button 
+-          onClick={handleRescan}
+-          style={{
+-            padding: '4px 8px',
+-            fontSize: '12px',
+-            backgroundColor: 'var(--vscode-button-background, #0e639c)',
+-            color: 'var(--vscode-button-foreground, #ffffff)',
+-            border: 'none',
+-            borderRadius: '2px',
+-            cursor: 'pointer'
+-          }}
+-        >
+-          Re-scan
+-        </button>
+-        {state.type === 'data' && (
+-          <span style={{ marginLeft: '10px', fontSize: '12px', color: 'var(--vscode-descriptionForeground, #ccccccaa)' }}>
+-            {state.data.meta.count.nodes} nodes, {state.data.meta.count.edges} edges
+-            {state.data.meta.performanceOptimized && (
+-              <span style={{ color: 'var(--vscode-charts-orange, #FF8C00)', marginLeft: '5px' }}>
+-                (optimized)
+-              </span>
+-            )}
+-          </span>
+-        )}
+-      </div>
+-      
+-      <div style={{ flex: 1, position: 'relative' }}>
+-        {state.type === 'loading' && (
+-          <div style={{ 
+-            position: 'absolute', 
+-            top: '50%', 
+-            left: '50%', 
+-            transform: 'translate(-50%, -50%)',
+-            textAlign: 'center'
+-          }}>
+-            <p>Loading graph...</p>
+-          </div>
+-        )}
+-        
+-        {state.type === 'scanning' && (
+-          <div style={{ 
+-            position: 'absolute', 
+-            top: '50%', 
+-            left: '50%', 
+-            transform: 'translate(-50%, -50%)',
+-            textAlign: 'center'
+-          }}>
+-            <p>{state.message}</p>
+-          </div>
+-        )}
+-        
+-        {state.type === 'rendering' && (
+-          <div style={{ 
+-            position: 'absolute', 
+-            top: '50%', 
+-            left: '50%', 
+-            transform: 'translate(-50%, -50%)',
+-            textAlign: 'center'
+-          }}>
+-            <p>{state.message}</p>
+-          </div>
+-        )}
+-        
+-        {(isRendering && state.type === 'data') && (
+-          <div style={{ 
+-            position: 'absolute', 
+-            top: '10px', 
+-            right: '10px',
+-            backgroundColor: 'var(--vscode-badge-background, #4d4d4d)',
+-            color: 'var(--vscode-badge-foreground, #ffffff)',
+-            padding: '4px 8px',
+-            borderRadius: '3px',
+-            fontSize: '11px',
+-            zIndex: 1000
+-          }}>
+-            Rendering...
+-          </div>
+-        )}
+-        
+-        {state.type === 'error' && (
+-          <div style={{ 
+-            position: 'absolute', 
+-            top: '50%', 
+-            left: '50%', 
+-            transform: 'translate(-50%, -50%)',
+-            textAlign: 'center',
+-            color: 'var(--vscode-errorForeground, #f48771)'
+-          }}>
+-            <p>Error: {state.message}</p>
+-            <button 
+-              onClick={() => messenger.post('graph/load')}
+-              style={{
+-                marginTop: '10px',
+-                padding: '4px 8px',
+-                fontSize: '12px',
+-                backgroundColor: 'var(--vscode-button-background, #0e639c)',
+-                color: 'var(--vscode-button-foreground, #ffffff)',
+-                border: 'none',
+-                borderRadius: '2px',
+-                cursor: 'pointer'
+-              }}
+-            >
+-              Retry
+-            </button>
+-          </div>
+-        )}
+-        
+-        <div 
+-          ref={containerRef} 
+-          style={{ 
+-            width: '100%', 
+-            height: '100%',
+-            display: state.type === 'data' ? 'block' : 'none'
+-          }} 
+-        />
+-      </div>
+-    </div>
+-  )
+-}
+-
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

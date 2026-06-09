@@ -1,0 +1,137 @@
+import { query } from '../database/connection';
+import { Project, CreateProjectRequest, ProjectWithBugCount } from '../models/project';
+import { NotFoundError, DatabaseError } from '../utils/errors';
+
+/**
+ * Get all projects with bug counts
+ */
+export async function getAllProjects(): Promise<ProjectWithBugCount[]> {
+  try {
+    const result = await query(`
+      SELECT 
+        p.id,
+        p.name,
+        p.created_at as "createdAt",
+        COUNT(b.id)::int as "bugCount"
+      FROM projects p
+      LEFT JOIN bugs b ON p.id = b.project_id
+      GROUP BY p.id, p.name, p.created_at
+      ORDER BY p.created_at DESC
+    `);
+
+    return result.rows;
+  } catch (error) {
+    throw new DatabaseError('Failed to fetch projects', error as Error);
+  }
+}
+
+/**
+ * Get project by ID
+ */
+export async function getProjectById(id: number): Promise<Project> {
+  try {
+    const result = await query(
+      `SELECT 
+        id,
+        name,
+        created_at as "createdAt"
+      FROM projects 
+      WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError('Project', id);
+    }
+
+    return result.rows[0] as Project;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to fetch project', error as Error);
+  }
+}
+
+/**
+ * Create a new project
+ */
+export async function createProject(projectData: CreateProjectRequest): Promise<Project> {
+  try {
+    const result = await query(
+      `INSERT INTO projects (name) 
+       VALUES ($1) 
+       RETURNING id, name, created_at as "createdAt"`,
+      [projectData.name.trim()]
+    );
+
+    return result.rows[0] as Project;
+  } catch (error) {
+    // Handle unique constraint violation
+    if ((error as any).code === '23505') {
+      throw new DatabaseError('Project with this name already exists');
+    }
+    throw new DatabaseError('Failed to create project', error as Error);
+  }
+}
+
+/**
+ * Update project
+ */
+export async function updateProject(id: number, updates: Partial<CreateProjectRequest>): Promise<Project> {
+  try {
+    // First check if project exists
+    await getProjectById(id);
+
+    const result = await query(
+      `UPDATE projects 
+       SET name = COALESCE($2, name)
+       WHERE id = $1 
+       RETURNING id, name, created_at as "createdAt"`,
+      [id, updates.name?.trim()]
+    );
+
+    return result.rows[0] as Project;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    if ((error as any).code === '23505') {
+      throw new DatabaseError('Project with this name already exists');
+    }
+    throw new DatabaseError('Failed to update project', error as Error);
+  }
+}
+
+/**
+ * Delete project
+ */
+export async function deleteProject(id: number): Promise<void> {
+  try {
+    // First check if project exists
+    await getProjectById(id);
+
+    const result = await query('DELETE FROM projects WHERE id = $1', [id]);
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError('Project', id);
+    }
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to delete project', error as Error);
+  }
+}
+
+/**
+ * Check if project exists
+ */
+export async function projectExists(id: number): Promise<boolean> {
+  try {
+    const result = await query('SELECT 1 FROM projects WHERE id = $1', [id]);
+    return result.rows.length > 0;
+  } catch (error) {
+    throw new DatabaseError('Failed to check project existence', error as Error);
+  }
+}

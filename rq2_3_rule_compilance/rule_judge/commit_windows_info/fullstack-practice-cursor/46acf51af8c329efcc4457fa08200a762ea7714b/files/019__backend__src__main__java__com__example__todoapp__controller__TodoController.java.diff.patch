@@ -1,0 +1,165 @@
+diff --git a/backend/src/main/java/com/example/todoapp/controller/TodoController.java b/backend/src/main/java/com/example/todoapp/controller/TodoController.java
+index bef1778..5aa4502 100644
+--- a/backend/src/main/java/com/example/todoapp/controller/TodoController.java
++++ b/backend/src/main/java/com/example/todoapp/controller/TodoController.java
+@@ -2,15 +2,18 @@ package com.example.todoapp.controller;
+ 
+ import com.example.todoapp.dto.TodoRequestDto;
+ import com.example.todoapp.dto.TodoResponseDto;
++import com.example.todoapp.dto.TodoDeadlineStatsDto;
++import com.example.todoapp.dto.TodoFilterDto;
+ import com.example.todoapp.service.TodoService;
+ import jakarta.validation.Valid;
+ import lombok.RequiredArgsConstructor;
++import org.springframework.format.annotation.DateTimeFormat;
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.annotation.*;
+ 
++import java.time.LocalDateTime;
+ import java.util.List;
+-import java.util.Map;
+ 
+ @RestController
+ @RequestMapping("/api/todos")
+@@ -20,53 +23,116 @@ public class TodoController {
+ 
+     private final TodoService todoService;
+ 
+-    // 여기! 헬스체크 엔드포인트 추가
+-    @GetMapping("/health")
+-    public ResponseEntity<Map<String, Object>> healthCheck() {
+-        Map<String, Object> healthInfo = Map.of(
+-            "status", "UP",
+-            "service", "Todo Application",
+-            "timestamp", System.currentTimeMillis(),
+-            "version", "1.0.0"
+-        );
+-        return ResponseEntity.ok(healthInfo);
+-    }
+-
++    // Basic CRUD operations for current user
+     @GetMapping
+-    public ResponseEntity<List<TodoResponseDto>> getAllTodos() {
+-        List<TodoResponseDto> todos = todoService.getAllTodos();
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserTodos() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserTodos();
+         return ResponseEntity.ok(todos);
+     }
+ 
+     @GetMapping("/{id}")
+-    public ResponseEntity<TodoResponseDto> getTodoById(@PathVariable Long id) {
+-        TodoResponseDto todo = todoService.getTodoById(id);
++    public ResponseEntity<TodoResponseDto> getCurrentUserTodoById(@PathVariable Long id) {
++        TodoResponseDto todo = todoService.getCurrentUserTodoById(id);
+         return ResponseEntity.ok(todo);
+     }
+ 
+     @PostMapping
+-    public ResponseEntity<TodoResponseDto> createTodo(@Valid @RequestBody TodoRequestDto todoRequestDto) {
+-        TodoResponseDto createdTodo = todoService.createTodo(todoRequestDto);
++    public ResponseEntity<TodoResponseDto> createTodoForCurrentUser(@Valid @RequestBody TodoRequestDto todoRequestDto) {
++        TodoResponseDto createdTodo = todoService.createTodoForCurrentUser(todoRequestDto);
+         return ResponseEntity.status(HttpStatus.CREATED).body(createdTodo);
+     }
+ 
+     @PutMapping("/{id}")
+-    public ResponseEntity<TodoResponseDto> updateTodo(
++    public ResponseEntity<TodoResponseDto> updateCurrentUserTodo(
+             @PathVariable Long id,
+             @Valid @RequestBody TodoRequestDto todoRequestDto) {
+-        TodoResponseDto updatedTodo = todoService.updateTodo(id, todoRequestDto);
++        TodoResponseDto updatedTodo = todoService.updateCurrentUserTodo(id, todoRequestDto);
+         return ResponseEntity.ok(updatedTodo);
+     }
+ 
+     @PatchMapping("/{id}/toggle")
+-    public ResponseEntity<TodoResponseDto> toggleTodoStatus(@PathVariable Long id) {
+-        TodoResponseDto toggledTodo = todoService.toggleTodoStatus(id);
++    public ResponseEntity<TodoResponseDto> toggleCurrentUserTodoCompletion(@PathVariable Long id) {
++        TodoResponseDto toggledTodo = todoService.toggleCurrentUserTodoCompletion(id);
+         return ResponseEntity.ok(toggledTodo);
+     }
+ 
+     @DeleteMapping("/{id}")
+-    public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
+-        todoService.deleteTodo(id);
++    public ResponseEntity<Void> deleteCurrentUserTodo(@PathVariable Long id) {
++        todoService.deleteCurrentUserTodo(id);
+         return ResponseEntity.noContent().build();
+     }
++
++    // Deadline-specific endpoints
++    @GetMapping("/sorted-by-deadline")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserTodosSortedByDeadline() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserTodosSortedByDeadline();
++        return ResponseEntity.ok(todos);
++    }
++
++    @GetMapping("/with-deadlines")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserTodosWithDeadlines() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserTodosWithDeadlines();
++        return ResponseEntity.ok(todos);
++    }
++
++    @GetMapping("/without-deadlines")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserTodosWithoutDeadlines() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserTodosWithoutDeadlines();
++        return ResponseEntity.ok(todos);
++    }
++
++    @GetMapping("/overdue")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserOverdueTodos() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserOverdueTodos();
++        return ResponseEntity.ok(todos);
++    }
++
++    @GetMapping("/due-soon")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserDueSoonTodos() {
++        List<TodoResponseDto> todos = todoService.getCurrentUserDueSoonTodos();
++        return ResponseEntity.ok(todos);
++    }
++
++    @GetMapping("/by-date-range")
++    public ResponseEntity<List<TodoResponseDto>> getCurrentUserTodosByDateRange(
++            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
++            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
++        List<TodoResponseDto> todos = todoService.getCurrentUserTodosByDateRange(startDate, endDate);
++        return ResponseEntity.ok(todos);
++    }
++
++    // Deadline management
++    @PatchMapping("/{id}/deadline")
++    public ResponseEntity<TodoResponseDto> setTodoDeadline(
++            @PathVariable Long id,
++            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime deadline) {
++        TodoResponseDto updatedTodo = todoService.setTodoDeadline(id, deadline);
++        return ResponseEntity.ok(updatedTodo);
++    }
++
++    @DeleteMapping("/{id}/deadline")
++    public ResponseEntity<TodoResponseDto> removeTodoDeadline(@PathVariable Long id) {
++        TodoResponseDto updatedTodo = todoService.removeTodoDeadline(id);
++        return ResponseEntity.ok(updatedTodo);
++    }
++
++    // Statistics and analytics
++    @GetMapping("/stats")
++    public ResponseEntity<TodoDeadlineStatsDto> getCurrentUserTodoStats() {
++        TodoDeadlineStatsDto stats = todoService.getCurrentUserTodoStats();
++        return ResponseEntity.ok(stats);
++    }
++
++    // Search and filter
++    @GetMapping("/search")
++    public ResponseEntity<List<TodoResponseDto>> searchCurrentUserTodos(@RequestParam String keyword) {
++        List<TodoResponseDto> todos = todoService.searchCurrentUserTodos(keyword);
++        return ResponseEntity.ok(todos);
++    }
++
++    @PostMapping("/filter")
++    public ResponseEntity<List<TodoResponseDto>> filterCurrentUserTodos(@RequestBody TodoFilterDto filter) {
++        List<TodoResponseDto> todos = todoService.filterCurrentUserTodos(filter);
++        return ResponseEntity.ok(todos);
++    }
+ }

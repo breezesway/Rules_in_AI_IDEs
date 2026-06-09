@@ -1,0 +1,438 @@
+import * as vscode from "vscode";
+import * as http from "node:http";
+import * as path from "node:path";
+import { randomBytes } from "node:crypto";
+import { computeImpact } from "./impact-analysis.service.js";
+import { onboardingModeService, type OnboardingMode } from "./onboarding-mode.service.js";
+import { OnboardingWalkthroughService, type OnboardingPlan } from "./onboarding-walkthrough.service.js";
+
+export interface BridgeInfo {
+  port: number;
+  token: string;
+}
+
+export async function startHttpBridge(context: vscode.ExtensionContext, walkthroughService?: OnboardingWalkthroughService): Promise<BridgeInfo> {
+  const token = randomBytes(32).toString("base64url");
+  
+  // Use provided walkthrough service or create a new one for backward compatibility
+  const walkthrough = walkthroughService || new OnboardingWalkthroughService();
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      // Only allow loopback requests
+      const host = req.socket.remoteAddress || "";
+      // IPv6 loopback can be ::1, IPv4 127.0.0.1
+      const isLoopback = host === "127.0.0.1" || host === "::1" || host === "::ffff:127.0.0.1";
+      if (!isLoopback) {
+        res.statusCode = 403; res.end(); return;
+      }
+
+      // Very small router
+      if (req.method !== "POST") { res.statusCode = 405; res.end(); return; }
+      if (!req.url) { res.statusCode = 404; res.end(); return; }
+
+      // Auth - Requirements 6.5
+      const auth = req.headers["authorization"] || "";
+      const expected = `Bearer ${token}`;
+      if (auth !== expected) { 
+        console.warn('HTTP bridge authentication failed:', { received: auth ? 'Bearer [REDACTED]' : 'none', expected: 'Bearer [REDACTED]' });
+        res.statusCode = 401; 
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ 
+          error: "Authentication failed", 
+          affectedFiles: [] 
+        })); 
+        return; 
+      }
+
+      if (req.url.startsWith("/open-graph")) {
+        // Reveal or open the graph view via the existing command
+        await vscode.commands.executeCommand("constellation.openGraphView");
+        res.statusCode = 204; // No Content
+        res.end();
+        return;
+      }
+
+      if (req.url.startsWith("/impact-analysis")) {
+        // Parse request body to get filePath with size limits
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large",
+              affectedFiles: []
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse JSON request body with error handling
+            let requestData;
+            try {
+              requestData = JSON.parse(body);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Invalid JSON in request body",
+                affectedFiles: []
+              }));
+              return;
+            }
+            
+            const filePath = requestData.filePath;
+            
+            if (!filePath || typeof filePath !== "string") {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Missing or invalid filePath in request body. Expected: { filePath: string }",
+                affectedFiles: []
+              }));
+              return;
+            }
+            
+            // Additional validation for empty or whitespace-only paths
+            if (filePath.trim().length === 0) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "filePath cannot be empty",
+                affectedFiles: []
+              }));
+              return;
+            }
+            
+            // Compute impact analysis
+            const impactResult = await computeImpact(context, filePath);
+            
+            // Normalize paths to workspace-relative node ids for UI filtering
+            const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? "";
+            const toNodeId = (p: string): string | null => {
+              try {
+                if (!p) {return null;}
+                // Normalize slashes
+                const slashed = p.replace(/\\/g, '/');
+                // If already relative, return as-is
+                if (!path.isAbsolute(slashed)) {return slashed;}
+                if (!wsRoot) {return null;}
+                const rel = path.relative(wsRoot, slashed).replace(/\\/g, '/');
+                if (rel.startsWith('..')) {return null;} // outside workspace
+                return rel;
+              } catch { return null; }
+            };
+
+            const normalizedSource = toNodeId(impactResult.sourceFile) ?? impactResult.sourceFile;
+            const normalizedAffected = (impactResult.affectedFiles || [])
+              .map(toNodeId)
+              .filter((x): x is string => !!x);
+
+            // Trigger impact display in webview
+            await vscode.commands.executeCommand("constellation.showImpact", {
+              sourceFile: normalizedSource,
+              affectedFiles: normalizedAffected
+            });
+            
+            // Return impact analysis results
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({
+              affectedFiles: normalizedAffected
+            }));
+            
+          } catch (error) {
+            // Handle errors gracefully - Requirements 6.5, 6.6
+            console.error('HTTP bridge impact analysis error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during impact analysis";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('No dependency data available')) {
+                res.statusCode = 412; // Precondition Failed - needs scan
+              } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
+                res.statusCode = 408; // Request Timeout
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage,
+              affectedFiles: [] // Return empty array as graceful fallback per requirements 6.5
+            }));
+          }
+        });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/persona")) {
+        // Handle persona mode switching
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large",
+              success: false
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse JSON request body
+            let requestData;
+            try {
+              requestData = JSON.parse(body);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Invalid JSON in request body",
+                success: false
+              }));
+              return;
+            }
+            
+            const action = requestData.action;
+            
+            if (!action || typeof action !== "string" || !["enable", "disable"].includes(action)) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Missing or invalid action in request body. Expected: { action: 'enable' | 'disable' }",
+                success: false
+              }));
+              return;
+            }
+            
+            // Perform mode switch
+            let newMode: OnboardingMode;
+            let message: string;
+            
+            if (action === "enable") {
+              await onboardingModeService.switchToOnboarding();
+              newMode = "Onboarding";
+              message = "Successfully switched to Onboarding mode";
+            } else {
+              await onboardingModeService.switchToDefault();
+              newMode = "Default";
+              message = "Successfully switched to Default mode";
+            }
+            
+            // Return success response
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({
+              success: true,
+              mode: newMode,
+              message
+            }));
+            
+          } catch (error) {
+            console.error('HTTP bridge persona switching error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during persona switching";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage,
+              success: false
+            }));
+          }
+        });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/onboarding/commitPlan")) {
+        // Handle onboarding plan commitment
+        let body = "";
+        let bodySize = 0;
+        const maxBodySize = 1024 * 1024; // 1MB limit
+        
+        req.on("data", (chunk) => {
+          bodySize += chunk.length;
+          if (bodySize > maxBodySize) {
+            res.statusCode = 413; // Payload Too Large
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ 
+              error: "Request body too large"
+            }));
+            return;
+          }
+          body += chunk.toString();
+        });
+        
+        req.on("end", async () => {
+          try {
+            // Parse JSON request body
+            let requestData;
+            try {
+              requestData = JSON.parse(body);
+            } catch (parseError) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Invalid JSON in request body"
+              }));
+              return;
+            }
+            
+            const plan = requestData.plan as OnboardingPlan;
+            
+            if (!plan) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ 
+                error: "Missing plan in request body. Expected: { plan: OnboardingPlan }"
+              }));
+              return;
+            }
+            
+            // Commit plan using walkthrough service
+            const result = await walkthrough.commitPlan(plan);
+            
+            // Return success response
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
+            
+          } catch (error) {
+            console.error('HTTP bridge commit plan error:', error);
+            
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            
+            let errorMessage = "Unknown error occurred during plan commitment";
+            if (error instanceof Error) {
+              errorMessage = error.message;
+              
+              // Provide more specific error codes for different failure types
+              if (error.message.includes('No workspace folder open')) {
+                res.statusCode = 400; // Bad Request - no workspace
+              } else if (error.message.includes('validation') || error.message.includes('Invalid') || error.message.includes('required')) {
+                res.statusCode = 400; // Bad Request - validation error
+              } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+                res.statusCode = 403; // Forbidden - permission denied
+              } else if (error.message.includes('not found') || error.message.includes('ENOENT')) {
+                res.statusCode = 404; // Not Found - file doesn't exist
+              }
+            }
+            
+            res.end(JSON.stringify({ 
+              error: errorMessage
+            }));
+          }
+        });
+        
+        return;
+      }
+
+      if (req.url.startsWith("/onboarding/nextStep")) {
+        // Handle onboarding step progression
+        try {
+          // Advance to next step using walkthrough service
+          const result = await walkthrough.nextStep();
+          
+          // Return success response
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(result));
+          
+        } catch (error) {
+          console.error('HTTP bridge next step error:', error);
+          
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          
+          let errorMessage = "Unknown error occurred during step progression";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+            
+            // Provide more specific error codes for different failure types
+            if (error.message.includes('No active walkthrough')) {
+              res.statusCode = 412; // Precondition Failed - no active walkthrough
+            } else if (error.message.includes('No workspace folder open')) {
+              res.statusCode = 400; // Bad Request - no workspace
+            } else if (error.message.includes('not found') || error.message.includes('ENOENT')) {
+              res.statusCode = 404; // Not Found - file doesn't exist
+            } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+              res.statusCode = 403; // Forbidden - permission denied
+            }
+          }
+          
+          res.end(JSON.stringify({ 
+            error: errorMessage
+          }));
+        }
+        
+        return;
+      }
+
+      res.statusCode = 404; res.end();
+    } catch (error) {
+      // Handle unexpected server errors gracefully - Requirements 6.5, 6.6
+      console.error('HTTP bridge server error:', error);
+      try { 
+        res.statusCode = 500; 
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ 
+          error: "Internal server error", 
+          affectedFiles: [] 
+        })); 
+      } catch (finalError) {
+        console.error('Failed to send error response:', finalError);
+      }
+    }
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+
+  const address = server.address();
+  const port = typeof address === "object" && address?.port ? address.port : 0;
+
+  // Dispose on deactivate
+  context.subscriptions.push({ dispose: () => server.close() });
+
+  return { port, token };
+}

@@ -1,0 +1,1 @@
+Project idea: and example "hello world" webapp project to show off the full capabilities of this instructions generation system. Maybe a fun little meta-game about generating instructions for a happy little robot.

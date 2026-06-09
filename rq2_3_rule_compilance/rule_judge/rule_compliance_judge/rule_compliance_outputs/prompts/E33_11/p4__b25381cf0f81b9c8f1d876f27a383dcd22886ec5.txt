@@ -1,0 +1,87 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: internal/domain/.cursor/rules/entity.mdc
+- Change Type: added
+- Target Rule Content:
+All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing data structures with field tags or decorators (e.g., Go structs, Rust structs with serde, or TypeScript classes with decorators).
+- Suggested Logic: 1. Scan source code for struct/class field definitions.
+2. Locate 'json' tags/annotations and use a regular expression to verify that the tag value follows snake_case (e.g., `^[a-z0-9_]+$`).
+3. Check for the presence of a 'secret' tag/annotation on fields.
+4. If a 'secret' tag is present, verify that the 'json' tag is set to omit the field (e.g., `json:"-"` in Go).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: docs: add reusable pattern for Go enumerated string types
+
+- Document flexible template for defining enumerated string types in Go
+- Include naming conventions, comments, and usage guidelines
+- Allow minor mistakes or variations when generating code with this pattern
+- Enable consistent and maintainable enum definitions across the codebase
+- Changed Files List: 
+internal/domain/.cursor/rules/generic-types.mdc	+27	-0	after_lines=27
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── global.mdc
+├── README.md
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+└── internal
+    └── domain
+        └── .cursor
+            └── rules
+                └── generic-types.mdc
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: internal/domain/.cursor/rules/generic-types.mdc ---
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+new file mode 100644
+index 0000000..b16fcc5
+--- /dev/null
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -0,0 +1,27 @@
++## Generic Data Types 
++
++This rule describe meta information of generic data type generator
++
++### Enumerated String
++
++It's represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this (Please make it fault tolerant. It should be a little bit flexible. U know, I am a little bit clumsy): 
++
++```
++UserStatus is Enumerated string of "active" and "inactive"
++```
++
++It can be representation of code :  
++
++```go
++// UserStatus represents the status of a user account.
++// Valid values are UserStatusActive and UserStatusInactive.
++type UserStatus string
++
++const (
++    // UserStatusActive indicates the user account is active.
++    UserStatusActive UserStatus = "active"
++
++    // UserStatusInactive indicates the user account is inactive.
++    UserStatusInactive UserStatus = "inactive"
++) 
++```
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

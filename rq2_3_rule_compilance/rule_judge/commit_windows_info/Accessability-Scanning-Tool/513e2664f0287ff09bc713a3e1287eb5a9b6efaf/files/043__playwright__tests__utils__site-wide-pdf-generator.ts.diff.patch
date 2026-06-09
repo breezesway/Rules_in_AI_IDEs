@@ -1,0 +1,224 @@
+diff --git a/playwright/tests/utils/site-wide-pdf-generator.ts b/playwright/tests/utils/site-wide-pdf-generator.ts
+index 401b72c..42cf29d 100644
+--- a/playwright/tests/utils/site-wide-pdf-generator.ts
++++ b/playwright/tests/utils/site-wide-pdf-generator.ts
+@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
+ import { SiteWideAccessibilityReport } from './accessibility-helpers';
+ 
+ export class SiteWideAccessibilityPdfGenerator {
+-  constructor(private page: Page) { }
++  constructor(private page: Page) {}
+ 
+   async generateSiteWidePdfReport(
+     report: SiteWideAccessibilityReport,
+@@ -164,7 +164,7 @@ export class SiteWideAccessibilityPdfGenerator {
+         ${this.generateBusinessImpactSection(report)}
+         ${this.generateComplianceOverview(report)}
+         ${this.generateRecommendationsAndTimeline(report)}
+-        `;
++    `;
+   }
+ 
+   private generateResearcherContent(report: SiteWideAccessibilityReport): string {
+@@ -173,7 +173,7 @@ export class SiteWideAccessibilityPdfGenerator {
+         ${this.generateWcagComplianceMatrix(report)}
+         ${this.generateAccessibilityScenarios(report)}
+         ${this.generateResearchRecommendations(report)}
+-        `;
++    `;
+   }
+ 
+   private generateDeveloperContent(report: SiteWideAccessibilityReport): string {
+@@ -219,10 +219,11 @@ export class SiteWideAccessibilityPdfGenerator {
+             <div class="summary-description">
+                 <p><strong>Compliance Status:</strong> ${overallCompliance}</p>
+                 <p>This report evaluates ${report.summary.totalPages} pages against WCAG 2.1 AA accessibility standards. 
+-                ${report.summary.pagesWithViolations > 0
+-        ? `${report.summary.pagesWithViolations} pages have accessibility issues that require attention.`
+-        : 'All pages meet accessibility standards.'
+-      }</p>
++                ${
++                  report.summary.pagesWithViolations > 0
++                    ? `${report.summary.pagesWithViolations} pages have accessibility issues that require attention.`
++                    : 'All pages meet accessibility standards.'
++                }</p>
+             </div>
+         </div>
+         `;
+@@ -283,16 +284,16 @@ export class SiteWideAccessibilityPdfGenerator {
+ 
+                 <h3>📋 Most Common Issues</h3>
+                 ${report.summary.mostCommonViolations
+-        .slice(0, 5)
+-        .map(
+-          (violation, index) => `
++                  .slice(0, 5)
++                  .map(
++                    (violation, index) => `
+                     <div class="violation-summary-card">
+                         <div class="violation-summary-title">${index + 1}. ${violation.description}</div>
+                         <div class="violation-summary-meta">Affects ${violation.affectedPages} pages • ${violation.totalOccurrences} total occurrences</div>
+                     </div>
+                 `
+-        )
+-        .join('')}
++                  )
++                  .join('')}
+             </div>
+         </div>
+         `;
+@@ -509,9 +510,9 @@ export class SiteWideAccessibilityPdfGenerator {
+                 </thead>
+                 <tbody>
+                     ${Object.entries(report.violationsByType)
+-        .sort(([, a], [, b]) => b.totalOccurrences - a.totalOccurrences)
+-        .map(
+-          ([id, data]) => `
++                      .sort(([, a], [, b]) => b.totalOccurrences - a.totalOccurrences)
++                      .map(
++                        ([id, data]) => `
+                             <tr>
+                                 <td><code>${id}</code></td>
+                                 <td><span class="impact-badge impact-${data.impact}">${data.impact}</span></td>
+@@ -520,28 +521,28 @@ export class SiteWideAccessibilityPdfGenerator {
+                                 <td>WCAG 2.1 AA</td>
+                             </tr>
+                         `
+-        )
+-        .join('')}
++                      )
++                      .join('')}
+                 </tbody>
+             </table>
+ 
+                         <h3>🌐 Browser Compatibility</h3>
+             ${Object.entries(report.violationsByType)
+-        .map(([id, data]) =>
+-          data.browsers && data.browsers.length > 0
+-            ? `<p><strong>${id}:</strong> Found in ${data.browsers.join(', ')}</p>`
+-            : ''
+-        )
+-        .join('')}
++              .map(([id, data]) =>
++                data.browsers && data.browsers.length > 0
++                  ? `<p><strong>${id}:</strong> Found in ${data.browsers.join(', ')}</p>`
++                  : ''
++              )
++              .join('')}
+ 
+             <h3>🔧 Detection Tools Coverage</h3>
+             ${Object.entries(report.violationsByType)
+-        .map(([id, data]) =>
+-          data.tools && data.tools.length > 0
+-            ? `<p><strong>${id}:</strong> Detected by ${data.tools.join(', ')}</p>`
+-            : ''
+-        )
+-        .join('')}
++              .map(([id, data]) =>
++                data.tools && data.tools.length > 0
++                  ? `<p><strong>${id}:</strong> Detected by ${data.tools.join(', ')}</p>`
++                  : ''
++              )
++              .join('')}
+             
+             <div class="summary-stats">
+                 <p><strong>Multi-Tool Analysis:</strong> This report combines results from two complementary accessibility testing tools to provide comprehensive coverage:</p>
+@@ -1131,8 +1132,9 @@ test('accessibility check', async ({ page }) => {
+                 <span class="compliance-badge ${overallCompliance.toLowerCase().replace('_', '-')}">${overallCompliance.replace('_', ' ')}</span>
+             </p>
+             
+-            ${report.summary.compliancePercentage < 100
+-        ? `
++            ${
++              report.summary.compliancePercentage < 100
++                ? `
+                 <p style="margin-top: 10px;"><strong>Key Recommendations:</strong></p>
+                 <ul style="margin-top: 5px; padding-left: 20px;">
+                     ${report.summary.criticalViolations > 0 ? '<li>Address critical accessibility violations immediately to avoid legal risks</li>' : ''}
+@@ -1141,8 +1143,8 @@ test('accessibility check', async ({ page }) => {
+                     <li>Conduct regular accessibility testing in development workflow</li>
+                 </ul>
+             `
+-        : ''
+-      }
++                : ''
++            }
+         </div>
+         `;
+   }
+@@ -1785,7 +1787,7 @@ test('accessibility check', async ({ page }) => {
+             <p style="margin-bottom: 20px;">Consolidated accessibility violations grouped by type. Each violation shows the fix guidance once, followed by all affected pages and elements to streamline development efforts.</p>
+         `;
+ 
+-    sortedViolationGroups.forEach(([violationId, group]) => {
++    sortedViolationGroups.forEach(([_violationId, group]) => {
+       const { violation, instances } = group;
+       const impactClass = violation.impact.toLowerCase();
+       const uniquePages = [...new Set(instances.map(i => i.pageUrl))];
+@@ -1816,21 +1818,23 @@ test('accessibility check', async ({ page }) => {
+                         <p><strong>Priority:</strong> <span class="priority-badge priority-${violation.remediation.priority.toLowerCase()}">${violation.remediation.priority}</span></p>
+                         <p><strong>Effort:</strong> ${violation.remediation.effort}</p>
+                         
+-                        ${violation.remediation.suggestions.length > 0
+-          ? `
++                        ${
++                          violation.remediation.suggestions.length > 0
++                            ? `
+                         <p><strong>Recommendations:</strong></p>
+                         <ul style="margin-left: 20px; padding-left: 20px; line-height: 1.6;">
+                             ${violation.remediation.suggestions.map((suggestion: string) => `<li style="margin-bottom: 5px;">${suggestion}</li>`).join('')}
+                         </ul>
+                         `
+-          : ''
+-        }
++                            : ''
++                        }
+                         
+                         <p><strong>Learn More:</strong> <a href="${violation.helpUrl}" target="_blank">${violation.helpUrl}</a></p>
+                     </div>
+ 
+-                    ${fixSuggestion
+-          ? `
++                    ${
++                      fixSuggestion
++                        ? `
+                     <div class="detail-section">
+                         <h4>✅ Code Fix Example</h4>
+                         <div class="code-container fixed-code">
+@@ -1838,8 +1842,8 @@ test('accessibility check', async ({ page }) => {
+                         </div>
+                     </div>
+                     `
+-          : ''
+-        }
++                        : ''
++                    }
+ 
+                     <div class="detail-section">
+                         <h4>🏷️ WCAG Information</h4>
+@@ -1947,9 +1951,10 @@ test('accessibility check', async ({ page }) => {
+           }
+         });
+       },
+-      'color-contrast': html => {
+-        return `${html
+-          }\n<!-- Fix: Increase colour contrast to meet WCAG AA standards (4.5:1 for normal text, 3:1 for large text) -->\n<!-- Example: Use darker colours or add background colours for better contrast -->`;
++      'color-contrast': (html: string) => {
++        return `${
++          html
++        }\n<!-- Fix: Increase colour contrast to meet WCAG AA standards (4.5:1 for normal text, 3:1 for large text) -->\n<!-- Example: Use darker colours or add background colours for better contrast -->`;
+       },
+       'link-name': html => {
+         return html.replace(/<a([^>]*?)>(.*?)<\/a>/gi, (match, attrs, content) => {
+@@ -1981,8 +1986,9 @@ test('accessibility check', async ({ page }) => {
+         });
+       },
+       'heading-order': html => {
+-        return `${html
+-          }\n<!-- Fix: Ensure headings follow logical order (h1, h2, h3, etc.) without skipping levels -->`;
++        return `${
++          html
++        }\n<!-- Fix: Ensure headings follow logical order (h1, h2, h3, etc.) without skipping levels -->`;
+       },
+       'meta-viewport': html => {
+         return '<meta name="viewport" content="width=device-width, initial-scale=1">';

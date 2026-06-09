@@ -1,0 +1,28 @@
+diff --git a/infrastructure/bin/grace-app.ts b/infrastructure/bin/grace-app.ts
+index 4f7cfcf..5c62303 100644
+--- a/infrastructure/bin/grace-app.ts
++++ b/infrastructure/bin/grace-app.ts
+@@ -3,6 +3,7 @@ import 'source-map-support/register';
+ import * as cdk from 'aws-cdk-lib';
+ import { GraceFoundationStack } from '../lib/grace-foundation-stack';
+ import { GraceLogicStack } from '../lib/grace-logic-stack';
++import { GraceOrchestrationStack } from '../lib/grace-orchestration-stack';
+ 
+ const app = new cdk.App();
+ 
+@@ -32,6 +33,15 @@ const logicStack = new GraceLogicStack(foundationStack, 'GraceLogicStack', {
+   isProduction
+ });
+ 
++// Create the orchestration stack as a nested stack
++const orchestrationStack = new GraceOrchestrationStack(foundationStack, 'GraceOrchestrationStack', {
++  description: 'Orchestration layer for the GRACE project including Step Functions and EventBridge rules',
++  provenanceLogger: logicStack.provenanceLogger,
++  dataBucket: foundationStack.dataBucket,
++  eventBus: foundationStack.eventBus,
++  isProduction
++});
++
+ // Add tags to all resources
+ cdk.Tags.of(app).add('Project', 'GRACE');
+ cdk.Tags.of(app).add('Environment', isProduction ? 'Production' : 'Development');

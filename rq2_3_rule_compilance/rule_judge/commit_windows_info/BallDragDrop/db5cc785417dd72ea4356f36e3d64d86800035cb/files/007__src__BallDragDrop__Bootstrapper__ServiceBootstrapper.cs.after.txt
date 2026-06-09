@@ -1,0 +1,316 @@
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.IO;
+using BallDragDrop.ViewModels;
+using BallDragDrop.Services;
+using BallDragDrop.Contracts;
+using BallDragDrop.Models;
+
+namespace BallDragDrop.Bootstrapper
+{
+    /// <summary>
+    /// Central static bootstrapper class for dependency injection configuration
+    /// </summary>
+    public static class ServiceBootstrapper
+    {
+        #region Fields
+
+        /// <summary>
+        /// The configured service provider instance
+        /// </summary>
+        private static ServiceProvider? _serviceProvider;
+
+        /// <summary>
+        /// Lock object for thread-safe initialization
+        /// </summary>
+        private static readonly object _lock = new object();
+
+        #endregion Fields
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the configured service provider
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when the service provider has not been initialized</exception>
+        public static ServiceProvider ServiceProvider
+        {
+            get
+            {
+                if (_serviceProvider == null)
+                {
+                    throw new InvalidOperationException("ServiceBootstrapper has not been initialized. Call Initialize() first.");
+                }
+                return _serviceProvider;
+            }
+        }
+
+        #endregion Properties
+
+        #region Methods
+
+        /// <summary>
+        /// Initializes the service container with all application services
+        /// </summary>
+        public static void Initialize()
+        {
+            lock (_lock)
+            {
+                if (_serviceProvider != null)
+                {
+                    return; // Already initialized
+                }
+
+                var services = new ServiceCollection();
+                ConfigureServices(services);
+                _serviceProvider = services.BuildServiceProvider();
+            }
+        }
+
+        /// <summary>
+        /// Configures all application services in the dependency injection container
+        /// </summary>
+        /// <param name="services">The service collection to configure</param>
+        public static void ConfigureServices(IServiceCollection services)
+        {
+            // Register core application services
+            RegisterCoreServices(services);
+            
+            // Register logging services (will be implemented in subtask 7.2)
+            RegisterLoggingServices(services);
+            
+            // Register state machine services
+            RegisterStateMachineServices(services);
+            
+            // Register ViewModels
+            RegisterViewModels(services);
+            
+            // Register other application services
+            RegisterApplicationServices(services);
+        }
+
+        /// <summary>
+        /// Registers core application services
+        /// </summary>
+        private static void RegisterCoreServices(IServiceCollection services)
+        {
+            // Core services will be registered here
+            services.AddSingleton<SettingsManager>(provider => 
+                new SettingsManager(provider.GetRequiredService<ILogService>()));
+            
+            // Register ConfigurationService with initialization
+            services.AddSingleton<IConfigurationService>(provider =>
+            {
+                var logService = provider.GetRequiredService<ILogService>();
+                var configService = new ConfigurationService(logService);
+                configService.Initialize(); // Initialize synchronously for DI
+                return configService;
+            });
+            
+            // ImageService uses static methods, so no registration needed
+            // EventThrottler and PerformanceMonitor are created as needed with specific parameters
+        }
+
+        /// <summary>
+        /// Registers logging-related services
+        /// </summary>
+        private static void RegisterLoggingServices(IServiceCollection services)
+        {
+            // Initialize Log4NET configuration
+            InitializeLog4NetConfiguration();
+            
+            // Register ILogService as singleton with Log4NetService implementation
+            services.AddSingleton<ILogService, Log4NetService>();
+            
+            // Register IExceptionHandlingService
+            services.AddSingleton<IExceptionHandlingService, ExceptionHandlingService>();
+            
+            // Register method interception services
+            services.AddTransient<IMethodLoggingInterceptor, MethodLoggingInterceptor>();
+        }
+
+        /// <summary>
+        /// Initializes Log4NET configuration
+        /// </summary>
+        private static void InitializeLog4NetConfiguration()
+        {
+            try
+            {
+                // Load configuration from log4net.config file
+                var configFile = new System.IO.FileInfo("log4net.config");
+                if (configFile.Exists)
+                {
+                    log4net.Config.XmlConfigurator.ConfigureAndWatch(configFile);
+                }
+                else
+                {
+                    // Fallback to basic configuration if config file doesn't exist
+                    log4net.Config.BasicConfigurator.Configure();
+                    
+                    // Log a warning about missing config file
+                    var logger = log4net.LogManager.GetLogger(typeof(ServiceBootstrapper));
+                    logger.Warn("log4net.config file not found, using basic configuration");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fallback to basic configuration on any error
+                log4net.Config.BasicConfigurator.Configure();
+                
+                // Log the error
+                var logger = log4net.LogManager.GetLogger(typeof(ServiceBootstrapper));
+                logger.Error("Failed to initialize Log4NET configuration", ex);
+            }
+        }
+
+        /// <summary>
+        /// Registers ViewModels for dependency injection
+        /// </summary>
+        private static void RegisterViewModels(IServiceCollection services)
+        {
+            services.AddTransient<BallViewModel>(provider => 
+                new BallViewModel(
+                    provider.GetRequiredService<ILogService>(),
+                    provider.GetRequiredService<IBallStateMachine>(),
+                    provider.GetRequiredService<IHandStateMachine>(),
+                    null, // ImageService will be created internally
+                    provider.GetRequiredService<IConfigurationService>()));
+
+            services.AddTransient<StatusBarViewModel>(provider =>
+                new StatusBarViewModel(
+                    provider.GetRequiredService<ILogService>(),
+                    provider.GetRequiredService<IBallStateMachine>(),
+                    provider.GetRequiredService<PerformanceMonitor>()));
+
+            services.AddTransient<MainWindowViewModel>(provider =>
+                new MainWindowViewModel(
+                    provider.GetRequiredService<BallViewModel>(),
+                    provider.GetRequiredService<StatusBarViewModel>(),
+                    provider.GetRequiredService<ILogService>()));
+        }
+
+        /// <summary>
+        /// Registers state machine services for dependency injection
+        /// </summary>
+        private static void RegisterStateMachineServices(IServiceCollection services)
+        {
+            // Register BallStateConfiguration as singleton with default settings
+            services.AddSingleton<BallStateConfiguration>(provider =>
+            {
+                var config = BallStateConfiguration.CreateDefault();
+                
+                // Configure default state machine settings
+                config.VelocityThreshold = 50.0;
+                config.StateTransitionDelay = TimeSpan.FromMilliseconds(100);
+                config.EnableStateLogging = true;
+                config.EnableVisualFeedback = true;
+                config.EnableTransitionValidation = true;
+                config.EnableAsyncNotifications = false;
+                
+                return config;
+            });
+            
+            // Register IBallStateMachine as singleton
+            services.AddSingleton<IBallStateMachine, BallStateMachine>(provider =>
+                new BallStateMachine(
+                    provider.GetRequiredService<ILogService>(),
+                    provider.GetRequiredService<BallStateConfiguration>()));
+        }
+
+        /// <summary>
+        /// Registers other application-specific services
+        /// </summary>
+        private static void RegisterApplicationServices(IServiceCollection services)
+        {
+            // Register PerformanceMonitor as singleton with 60 FPS target
+            services.AddSingleton<PerformanceMonitor>(provider => new PerformanceMonitor(60));
+            
+            // Register cursor services
+            RegisterCursorServices(services);
+        }
+
+        /// <summary>
+        /// Registers cursor-related services for dependency injection
+        /// </summary>
+        private static void RegisterCursorServices(IServiceCollection services)
+        {
+            // Register CursorConfiguration as singleton with default settings
+            services.AddSingleton<CursorConfiguration>(provider =>
+            {
+                return new CursorConfiguration
+                {
+                    EnableCustomCursors = true,
+                    DefaultCursorPath = "Resources/Cursors/default.png",
+                    HoverCursorPath = "Resources/Cursors/hover.png",
+                    GrabbingCursorPath = "Resources/Cursors/grabbing.png",
+                    ReleasingCursorPath = "Resources/Cursors/releasing.png",
+                    DebounceTimeMs = 16,
+                    ReleasingDurationMs = 200
+                };
+            });
+            
+            // Register CursorImageLoader as singleton
+            services.AddSingleton<CursorImageLoader>();
+            
+            // Register TestCursorGenerator as singleton
+            services.AddSingleton<TestCursorGenerator>();
+            
+            // Register ICursorService as singleton
+            services.AddSingleton<ICursorService>(provider =>
+                new CursorManager(
+                    provider.GetRequiredService<IConfigurationService>(),
+                    provider.GetRequiredService<ILogService>(),
+                    provider.GetRequiredService<CursorImageLoader>(),
+                    provider.GetRequiredService<CursorConfiguration>()));
+            
+            // Register IHandStateMachine as singleton with proper dependency resolution
+            services.AddSingleton<IHandStateMachine>(provider =>
+            {
+                var handStateMachine = new HandStateMachine(
+                    provider.GetRequiredService<ILogService>(),
+                    provider.GetRequiredService<ICursorService>(),
+                    provider.GetRequiredService<CursorConfiguration>());
+                
+                // Register hand state machine as observer of ball state machine
+                var ballStateMachine = provider.GetRequiredService<IBallStateMachine>();
+                ballStateMachine.Subscribe(handStateMachine);
+                
+                return handStateMachine;
+            });
+        }
+
+        /// <summary>
+        /// Gets a service of the specified type
+        /// </summary>
+        /// <typeparam name="T">The type of service to retrieve</typeparam>
+        /// <returns>The service instance</returns>
+        public static T GetService<T>() where T : notnull
+        {
+            return ServiceProvider.GetRequiredService<T>();
+        }
+
+        /// <summary>
+        /// Gets a service of the specified type, or null if not found
+        /// </summary>
+        /// <typeparam name="T">The type of service to retrieve</typeparam>
+        /// <returns>The service instance or null</returns>
+        public static T? GetOptionalService<T>() where T : class
+        {
+            return ServiceProvider.GetService<T>();
+        }
+
+        /// <summary>
+        /// Disposes the service provider and cleans up resources
+        /// </summary>
+        public static void Dispose()
+        {
+            lock (_lock)
+            {
+                _serviceProvider?.Dispose();
+                _serviceProvider = null;
+            }
+        }
+
+        #endregion Methods
+    }
+}

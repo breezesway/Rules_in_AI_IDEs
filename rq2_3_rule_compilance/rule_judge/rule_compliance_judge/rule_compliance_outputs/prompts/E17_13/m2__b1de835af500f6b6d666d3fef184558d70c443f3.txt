@@ -1,0 +1,136 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - One assertion per test case
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Test source code files (e.g., files ending in .test.js, .spec.ts, _test.py, or files within a tests/ directory).
+- Suggested Logic: Identify test function/method blocks using AST parsing (e.g., looking for 'test' or 'it' function calls in Jest, or methods annotated with @Test in JUnit). Within the scope of each identified test function, count the occurrences of assertion statements or library calls (e.g., 'expect', 'assert', 'assertEquals'). If the count per test function is greater than one, it is a violation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: We see something on the screen
+- Changed Files List: 
+.cursorrules	+0	-2	after_lines=18
+main.go	+11	-1	after_lines=39
+main_test.go	+10	-0	after_lines=10
+web/static/index.html	+5	-3	after_lines=22
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── go.mod
+├── main.go
+├── main_test.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursorrules ---
+diff --git a/.cursorrules b/.cursorrules
+index 9612f65..6d9b7d4 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -1,5 +1,3 @@
+-Can you help me create a hello world Go command line app in this folder with git and go.mod configured?
+-
+ When helping with Go development:
+ 1. Always start with a failing test first (Test-Driven Development)
+ 2. Follow the "Red, Green, Refactor" cycle:
+
+--- FILE: main.go ---
+diff --git a/main.go b/main.go
+index 3fcb7f2..890672f 100644
+--- a/main.go
++++ b/main.go
+@@ -6,23 +6,33 @@ import "syscall/js"
+ 
+ type Game struct {
+ 	Board []string
++	text  string
+ }
+ 
+ func NewGame() *Game {
+ 	return &Game{
+ 		Board: make([]string, 9),
++		text:  "hello",
+ 	}
+ }
+ 
++func (g *Game) Text() string {
++	return g.text
++}
++
+ func main() {
+ 	c := make(chan struct{}, 0)
+ 
++	game := NewGame()
++
+ 	// Register our game in JavaScript
+ 	js.Global().Set("tictactoeGame", js.ValueOf(map[string]interface{}{
+ 		"newGame": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+-			game := NewGame()
+ 			return game.Board
+ 		}),
++		"text": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
++			return game.Text()
++		}),
+ 	}))
+ 
+ 	<-c // Keep running
+
+--- FILE: main_test.go ---
+diff --git a/main_test.go b/main_test.go
+new file mode 100644
+index 0000000..7a5f5a3
+--- /dev/null
++++ b/main_test.go
+@@ -0,0 +1,10 @@
++package main
++
++import "testing"
++
++func TestText(t *testing.T) {
++	game := NewGame()
++	if game.Text() != "hello" {
++		t.Errorf("Expected text to be 'hello', got %q", game.Text())
++	}
++}
+
+--- FILE: web/static/index.html ---
+diff --git a/web/static/index.html b/web/static/index.html
+index a5e6618..7e1e860 100644
+--- a/web/static/index.html
++++ b/web/static/index.html
+@@ -5,16 +5,18 @@
+     <title>Tic Tac Toe</title>
+ </head>
+ <body>
++    <div id="content"></div>
++    
++    <script src="wasm_exec.js"></script>
+     <script>
+         // Load WASM
+         const go = new Go();
+         WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+             .then((result) => {
+                 go.run(result.instance);
+-                // Now we can access our game
+-                console.log("New game board:", tictactoeGame.newGame());
++                // Display the text using the new method name
++                document.getElementById('content').textContent = tictactoeGame.text();
+             });
+     </script>
+-    <script src="wasm_exec.js"></script>
+ </body>
+ </html> 
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

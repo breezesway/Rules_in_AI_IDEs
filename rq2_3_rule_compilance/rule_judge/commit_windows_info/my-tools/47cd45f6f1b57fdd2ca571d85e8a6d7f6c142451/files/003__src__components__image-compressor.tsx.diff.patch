@@ -1,0 +1,179 @@
+diff --git a/src/components/image-compressor.tsx b/src/components/image-compressor.tsx
+index e9aa62f..46cba1c 100644
+--- a/src/components/image-compressor.tsx
++++ b/src/components/image-compressor.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState } from 'react';
+-import { Image, FolderOpen, Settings } from 'lucide-react';
++import { Image, FolderOpen, Settings, Eye } from 'lucide-react';
+ import { Modal } from '../ui/modal';
++import { ImagePreview } from '../ui/image-preview';
+ import { formatFileSize } from '../lib/utils';
+ import { toast } from 'sonner';
+ 
+@@ -16,6 +17,27 @@ interface ImageFile {
+   status: 'ready' | 'processing' | 'done' | 'error';
+ }
+ 
++interface PreviewData {
++  originalPath: string;
++  previewPath: string;
++  originalBase64: string;
++  compressedBase64: string;
++  original: {
++    size: number;
++    width: number;
++    height: number;
++    format: string;
++  };
++  compressed: {
++    size: number;
++    width: number;
++    height: number;
++    format: string;
++  };
++  compressionRatio: number;
++  sizeDifference: number;
++}
++
+ 
+ 
+ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+@@ -28,6 +50,12 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   const [namingSuffix, setNamingSuffix] = useState('_compressed');
+   const [saveLocation, setSaveLocation] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
++  
++  // 预览相关状态
++  const [showPreview, setShowPreview] = useState(false);
++  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
++  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
++  const [selectedFileForPreview, setSelectedFileForPreview] = useState<ImageFile | null>(null);
+ 
+   // 初始化保存位置 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+@@ -66,6 +94,68 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+     setFiles(prev => prev.filter((_, i) => i !== index));
+   };
+ 
++  // 生成预览
++  const handlePreview = async (file: ImageFile) => {
++    if (isGeneratingPreview) return;
++    
++    setSelectedFileForPreview(file);
++    setIsGeneratingPreview(true);
++    setShowPreview(true);
++    setPreviewData(null);
++
++    try {
++      const settings = {
++        method: compressionMethod,
++        quality: qualityLevel,
++        targetSize,
++        maxDimension,
++        outputFormat
++      };
++
++      const result = await window.electronAPI.generateImagePreview(file.path, settings);
++      
++      if (result.success && result.preview) {
++        setPreviewData(result.preview);
++      } else {
++        toast.error(result.error || '生成预览失败');
++        setShowPreview(false);
++      }
++    } catch (error) {
++      console.error('生成预览失败:', error);
++      toast.error('生成预览失败，请重试');
++      setShowPreview(false);
++    } finally {
++      setIsGeneratingPreview(false);
++    }
++  };
++
++  // 关闭预览
++  const handleClosePreview = async () => {
++    if (previewData?.previewPath) {
++      // 清理预览文件
++      try {
++        await window.electronAPI.cleanupImagePreview(previewData.previewPath);
++      } catch (error) {
++        console.error('清理预览文件失败:', error);
++      }
++    }
++    
++    setShowPreview(false);
++    setPreviewData(null);
++    setSelectedFileForPreview(null);
++  };
++
++  // 确认压缩（从预览界面）
++  const handleConfirmFromPreview = async () => {
++    if (!selectedFileForPreview) return;
++    
++    // 关闭预览
++    await handleClosePreview();
++    
++    // 执行压缩
++    await handleCompress();
++  };
++
+ 
+ 
+   const handleCompress = async () => {
+@@ -125,7 +215,16 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   );
+ 
+   return (
+-    <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
++    <>
++      <ImagePreview
++        isOpen={showPreview}
++        onClose={handleClosePreview}
++        preview={previewData}
++        onConfirm={handleConfirmFromPreview}
++        isGenerating={isGeneratingPreview}
++      />
++      
++      <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
+       <div className="space-y-6">
+         {/* 文件选择区域 */}
+         <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+@@ -167,12 +266,23 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+                       </p>
+                     </div>
+                   </div>
+-                  <button
+-                    onClick={() => removeFile(index)}
+-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200"
+-                  >
+-                    删除
+-                  </button>
++                  <div className="flex items-center space-x-2">
++                    <button
++                      onClick={() => handlePreview(file)}
++                      disabled={isProcessing || isGeneratingPreview}
++                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
++                      title="预览压缩效果"
++                    >
++                      <Eye className="h-4 w-4" />
++                    </button>
++                    <button
++                      onClick={() => removeFile(index)}
++                      disabled={isProcessing}
++                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
++                    >
++                      删除
++                    </button>
++                  </div>
+                 </li>
+               ))}
+             </ul>
+@@ -322,5 +432,6 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+         </div>
+       </div>
+     </Modal>
++    </>
+   );
+ } 
+\ No newline at end of file

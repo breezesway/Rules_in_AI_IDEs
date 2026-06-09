@@ -1,0 +1,40 @@
+diff --git a/lib/main.dart b/lib/main.dart
+index 1f9e7b1..ad78b15 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
+ import 'package:get_it/get_it.dart';
+ import 'package:gh3/src/init.dart';
+ import 'package:gh3/src/screens/app/gh3_app.dart';
+-import 'package:gh3/src/screens/home_screen/home_viewmodel.dart';
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart';
+-import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
++import 'package:gh3/src/routing/route_collection_service.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+-import 'package:gh3/src/services/github_auth_client.dart';
+ 
+ Future<void> main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+@@ -14,9 +12,7 @@ Future<void> main() async {
+ 
+   // Get services from dependency injection
+   final authService = getIt<AuthService>();
+-  final githubAuthClient = getIt<GithubAuthClient>();
+-  final homeViewModel = await GetIt.instance.getAsync<HomeViewModel>();
+-  final userDetailsViewModelFactory = getIt<UserDetailsViewModelFactory>();
++  final routeCollectionService = getIt<RouteCollectionService>();
+ 
+   // Create ViewModels manually with their dependencies
+   final authVM = AuthViewModel(authService);
+@@ -25,10 +21,7 @@ Future<void> main() async {
+   runApp(
+     Gh3App(
+       authViewModel: authVM,
+-      authService: authService,
+-      githubAuthClient: githubAuthClient,
+-      homeViewModel: homeViewModel,
+-      userDetailsViewModelFactory: userDetailsViewModelFactory,
++      routeCollectionService: routeCollectionService,
+     ),
+   );
+ }

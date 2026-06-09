@@ -1,0 +1,126 @@
+diff --git a/mcp_flutter_automation/lib/src/server.dart b/mcp_flutter_automation/lib/src/server.dart
+index 167f9c7..05f8f06 100644
+--- a/mcp_flutter_automation/lib/src/server.dart
++++ b/mcp_flutter_automation/lib/src/server.dart
+@@ -3,7 +3,6 @@ import 'dart:convert';
+ import 'dart:io';
+ import 'package:logging/logging.dart';
+ import 'flutter_controller.dart';
+-import 'screenshot_server.dart';
+ import 'widget_inspector.dart';
+ 
+ // Simplified MCP server base class for testing
+@@ -15,7 +14,6 @@ abstract class MCPBase {
+ class FlutterAutomationMCPServer extends MCPBase {
+   final _logger = Logger('FlutterAutomationMCPServer');
+   late final FlutterController _controller;
+-  late final ScreenshotServer _screenshotServer;
+   late final WidgetInspector _widgetInspector;
+ 
+   FlutterAutomationMCPServer()
+@@ -26,7 +24,6 @@ class FlutterAutomationMCPServer extends MCPBase {
+           },
+         ) {
+     _controller = FlutterController();
+-    _screenshotServer = ScreenshotServer();
+     _widgetInspector = WidgetInspector(_controller);
+   }
+ 
+@@ -91,45 +88,17 @@ class FlutterAutomationMCPServer extends MCPBase {
+           _logger.info(
+               'Received screenshot request for app: $appId, filename: $filename');
+ 
+-          // Try VM service screenshot first
+-          try {
+-            _logger.info('Attempting VM service screenshot...');
+-            final screenshot = await _controller.captureScreenshot(appId);
+-            if (screenshot != null) {
+-              _logger.info(
+-                  'VM service screenshot successful, size: ${screenshot.length}');
+-
+-              // Save to specified file
+-              final appInfo = _controller.getAppInfo(appId);
+-              final filePath = '${appInfo['projectPath']}/$filename';
+-              final bytes = base64Decode(screenshot);
+-              final file = File(filePath);
+-              await file.writeAsBytes(bytes);
+-
+-              return {
+-                'success': true,
+-                'filename': filename,
+-                'filepath': filePath,
+-                'size_bytes': bytes.length,
+-                'format': 'png',
+-                'method': 'vm_service',
+-              };
+-            }
+-          } catch (e) {
+-            _logger.warning('VM Service screenshot failed: $e');
+-          }
+-
+-          // Fallback to screenshot server (RenderRepaintBoundary)
+-          _logger.info('Trying screenshot server fallback...');
+-          final latestScreenshot = _screenshotServer.getLatestScreenshot();
+-          if (latestScreenshot != null) {
++          // Capture screenshot via VM service
++          _logger.info('Attempting VM service screenshot...');
++          final screenshot = await _controller.captureScreenshot(appId);
++          if (screenshot != null) {
+             _logger.info(
+-                'Screenshot server has screenshot, size: ${latestScreenshot.length}');
++                'VM service screenshot successful, size: ${screenshot.length}');
+ 
+             // Save to specified file
+             final appInfo = _controller.getAppInfo(appId);
+             final filePath = '${appInfo['projectPath']}/$filename';
+-            final bytes = base64Decode(latestScreenshot);
++            final bytes = base64Decode(screenshot);
+             final file = File(filePath);
+             await file.writeAsBytes(bytes);
+ 
+@@ -139,18 +108,15 @@ class FlutterAutomationMCPServer extends MCPBase {
+               'filepath': filePath,
+               'size_bytes': bytes.length,
+               'format': 'png',
+-              'method': 'render_repaint_boundary',
+-              'timestamp':
+-                  _screenshotServer.getScreenshotTimestamp()?.toIso8601String(),
++              'method': 'vm_service',
++            };
++          } else {
++            return {
++              'success': false,
++              'error': 'Screenshot capture failed - VM service returned null',
+             };
+           }
+ 
+-          _logger.warning('No screenshot available from any method');
+-          return {
+-            'success': false,
+-            'error': 'No screenshot available from any method',
+-          };
+-
+         case 'get_logs':
+           final appId = params['appId'] as String;
+           final count = params['count'] as int?;
+@@ -295,13 +261,6 @@ class FlutterAutomationMCPServer extends MCPBase {
+   Future<void> start() async {
+     _logger.info('Starting Flutter Automation MCP Server');
+ 
+-    // Start the screenshot server
+-    try {
+-      await _screenshotServer.start(port: 3000);
+-    } catch (e) {
+-      _logger.warning('Failed to start screenshot server: $e');
+-    }
+-
+     // Listen for MCP protocol messages on stdin
+     await for (final line
+         in stdin.transform(utf8.decoder).transform(LineSplitter())) {
+@@ -629,6 +588,5 @@ class FlutterAutomationMCPServer extends MCPBase {
+   Future<void> stop() async {
+     _logger.info('Stopping Flutter Automation MCP Server');
+     await _controller.dispose();
+-    await _screenshotServer.stop();
+   }
+ }

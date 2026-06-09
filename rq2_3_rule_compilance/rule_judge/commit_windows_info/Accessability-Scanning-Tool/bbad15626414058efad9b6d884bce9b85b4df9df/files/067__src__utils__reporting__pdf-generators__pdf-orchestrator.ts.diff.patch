@@ -1,0 +1,92 @@
+diff --git a/src/utils/reporting/pdf-generators/pdf-orchestrator.ts b/src/utils/reporting/pdf-generators/pdf-orchestrator.ts
+index eb6cc5f..41d7c74 100644
+--- a/src/utils/reporting/pdf-generators/pdf-orchestrator.ts
++++ b/src/utils/reporting/pdf-generators/pdf-orchestrator.ts
+@@ -1,5 +1,5 @@
+ import { Page } from '@playwright/test';
+-import { chromium } from 'playwright';
++import { chromium } from '@playwright/test';
+ import { join } from 'path';
+ import { statSync, readdirSync } from 'fs';
+ import { SiteWideAccessibilityReport, ServiceResult } from '@/core/types/common';
+@@ -15,6 +15,42 @@ export interface PdfGenerationResult {
+   sizeKB: number;
+ }
+ 
++export interface ScanMetadata {
++  totalPages?: number;
++  totalViolations?: number;
++  compliancePercentage?: number;
++  wcagLevel?: string;
++  criticalViolations?: number;
++  seriousViolations?: number;
++  moderateViolations?: number;
++  minorViolations?: number;
++  browser?: string;
++  viewport?: string;
++  scanConfiguration?: {
++    maxPages?: number;
++    maxDepth?: number;
++    maxConcurrency?: number;
++    retryFailedPages?: boolean;
++    generateReports?: boolean;
++    wcagLevel?: string;
++  };
++  performanceMetrics?: {
++    totalScanTime?: number;
++    averageTimePerPage?: number;
++    successRate?: number;
++    pagesAnalyzed?: number;
++    pagesWithViolations?: number;
++  };
++  toolsUsed?: string[];
++  scanStartedAt?: Date;
++  scanCompletedAt?: Date;
++  scanId?: string;
++  scanType?: 'full-site' | 'single-page' | 'quick';
++  userAgent?: string;
++  crawlDepth?: number;
++  excludedPatterns?: string[];
++}
++
+ export interface PdfGenerationOptions {
+   audiences?: Array<{ name: string; displayName: string }>;
+   filename?: string;
+@@ -26,6 +62,7 @@ export interface PdfGenerationOptions {
+     bottom: string;
+     left: string;
+   };
++  scanMetadata?: ScanMetadata;
+ }
+ 
+ export class PdfOrchestrator {
+@@ -77,6 +114,7 @@ export class PdfOrchestrator {
+               format,
+               includeBackground,
+               margins,
++              ...(options.scanMetadata && { scanMetadata: options.scanMetadata }),
+             }
+           );
+ 
+@@ -111,17 +149,19 @@ export class PdfOrchestrator {
+       format: string;
+       includeBackground: boolean;
+       margins: { top: string; right: string; bottom: string; left: string };
++      scanMetadata?: ScanMetadata;
+     }
+   ): Promise<ServiceResult<PdfGenerationResult>> {
+     return this.errorHandler.executeWithErrorHandling(async () => {
+       const pdfPage = await browser.newPage();
+ 
+       try {
+-        // Generate HTML content
++        // Generate HTML content with scan metadata
+         const htmlContent = this.templateGenerator.generateAudienceSpecificTemplate(
+           report,
+           audience.name,
+-          audience.displayName
++          audience.displayName,
++          pdfOptions.scanMetadata
+         );
+ 
+         // Create temporary HTML file

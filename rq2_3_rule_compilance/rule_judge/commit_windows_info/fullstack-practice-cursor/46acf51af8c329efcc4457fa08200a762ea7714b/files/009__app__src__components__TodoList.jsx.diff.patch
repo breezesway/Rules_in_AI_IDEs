@@ -1,0 +1,205 @@
+diff --git a/app/src/components/TodoList.jsx b/app/src/components/TodoList.jsx
+index 0bdc49f..23954a3 100644
+--- a/app/src/components/TodoList.jsx
++++ b/app/src/components/TodoList.jsx
+@@ -1,14 +1,65 @@
+-import React from 'react';
++import React, { useState, useEffect } from 'react';
++import { useTodo } from '../context/TodoContext';
+ import TodoItem from './TodoItem';
+ import './TodoList.css';
+ 
+-const TodoList = ({ todos, loading, onUpdate, onToggle, onDelete }) => {
++const TodoList = () => {
++    const { 
++        todos, 
++        loading, 
++        error, 
++        stats,
++        updateTodo, 
++        toggleTodoCompletion, 
++        deleteTodo,
++        setTodoDeadline,
++        removeTodoDeadline,
++        getOverdueTodos,
++        getDueSoonTodos
++    } = useTodo();
++
++    const [overdueTodos, setOverdueTodos] = useState([]);
++    const [dueSoonTodos, setDueSoonTodos] = useState([]);
++    const [showOverdue, setShowOverdue] = useState(false);
++    const [showDueSoon, setShowDueSoon] = useState(false);
++
++    useEffect(() => {
++        if (todos.length > 0) {
++            loadSpecialTodos();
++        }
++    }, [todos]);
++
++    const loadSpecialTodos = async () => {
++        try {
++            const [overdue, dueSoon] = await Promise.all([
++                getOverdueTodos(),
++                getDueSoonTodos()
++            ]);
++            setOverdueTodos(overdue);
++            setDueSoonTodos(dueSoon);
++        } catch (error) {
++            console.error('Failed to load special todos:', error);
++        }
++    };
++
+     if (loading && todos.length === 0) {
+         return (
+             <div className="todo-list-container">
+                 <div className="loading-state">
+                     <div className="loading-spinner"></div>
+-                    <p>Loading todos...</p>
++                    <p>Loading your todos...</p>
++                </div>
++            </div>
++        );
++    }
++
++    if (error) {
++        return (
++            <div className="todo-list-container">
++                <div className="error-state">
++                    <div className="error-icon">❌</div>
++                    <h3>Error loading todos</h3>
++                    <p>{error}</p>
+                 </div>
+             </div>
+         );
+@@ -31,21 +82,83 @@ const TodoList = ({ todos, loading, onUpdate, onToggle, onDelete }) => {
+ 
+     return (
+         <div className="todo-list-container">
+-            <div className="todo-stats">
+-                <div className="stat-item">
+-                    <span className="stat-number">{activeTodos.length}</span>
+-                    <span className="stat-label">Active</span>
++            {/* Enhanced Statistics */}
++            {stats && (
++                <div className="todo-stats enhanced">
++                    <div className="stat-item">
++                        <span className="stat-number">{activeTodos.length}</span>
++                        <span className="stat-label">Active</span>
++                    </div>
++                    <div className="stat-item">
++                        <span className="stat-number">{completedTodos.length}</span>
++                        <span className="stat-label">Completed</span>
++                    </div>
++                    <div className="stat-item">
++                        <span className="stat-number">{stats.todosWithDeadlines}</span>
++                        <span className="stat-label">With Deadlines</span>
++                    </div>
++                    <div className="stat-item">
++                        <span className="stat-number">{stats.overdueTodos}</span>
++                        <span className="stat-label">Overdue</span>
++                    </div>
++                    <div className="stat-item">
++                        <span className="stat-number">{stats.dueSoonTodos}</span>
++                        <span className="stat-label">Due Soon</span>
++                    </div>
++                    <div className="stat-item">
++                        <span className="stat-number">{Math.round(stats.deadlineCompletionRate)}%</span>
++                        <span className="stat-label">Completion Rate</span>
++                    </div>
+                 </div>
+-                <div className="stat-item">
+-                    <span className="stat-number">{completedTodos.length}</span>
+-                    <span className="stat-label">Completed</span>
++            )}
++
++            {/* Overdue Todos Section */}
++            {overdueTodos.length > 0 && (
++                <div className="todo-section overdue-section">
++                    <h2 className="section-title overdue-title" onClick={() => setShowOverdue(!showOverdue)}>
++                        <span className="overdue-icon">⚠️</span>
++                        Overdue Todos ({overdueTodos.length})
++                        <span className="toggle-icon">{showOverdue ? '▼' : '▶'}</span>
++                    </h2>
++                    {showOverdue && overdueTodos.map(todo => (
++                        <TodoItem
++                            key={todo.id}
++                            todo={todo}
++                            onUpdate={updateTodo}
++                            onToggle={toggleTodoCompletion}
++                            onDelete={deleteTodo}
++                            onSetDeadline={setTodoDeadline}
++                            onRemoveDeadline={removeTodoDeadline}
++                            loading={loading}
++                        />
++                    ))}
+                 </div>
+-                <div className="stat-item">
+-                    <span className="stat-number">{todos.length}</span>
+-                    <span className="stat-label">Total</span>
++            )}
++
++            {/* Due Soon Todos Section */}
++            {dueSoonTodos.length > 0 && (
++                <div className="todo-section due-soon-section">
++                    <h2 className="section-title due-soon-title" onClick={() => setShowDueSoon(!showDueSoon)}>
++                        <span className="due-soon-icon">⏰</span>
++                        Due Soon ({dueSoonTodos.length})
++                        <span className="toggle-icon">{showDueSoon ? '▼' : '▶'}</span>
++                    </h2>
++                    {showDueSoon && dueSoonTodos.map(todo => (
++                        <TodoItem
++                            key={todo.id}
++                            todo={todo}
++                            onUpdate={updateTodo}
++                            onToggle={toggleTodoCompletion}
++                            onDelete={deleteTodo}
++                            onSetDeadline={setTodoDeadline}
++                            onRemoveDeadline={removeTodoDeadline}
++                            loading={loading}
++                        />
++                    ))}
+                 </div>
+-            </div>
++            )}
+ 
++            {/* Active Todos Section */}
+             {activeTodos.length > 0 && (
+                 <div className="todo-section">
+                     <h2 className="section-title">Active Todos</h2>
+@@ -53,15 +166,18 @@ const TodoList = ({ todos, loading, onUpdate, onToggle, onDelete }) => {
+                         <TodoItem
+                             key={todo.id}
+                             todo={todo}
+-                            onUpdate={onUpdate}
+-                            onToggle={onToggle}
+-                            onDelete={onDelete}
++                            onUpdate={updateTodo}
++                            onToggle={toggleTodoCompletion}
++                            onDelete={deleteTodo}
++                            onSetDeadline={setTodoDeadline}
++                            onRemoveDeadline={removeTodoDeadline}
+                             loading={loading}
+                         />
+                     ))}
+                 </div>
+             )}
+ 
++            {/* Completed Todos Section */}
+             {completedTodos.length > 0 && (
+                 <div className="todo-section">
+                     <h2 className="section-title">Completed Todos</h2>
+@@ -69,9 +185,11 @@ const TodoList = ({ todos, loading, onUpdate, onToggle, onDelete }) => {
+                         <TodoItem
+                             key={todo.id}
+                             todo={todo}
+-                            onUpdate={onUpdate}
+-                            onToggle={onToggle}
+-                            onDelete={onDelete}
++                            onUpdate={updateTodo}
++                            onToggle={toggleTodoCompletion}
++                            onDelete={deleteTodo}
++                            onSetDeadline={setTodoDeadline}
++                            onRemoveDeadline={removeTodoDeadline}
+                             loading={loading}
+                         />
+                     ))}

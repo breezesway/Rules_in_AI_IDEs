@@ -1,0 +1,162 @@
+diff --git a/src/main/utils/pdf-utils.ts b/src/main/utils/pdf-utils.ts
+new file mode 100644
+index 0000000..794eb1e
+--- /dev/null
++++ b/src/main/utils/pdf-utils.ts
+@@ -0,0 +1,155 @@
++import { PDFDocument } from 'pdf-lib';
++import path from 'node:path';
++import fs from 'node:fs/promises';
++import { PdfMergeOptions } from './types';
++import { generateUniqueFilePath, getFilesInfo } from './file-utils';
++import { ConfigManager } from './config-manager';
++import { HistoryManager } from './history-manager';
++
++// PDF合并核心函数
++export async function mergePdfs(
++  options: PdfMergeOptions,
++  configManager: ConfigManager,
++  historyManager: HistoryManager,
++  onProgress?: (data: { current: number; total: number; currentFile: string; progress: number }) => void
++) {
++  const startTime = Date.now();
++  const { filePaths, outputPath, outputFileName } = options;
++  
++  try {
++    const mergedPdf = await PDFDocument.create();
++    
++    // 逐个读取并合并PDF文件
++    for (let i = 0; i < filePaths.length; i++) {
++      const filePath = filePaths[i];
++      
++      // 发送进度更新
++      if (onProgress) {
++        onProgress({
++          current: i + 1,
++          total: filePaths.length,
++          currentFile: path.basename(filePath),
++          progress: Math.round(((i + 1) / filePaths.length) * 100)
++        });
++      }
++      
++      await processPdfFile(filePath, mergedPdf);
++    }
++    
++    // 生成合并后的PDF字节
++    const pdfBytes = await mergedPdf.save();
++    
++    // 确保输出目录存在
++    await fs.mkdir(outputPath, { recursive: true });
++    
++    // 处理文件重名
++    const { path: finalOutputPath, name: finalOutputFileName } = 
++      await generateUniqueFilePath(outputPath, outputFileName, configManager);
++    
++    // 写入合并后的PDF文件
++    await fs.writeFile(finalOutputPath, pdfBytes);
++
++    // 获取输出文件大小并记录历史
++    await recordMergeSuccess(
++      filePaths, finalOutputPath, finalOutputFileName, 
++      outputPath, startTime, historyManager
++    );
++
++    return {
++      success: true,
++      outputPath: finalOutputPath,
++      message: `PDF文件已成功合并为 "${finalOutputFileName}"`
++    };
++    
++  } catch (error) {
++    console.error('PDF合并错误:', error);
++    
++    const errorMessage = error instanceof Error ? error.message : '合并PDF时发生未知错误';
++    
++    // 记录失败历史
++    await recordMergeFailure(
++      filePaths, outputPath, outputFileName, 
++      startTime, errorMessage, historyManager
++    );
++
++    return {
++      success: false,
++      error: errorMessage
++    };
++  }
++}
++
++// 处理单个PDF文件
++async function processPdfFile(filePath: string, mergedPdf: PDFDocument) {
++  try {
++    const pdfBytes = await fs.readFile(filePath);
++    const pdf = await PDFDocument.load(pdfBytes);
++    const pageIndices = pdf.getPageIndices();
++    const pages = await mergedPdf.copyPages(pdf, pageIndices);
++    pages.forEach((page) => mergedPdf.addPage(page));
++  } catch (fileError) {
++    console.error(`处理文件 ${filePath} 时出错:`, fileError);
++    throw new Error(`文件 ${path.basename(filePath)} 可能已损坏或不是有效的PDF文件`);
++  }
++}
++
++// 记录合并成功
++async function recordMergeSuccess(
++  filePaths: string[], 
++  finalOutputPath: string, 
++  finalOutputFileName: string,
++  outputPath: string,
++  startTime: number,
++  historyManager: HistoryManager
++) {
++  const outputStats = await fs.stat(finalOutputPath);
++  const duration = Date.now() - startTime;
++
++  await historyManager.addRecord({
++    type: 'pdf-merge',
++    files: await getFilesInfo(filePaths),
++    output: {
++      name: finalOutputFileName,
++      path: finalOutputPath,
++      size: outputStats.size
++    },
++    settings: {
++      outputPath,
++      fileCount: filePaths.length
++    },
++    duration,
++    success: true
++  });
++}
++
++// 记录合并失败
++async function recordMergeFailure(
++  filePaths: string[],
++  outputPath: string,
++  outputFileName: string,
++  startTime: number,
++  errorMessage: string,
++  historyManager: HistoryManager
++) {
++  const duration = Date.now() - startTime;
++
++  try {
++    await historyManager.addRecord({
++      type: 'pdf-merge',
++      files: await getFilesInfo(filePaths),
++      output: {
++        name: outputFileName,
++        path: path.join(outputPath, outputFileName)
++      },
++      settings: {
++        outputPath,
++        fileCount: filePaths.length
++      },
++      duration,
++      success: false,
++      error: errorMessage
++    });
++  } catch (historyError) {
++    console.error('保存失败历史记录时出错:', historyError);
++  }
++} 
+\ No newline at end of file

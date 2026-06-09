@@ -1,0 +1,55 @@
+diff --git a/src/components/scan-results.tsx b/src/components/scan-results.tsx
+index 2335f9d..ebd8c93 100644
+--- a/src/components/scan-results.tsx
++++ b/src/components/scan-results.tsx
+@@ -17,6 +17,10 @@ import { CrossWebResult } from '@/lib/modules/cross-web';
+ import { MultimodalResult } from '@/lib/modules/multimodal';
+ import { MonitoringResult } from '@/lib/modules/monitoring';
+ import { SchemaAdvancedResult } from '@/lib/modules/schema-advanced';
++import { useState, useEffect } from 'react';
++
++// Debug logging
++console.log('🔍 ScanResults component wordt geladen');
+ 
+ type Status = 'success' | 'warning' | 'danger';
+ 
+@@ -75,6 +79,14 @@ interface ScanResultsProps {
+ }
+ 
+ export function ScanResults({ result, onNewScan }: ScanResultsProps) {
++  const [isMounted, setIsMounted] = useState(false);
++  
++  // Client-side alleen - voorkomt hydration mismatch
++  useEffect(() => {
++    setIsMounted(true);
++    console.log('🏆 ScanResults component gemount met score:', result.overallScore);
++  }, [result.overallScore]);
++  
+   // Helper functie om module object te maken met dynamisch berekende status
+   const createModuleWithCalculatedStatus = (
+     id: string,
+@@ -98,6 +110,11 @@ export function ScanResults({ result, onNewScan }: ScanResultsProps) {
+     if (score >= 50) return 'warning';
+     return 'danger';
+   };
++  
++  // Render niks tijdens SSR of als component nog niet gemount is
++  if (!isMounted) {
++    return <div className="text-center py-12">Resultaten worden geladen...</div>;
++  }
+ 
+   return (
+     <div className="space-y-8">
+@@ -345,8 +362,10 @@ export function ScanResults({ result, onNewScan }: ScanResultsProps) {
+         ]}
+       />
+ 
+-      <div className="flex justify-end">
+-        <Button onClick={onNewScan}>Nieuwe Scan</Button>
++      <div className="mt-8 flex justify-center">
++        <Button onClick={onNewScan} size="lg">
++          Nieuwe scan starten
++        </Button>
+       </div>
+     </div>
+   );

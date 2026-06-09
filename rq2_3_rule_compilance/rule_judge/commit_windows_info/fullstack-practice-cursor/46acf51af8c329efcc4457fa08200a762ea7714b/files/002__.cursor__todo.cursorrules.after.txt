@@ -1,0 +1,450 @@
+# User-Specific Todo Management System with Deadline Feature
+
+You are a full-stack development expert specializing in user-specific data management. Your current task is to implement a **system where logged-in users can manage their own Todo lists with optional deadline functionality**. Each user should only be able to view and manage Todos they have created, with the ability to set optional deadlines for better task management.
+
+## Project Objectives
+- **Personalized Todo Management**: Each user has their own Todo list with deadline tracking
+- **Data Isolation**: Complete separation of Todo data between users
+- **Permission-Based Access**: Users can only perform CRUD operations on their own Todos
+- **Enhanced Security**: Block access to other users' Todos
+- **Deadline Management**: Optional deadline feature for better task prioritization
+- **Improved User Experience**: Display personal Todo list immediately upon login with deadline indicators
+
+## Core Implementation Requirements
+
+### 1. Backend Data Isolation with Deadline Support
+- **Repository Level**: Filter all Todo queries by current logged-in user ID
+- **Service Level**: Verify user permissions in business logic
+- **Controller Level**: Extract current user information when processing requests
+- **Security Verification**: Block attempts to access other users' Todos
+- **Deadline Management**: Handle optional deadline fields and validation
+
+### 2. Frontend Personalization with Deadline Features
+- **User-Specific Todo Lists**: Display only the logged-in user's Todos with deadline information
+- **Real-time Updates**: Immediate screen reflection of Todo CRUD operations
+- **User Information Display**: Show current logged-in user info in header
+- **Empty State Handling**: Friendly messages when user has no Todos
+- **Deadline UI**: Date picker and deadline status indicators
+- **Deadline Sorting**: Organize Todos by deadline urgency
+
+## Data Model Structure
+
+### Enhanced Todo Entity with Deadline
+```java
+@Entity
+@Table(name = "todos")
+public class Todo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false, length = 100)
+    @NotBlank(message = "Title is required")
+    @Size(max = 100, message = "Title cannot exceed 100 characters")
+    private String title;
+    
+    @Column(length = 500)
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
+    private String description;
+    
+    @Column(nullable = false)
+    @NotNull(message = "Completion status is required")
+    private Boolean completed = false;
+    
+    // NEW: Optional deadline field
+    @Column(name = "deadline")
+    private LocalDateTime deadline;
+    
+    // Core: Many-to-one relationship with User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @NotNull(message = "User information is required")
+    private User user;
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    // Deadline utility methods
+    public boolean hasDeadline() {
+        return deadline != null;
+    }
+    
+    public boolean isOverdue() {
+        return hasDeadline() && !completed && LocalDateTime.now().isAfter(deadline);
+    }
+    
+    public boolean isDueSoon() {
+        if (!hasDeadline() || completed) return false;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dueSoonThreshold = now.plusDays(1); // Within 24 hours
+        return deadline.isBefore(dueSoonThreshold) && deadline.isAfter(now);
+    }
+    
+    // Constructors, getters, setters...
+}
+```
+
+### User Entity (Todo Relationship)
+```java
+@Entity
+@Table(name = "users")
+public class User {
+    // Existing fields...
+    
+    // One-to-many relationship
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Todo> todos = new ArrayList<>();
+    
+    // Getters, setters...
+}
+```
+
+## Enhanced Repository Interface
+
+### TodoRepository (User-Specific Filtering with Deadline Queries)
+```java
+@Repository
+public interface TodoRepository extends JpaRepository<Todo, Long> {
+    
+    // Basic user-specific queries
+    List<Todo> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Todo> findByUserIdAndCompletedOrderByCreatedAtDesc(Long userId, Boolean completed);
+    long countByUserId(Long userId);
+    long countByUserIdAndCompleted(Long userId, Boolean completed);
+    Optional<Todo> findByIdAndUserId(Long id, Long userId);
+    boolean existsByIdAndUserId(Long id, Long userId);
+    
+    // Deadline-specific queries
+    List<Todo> findByUserIdOrderByDeadlineAscNullsLast(Long userId);
+    List<Todo> findByUserIdAndDeadlineIsNotNullOrderByDeadlineAsc(Long userId);
+    List<Todo> findByUserIdAndDeadlineIsNullOrderByCreatedAtDesc(Long userId);
+    
+    // Overdue and due soon queries
+    @Query("SELECT t FROM Todo t WHERE t.user.id = :userId AND t.deadline < :now AND t.completed = false ORDER BY t.deadline ASC")
+    List<Todo> findOverdueTodosByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+    
+    @Query("SELECT t FROM Todo t WHERE t.user.id = :userId AND t.deadline BETWEEN :now AND :dueSoon AND t.completed = false ORDER BY t.deadline ASC")
+    List<Todo> findDueSoonTodosByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now, @Param("dueSoon") LocalDateTime dueSoon);
+    
+    // Deadline range queries
+    @Query("SELECT t FROM Todo t WHERE t.user.id = :userId AND t.deadline BETWEEN :startDate AND :endDate ORDER BY t.deadline ASC")
+    List<Todo> findTodosByUserIdAndDeadlineBetween(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
+    // Statistics queries
+    @Query("SELECT COUNT(t) FROM Todo t WHERE t.user.id = :userId AND t.deadline < :now AND t.completed = false")
+    long countOverdueTodosByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+    
+    @Query("SELECT COUNT(t) FROM Todo t WHERE t.user.id = :userId AND t.deadline IS NOT NULL")
+    long countTodosWithDeadlineByUserId(@Param("userId") Long userId);
+}
+```
+
+## Enhanced Service Interface
+
+### TodoService Interface with Deadline Management
+```java
+public interface TodoService {
+    // Basic CRUD operations
+    List<TodoResponseDto> getCurrentUserTodos();
+    TodoResponseDto getCurrentUserTodoById(Long todoId);
+    TodoResponseDto createTodoForCurrentUser(TodoRequestDto todoRequest);
+    TodoResponseDto updateCurrentUserTodo(Long todoId, TodoRequestDto todoRequest);
+    void deleteCurrentUserTodo(Long todoId);
+    TodoResponseDto toggleCurrentUserTodoCompletion(Long todoId);
+    
+    // Deadline-specific operations
+    List<TodoResponseDto> getCurrentUserTodosSortedByDeadline();
+    List<TodoResponseDto> getCurrentUserTodosWithDeadlines();
+    List<TodoResponseDto> getCurrentUserTodosWithoutDeadlines();
+    List<TodoResponseDto> getCurrentUserOverdueTodos();
+    List<TodoResponseDto> getCurrentUserDueSoonTodos();
+    List<TodoResponseDto> getCurrentUserTodosByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    
+    // Deadline management
+    TodoResponseDto setTodoDeadline(Long todoId, LocalDateTime deadline);
+    TodoResponseDto removeTodoDeadline(Long todoId);
+    
+    // Statistics and analytics
+    TodoStatsDto getCurrentUserTodoStats();
+    TodoDeadlineStatsDto getCurrentUserDeadlineStats();
+    
+    // Search and filter
+    List<TodoResponseDto> searchCurrentUserTodos(String keyword);
+    List<TodoResponseDto> filterCurrentUserTodos(TodoFilterDto filter);
+}
+```
+
+## Enhanced DTOs
+
+### TodoRequestDto (with Deadline)
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TodoRequestDto {
+    
+    @NotBlank(message = "Title is required")
+    @Size(max = 100, message = "Title cannot exceed 100 characters")
+    private String title;
+    
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
+    private String description;
+    
+    private Boolean completed = false;
+    
+    // NEW: Optional deadline field
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime deadline;
+}
+```
+
+### TodoResponseDto (with Deadline Information)
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TodoResponseDto {
+    
+    private Long id;
+    private String title;
+    private String description;
+    private Boolean completed;
+    
+    // Deadline information
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime deadline;
+    private Boolean hasDeadline;
+    private Boolean isOverdue;
+    private Boolean isDueSoon;
+    private String deadlineStatus; // "NO_DEADLINE", "ON_TIME", "DUE_SOON", "OVERDUE"
+    
+    // Timestamps
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
+}
+```
+
+### TodoDeadlineStatsDto
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TodoDeadlineStatsDto {
+    private long totalTodos;
+    private long todosWithDeadlines;
+    private long todosWithoutDeadlines;
+    private long overdueTodos;
+    private long dueSoonTodos;
+    private long completedWithDeadlines;
+    private double deadlineCompletionRate;
+    private LocalDateTime nextDeadline;
+    private long todosThisWeek;
+    private long todosThisMonth;
+}
+```
+
+### TodoFilterDto
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TodoFilterDto {
+    private Boolean completed;
+    private Boolean hasDeadline;
+    private LocalDateTime deadlineFrom;
+    private LocalDateTime deadlineTo;
+    private String sortBy; // "CREATED_AT", "DEADLINE", "TITLE"
+    private String sortDirection; // "ASC", "DESC"
+    private Boolean overdueOnly;
+    private Boolean dueSoonOnly;
+}
+```
+
+## API Endpoints
+
+### Enhanced Todo Endpoints with Deadline Management
+```
+// Basic CRUD operations
+GET    /api/todos                    - Get current user's todos
+GET    /api/todos/{id}               - Get specific todo
+POST   /api/todos                    - Create new todo (with optional deadline)
+PUT    /api/todos/{id}               - Update todo (including deadline)
+DELETE /api/todos/{id}               - Delete todo
+PATCH  /api/todos/{id}/toggle        - Toggle completion status
+
+// Deadline-specific endpoints
+GET    /api/todos/sorted-by-deadline - Get todos sorted by deadline
+GET    /api/todos/with-deadlines     - Get todos that have deadlines
+GET    /api/todos/without-deadlines  - Get todos without deadlines
+GET    /api/todos/overdue            - Get overdue todos
+GET    /api/todos/due-soon           - Get todos due soon
+GET    /api/todos/by-date-range      - Get todos within date range
+
+// Deadline management
+PATCH  /api/todos/{id}/deadline      - Set or update todo deadline
+DELETE /api/todos/{id}/deadline      - Remove todo deadline
+
+// Statistics and analytics
+GET    /api/todos/stats              - Get todo statistics
+GET    /api/todos/deadline-stats     - Get deadline-specific statistics
+
+// Search and filter
+GET    /api/todos/search             - Search todos
+GET    /api/todos/filter             - Filter todos with multiple criteria
+```
+
+## Frontend Components Structure
+
+### Enhanced Todo Management Components
+```
+src/components/todo/
+├── TodoList.jsx                    - Main todo list with deadline indicators
+├── TodoItem.jsx                    - Individual todo item with deadline display
+├── TodoForm.jsx                    - Create/edit form with deadline picker
+├── DeadlinePicker.jsx              - Date/time picker component
+├── DeadlineIndicator.jsx           - Visual deadline status indicator
+├── TodoFilters.jsx                 - Filter controls for todos
+├── TodoStats.jsx                   - Statistics dashboard
+├── OverdueTodos.jsx                - Overdue todos section
+├── DueSoonTodos.jsx                - Due soon todos section
+└── TodoCalendar.jsx                - Calendar view of todos with deadlines
+```
+
+### Deadline-Related Hooks
+```
+src/hooks/
+├── useTodos.js                     - Enhanced with deadline management
+├── useDeadlineFilters.js           - Deadline filtering logic
+├── useTodoStats.js                 - Statistics and analytics
+└── useDeadlineNotifications.js     - Deadline reminder system
+```
+
+## Deadline Features Specification
+
+### 1. Deadline Management
+- **Optional Deadline Setting**: Users can optionally set deadlines for todos
+- **Flexible Date/Time Input**: Support for both date-only and date-time deadlines
+- **Deadline Modification**: Users can update or remove deadlines at any time
+- **Timezone Handling**: Proper timezone support for deadline calculations
+
+### 2. Deadline Status Indicators
+- **Visual Indicators**: Color-coded status indicators for different deadline states
+- **Status Categories**:
+  - No Deadline: Gray indicator
+  - On Time: Green indicator
+  - Due Soon (within 24 hours): Yellow indicator
+  - Overdue: Red indicator
+- **Icon System**: Intuitive icons for different deadline states
+
+### 3. Deadline Sorting and Filtering
+- **Sort Options**:
+  - By deadline (ascending/descending)
+  - By creation date
+  - By title
+  - Mixed sorting (deadline first, then creation date)
+- **Filter Options**:
+  - Show only todos with deadlines
+  - Show only todos without deadlines
+  - Show only overdue todos
+  - Show only due soon todos
+  - Date range filtering
+
+### 4. Deadline Notifications and Reminders
+- **Visual Reminders**: Prominent display of overdue and due soon todos
+- **Dashboard Alerts**: Summary of deadline status on main dashboard
+- **Statistics**: Deadline completion rates and trends
+- **Upcoming Deadlines**: Preview of next deadlines
+
+## User Experience Enhancements
+
+### 1. Intuitive Deadline Interface
+- **Easy Date Selection**: User-friendly date/time picker
+- **Quick Deadline Options**: Preset options (Today, Tomorrow, Next Week, etc.)
+- **Clear Visual Feedback**: Immediate visual indication of deadline status
+- **Responsive Design**: Deadline features work well on mobile devices
+
+### 2. Smart Deadline Organization
+- **Automatic Grouping**: Group todos by deadline urgency
+- **Contextual Sorting**: Default sorting that prioritizes urgent items
+- **Progress Tracking**: Visual progress indicators for deadline completion
+- **Achievement System**: Encourage timely completion with progress metrics
+
+### 3. Deadline Analytics
+- **Completion Statistics**: Track deadline completion rates
+- **Trend Analysis**: Show improvement in deadline management over time
+- **Performance Insights**: Identify patterns in deadline adherence
+- **Goal Setting**: Help users set realistic deadlines based on historical data
+
+## Security Considerations
+
+### 1. Permission Verification (Critical)
+- **User Verification Required**: All Todo operations must verify current user
+- **Cross-User Access Prevention**: Block attempts to access other users' Todos via ID
+- **URL Direct Access Protection**: Prevent permission bypass through direct URL access
+- **Deadline Data Protection**: Ensure deadline information is only accessible to Todo owner
+
+### 2. Data Validation
+- **Deadline Validation**: Ensure deadline dates are valid and reasonable
+- **Input Sanitization**: Server-side validation of all user input data
+- **SQL Injection Prevention**: Use JPA to prevent SQL injection attacks
+- **XSS Attack Prevention**: Escape user-generated content
+
+### 3. Error Handling
+- **Clear Error Messages**: Provide user-friendly error messages for unauthorized access
+- **404 Responses**: Return 404 for non-existent Todos
+- **Deadline Validation Errors**: Specific error messages for invalid deadline formats
+
+## Testing Scenarios
+
+### 1. Functionality Testing
+- **User Isolation**: User A can only view their own Todos after login
+- **Deadline CRUD**: Users can create, read, update, and delete deadlines
+- **Deadline Calculations**: Verify overdue and due soon calculations are accurate
+- **Cross-User Isolation**: User A and User B's Todos remain completely separate
+
+### 2. Security Testing
+- **Unauthorized Access**: User A attempting to access User B's Todo ID → 403 Forbidden
+- **Unauthenticated Access**: Non-logged-in users attempting Todo access → 401 Unauthorized
+- **Invalid JWT**: Invalid JWT token access attempts → 401 Unauthorized
+- **Deadline Security**: Deadline information only accessible to Todo owner
+
+### 3. Usability Testing
+- **Immediate Display**: Personal Todo list with deadlines displayed immediately upon login
+- **Empty State**: Friendly guidance when user has no Todos
+- **Real-time Updates**: Immediate screen reflection of Todo/deadline changes
+- **Deadline UX**: Intuitive deadline setting and status indication
+
+## Development Priorities
+
+1. **Backend Repository and Service Updates** (Implement user-specific filtering with deadline support)
+2. **Controller Permission Logic** (Add authorization verification with deadline endpoints)
+3. **Frontend AuthContext and User Management** (Enhanced user information handling)
+4. **Todo Management Hook Implementation** (User-specific data processing with deadline features)
+5. **Deadline UI Components** (Date picker, status indicators, filtering)
+6. **UI/UX Personalization** (User-specific interface with deadline visualization)
+7. **Security Testing and Verification** (Comprehensive security audit)
+8. **Error Handling and User Experience** (Refined error handling and UX improvements)
+9. **Deadline Analytics and Statistics** (Advanced deadline tracking features)
+
+## Expected Deliverables
+
+✅ **Independent Todo Lists**: Each logged-in user has their own separate Todo list with deadline tracking
+✅ **Complete Data Isolation**: Other users' Todo data is completely inaccessible
+✅ **Permission-Based CRUD**: Guaranteed permission-based CRUD operations with deadline management
+✅ **User-Friendly Personalized Interface**: Intuitive interface with deadline visualization
+✅ **Enhanced Security**: Strengthened data access control with deadline protection
+✅ **Real-time Updates**: Real-time Todo and deadline status updates
+✅ **Advanced Deadline Features**: Comprehensive deadline management with analytics
+✅ **Improved Task Management**: Better task prioritization through deadline functionality
+
+Create a perfectly personalized Todo management system where each user encounters their own Todo world upon login, complete with sophisticated deadline management capabilities for enhanced productivity!

@@ -1,0 +1,162 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: feat: add "Clear All Layers" button to Sidebar and store
+
+    * Add "Clear All Layers" button to Sidebar component, disabled when no layers exist
+    * Add clearAllLayers action to layers store for resetting all layers
+- Changed Files List: 
+conversations/2-add-clear-all-layers-button.md	+48	-0	after_lines=48
+src/components/Sidebar.tsx	+7	-0	after_lines=46
+src/store/index.ts	+2	-0	after_lines=63
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   └── 2-add-clear-all-layers-button.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: conversations/2-add-clear-all-layers-button.md ---
+diff --git a/conversations/2-add-clear-all-layers-button.md b/conversations/2-add-clear-all-layers-button.md
+new file mode 100644
+index 0000000..ec2e3bd
+--- /dev/null
++++ b/conversations/2-add-clear-all-layers-button.md
+@@ -0,0 +1,48 @@
++# Conversation 2: Add Clear All Layers Button
++
++**Date**: Current session
++
++## Participants
++- **Chuang**: User
++- **Cursor**: AI Assistant
++
++## Summary
++Added a "Clear All Layers" button to the sidebar and implemented the corresponding store method to clear all layers from the ASCII Canvas project.
++
++## Conversation Flow
++
++### Chuang's Request
++> Add a button on top of the sidebar to perform clearing all layers. Add relative methods to the store also.
++
++### Cursor's Implementation
++1. **Examined the current store structure** (`src/store/index.ts`)
++2. **Added `clearAllLayers` method** to the `LayersStore` interface and implementation
++3. **Updated the Sidebar component** (`src/components/Sidebar.tsx`) to include the new button
++
++### Chuang's Confirmation
++> Save the history
++
++## Code Changes Made
++
++### Store Updates (`src/store/index.ts`)
++- Added `clearAllLayers: () => void` to the `LayersStore` interface
++- Implemented `clearAllLayers: () => set({ layers: [] })` method
++
++### Sidebar Updates (`src/components/Sidebar.tsx`)
++- Added "Clear All Layers" button at the top of the sidebar
++- Styled with red background to indicate destructive action
++- Added disabled state when no layers exist
++- Positioned above the "Layers" heading for easy access
++
++## Features Implemented
++- **Visual Feedback**: Red button indicating destructive action
++- **Smart Disabling**: Button disabled when no layers to clear
++- **Consistent Styling**: Matches existing sidebar design patterns
++- **Immediate Effect**: Clears all layers instantly when clicked
++
++## Files Modified
++- `src/store/index.ts` - Added clearAllLayers method
++- `src/components/Sidebar.tsx` - Added Clear All Layers button
++
++## Status
++✅ **Completed** - All changes accepted by user 
+\ No newline at end of file
+
+--- FILE: src/components/Sidebar.tsx ---
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+index fbaf8f1..d0b51d5 100644
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -7,6 +7,13 @@ export default function Sidebar() {
+ 
+   return (
+     <div className="flex h-full w-64 flex-col bg-gray-800 p-4 text-white shrink-0">
++      <button
++        className="mb-4 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
++        onClick={() => useLayersStore.getState().clearAllLayers()}
++        disabled={layers.length === 0}
++      >
++        Clear All Layers
++      </button>
+       <h2 className="mb-4 text-xl font-bold">Layers</h2>
+       <ul className="space-y-2">
+         {layers.map((layer) => (
+
+--- FILE: src/store/index.ts ---
+diff --git a/src/store/index.ts b/src/store/index.ts
+index 3e1043a..a2f4414 100644
+--- a/src/store/index.ts
++++ b/src/store/index.ts
+@@ -11,6 +11,7 @@ interface LayersStore {
+   removeLayer: (id: string) => void;
+   updateLayer: (id: string, canvas: string[][]) => void;
+   reorderLayers: (fromIndex: number, toIndex: number) => void;
++  clearAllLayers: () => void;
+ }
+ 
+ export const useLayersStore = create<LayersStore>((set) => ({
+@@ -33,6 +34,7 @@ export const useLayersStore = create<LayersStore>((set) => ({
+       layers.splice(toIndex, 0, movedLayer);
+       return { layers };
+     }),
++  clearAllLayers: () => set({ layers: [] }),
+ }));
+ 
+ interface Shape {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

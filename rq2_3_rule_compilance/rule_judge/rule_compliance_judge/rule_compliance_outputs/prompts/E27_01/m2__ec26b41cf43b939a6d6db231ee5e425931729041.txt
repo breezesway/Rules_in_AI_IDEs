@@ -1,0 +1,936 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Language Features
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Formatting: Prettier with single quotes, 2-space tabs
++ - Formatting: Prettier with single quotes, 2-space tabs, don't use "any" as ts type
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Prettier configuration files (e.g., .prettierrc, package.json) and TypeScript source code files (.ts, .tsx).
+- Suggested Logic: 1. Inspect Prettier configuration files to verify that 'singleQuote' is set to true and 'tabWidth' is set to 2. 2. Scan TypeScript source files using a static analysis tool or AST parser to identify any instances where 'any' is used as a type annotation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: plan: simplify plan for mvp
+- Changed Files List: 
+.kiro/specs/kirapilot-app/design.md	+66	-84	after_lines=378
+.kiro/specs/kirapilot-app/future_plan.md	+103	-0	after_lines=103
+.kiro/specs/kirapilot-app/requirements.md	+22	-46	after_lines=80
+.kiro/specs/kirapilot-app/tasks.md	+22	-109	after_lines=141
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .husky
+│   └── pre-commit
+├── .kiro
+│   ├── hooks
+│   │   └── fix-any-types.kiro.hook
+│   ├── specs
+│   │   └── kirapilot-app
+│   │       ├── design.md
+│   │       ├── future_plan.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── extensions.json
+├── FORMATTING_SETUP.md
+├── PROJECT_STRUCTURE.md
+├── README.md
+├── TESTING.md
+├── TEST_SOLUTION.md
+├── eslint.config.js
+├── hero.ts
+├── index.html
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── tauri.svg
+│   └── vite.svg
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── TitleBar.tsx
+│   │   ├── common
+│   │   │   ├── DatePicker.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── PrioritySelector.tsx
+│   │   │   ├── RichTextEditor.tsx
+│   │   │   ├── TagInput.tsx
+│   │   │   └── index.ts
+│   │   ├── planning
+│   │   │   ├── DayView.tsx
+│   │   │   ├── Planner.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── TaskColumn.tsx
+│   │   │   ├── TaskModal.tsx
+│   │   │   ├── TimeHistoryModal.tsx
+│   │   │   ├── WeekView.tsx
+│   │   │   └── WeeklyPlan.tsx
+│   │   ├── reports
+│   │   │   ├── Reports.tsx
+│   │   │   └── index.ts
+│   │   └── timer
+│   │       ├── SessionHistory.tsx
+│   │       └── index.ts
+│   ├── contexts
+│   │   └── TimerContext.tsx
+│   ├── hooks
+│   │   ├── useDatabase.ts
+│   │   └── useSimpleTimer.ts
+│   ├── main.tsx
+│   ├── services
+│   │   ├── database
+│   │   │   ├── DatabaseProvider.tsx
+│   │   │   ├── README.md
+│   │   │   ├── __mocks__
+│   │   │   │   └── mockDatabase.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mockDatabase.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── FocusRepository.ts
+│   │   │   │   ├── PatternRepository.ts
+│   │   │   │   ├── README.md
+│   │   │   │   ├── TaskRepository.ts
+│   │   │   │   ├── TimeTrackingRepository.ts
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── TaskRepository.test.ts
+│   │   │   │   └── index.ts
+│   │   │   └── utils.ts
+│   │   └── notifications
+│   │       └── TimerNotifications.ts
+│   ├── setupTests.ts
+│   ├── types
+│   │   ├── README.md
+│   │   ├── database.ts
+│   │   ├── index.ts
+│   │   └── validation.ts
+│   ├── utils
+│   │   ├── __tests__
+│   │   │   ├── migration.test.ts
+│   │   │   └── validation.test.ts
+│   │   ├── clearOldData.ts
+│   │   ├── debugDatabase.ts
+│   │   ├── index.ts
+│   │   ├── migration.ts
+│   │   ├── resetDatabase.ts
+│   │   └── transformations.ts
+│   └── vite-env.d.ts
+├── src-tauri
+│   ├── .gitignore
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── build.rs
+│   ├── capabilities
+│   │   └── default.json
+│   ├── icons
+│   │   ├── 128x128.png
+│   │   ├── 128x128@2x.png
+│   │   ├── 32x32.png
+│   │   ├── Square107x107Logo.png
+│   │   ├── Square142x142Logo.png
+│   │   ├── Square150x150Logo.png
+│   │   ├── Square284x284Logo.png
+│   │   ├── Square30x30Logo.png
+│   │   ├── Square310x310Logo.png
+│   │   ├── Square44x44Logo.png
+│   │   ├── Square71x71Logo.png
+│   │   ├── Square89x89Logo.png
+│   │   ├── StoreLogo.png
+│   │   ├── icon.icns
+│   │   ├── icon.ico
+│   │   └── icon.png
+│   ├── src
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   └── tauri.conf.json
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/kirapilot-app/design.md ---
+diff --git a/.kiro/specs/kirapilot-app/design.md b/.kiro/specs/kirapilot-app/design.md
+index 4f3630a..7840de6 100644
+--- a/.kiro/specs/kirapilot-app/design.md
++++ b/.kiro/specs/kirapilot-app/design.md
+@@ -2,7 +2,7 @@
+ 
+ ## Overview
+ 
+-KiraPilot is designed as a cross-platform productivity application with a hybrid architecture combining a Tauri-based desktop application and native mobile apps. The system emphasizes local-first data processing with optional cloud synchronization, ensuring privacy while providing seamless cross-device experiences. The core innovation lies in the integration of Kira AI assistant, which has direct access to all application features through a tool-based architecture.
++KiraPilot is designed as a desktop productivity application built with Tauri, combining React frontend with Rust backend. The system emphasizes local-first data processing and storage, ensuring privacy and performance while providing a native desktop experience. The core innovation lies in the integration of Kira AI assistant, which has direct access to task management and time tracking features through a tool-based architecture.
+ 
+ ## Architecture
+ 
+@@ -15,63 +15,59 @@ graph TB
+         B[Tailwind CSS + Animations]
+         C[Lucide React Icons]
+     end
+-    
++
+     subgraph "Application Layer"
+         D[Tauri Runtime]
+         E[State Management]
+         F[AI Assistant Engine]
+     end
+-    
++
+     subgraph "Data Layer"
+         G[Local SQLite Database]
+         H[File System Storage]
+-        I[Optional Supabase Sync]
+     end
+-    
++
+     subgraph "External Services"
+         J[Cloud LLM APIs]
+-        K[NestJS Sync Service]
+-        L[Background Services]
+     end
+-    
++
+     A --> D
+     D --> G
+     D --> H
+     F --> G
+     F --> H
+-    G -.-> I
+-    I -.-> K
+     F -.-> J
+ ```
+ 
+ ### Platform-Specific Architecture
+ 
+ - **Desktop (macOS, Windows, Linux)**: Tauri + React frontend with Rust backend
+-- **Mobile (iOS, Android)**: React Native with shared TypeScript business logic
+-- **Shared Components**: TypeScript interfaces, data models, and AI logic
++- **Local Storage**: SQLite database with file system for all user data
++- **AI Integration**: Optional cloud LLM APIs with local fallback processing
+ 
+ ## Components and Interfaces
+ 
+ ### Core Components
+ 
+-#### 1. Dashboard Component
++#### 1. Planning Interface Component
++
+ ```typescript
+-interface DashboardProps {
++interface PlanningProps {
+   tasks: Task[];
+-  energyMetrics: EnergyMetrics;
+   weeklyPlan: WeeklyPlan;
+   suggestions: AISuggestion[];
+ }
+ 
+-interface EnergyMetrics {
+-  currentLevel: number;
+-  focusScore: number;
+-  productivityTrend: TrendData[];
+-  optimalTimes: TimeSlot[];
++interface WeeklyPlan {
++  startDate: Date;
++  endDate: Date;
++  scheduledTasks: Task[];
++  backlogTasks: Task[];
+ }
+ ```
+ 
+ #### 2. Task Management System
++
+ ```typescript
+ interface Task {
+   id: string;
+@@ -82,8 +78,8 @@ interface Task {
+   dependencies: string[];
+   timeEstimate: number;
+   actualTime: number;
+-  dueDate?: Date;           // When the task is due (deadline)
+-  scheduledDate?: Date;     // When the task is planned to be worked on
++  dueDate?: Date; // When the task is due (deadline)
++  scheduledDate?: Date; // When the task is planned to be worked on
+   tags: string[];
+ }
+ 
+@@ -97,6 +93,7 @@ interface TaskManager {
+ ```
+ 
+ #### Planning System Logic
++
+ The planning interface uses `scheduledDate` for organizing tasks into columns:
+ 
+ - **Backlog Column**: Tasks with `scheduledDate = null` (no scheduled work date)
+@@ -106,6 +103,7 @@ The planning interface uses `scheduledDate` for organizing tasks into columns:
+ Note: `dueDate` represents when a task must be completed (deadline), while `scheduledDate` represents when you plan to work on it. A task can have a due date but no scheduled date (appears in backlog until scheduled).
+ 
+ #### 3. Time Tracking Engine
++
+ ```typescript
+ interface TimeTracker {
+   startSession(taskId: string): Promise<TimerSession>;
+@@ -125,26 +123,8 @@ interface TimerSession {
+ }
+ ```
+ 
+-#### 4. Focus Environment Manager
+-```typescript
+-interface FocusManager {
+-  startFocusSession(config: FocusConfig): Promise<FocusSession>;
+-  endFocusSession(sessionId: string): Promise<FocusMetrics>;
+-  blockDistractions(): Promise<void>;
+-  restoreDistractions(): Promise<void>;
+-  updateWorkspace(context: TaskContext): Promise<void>;
+-}
+-
+-interface FocusConfig {
+-  duration: number;
+-  taskId: string;
+-  distractionLevel: DistractionLevel;
+-  backgroundAudio?: AudioConfig;
+-  breakReminders: boolean;
+-}
+-```
++#### 4. Kira AI Assistant
+ 
+-#### 5. Kira AI Assistant
+ ```typescript
+ interface KiraAI {
+   processMessage(message: string, context: AppContext): Promise<AIResponse>;
+@@ -154,7 +134,7 @@ interface KiraAI {
+ }
+ 
+ interface AIAction {
+-  type: 'CREATE_TASK' | 'START_TIMER' | 'SCHEDULE_FOCUS' | 'ANALYZE_PRODUCTIVITY';
++  type: 'CREATE_TASK' | 'START_TIMER' | 'UPDATE_TASK' | 'VIEW_TIME_DATA';
+   parameters: Record<string, any>;
+   context: AppContext;
+ }
+@@ -196,26 +176,12 @@ CREATE TABLE time_sessions (
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+ );
+ 
+--- Focus sessions
+-CREATE TABLE focus_sessions (
+-    id TEXT PRIMARY KEY,
+-    task_id TEXT REFERENCES tasks(id),
+-    duration INTEGER NOT NULL,
+-    actual_duration INTEGER,
+-    focus_score REAL,
+-    distraction_count INTEGER DEFAULT 0,
+-    notes TEXT,
+-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-);
+-
+--- User patterns and analytics
+-CREATE TABLE productivity_patterns (
++-- AI interactions and suggestions
++CREATE TABLE ai_interactions (
+     id TEXT PRIMARY KEY,
+-    user_id TEXT NOT NULL,
+-    pattern_type TEXT NOT NULL,
+-    time_slot TEXT,
+-    productivity_score REAL,
+-    confidence_level REAL,
++    message TEXT NOT NULL,
++    response TEXT NOT NULL,
++    action_taken TEXT,
+     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+ );
+ ```
+@@ -224,12 +190,10 @@ CREATE TABLE productivity_patterns (
+ 
+ ```typescript
+ interface AppState {
+-  user: UserState;
+   tasks: TaskState;
+   timer: TimerState;
+-  focus: FocusState;
+   ai: AIState;
+-  sync: SyncState;
++  ui: UIState;
+ }
+ 
+ interface TaskState {
+@@ -246,21 +210,25 @@ interface TaskState {
+ ### Error Categories and Strategies
+ 
+ #### 1. Network Errors
++
+ - **Strategy**: Graceful degradation with local-first approach
+ - **Implementation**: Queue sync operations, retry with exponential backoff
+ - **User Experience**: Show offline indicator, continue local operations
+ 
+ #### 2. Data Validation Errors
++
+ - **Strategy**: Client-side validation with server-side verification
+ - **Implementation**: TypeScript interfaces with runtime validation using Zod
+ - **User Experience**: Inline validation messages, prevent invalid submissions
+ 
+ #### 3. AI Service Errors
++
+ - **Strategy**: Fallback to local processing or simplified responses
+ - **Implementation**: Circuit breaker pattern for external AI services
+ - **User Experience**: Inform user of limited AI functionality, maintain core features
+ 
+ #### 4. Database Errors
++
+ - **Strategy**: Transaction rollback and data integrity preservation
+ - **Implementation**: SQLite WAL mode with automatic backup
+ - **User Experience**: Show error message, attempt automatic recovery
+@@ -291,16 +259,19 @@ class ErrorHandler {
+ ### Testing Pyramid
+ 
+ #### 1. Unit Tests (70%)
++
+ - **Framework**: Jest + React Testing Library
+ - **Coverage**: Individual components, utilities, and business logic
+ - **Focus**: Pure functions, component behavior, data transformations
+ 
+ #### 2. Integration Tests (20%)
++
+ - **Framework**: Jest + Supertest for API testing
+ - **Coverage**: Component interactions, database operations, AI tool integration
+ - **Focus**: Data flow between layers, API endpoints, state management
+ 
+ #### 3. End-to-End Tests (10%)
++
+ - **Framework**: Playwright for cross-platform testing
+ - **Coverage**: Critical user journeys, AI assistant interactions
+ - **Focus**: Complete workflows, cross-device synchronization
+@@ -308,34 +279,36 @@ class ErrorHandler {
+ ### AI-Specific Testing
+ 
+ #### 1. AI Response Testing
++
+ ```typescript
+ describe('Kira AI Assistant', () => {
+   test('should create task from natural language', async () => {
+     const response = await kira.processMessage(
+-      "Create a task to review the quarterly report by Friday",
++      'Create a task to review the quarterly report by Friday',
+       mockContext
+     );
+-    
++
+     expect(response.actions).toContainEqual({
+       type: 'CREATE_TASK',
+       parameters: {
+         title: expect.stringContaining('quarterly report'),
+-        dueDate: expect.any(Date)
+-      }
++        dueDate: expect.any(Date),
++      },
+     });
+   });
+ });
+ ```
+ 
+-#### 2. Pattern Recognition Testing
++#### 2. Time Tracking Testing
++
+ ```typescript
+-describe('Pattern Analysis', () => {
+-  test('should identify productivity patterns', async () => {
+-    const mockData = generateMockProductivityData();
+-    const patterns = await kira.analyzePatterns('user123');
+-    
+-    expect(patterns.optimalTimes).toBeDefined();
+-    expect(patterns.energyLevels).toHaveLength(7); // 7 days
++describe('Time Tracking', () => {
++  test('should track time sessions accurately', async () => {
++    const session = await timeTracker.startSession('task123');
++    await timeTracker.stopSession(session.id, 'Completed task');
++
++    expect(session.taskId).toBe('task123');
++    expect(session.endTime).toBeDefined();
+   });
+ });
+ ```
+@@ -343,16 +316,19 @@ describe('Pattern Analysis', () => {
+ ### Performance Testing
+ 
+ #### 1. Database Performance
++
+ - Test query performance with large datasets
+ - Validate indexing strategies
+ - Monitor memory usage during sync operations
+ 
+ #### 2. AI Response Times
++
+ - Benchmark local vs cloud AI processing
+ - Test fallback mechanisms
+ - Validate caching strategies
+ 
+ #### 3. Cross-Platform Performance
++
+ - Test startup times across platforms
+ - Validate memory usage on mobile devices
+ - Monitor battery impact on mobile platforms
+@@ -360,11 +336,13 @@ describe('Pattern Analysis', () => {
+ ### Security Testing
+ 
+ #### 1. Data Privacy
++
+ - Validate local data encryption
+ - Test data anonymization for cloud sync
+ - Verify no sensitive data in logs
+ 
+ #### 2. AI Security
++
+ - Test prompt injection resistance
+ - Validate tool access permissions
+ - Monitor for data leakage in AI responses
+@@ -372,25 +350,29 @@ describe('Pattern Analysis', () => {
+ ## Implementation Considerations
+ 
+ ### Privacy-First Design
+-- All sensitive data processing occurs locally by default
+-- Cloud sync uses encrypted, anonymized data
+-- User has granular control over data sharing
++
++- All sensitive data processing and storage occurs locally
++- No personal data shared with external services without explicit consent
++- User has full control over AI interactions and data usage
+ - AI explanations are transparent and auditable
+ 
+ ### Performance Optimization
++
+ - Lazy loading for large task lists
+ - Virtual scrolling for time tracking visualizations
+ - Debounced AI suggestions to prevent excessive API calls
+ - Efficient SQLite queries with proper indexing
+ 
+ ### Accessibility
++
+ - Full keyboard navigation support
+ - Screen reader compatibility
+ - High contrast mode support
+ - Customizable font sizes and UI scaling
+ 
+-### Internationalization
+-- Support for multiple languages
+-- Locale-aware date and time formatting
+-- Cultural considerations for productivity patterns
+-- RTL language support
+\ No newline at end of file
++### Cross-Platform Consistency
++
++- Native feel on macOS, Windows, and Linux
++- Consistent design language across platforms
++- Platform-specific optimizations and integrations
++- Responsive design for different screen sizes
+
+--- FILE: .kiro/specs/kirapilot-app/future_plan.md ---
+diff --git a/.kiro/specs/kirapilot-app/future_plan.md b/.kiro/specs/kirapilot-app/future_plan.md
+new file mode 100644
+index 0000000..eb90aa3
+--- /dev/null
++++ b/.kiro/specs/kirapilot-app/future_plan.md
+@@ -0,0 +1,103 @@
++# Future Development Plan
++
++This document outlines features and capabilities that are planned for future phases of KiraPilot development, after the core MVP is complete.
++
++## Phase 2: Advanced Focus and Analytics
++
++### Focus Environment System
++
++- **Distraction Blocking**: System-level distraction blocking during deep work sessions
++- **Dynamic Workspace**: Context-aware UI adaptation based on current task type
++- **Background Audio**: Integration with ambient sounds and focus music
++- **Focus Metrics**: Detailed focus session analytics and session replay capabilities
++- **Break Management**: Intelligent break reminders and session optimization
++
++### Pattern Recognition and Analytics
++
++- **Productivity Patterns**: AI-powered analysis of optimal work times and energy levels
++- **Habit Correlation**: Analysis of how different activities impact productivity
++- **Automatic Scheduling**: Smart suggestions for task scheduling based on personal patterns
++- **Energy Tracking**: Personal energy level monitoring throughout the day
++- **Advanced Analytics**: Comprehensive productivity insights and trend analysis
++
++## Phase 3: Cross-Platform and Synchronization
++
++### Mobile Applications
++
++- **iOS App**: Native iOS application with shared business logic
++- **Android App**: Native Android application with consistent experience
++- **Responsive Design**: Seamless transitions between desktop and mobile interfaces
++- **Touch Optimization**: Mobile-optimized interactions and gestures
++
++### Data Synchronization
++
++- **Cloud Sync**: Optional cloud synchronization across devices
++- **Conflict Resolution**: Intelligent handling of data conflicts between devices
++- **Offline Support**: Full functionality with sync queue for offline operations
++- **Privacy Controls**: Granular control over what data is synchronized
++
++### Backend Infrastructure
++
++- **NestJS API**: Scalable backend service for advanced sync features
++- **Supabase Integration**: Real-time data synchronization infrastructure
++- **Data Encryption**: End-to-end encryption for cloud-stored data
++- **User Authentication**: Secure user accounts and device management
++
++## Phase 4: Advanced AI and Automation
++
++### Enhanced AI Capabilities
++
++- **Advanced Pattern Analysis**: Deep learning models for productivity optimization
++- **Predictive Scheduling**: AI-powered automatic task scheduling
++- **Contextual Insights**: More sophisticated productivity recommendations
++- **Natural Language Processing**: Enhanced understanding of complex user requests
++- **Proactive Assistance**: Intelligent notifications and productivity coaching
++
++### Automation Features
++
++- **Workflow Automation**: Custom automation rules and triggers
++- **Integration APIs**: Third-party service integrations (calendars, project management)
++- **Smart Templates**: AI-generated task templates based on patterns
++- **Batch Operations**: Bulk task management and organization features
++
++## Phase 5: Enterprise and Collaboration
++
++### Team Features
++
++- **Team Workspaces**: Shared task management and collaboration
++- **Project Management**: Advanced project tracking and reporting
++- **Team Analytics**: Productivity insights for teams and managers
++- **Permission System**: Role-based access control and data sharing
++
++### Enterprise Integration
++
++- **SSO Integration**: Single sign-on with enterprise identity providers
++- **Compliance Features**: Data governance and audit trails
++- **Custom Deployment**: On-premises and private cloud deployment options
++- **API Access**: Full REST API for enterprise integrations
++
++## Implementation Priorities
++
++1. **Core MVP** (Current Phase): Task management, time tracking, basic AI assistant
++2. **Focus & Analytics** (Phase 2): Advanced productivity features and insights
++3. **Cross-Platform** (Phase 3): Mobile apps and synchronization
++4. **Advanced AI** (Phase 4): Enhanced automation and intelligence
++5. **Enterprise** (Phase 5): Team collaboration and enterprise features
++
++## Technical Considerations
++
++### Architecture Evolution
++
++- Maintain local-first approach while adding optional cloud features
++- Ensure backward compatibility as new features are added
++- Design APIs and data models to support future enhancements
++- Plan for scalability and performance optimization
++
++### Privacy and Security
++
++- Maintain privacy-first principles throughout all phases
++- Implement progressive privacy controls as features are added
++- Ensure user control over data sharing and synchronization
++- Regular security audits and updates
++
++This roadmap provides a clear path for KiraPilot's evolution while maintaining focus on the core productivity experience in the initial release.
+
+--- FILE: .kiro/specs/kirapilot-app/requirements.md ---
+diff --git a/.kiro/specs/kirapilot-app/requirements.md b/.kiro/specs/kirapilot-app/requirements.md
+index e278386..605e674 100644
+--- a/.kiro/specs/kirapilot-app/requirements.md
++++ b/.kiro/specs/kirapilot-app/requirements.md
+@@ -2,17 +2,17 @@
+ 
+ ## Introduction
+ 
+-KiraPilot is a cross-platform productivity application that combines task management, time tracking, and focus tools with an intelligent AI assistant named Kira. The application aims to help users take control of their time and tasks through a beautifully designed, native-feeling interface that adapts to individual productivity patterns and provides contextual assistance.
++KiraPilot is a desktop productivity application that combines task management, time tracking, and an intelligent AI assistant named Kira. The application aims to help users take control of their time and tasks through a beautifully designed, native-feeling interface with local data storage for privacy and performance.
+ 
+ ## Requirements
+ 
+ ### Requirement 1
+ 
+-**User Story:** As a user, I want a centralized dashboard that shows weekly/daily planning interface, and analytics/report so that I can quickly understand my current productivity state and upcoming commitments.
++**User Story:** As a user, I want a centralized planning interface that shows weekly/daily task organization, so that I can quickly understand my current productivity state and upcoming commitments.
+ 
+ #### Acceptance Criteria
+ 
+-1. WHEN the user opens the application THEN the system SHALL display a planning interface with weekly/daily planner. Other tabs can be Calendar, Analytics, Settings.
++1. WHEN the user opens the application THEN the system SHALL display a planning interface with weekly/daily planner as the main view
+ 2. WHEN the user accesses planning THEN the system SHALL provide a drag-and-drop interface for task scheduling
+ 3. WHEN tasks are organized in planning views THEN the system SHALL categorize tasks as follows:
+    - **Backlog**: Tasks without a scheduled date (scheduledDate = null)
+@@ -39,66 +39,42 @@ KiraPilot is a cross-platform productivity application that combines task manage
+ 
+ 1. WHEN the user starts a task THEN the system SHALL provide a built-in timer with start, pause, and reset functionality
+ 2. WHEN time tracking is active THEN the system SHALL allow users to add session notes for context capturing
+-3. WHEN the user completes time tracking sessions THEN the system SHALL generate beautiful charts and visualizations of time data
+-4. WHEN the system analyzes time patterns THEN it SHALL provide automatic time-boxing suggestions based on historical data
+-5. WHEN the user views time data THEN the system SHALL display time allocation across different tasks and projects
++3. WHEN the user completes time tracking sessions THEN the system SHALL generate charts and visualizations of time data
++4. WHEN the user views time data THEN the system SHALL display time allocation across different tasks and projects
++5. WHEN the user reviews time history THEN the system SHALL provide session details and productivity insights
+ 
+ ### Requirement 4
+ 
+-**User Story:** As a user, I want a focus environment that minimizes distractions and adapts to my work context, so that I can maintain deep concentration during important tasks.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the user enters focus mode THEN the system SHALL block distractions and notifications during deep work sessions
+-2. WHEN the user starts a focus session THEN the system SHALL create a dynamic workspace based on the current task context
+-3. WHEN the user is in focus mode THEN the system SHALL provide background noise and music integration options
+-4. WHEN focus sessions complete THEN the system SHALL track focus metrics and provide session replay capabilities
+-5. WHEN the user exits focus mode THEN the system SHALL restore normal notification and distraction settings
+-
+-### Requirement 5
+-
+-**User Story:** As a user, I want the system to recognize my productivity patterns and provide intelligent insights, so that I can optimize my work schedule and habits.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the user completes tasks over time THEN the system SHALL analyze productivity patterns across days and weeks
+-2. WHEN the system detects energy patterns THEN it SHALL identify personal energy levels throughout different times
+-3. WHEN patterns are established THEN the system SHALL provide automatic scheduling suggestions based on optimal productivity times
+-4. WHEN the user performs activities THEN the system SHALL analyze habit correlations and their impact on productivity
+-5. WHEN insights are available THEN the system SHALL present analytics in clear, actionable visualizations
+-
+-### Requirement 6
+-
+ **User Story:** As a user, I want to interact with Kira AI assistant through natural language to control the app and receive intelligent suggestions, so that I can manage my productivity more efficiently and intuitively.
+ 
+ #### Acceptance Criteria
+ 
+ 1. WHEN the user communicates with Kira THEN the system SHALL provide a natural language interface for app control
+-2. WHEN Kira processes requests THEN the AI SHALL have access to all app features and functionality through tool-based architecture
+-3. WHEN the user needs assistance THEN Kira SHALL provide context-aware suggestions and insights based on current state and patterns
+-4. WHEN appropriate THEN Kira SHALL send proactive notifications and reminders without being intrusive
++2. WHEN Kira processes requests THEN the AI SHALL have access to task management and time tracking features through tool-based architecture
++3. WHEN the user needs assistance THEN Kira SHALL provide context-aware suggestions based on current tasks and time data
++4. WHEN appropriate THEN Kira SHALL send helpful notifications and reminders without being intrusive
+ 5. WHEN the user asks questions THEN Kira SHALL provide explanations for its suggestions and recommendations
+ 
+-### Requirement 7
++### Requirement 5
+ 
+-**User Story:** As a user, I want the application to work seamlessly across all my devices with consistent experience, so that I can access my productivity tools wherever I am.
++**User Story:** As a user, I want the application to work consistently on desktop platforms, so that I can access my productivity tools with native performance and feel.
+ 
+ #### Acceptance Criteria
+ 
+-1. WHEN the user accesses the app on different platforms THEN the system SHALL provide consistent experience across macOS, Windows, Linux, iOS, and Android
+-2. WHEN the user switches between devices THEN the system SHALL maintain smooth transitions between desktop and mobile interfaces
+-3. WHEN the app runs on different screen sizes THEN the system SHALL use responsive design that adapts to available screen space
+-4. WHEN the user interacts with the app THEN it SHALL feel native on each platform while maintaining design cohesion
+-5. WHEN data synchronization is enabled THEN the system SHALL sync user data across devices through optional cloud connectivity
++1. WHEN the user accesses the app on different desktop platforms THEN the system SHALL provide consistent experience across macOS, Windows, and Linux
++2. WHEN the app runs on different screen sizes THEN the system SHALL use responsive design that adapts to available screen space
++3. WHEN the user interacts with the app THEN it SHALL feel native on each platform while maintaining design cohesion
++4. WHEN the app starts THEN it SHALL load quickly with local data storage for optimal performance
++5. WHEN the user works offline THEN the system SHALL maintain full functionality without internet connectivity
+ 
+-### Requirement 8
++### Requirement 6
+ 
+ **User Story:** As a user, I want my personal data to remain private and secure, so that I can trust the application with my sensitive productivity information.
+ 
+ #### Acceptance Criteria
+ 
+-1. WHEN the system processes sensitive information THEN it SHALL use local processing by default
+-2. WHEN cloud connectivity is offered THEN the system SHALL provide clear user control over data sharing
+-3. WHEN AI operations occur THEN the system SHALL provide transparent explanations for suggestions and decisions
+-4. WHEN data is stored THEN the system SHALL not share information with third parties without explicit user consent
+-5. WHEN the user configures privacy settings THEN the system SHALL respect those preferences across all features
+\ No newline at end of file
++1. WHEN the system processes sensitive information THEN it SHALL use local processing and storage by default
++2. WHEN AI operations occur THEN the system SHALL provide transparent explanations for suggestions and decisions
++3. WHEN data is stored THEN the system SHALL keep all information locally on the user's device
++4. WHEN the user configures privacy settings THEN the system SHALL respect those preferences across all features
++5. WHEN the system makes AI requests THEN it SHALL not share personal task or time data with external services
+
+--- FILE: .kiro/specs/kirapilot-app/tasks.md ---
+diff --git a/.kiro/specs/kirapilot-app/tasks.md b/.kiro/specs/kirapilot-app/tasks.md
+index f9ce225..fe217c0 100644
+--- a/.kiro/specs/kirapilot-app/tasks.md
++++ b/.kiro/specs/kirapilot-app/tasks.md
+@@ -83,132 +83,45 @@
+   - Run build and fix issues at the final
+   - Adjust linting configs to improve it and iterate
+ 
+-- [ ] 5. Develop focus environment system
+-- [ ] 5.1 Implement focus session management
+-  - Create FocusSession component with configuration options
+-  - Build distraction blocking functionality using Tauri system APIs
+-  - Implement background audio integration
+-  - Create focus metrics tracking and storage
+-  - Add break reminder system
+-  - Write tests for focus session lifecycle
+-  - _Requirements: 4.1, 4.4_
+-
+-- [ ] 5.2 Build dynamic workspace adaptation
+-  - Implement workspace context detection based on current task
+-  - Create UI adaptation system for different task types
+-  - Build focus metrics visualization and session replay
+-  - Add focus environment customization options
+-  - Create focus session analytics dashboard
+-  - Write tests for workspace adaptation logic
+-  - _Requirements: 4.2, 4.4_
+-
+-- [ ] 6. Create pattern recognition and analytics system
+-- [ ] 6.1 Implement productivity pattern analysis
+-  - Build data collection system for user activity patterns
+-  - Create algorithms for detecting optimal productivity times
+-  - Implement energy level tracking and analysis
+-  - Build habit correlation analysis system
+-  - Create pattern confidence scoring
+-  - Write unit tests for pattern detection algorithms
+-  - _Requirements: 5.1, 5.2, 5.4_
+-
+-- [ ] 6.2 Build analytics dashboard and insights
+-  - Create ProductivityAnalytics component with visualizations
+-  - Implement automatic scheduling suggestions based on patterns
+-  - Build insights generation system with actionable recommendations
+-  - Create pattern-based notification system
+-  - Add analytics export functionality
+-  - Write tests for analytics calculations and suggestions
+-  - _Requirements: 5.3, 5.5_
+-
+-- [ ] 7. Develop Kira AI assistant foundation
+-- [ ] 7.1 Set up AI service architecture
++- [ ] 5. Develop Kira AI assistant foundation
++- [ ] 5.1 Set up AI service architecture
+   - Create AIService interface and implementation
+-  - Set up local LLM integration with fallback to cloud APIs
++  - Set up cloud LLM API integration with error handling
+   - Implement conversation context management
+   - Build AI response parsing and action extraction
+   - Create AI service error handling and fallback mechanisms
+   - Write unit tests for AI service components
+-  - _Requirements: 6.1, 6.2, 8.2_
++  - _Requirements: 4.1, 4.2, 6.2_
+ 
+-- [ ] 7.2 Implement AI tool system for app control
++- [ ] 5.2 Implement AI tool system for app control
+   - Create tool definitions for task management operations
+-  - Build tools for time tracking and focus session control
+-  - Implement analytics and pattern analysis tools
++  - Build tools for time tracking control and data retrieval
+   - Create tool execution engine with permission system
+   - Add tool result formatting and user feedback
+   - Write integration tests for AI tool execution
+-  - _Requirements: 6.2, 6.3_
++  - _Requirements: 4.2, 4.3_
+ 
+-- [ ] 7.3 Build natural language interface
++- [ ] 5.3 Build natural language interface
+   - Create chat interface component for AI interactions
+   - Implement message parsing and intent recognition
+   - Build context-aware suggestion generation
+-  - Create proactive notification system
++  - Create helpful notification system
+   - Add conversation history and context persistence
+   - Write tests for natural language processing
+-  - _Requirements: 6.1, 6.4, 6.5_
+-
+-- [ ] 8. Create command center dashboard
+-- [ ] 8.1 Build main dashboard layout and components
+-  - Create Dashboard component with responsive grid layout
+-  - Implement task overview with status indicators
+-  - Build energy and focus metrics display
+-  - Create quick action buttons and shortcuts
+-  - Add real-time data updates and refresh mechanisms
+-  - Write tests for dashboard component rendering
+-  - _Requirements: 1.1, 1.2, 1.3_
+-
+-- [ ] 8.2 Integrate AI suggestions and insights
+-  - Add AI suggestion cards to dashboard
+-  - Implement context-aware recommendation display
+-  - Create suggestion interaction and dismissal system
+-  - Build personalized dashboard customization
+-  - Add dashboard analytics and usage tracking
+-  - Write integration tests for AI-dashboard interaction
+-  - _Requirements: 1.5, 6.3, 6.4_
+-
+-- [ ] 9. Implement cross-platform synchronization
+-- [ ] 9.1 Build local-first sync architecture
+-  - Create sync service with conflict resolution
+-  - Implement data encryption for cloud storage
+-  - Build offline queue for sync operations
+-  - Create sync status indicators and user controls
+-  - Add privacy controls for data sharing
+-  - Write tests for sync operations and conflict resolution
+-  - _Requirements: 7.2, 8.1, 8.4_
+-
+-- [ ] 9.2 Set up optional cloud backend integration
+-  - Configure Supabase integration for data synchronization
+-  - Implement user authentication and authorization
+-  - Build NestJS API service for advanced sync features
+-  - Create data anonymization for cloud analytics
+-  - Add sync monitoring and error reporting
+-  - Write integration tests for cloud sync functionality
+-  - _Requirements: 7.2, 8.2, 8.5_
+-
+-- [ ] 10. Implement privacy and security features
+-- [ ] 10.1 Build privacy controls and data management
++  - _Requirements: 4.1, 4.4, 4.5_
++
++- [ ] 6. Implement privacy and security features
++- [ ] 6.1 Build privacy controls and data management
+   - Create privacy settings interface
+-  - Implement local data encryption
++  - Implement local data storage security
+   - Build data export and deletion functionality
+   - Create transparent AI operation logging
+-  - Add user consent management for cloud features
++  - Add user control over AI data usage
+   - Write tests for privacy and security features
+-  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+-
+-- [ ] 11. Add cross-platform mobile support preparation
+-- [ ] 11.1 Create shared business logic layer
+-  - Extract core business logic into platform-agnostic modules
+-  - Create shared TypeScript interfaces and utilities
+-  - Build platform abstraction layer for native features
+-  - Implement shared state management patterns
+-  - Create mobile-responsive UI components
+-  - Write tests for shared business logic
+-  - _Requirements: 7.1, 7.3, 7.4_
+-
+-- [ ] 12. Implement comprehensive testing and quality assurance
+-- [ ] 12.1 Set up testing infrastructure and write comprehensive tests
++  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
++
++- [ ] 7. Implement comprehensive testing and quality assurance
++- [ ] 7.1 Set up testing infrastructure and write comprehensive tests
+   - Configure Jest and React Testing Library for unit tests
+   - Set up Playwright for end-to-end testing
+   - Create test utilities and mock data generators
+@@ -217,12 +130,12 @@
+   - Create accessibility testing suite
+   - _Requirements: All requirements validation_
+ 
+-- [ ] 13. Build production deployment and distribution
+-- [ ] 13.1 Configure build and deployment pipeline
++- [ ] 8. Build production deployment and distribution
++- [ ] 8.1 Configure build and deployment pipeline
+   - Set up Tauri build configuration for all platforms
+   - Create automated testing and build pipeline
+   - Configure code signing and app store distribution
+   - Implement crash reporting and analytics
+   - Create user documentation and onboarding
+   - Set up monitoring and error tracking
+-  - _Requirements: 7.1, 7.4_
++  - _Requirements: 5.1, 5.4_
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

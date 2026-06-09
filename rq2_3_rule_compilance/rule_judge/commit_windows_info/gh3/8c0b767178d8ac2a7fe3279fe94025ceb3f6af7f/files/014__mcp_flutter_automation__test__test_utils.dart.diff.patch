@@ -1,0 +1,181 @@
+diff --git a/mcp_flutter_automation/test/test_utils.dart b/mcp_flutter_automation/test/test_utils.dart
+index ca734fa..b7647ff 100644
+--- a/mcp_flutter_automation/test/test_utils.dart
++++ b/mcp_flutter_automation/test/test_utils.dart
+@@ -9,7 +9,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
+ class TestUtils {
+   /// Creates a temporary directory for testing
+   static Directory createTempDir() {
+-    final tempDir = Directory.systemTemp.createTempSync('flutter_automation_test_');
++    final tempDir =
++        Directory.systemTemp.createTempSync('flutter_automation_test_');
+     addTearDown(() {
+       if (tempDir.existsSync()) {
+         tempDir.deleteSync(recursive: true);
+@@ -17,14 +18,14 @@ class TestUtils {
+     });
+     return tempDir;
+   }
+-  
++
+   /// Creates a mock Flutter project structure
+   static Directory createMockFlutterProject({String? name}) {
+     final projectName = name ?? 'test_flutter_app';
+     final projectDir = createTempDir();
+     final libDir = Directory('${projectDir.path}/lib');
+     libDir.createSync();
+-    
++
+     // Create pubspec.yaml
+     final pubspecFile = File('${projectDir.path}/pubspec.yaml');
+     pubspecFile.writeAsStringSync('''
+@@ -48,7 +49,7 @@ dev_dependencies:
+ flutter:
+   uses-material-design: true
+ ''');
+-    
++
+     // Create main.dart
+     final mainFile = File('${libDir.path}/main.dart');
+     mainFile.writeAsStringSync('''
+@@ -122,10 +123,10 @@ class _MyHomePageState extends State<MyHomePage> {
+   }
+ }
+ ''');
+-    
++
+     return projectDir;
+   }
+-  
++
+   /// Creates a mock VM service response
+   static Map<String, dynamic> createMockVmResponse({
+     String? version,
+@@ -141,24 +142,27 @@ class _MyHomePageState extends State<MyHomePage> {
+       'version': version ?? '3.8.1 (stable)',
+       'pid': 12345,
+       'startTime': DateTime.now().millisecondsSinceEpoch,
+-      'isolates': isolateIds?.map((id) => {
+-        'type': '@Isolate',
+-        'id': id,
+-        'number': id.split('/').last,
+-        'name': 'main',
+-        'isSystemIsolate': false,
+-      }).toList() ?? [
+-        {
+-          'type': '@Isolate',
+-          'id': 'isolates/123456789',
+-          'number': '123456789',
+-          'name': 'main',
+-          'isSystemIsolate': false,
+-        }
+-      ],
++      'isolates': isolateIds
++              ?.map((id) => {
++                    'type': '@Isolate',
++                    'id': id,
++                    'number': id.split('/').last,
++                    'name': 'main',
++                    'isSystemIsolate': false,
++                  })
++              .toList() ??
++          [
++            {
++              'type': '@Isolate',
++              'id': 'isolates/123456789',
++              'number': '123456789',
++              'name': 'main',
++              'isSystemIsolate': false,
++            }
++          ],
+     };
+   }
+-  
++
+   /// Creates a mock screenshot response
+   static Map<String, dynamic> createMockScreenshotResponse() {
+     // Create a simple base64 encoded 1x1 pixel PNG
+@@ -173,13 +177,13 @@ class _MyHomePageState extends State<MyHomePage> {
+       0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, // IEND chunk
+       0x42, 0x60, 0x82
+     ];
+-    
++
+     return {
+       'type': 'Success',
+       'screenshot': base64Encode(pngBytes),
+     };
+   }
+-  
++
+   /// Creates a mock widget tree response
+   static Map<String, dynamic> createMockWidgetTreeResponse() {
+     return {
+@@ -212,7 +216,7 @@ class _MyHomePageState extends State<MyHomePage> {
+       },
+     };
+   }
+-  
++
+   /// Waits for a condition to be true with timeout
+   static Future<void> waitForCondition(
+     bool Function() condition, {
+@@ -220,16 +224,16 @@ class _MyHomePageState extends State<MyHomePage> {
+     Duration pollInterval = const Duration(milliseconds: 100),
+   }) async {
+     final stopwatch = Stopwatch()..start();
+-    
++
+     while (!condition() && stopwatch.elapsed < timeout) {
+       await Future.delayed(pollInterval);
+     }
+-    
++
+     if (!condition()) {
+       throw TimeoutException('Condition not met within $timeout', timeout);
+     }
+   }
+-  
++
+   /// Creates a mock process that outputs specific lines
+   static Map<String, dynamic> createMockProcessInfo({
+     List<String>? stdoutLines,
+@@ -249,11 +253,12 @@ class CustomMatchers {
+   /// Matcher for checking if a string contains VM service URL
+   static Matcher containsVmServiceUrl() {
+     return predicate<String>(
+-      (value) => RegExp(r'VM Service[^\n]*at[:\s]+(http[^\s]+)').hasMatch(value),
++      (value) =>
++          RegExp(r'VM Service[^\n]*at[:\s]+(http[^\s]+)').hasMatch(value),
+       'contains VM service URL',
+     );
+   }
+-  
++
+   /// Matcher for checking base64 encoded images
+   static Matcher isBase64Image() {
+     return predicate<String>(
+@@ -261,11 +266,11 @@ class CustomMatchers {
+         try {
+           final decoded = base64Decode(value);
+           // Check if it starts with PNG signature
+-          return decoded.length > 8 && 
+-                 decoded[0] == 0x89 && 
+-                 decoded[1] == 0x50 && 
+-                 decoded[2] == 0x4E && 
+-                 decoded[3] == 0x47;
++          return decoded.length > 8 &&
++              decoded[0] == 0x89 &&
++              decoded[1] == 0x50 &&
++              decoded[2] == 0x4E &&
++              decoded[3] == 0x47;
+         } catch (e) {
+           return false;
+         }
+@@ -314,4 +319,4 @@ RenderFlex overflowed by 42.0 pixels on the right.
+   }
+ ]
+ ''';
+-}
+\ No newline at end of file
++}

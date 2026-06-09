@@ -1,0 +1,962 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - **Dependency Injection** pattern with Injectable + GetIt
++ - **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dart source code files (specifically those identified as Services and ViewModels via naming conventions or directory structure), and annotations from the 'injectable' package.
+- Suggested Logic: 1. Identify 'Service' files (e.g., files in 'services/' or named '*_service.dart') and verify they contain @injectable, @singleton, or @lazySingleton annotations.
+2. Identify 'ViewModel' files (e.g., files in 'view_models/' or named '*_view_model.dart') and verify they do NOT contain 'injectable' package annotations.
+3. Verify that ViewModels are instantiated using class constructors (e.g., 'HomeViewModel()') and not via GetIt resolution (e.g., 'getIt<HomeViewModel>()').
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: refactor: enhance authentication service error handling and test coverage
+
+- Improve token storage error handling in AuthService init method
+- Add comprehensive error scenario testing for token storage operations
+- Enhance authentication service unit tests with mock ITokenStorage
+- Update generated mock files for improved test reliability
+- Ensure graceful handling of storage failures during token cleanup
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+- Changed Files List: 
+lib/src/init.config.dart	+3	-3	after_lines=128
+lib/src/services/auth_service.dart	+17	-8	after_lines=110
+test/integration/di_factory_integration_test.dart	+21	-7	after_lines=271
+test/screens/home_screen/home_viewmodel_test.mocks.dart	+5	-35	after_lines=186
+test/screens/login_screen/login_route_provider_test.mocks.dart	+6	-6	after_lines=121
+test/services/auth_service_test.dart	+317	-1	after_lines=456
+test/services/auth_service_test.mocks.dart	+36	-0	after_lines=142
+
+- Project Directory Tree (Snapshot after commit):
+├── .claude
+│   └── settings.local.json
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── kiro-lessons.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── CLAUDE.md
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── base_viewmodel.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_route_provider.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   └── home_viewmodel_factory.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   ├── loading_route_provider.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_route_provider.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   └── user_details
+│       │       ├── user_details_route.dart
+│       │       ├── user_details_route_provider.dart
+│       │       ├── user_details_screen.dart
+│       │       ├── user_details_viewmodel.dart
+│       │       └── user_details_viewmodel_factory.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── integration
+    │   ├── auth_integration_test.dart
+    │   ├── auth_integration_test.mocks.dart
+    │   ├── di_factory_integration_test.dart
+    │   ├── di_factory_integration_test.mocks.dart
+    │   ├── modular_architecture_test.dart
+    │   └── modular_architecture_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── app
+    │   │   ├── auth_viewmodel_test.dart
+    │   │   └── auth_viewmodel_test.mocks.dart
+    │   ├── base_viewmodel_test.dart
+    │   ├── home_screen
+    │   │   ├── home_route_provider_test.dart
+    │   │   ├── home_route_provider_test.mocks.dart
+    │   │   ├── home_route_test.dart
+    │   │   ├── home_screen_test.dart
+    │   │   ├── home_screen_test.mocks.dart
+    │   │   ├── home_viewmodel_factory_test.dart
+    │   │   ├── home_viewmodel_factory_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   └── home_viewmodel_test.mocks.dart
+    │   ├── loading_screen
+    │   │   ├── loading_route_provider_test.dart
+    │   │   ├── loading_route_provider_test.mocks.dart
+    │   │   ├── loading_route_test.dart
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   ├── login_screen
+    │   │   ├── login_route_provider_test.dart
+    │   │   ├── login_route_provider_test.mocks.dart
+    │   │   ├── login_route_test.dart
+    │   │   ├── login_screen_test.dart
+    │   │   ├── login_screen_test.mocks.dart
+    │   │   ├── login_viewmodel_factory_test.dart
+    │   │   ├── login_viewmodel_factory_test.mocks.dart
+    │   │   ├── login_viewmodel_test.dart
+    │   │   └── login_viewmodel_test.mocks.dart
+    │   └── user_details
+    │       ├── user_details_route_provider_test.dart
+    │       ├── user_details_route_provider_test.mocks.dart
+    │       ├── user_details_route_test.dart
+    │       ├── user_details_screen_test.dart
+    │       ├── user_details_screen_test.mocks.dart
+    │       ├── user_details_viewmodel_factory_test.dart
+    │       └── user_details_viewmodel_test.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: lib/src/init.config.dart ---
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 5b682c1..cb550ae 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -47,12 +47,12 @@ extension GetItInjectableX on _i174.GetIt {
+     final envModule = _$EnvModule();
+     final githubAuthHttpClientModule = _$GithubAuthHttpClientModule();
+     final ferryModule = _$FerryModule();
+-    gh.factory<_i482.RouteCollectionService>(
+-      () => _i482.RouteCollectionService(),
+-    );
+     gh.factory<_i627.UserDetailsViewModelFactory>(
+       () => _i627.UserDetailsViewModelFactory(),
+     );
++    gh.factory<_i482.RouteCollectionService>(
++      () => _i482.RouteCollectionService(),
++    );
+     gh.lazySingleton<_i589.Env>(() => envModule.env);
+     gh.lazySingleton<_i519.Client>(() => githubAuthHttpClientModule.httpClient);
+     gh.lazySingleton<_i1066.TimerService>(() => _i1066.DefaultTimerService());
+
+--- FILE: lib/src/services/auth_service.dart ---
+diff --git a/lib/src/services/auth_service.dart b/lib/src/services/auth_service.dart
+index 215ed53..46e0a2d 100644
+--- a/lib/src/services/auth_service.dart
++++ b/lib/src/services/auth_service.dart
+@@ -24,15 +24,24 @@ class AuthService {
+ 
+   /// Initialize service: load token from storage and validate.
+   Future<void> init() async {
+-    // Load existing token
+-    final token = await _tokenStorage.getToken();
+-    if (token != null) {
+-      final valid = await _checkTokenValid(token);
+-      if (valid) {
+-        _accessToken = token;
+-      } else {
+-        await _tokenStorage.deleteToken();
++    try {
++      // Load existing token
++      final token = await _tokenStorage.getToken();
++      if (token != null) {
++        final valid = await _checkTokenValid(token);
++        if (valid) {
++          _accessToken = token;
++        } else {
++          try {
++            await _tokenStorage.deleteToken();
++          } catch (_) {
++            // Ignore delete errors during cleanup
++          }
++        }
+       }
++    } catch (_) {
++      // If token storage fails, start with no token
++      _accessToken = null;
+     }
+   }
+
+--- FILE: test/integration/di_factory_integration_test.dart ---
+diff --git a/test/integration/di_factory_integration_test.dart b/test/integration/di_factory_integration_test.dart
+index 9750e2b..e6f2d5d 100644
+--- a/test/integration/di_factory_integration_test.dart
++++ b/test/integration/di_factory_integration_test.dart
+@@ -64,10 +64,17 @@ void main() {
+       );
+ 
+       // Test route providers can be created from factories
+-      final homeProvider = HomeRouteProvider(GetIt.I<HomeViewModelFactory>(), authViewModel);
+-      final loginProvider = LoginRouteProvider(GetIt.I<LoginViewModelFactory>());
++      final homeProvider = HomeRouteProvider(
++        GetIt.I<HomeViewModelFactory>(),
++        authViewModel,
++      );
++      final loginProvider = LoginRouteProvider(
++        GetIt.I<LoginViewModelFactory>(),
++      );
+       final loadingProvider = LoadingRouteProvider(authViewModel);
+-      final userDetailsProvider = UserDetailsRouteProvider(GetIt.I<UserDetailsViewModelFactory>());
++      final userDetailsProvider = UserDetailsRouteProvider(
++        GetIt.I<UserDetailsViewModelFactory>(),
++      );
+ 
+       // Verify all providers can be created
+       expect(homeProvider, isNotNull);
+@@ -175,10 +182,17 @@ void main() {
+       );
+ 
+       // Create route providers manually (not registered with GetIt)
+-      final homeProvider = HomeRouteProvider(GetIt.I<HomeViewModelFactory>(), authViewModel);
+-      final loginProvider = LoginRouteProvider(GetIt.I<LoginViewModelFactory>());
++      final homeProvider = HomeRouteProvider(
++        GetIt.I<HomeViewModelFactory>(),
++        authViewModel,
++      );
++      final loginProvider = LoginRouteProvider(
++        GetIt.I<LoginViewModelFactory>(),
++      );
+       final loadingProvider = LoadingRouteProvider(authViewModel);
+-      final userDetailsProvider = UserDetailsRouteProvider(GetIt.I<UserDetailsViewModelFactory>());
++      final userDetailsProvider = UserDetailsRouteProvider(
++        GetIt.I<UserDetailsViewModelFactory>(),
++      );
+ 
+       // Test that each provider can create routes
+       final homeRoute = homeProvider.getRoute();
+@@ -254,4 +268,4 @@ void main() {
+       },
+     );
+   });
+-}
+\ No newline at end of file
++}
+
+--- FILE: test/screens/home_screen/home_viewmodel_test.mocks.dart ---
+diff --git a/test/screens/home_screen/home_viewmodel_test.mocks.dart b/test/screens/home_screen/home_viewmodel_test.mocks.dart
+index 5f1d2ed..9be1fca 100644
+--- a/test/screens/home_screen/home_viewmodel_test.mocks.dart
++++ b/test/screens/home_screen/home_viewmodel_test.mocks.dart
+@@ -49,15 +49,15 @@ class _FakeTypedLink_3 extends _i1.SmartFake implements _i2.TypedLink {
+ ///
+ /// See the documentation for Mockito's code generation for more information.
+ class MockClient extends _i1.Mock implements _i4.Client {
++  MockClient() {
++    _i1.throwOnMissingStub(this);
++  }
++
+   @override
+   _i2.Link get link =>
+       (super.noSuchMethod(
+             Invocation.getter(#link),
+             returnValue: _FakeLink_0(this, Invocation.getter(#link)),
+-            returnValueForMissingStub: _FakeLink_0(
+-              this,
+-              Invocation.getter(#link),
+-            ),
+           )
+           as _i2.Link);
+ 
+@@ -66,7 +66,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+       (super.noSuchMethod(
+             Invocation.getter(#typePolicies),
+             returnValue: <String, _i2.TypePolicy>{},
+-            returnValueForMissingStub: <String, _i2.TypePolicy>{},
+           )
+           as Map<String, _i2.TypePolicy>);
+ 
+@@ -75,7 +74,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+       (super.noSuchMethod(
+             Invocation.getter(#updateCacheHandlers),
+             returnValue: <String, Function>{},
+-            returnValueForMissingStub: <String, Function>{},
+           )
+           as Map<String, Function>);
+ 
+@@ -84,17 +82,12 @@ class MockClient extends _i1.Mock implements _i4.Client {
+       (super.noSuchMethod(
+             Invocation.getter(#defaultFetchPolicies),
+             returnValue: <_i5.OperationType, _i2.FetchPolicy>{},
+-            returnValueForMissingStub: <_i5.OperationType, _i2.FetchPolicy>{},
+           )
+           as Map<_i5.OperationType, _i2.FetchPolicy>);
+ 
+   @override
+   bool get addTypename =>
+-      (super.noSuchMethod(
+-            Invocation.getter(#addTypename),
+-            returnValue: false,
+-            returnValueForMissingStub: false,
+-          )
++      (super.noSuchMethod(Invocation.getter(#addTypename), returnValue: false)
+           as bool);
+ 
+   @override
+@@ -102,10 +95,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+       (super.noSuchMethod(
+             Invocation.getter(#cache),
+             returnValue: _FakeCache_1(this, Invocation.getter(#cache)),
+-            returnValueForMissingStub: _FakeCache_1(
+-              this,
+-              Invocation.getter(#cache),
+-            ),
+           )
+           as _i2.Cache);
+ 
+@@ -119,11 +108,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+                   this,
+                   Invocation.getter(#requestController),
+                 ),
+-            returnValueForMissingStub:
+-                _FakeStreamController_2<_i2.OperationRequest<dynamic, dynamic>>(
+-                  this,
+-                  Invocation.getter(#requestController),
+-                ),
+           )
+           as _i3.StreamController<_i2.OperationRequest<dynamic, dynamic>>);
+ 
+@@ -160,8 +144,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+             Invocation.method(#request, [request, forward]),
+             returnValue:
+                 _i3.Stream<_i2.OperationResponse<TData, TVars>>.empty(),
+-            returnValueForMissingStub:
+-                _i3.Stream<_i2.OperationResponse<TData, TVars>>.empty(),
+           )
+           as _i3.Stream<_i2.OperationResponse<TData, TVars>>);
+ 
+@@ -173,10 +155,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+               this,
+               Invocation.method(#concat, [next]),
+             ),
+-            returnValueForMissingStub: _FakeTypedLink_3(
+-              this,
+-              Invocation.method(#concat, [next]),
+-            ),
+           )
+           as _i2.TypedLink);
+ 
+@@ -188,10 +166,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+               this,
+               Invocation.method(#route, [route]),
+             ),
+-            returnValueForMissingStub: _FakeTypedLink_3(
+-              this,
+-              Invocation.method(#route, [route]),
+-            ),
+           )
+           as _i2.TypedLink);
+ 
+@@ -207,10 +181,6 @@ class MockClient extends _i1.Mock implements _i4.Client {
+               this,
+               Invocation.method(#split, [test, left, right]),
+             ),
+-            returnValueForMissingStub: _FakeTypedLink_3(
+-              this,
+-              Invocation.method(#split, [test, left, right]),
+-            ),
+           )
+           as _i2.TypedLink);
+ }
+
+--- FILE: test/screens/login_screen/login_route_provider_test.mocks.dart ---
+diff --git a/test/screens/login_screen/login_route_provider_test.mocks.dart b/test/screens/login_screen/login_route_provider_test.mocks.dart
+index e072a49..13a30af 100644
+--- a/test/screens/login_screen/login_route_provider_test.mocks.dart
++++ b/test/screens/login_screen/login_route_provider_test.mocks.dart
+@@ -80,12 +80,6 @@ class MockLoginViewModel extends _i1.Mock implements _i2.LoginViewModel {
+       (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+           as bool);
+ 
+-  @override
+-  void onDispose() => super.noSuchMethod(
+-    Invocation.method(#onDispose, []),
+-    returnValueForMissingStub: null,
+-  );
+-
+   @override
+   _i4.Future<void> login() =>
+       (super.noSuchMethod(
+@@ -95,6 +89,12 @@ class MockLoginViewModel extends _i1.Mock implements _i2.LoginViewModel {
+           )
+           as _i4.Future<void>);
+ 
++  @override
++  void onDispose() => super.noSuchMethod(
++    Invocation.method(#onDispose, []),
++    returnValueForMissingStub: null,
++  );
++
+   @override
+   void dispose() => super.noSuchMethod(
+     Invocation.method(#dispose, []),
+
+--- FILE: test/services/auth_service_test.dart ---
+diff --git a/test/services/auth_service_test.dart b/test/services/auth_service_test.dart
+index 9ba9a5e..9be6ee2 100644
+--- a/test/services/auth_service_test.dart
++++ b/test/services/auth_service_test.dart
+@@ -9,7 +9,7 @@ import 'package:mockito/annotations.dart';
+ import 'package:mockito/mockito.dart';
+ import 'auth_service_test.mocks.dart';
+ 
+-@GenerateMocks([GithubAuthClient, IScopeService, TimerService])
++@GenerateMocks([GithubAuthClient, IScopeService, TimerService, ITokenStorage])
+ void main() {
+   group('AuthService', () {
+     late AuthService authService;
+@@ -89,6 +89,322 @@ void main() {
+       expect(prefs.getString('github_access_token'), isNull);
+     });
+ 
++    test('init handles scope service exception gracefully', () async {
++      SharedPreferences.setMockInitialValues({'github_access_token': 'token1'});
++      when(
++        fakeScopeService.getScopesFromAccessToken(any),
++      ).thenThrow(Exception('Network error'));
++
++      await authService.init();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++      final prefs = await SharedPreferences.getInstance();
++      expect(prefs.getString('github_access_token'), isNull);
++    });
++
++    test('init handles null token correctly', () async {
++      SharedPreferences.setMockInitialValues({});
++
++      await authService.init();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++      verifyNever(fakeScopeService.getScopesFromAccessToken(any));
++    });
++
++    test('loginWithDeviceCode completes and stores token', () async {
++      when(
++        fakeAuthClient.createAccessTokenFromDeviceCode(any),
++      ).thenAnswer((_) async => 'new_token');
++
++      final token = await authService.loginWithDeviceCode('device_code');
++
++      expect(token, 'new_token');
++      expect(authService.accessToken, 'new_token');
++
++      final prefs = await SharedPreferences.getInstance();
++      expect(prefs.getString('github_access_token'), 'new_token');
++    });
++
++    test('loginWithDeviceCode handles AuthorizationPendingException', () async {
++      int callCount = 0;
++      when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenAnswer((
++        _,
++      ) async {
++        callCount++;
++        if (callCount == 1) {
++          throw AuthorizationPendingException();
++        } else {
++          return 'success_token';
++        }
++      });
++      when(fakeTimerService.delay(any)).thenAnswer((_) async {});
++
++      final token = await authService.loginWithDeviceCode('device_code');
++
++      expect(token, 'success_token');
++      verify(fakeTimerService.delay(const Duration(seconds: 5))).called(1);
++    });
++
++    test('loginWithDeviceCode handles SlowDownException', () async {
++      int callCount = 0;
++      when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenAnswer((
++        _,
++      ) async {
++        callCount++;
++        if (callCount == 1) {
++          throw SlowDownException();
++        } else {
++          return 'success_token';
++        }
++      });
++      when(fakeTimerService.delay(any)).thenAnswer((_) async {});
++
++      final token = await authService.loginWithDeviceCode('device_code');
++
++      expect(token, 'success_token');
++      verify(fakeTimerService.delay(const Duration(seconds: 10))).called(1);
++    });
++
++    test('login handles multiple authorization pending exceptions', () async {
++      when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
++        (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
++      );
++
++      int callCount = 0;
++      when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenAnswer((
++        _,
++      ) async {
++        callCount++;
++        if (callCount <= 3) {
++          throw AuthorizationPendingException();
++        } else {
++          return 'success_token';
++        }
++      });
++      when(fakeTimerService.delay(any)).thenAnswer((_) async {});
++
++      final token = await authService.login();
++
++      expect(token, 'success_token');
++      verify(fakeTimerService.delay(const Duration(seconds: 5))).called(3);
++    });
++
++    test('login handles mixed exception types', () async {
++      when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
++        (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
++      );
++
++      int callCount = 0;
++      when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenAnswer((
++        _,
++      ) async {
++        callCount++;
++        if (callCount == 1) {
++          throw AuthorizationPendingException();
++        } else if (callCount == 2) {
++          throw SlowDownException();
++        } else {
++          return 'mixed_token';
++        }
++      });
++      when(fakeTimerService.delay(any)).thenAnswer((_) async {});
++
++      final token = await authService.login();
++
++      expect(token, 'mixed_token');
++      verify(fakeTimerService.delay(const Duration(seconds: 5))).called(1);
++      verify(fakeTimerService.delay(const Duration(seconds: 10))).called(1);
++    });
++
++    test('init clears token when scope service throws exception', () async {
++      SharedPreferences.setMockInitialValues({'github_access_token': 'token1'});
++      when(
++        fakeScopeService.getScopesFromAccessToken(any),
++      ).thenThrow(Exception('Scope validation failed'));
++
++      await authService.init();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++
++      final prefs = await SharedPreferences.getInstance();
++      expect(prefs.getString('github_access_token'), isNull);
++    });
++
++    test('checkTokenValid returns false for insufficient scopes', () async {
++      SharedPreferences.setMockInitialValues({'github_access_token': 'token1'});
++      when(
++        fakeScopeService.getScopesFromAccessToken(any),
++      ).thenAnswer((_) async => ['read:user']); // Missing 'repo' scope
++
++      await authService.init();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++    });
++
++    test('checkTokenValid returns false for empty scopes', () async {
++      SharedPreferences.setMockInitialValues({'github_access_token': 'token1'});
++      when(
++        fakeScopeService.getScopesFromAccessToken(any),
++      ).thenAnswer((_) async => []); // No scopes
++
++      await authService.init();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++    });
++
++    test(
++      'checkTokenValid returns true when all required scopes present with extras',
++      () async {
++        SharedPreferences.setMockInitialValues({
++          'github_access_token': 'token1',
++        });
++        when(fakeScopeService.getScopesFromAccessToken(any)).thenAnswer(
++          (_) async => ['repo', 'read:user', 'write:repo_hook'],
++        ); // Extra scope
++
++        await authService.init();
++
++        expect(authService.accessToken, 'token1');
++        expect(authService.isLoggedIn, isTrue);
++      },
++    );
++
++    test('logout when not logged in does not throw', () async {
++      expect(authService.isLoggedIn, isFalse);
++
++      await authService.logout();
++
++      expect(authService.accessToken, isNull);
++      expect(authService.isLoggedIn, isFalse);
++    });
++
++    group('error handling during login flow', () {
++      test('login propagates AccessDeniedException', () async {
++        when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
++          (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
++        );
++        when(
++          fakeAuthClient.createAccessTokenFromDeviceCode(any),
++        ).thenThrow(AccessDeniedException());
++
++        expect(
++          () => authService.login(),
++          throwsA(isA<AccessDeniedException>()),
++        );
++      });
++
++      test('login propagates GithubNonRecoverableException', () async {
++        when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
++          (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
++        );
++        when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenThrow(
++          GithubNonRecoverableException('invalid_grant', 'Device code expired'),
++        );
++
++        expect(
++          () => authService.login(),
++          throwsA(isA<GithubNonRecoverableException>()),
++        );
++      });
++
++      test('loginWithDeviceCode propagates AccessDeniedException', () async {
++        when(
++          fakeAuthClient.createAccessTokenFromDeviceCode(any),
++        ).thenThrow(AccessDeniedException());
++
++        expect(
++          () => authService.loginWithDeviceCode('device_code'),
++          throwsA(isA<AccessDeniedException>()),
++        );
++      });
++
++      test(
++        'loginWithDeviceCode propagates GithubNonRecoverableException',
++        () async {
++          when(fakeAuthClient.createAccessTokenFromDeviceCode(any)).thenThrow(
++            GithubNonRecoverableException(
++              'expired_token',
++              'Device code has expired',
++            ),
++          );
++
++          expect(
++            () => authService.loginWithDeviceCode('device_code'),
++            throwsA(isA<GithubNonRecoverableException>()),
++          );
++        },
++      );
++    });
++
++    group('token storage error handling', () {
++      late MockITokenStorage mockTokenStorage;
++
++      setUp(() {
++        mockTokenStorage = MockITokenStorage();
++        authService = AuthService(
++          fakeAuthClient,
++          mockTokenStorage,
++          fakeScopeService,
++          fakeTimerService,
++        );
++      });
++
++      test('init handles token storage read errors', () async {
++        when(mockTokenStorage.getToken()).thenThrow(Exception('Storage error'));
++
++        await authService.init();
++
++        expect(authService.accessToken, isNull);
++        expect(authService.isLoggedIn, isFalse);
++      });
++
++      test('init handles token storage delete errors during cleanup', () async {
++        when(
++          mockTokenStorage.getToken(),
++        ).thenAnswer((_) async => 'invalid_token');
++        when(
++          fakeScopeService.getScopesFromAccessToken(any),
++        ).thenThrow(Exception('Invalid token'));
++        when(
++          mockTokenStorage.deleteToken(),
++        ).thenThrow(Exception('Delete failed'));
++
++        // Should not throw, but handle the error gracefully
++        await authService.init();
++
++        expect(authService.accessToken, isNull);
++        expect(authService.isLoggedIn, isFalse);
++        verify(mockTokenStorage.deleteToken()).called(1);
++      });
++
++      test('login handles token storage save errors', () async {
++        when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
++          (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
++        );
++        when(
++          fakeAuthClient.createAccessTokenFromDeviceCode(any),
++        ).thenAnswer((_) async => 'new_token');
++        when(
++          mockTokenStorage.saveToken(any),
++        ).thenThrow(Exception('Save failed'));
++
++        expect(() => authService.login(), throwsA(isA<Exception>()));
++      });
++
++      test('logout handles token storage delete errors', () async {
++        when(
++          mockTokenStorage.deleteToken(),
++        ).thenThrow(Exception('Delete failed'));
++
++        expect(() => authService.logout(), throwsA(isA<Exception>()));
++      });
++    });
++
+     test('login uses TimerService for AuthorizationPendingException', () async {
+       when(fakeAuthClient.createDeviceCode(any)).thenAnswer(
+         (_) async => GithubDeviceCodeResult(deviceCode: 'dc', userCode: 'uc'),
+
+--- FILE: test/services/auth_service_test.mocks.dart ---
+diff --git a/test/services/auth_service_test.mocks.dart b/test/services/auth_service_test.mocks.dart
+index a7d3c36..c4b7ec0 100644
+--- a/test/services/auth_service_test.mocks.dart
++++ b/test/services/auth_service_test.mocks.dart
+@@ -8,6 +8,7 @@ import 'dart:async' as _i3;
+ import 'package:gh3/src/services/github_auth_client.dart' as _i2;
+ import 'package:gh3/src/services/scope_service.dart' as _i5;
+ import 'package:gh3/src/services/timer_service.dart' as _i6;
++import 'package:gh3/src/services/token_storage.dart' as _i7;
+ import 'package:mockito/mockito.dart' as _i1;
+ import 'package:mockito/src/dummies.dart' as _i4;
+ 
+@@ -104,3 +105,38 @@ class MockTimerService extends _i1.Mock implements _i6.TimerService {
+           )
+           as _i3.Future<void>);
+ }
++
++/// A class which mocks [ITokenStorage].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockITokenStorage extends _i1.Mock implements _i7.ITokenStorage {
++  MockITokenStorage() {
++    _i1.throwOnMissingStub(this);
++  }
++
++  @override
++  _i3.Future<String?> getToken() =>
++      (super.noSuchMethod(
++            Invocation.method(#getToken, []),
++            returnValue: _i3.Future<String?>.value(),
++          )
++          as _i3.Future<String?>);
++
++  @override
++  _i3.Future<void> saveToken(String? token) =>
++      (super.noSuchMethod(
++            Invocation.method(#saveToken, [token]),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++
++  @override
++  _i3.Future<void> deleteToken() =>
++      (super.noSuchMethod(
++            Invocation.method(#deleteToken, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

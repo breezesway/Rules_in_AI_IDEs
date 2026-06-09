@@ -1,0 +1,554 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- Mock external dependencies (R2, KV)
++ - No Mocking: Use real bindings instead of mocks for Workers tests
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Test files (e.g., *.test.ts, *.spec.ts, *.test.js) and test configuration files.
+- Suggested Logic: 1. Identify test files within the repository.
+2. Scan for usage of mocking libraries (e.g., 'vi.mock', 'jest.mock', 'sinon.stub', 'msw') that target R2 or KV service identifiers or variable names.
+3. Check for manual object assignments to variables commonly used for bindings (e.g., 'env.R2 = ...' or 'const KV = { get: ... }') within the test files, which indicates manual stubbing.
+4. Ensure that the test environment setup (like Vitest for Workers) is configured to provide 'real' bindings (e.g., using 'cloudflare:test' imports) rather than external mock definitions.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: Add utility functions for file operations and API responses
+
+- Add file size validation and formatting utilities
+- Add filename validation for R2 compatibility
+- Add unique filename generation with timestamps
+- Add standardized API response helpers
+- Support file extension extraction and validation
+- Implement human-readable file size formatting
+- Changed Files List: 
+worker/.env.example	+18	-0	after_lines=18
+worker/SETUP.md	+94	-134	after_lines=129
+worker/package.json	+9	-1	after_lines=42
+worker/src/utils/index.ts	+92	-0	after_lines=92
+worker/wrangler.toml	+3	-1	after_lines=86
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── .env.example
+    ├── SETUP.md
+    ├── TESTING.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── handlers
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── index.ts
+    │   ├── integration.test.ts
+    │   ├── middleware
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── services
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── types
+    │   │   └── index.ts
+    │   └── utils
+    │       └── index.ts
+    ├── tsconfig.json
+    ├── vitest.config.ts
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/.env.example ---
+diff --git a/worker/.env.example b/worker/.env.example
+new file mode 100644
+index 0000000..9f09de6
+--- /dev/null
++++ b/worker/.env.example
+@@ -0,0 +1,18 @@
++# Environment Variables Example
++# Copy this file to .env.local for local development overrides
++# DO NOT commit actual .env files to version control
++
++# JWT Configuration
++JWT_SECRET=your-super-secure-jwt-secret-key-here-minimum-32-characters
++JWT_EXPIRY_HOURS=24
++
++# File Upload Limits
++MAX_FILE_SIZE_MB=50
++
++# Environment Identifier
++ENVIRONMENT=development
++
++# Optional: Local development overrides
++# These can be set in wrangler.toml [vars] section or via wrangler secrets
++# CLOUDFLARE_ACCOUNT_ID=your-account-id
++# CLOUDFLARE_API_TOKEN=your-api-token
+\ No newline at end of file
+
+--- FILE: worker/SETUP.md ---
+diff --git a/worker/SETUP.md b/worker/SETUP.md
+index 73e75f0..934519e 100644
+--- a/worker/SETUP.md
++++ b/worker/SETUP.md
+@@ -1,147 +1,97 @@
+-# Cloudflare Worker Setup Guide
++# Worker Setup Guide
+ 
+ ## Prerequisites
+ 
+-1. **Node.js 18+**: Install via nvm, homebrew, or official installer
+-2. **npm or yarn**: Package manager (comes with Node.js)
+-3. **Wrangler CLI**: Install globally with `npm install -g wrangler`
++- Node.js 18+ installed
++- Cloudflare account with Workers enabled
++- Wrangler CLI installed globally: `npm install -g wrangler`
++
++## Initial Setup
++
++1. **Install dependencies**
++   ```bash
++   cd worker
++   npm install
++   ```
++
++2. **Authenticate with Cloudflare**
++   ```bash
++   wrangler login
++   ```
++
++3. **Set up secrets for development**
++   ```bash
++   # Generate a secure JWT secret (minimum 32 characters)
++   wrangler secret put JWT_SECRET --env development
++   # Enter a secure random string when prompted
++   ```
++
++4. **Create required Cloudflare resources**
++   ```bash
++   # Create R2 bucket for development
++   wrangler r2 bucket create file-explorer-storage-dev
++   
++   # Create KV namespace for sessions
++   wrangler kv:namespace create "KV_SESSIONS" --env development
++   wrangler kv:namespace create "KV_SESSIONS" --env development --preview
++   
++   # Update wrangler.toml with the generated KV namespace IDs
++   ```
++
++5. **Update wrangler.toml**
++   - Replace the KV namespace IDs with the ones generated in step 4
++   - Ensure all bucket names match your created resources
+ 
+-## Development Setup
+-
+-### 1. Install Dependencies
+-
+-```bash
+-# Install Worker dependencies
+-npm install
+-
+-# Install Wrangler CLI globally if not already installed
+-npm install -g wrangler
+-```
+-
+-### 2. Configure Cloudflare Resources
+-
+-Before running the worker locally, you need to create the required Cloudflare resources for each environment:
+-
+-#### Development Environment
+-1. **R2 Bucket**: `file-explorer-storage-dev`
+-2. **KV Namespace**: `file-explorer-sessions-dev` (with preview: `file-explorer-sessions-dev-preview`)
+-3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_dev`
+-
+-#### Staging Environment
+-1. **R2 Bucket**: `file-explorer-storage-staging`
+-2. **KV Namespace**: `file-explorer-sessions-staging` (with preview: `file-explorer-sessions-staging-preview`)
+-3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_staging`
+-
+-#### Production Environment
+-1. **R2 Bucket**: `file-explorer-storage-prod`
+-2. **KV Namespace**: `file-explorer-sessions-prod` (with preview: `file-explorer-sessions-prod-preview`)
+-3. **Analytics Engine Dataset**: `r2_file_explorer_analytics_prod`
++## Development Commands
+ 
+-#### Resource Creation Commands
+ ```bash
+-# Development resources
+-wrangler r2 bucket create file-explorer-storage-dev
+-wrangler kv:namespace create "file-explorer-sessions-dev"
+-wrangler kv:namespace create "file-explorer-sessions-dev" --preview
+-
+-# Staging resources
+-wrangler r2 bucket create file-explorer-storage-staging
+-wrangler kv:namespace create "file-explorer-sessions-staging"
+-wrangler kv:namespace create "file-explorer-sessions-staging" --preview
+-
+-# Production resources
+-wrangler r2 bucket create file-explorer-storage-prod
+-wrangler kv:namespace create "file-explorer-sessions-prod"
+-wrangler kv:namespace create "file-explorer-sessions-prod" --preview
+-```
+-
+-**Important**: Update the KV namespace IDs in `wrangler.toml` with the actual IDs returned by the creation commands.
+-
+-### 3. Environment Variables
++# Start development server with hot reload
++npm run dev
+ 
+-The worker uses the following environment variables (configured in wrangler.toml):
+-
+-- `JWT_SECRET`: Secret key for JWT token signing
+-- `JWT_EXPIRY_HOURS`: JWT token expiration time in hours
+-- `MAX_FILE_SIZE_MB`: Maximum file upload size in MB
+-- `ENVIRONMENT`: Current environment (development/staging/production)
+-
+-### 4. Build Frontend Assets
+-
+-Before running the worker locally, build the React frontend:
++# Run tests
++npm test
+ 
+-```bash
+-# Build the React frontend
+-cd ../frontend
+-npm install
+-npm run build
++# Run tests in watch mode
++npm run test:watch
+ 
+-# Return to worker directory
+-cd ../worker
+-```
++# Run only unit tests
++npm run test:unit
+ 
+-### 5. Local Development
++# Run only integration tests
++npm run test:integration
+ 
+-```bash
+-# Start the worker in development mode (serves both API and frontend)
+-wrangler dev --local --port 8787
++# Run tests with coverage
++npm run test:coverage
+ 
+-# Or for remote development (uses actual Cloudflare resources)
+-wrangler dev --port 8787
++# Type checking
++npm run type-check
+ ```
+ 
+-### 6. Testing the Setup
++## Environment Configuration
+ 
+-Once the worker is running, you can test both the API and frontend:
++### Development
++- Uses local Miniflare for R2 and KV storage
++- JWT secret set via `wrangler secret`
++- File size limit: 50MB
++- JWT expiry: 24 hours
+ 
+-```bash
+-# Health check
+-curl http://localhost:8787/health
++### Staging
++- Separate R2 bucket and KV namespace
++- Reduced JWT expiry: 12 hours
++- Increased file size limit: 100MB
+ 
+-# Basic API response
+-curl http://localhost:8787/api
+-
+-# Frontend (React app)
+-open http://localhost:8787
+-```
++### Production
++- Production R2 bucket and KV namespace
++- Shortest JWT expiry: 8 hours
++- Highest file size limit: 200MB
+ 
+ ## Deployment
+ 
+-### Environment-Specific Deployments
+-
+ ```bash
+-# Deploy to staging environment
+-wrangler deploy --env staging
+-
+-# Deploy to production environment
+-wrangler deploy --env production
+-
+-# Deploy to development (default environment)
+-wrangler deploy
+-```
+-
+-### Environment Summary
+-
+-| Environment | Worker Name | R2 Bucket | KV Namespace | Analytics Dataset | JWT Expiry | Max File Size |
+-|-------------|-------------|-----------|--------------|-------------------|------------|---------------|
+-| **Development** | `r2-file-explorer-api` | `file-explorer-storage-dev` | `file-explorer-sessions-dev` | `r2_file_explorer_analytics_dev` | 24 hours | 50MB |
+-| **Staging** | `r2-file-explorer-api-staging` | `file-explorer-storage-staging` | `file-explorer-sessions-staging` | `r2_file_explorer_analytics_staging` | 12 hours | 100MB |
+-| **Production** | `r2-file-explorer-api-prod` | `file-explorer-storage-prod` | `file-explorer-sessions-prod` | `r2_file_explorer_analytics_prod` | 8 hours | 200MB |
+-
+-## Development Commands
+-
+-```bash
+-# Type checking
+-npm run type-check
+-
+-# Run tests
+-npm test
+-
+-# Run tests in watch mode
+-npm run test:watch
+-
+-# Deploy to specific environments
++# Deploy to staging
+ npm run deploy:staging
++
++# Deploy to production
+ npm run deploy:production
+ ```
+ 
+@@ -149,21 +99,31 @@ npm run deploy:production
+ 
+ ### Common Issues
+ 
+-1. **TypeScript compilation errors**: Run `npm run type-check` to identify and fix type issues
+-2. **Resource binding errors**: Ensure your R2 bucket and KV namespace exist and the IDs in wrangler.toml are correct
+-3. **Authentication errors**: Verify that `JWT_SECRET` is properly configured for your environment
++1. **KV namespace not found**
++   - Ensure KV namespaces are created and IDs match wrangler.toml
++   - Check that preview IDs are also set correctly
++
++2. **R2 bucket access denied**
++   - Verify bucket exists and name matches wrangler.toml
++   - Check Cloudflare account permissions
+ 
+-### Build Process
++3. **JWT secret not set**
++   - Run `wrangler secret put JWT_SECRET --env <environment>`
++   - Ensure secret is at least 32 characters long
+ 
+-For JavaScript/TypeScript Workers with Hono:
+-1. TypeScript code → JavaScript (via esbuild in wrangler)
+-2. JavaScript → Worker bundle (via wrangler)
++4. **Tests failing**
++   - Check that test bindings in vitest.config.ts match your setup
++   - Ensure all dependencies are installed
++
++### Logs and Debugging
+ 
+-If you encounter build issues, try:
+ ```bash
+-# Check TypeScript compilation
+-npm run type-check
++# View real-time logs during development
++wrangler dev --local=false
++
++# View production logs
++wrangler tail --env production
+ 
+-# Clear wrangler cache
+-wrangler dev --local --port 8787
++# View staging logs
++wrangler tail --env staging
+ ```
+\ No newline at end of file
+
+--- FILE: worker/package.json ---
+diff --git a/worker/package.json b/worker/package.json
+index 6ba20e5..849ddfd 100644
+--- a/worker/package.json
++++ b/worker/package.json
+@@ -5,6 +5,7 @@
+   "main": "src/index.ts",
+   "scripts": {
+     "dev": "wrangler dev",
++    "dev:remote": "wrangler dev --remote",
+     "deploy": "wrangler deploy",
+     "deploy:staging": "wrangler deploy --env staging",
+     "deploy:production": "wrangler deploy --env production",
+@@ -13,7 +14,14 @@
+     "test:unit": "vitest run src/**/*.test.ts",
+     "test:integration": "vitest run src/integration.test.ts",
+     "test:coverage": "vitest run --coverage",
+-    "type-check": "tsc --noEmit"
++    "type-check": "tsc --noEmit",
++    "lint": "tsc --noEmit",
++    "logs": "wrangler tail",
++    "logs:staging": "wrangler tail --env staging",
++    "logs:production": "wrangler tail --env production",
++    "setup:secrets": "echo 'Run: wrangler secret put JWT_SECRET' && echo 'Enter a secure 32+ character string'",
++    "setup:resources": "echo 'Creating R2 bucket...' && wrangler r2 bucket create file-explorer-storage-dev && echo 'Creating KV namespace...' && wrangler kv:namespace create KV_SESSIONS",
++    "clean": "rm -rf node_modules dist .wrangler && npm install"
+   },
+   "dependencies": {
+     "@tsndr/cloudflare-worker-jwt": "^3.2.0",
+
+--- FILE: worker/src/utils/index.ts ---
+diff --git a/worker/src/utils/index.ts b/worker/src/utils/index.ts
+new file mode 100644
+index 0000000..728853b
+--- /dev/null
++++ b/worker/src/utils/index.ts
+@@ -0,0 +1,92 @@
++// Utility functions for the R2 File Explorer API
++
++/**
++ * Validates file size against maximum allowed size
++ */
++export function validateFileSize(sizeBytes: number, maxSizeMB: number): boolean {
++  const maxSizeBytes = maxSizeMB * 1024 * 1024
++  return sizeBytes <= maxSizeBytes
++}
++
++/**
++ * Extracts file extension from filename
++ */
++export function getFileExtension(filename: string): string {
++  const parts = filename.split('.')
++  return parts.length > 1 ? parts.pop()?.toLowerCase() || '' : ''
++}
++
++/**
++ * Generates a unique filename with timestamp
++ */
++export function generateUniqueFilename(originalName?: string): string {
++  const timestamp = Date.now()
++  const random = Math.random().toString(36).substring(2, 8)
++  
++  if (originalName) {
++    const extension = getFileExtension(originalName)
++    const baseName = originalName.replace(/\.[^/.]+$/, '')
++    return `${baseName}-${timestamp}-${random}${extension ? '.' + extension : ''}`
++  }
++  
++  return `upload-${timestamp}-${random}`
++}
++
++/**
++ * Formats file size in human readable format
++ */
++export function formatFileSize(bytes: number): string {
++  const units = ['B', 'KB', 'MB', 'GB', 'TB']
++  let size = bytes
++  let unitIndex = 0
++  
++  while (size >= 1024 && unitIndex < units.length - 1) {
++    size /= 1024
++    unitIndex++
++  }
++  
++  return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
++}
++
++/**
++ * Validates filename for R2 compatibility
++ */
++export function validateFilename(filename: string): { valid: boolean; error?: string } {
++  if (!filename || filename.trim().length === 0) {
++    return { valid: false, error: 'Filename cannot be empty' }
++  }
++  
++  if (filename.length > 1024) {
++    return { valid: false, error: 'Filename too long (max 1024 characters)' }
++  }
++  
++  // R2 object keys cannot contain certain characters
++  const invalidChars = /[<>:"|?*\x00-\x1f]/
++  if (invalidChars.test(filename)) {
++    return { valid: false, error: 'Filename contains invalid characters' }
++  }
++  
++  return { valid: true }
++}
++
++/**
++ * Creates a standardized API error response
++ */
++export function createErrorResponse(message: string, code?: string) {
++  return {
++    success: false,
++    error: message,
++    ...(code && { code })
++  }
++}
++
++/**
++ * Creates a standardized API success response
++ */
++export function createSuccessResponse<T>(data?: T, message?: string) {
++  return {
++    success: true,
++    ...(data && { data }),
++    ...(message && { message })
++  }
++}
+\ No newline at end of file
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 8196c81..297ada0 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -26,11 +26,13 @@ dataset = "r2_file_explorer_analytics_dev"
+ 
+ # Development environment variables
+ [vars]
+-JWT_SECRET = "dev-secret-key-for-local-development-only-not-secure"
+ JWT_EXPIRY_HOURS = "24"
+ MAX_FILE_SIZE_MB = "50"
+ ENVIRONMENT = "development"
+ 
++# Note: JWT_SECRET should be set via wrangler secret for security
++# Run: wrangler secret put JWT_SECRET --env development
++
+ # Staging environment configuration
+ [env.staging]
+ name = "r2-file-explorer-api-staging"
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

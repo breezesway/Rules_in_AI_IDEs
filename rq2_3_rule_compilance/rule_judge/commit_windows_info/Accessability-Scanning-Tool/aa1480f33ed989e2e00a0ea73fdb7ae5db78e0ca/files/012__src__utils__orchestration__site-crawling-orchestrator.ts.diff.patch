@@ -1,0 +1,108 @@
+diff --git a/src/utils/orchestration/site-crawling-orchestrator.ts b/src/utils/orchestration/site-crawling-orchestrator.ts
+index 3bdc747..354c0ee 100644
+--- a/src/utils/orchestration/site-crawling-orchestrator.ts
++++ b/src/utils/orchestration/site-crawling-orchestrator.ts
+@@ -51,6 +51,19 @@ export class SiteCrawlingOrchestrator {
+             maxDepth: options.maxDepth,
+         });
+ 
++        // Validate URL before starting crawl
++        if (!targetUrl || targetUrl.trim() === '') {
++            this.errorHandler.logWarning('Empty target URL provided');
++            return [];
++        }
++
++        try {
++            new URL(targetUrl); // This will throw for invalid URLs
++        } catch (error) {
++            this.errorHandler.logWarning('Invalid URL format', { url: targetUrl });
++            return [];
++        }
++
+         const startTime = Date.now();
+ 
+         try {
+@@ -106,7 +119,7 @@ export class SiteCrawlingOrchestrator {
+                 `Site crawling failed: ${error instanceof Error ? error.message : error}`
+             );
+             this.errorHandler.handleError(error, 'Site crawling failed');
+-            throw error;
++            return [];
+         }
+     }
+ 
+@@ -135,10 +148,16 @@ export class SiteCrawlingOrchestrator {
+             warnings.push('Duplicate URLs found in crawl results');
+         }
+ 
++        // Check for pages with empty or invalid URLs
++        const pagesWithEmptyUrls = results.filter(page => !page.url || page.url.trim() === '');
++        if (pagesWithEmptyUrls.length > 0) {
++            errors.push(`${pagesWithEmptyUrls.length} pages have empty URLs`);
++        }
++
+         // Check for pages with missing titles
+         const pagesWithoutTitles = results.filter(page => !page.title || page.title.trim() === '');
+         if (pagesWithoutTitles.length > 0) {
+-            warnings.push(`${pagesWithoutTitles.length} pages have missing titles`);
++            errors.push(`${pagesWithoutTitles.length} pages have missing titles`);
+         }
+ 
+         // Check for pages with excessive load times
+@@ -212,30 +231,30 @@ export class SiteCrawlingOrchestrator {
+         }
+     }
+ 
+-      /**
+-   * Get browser status information
+-   */
+-  async getBrowserStatus(): Promise<{
+-    isHealthy: boolean;
+-    isInitialized: boolean;
+-    activePages: number;
+-  }> {
+-    try {
+-      const isHealthy = await this.browserManager.isBrowserHealthy();
+-      const resourceUsage = this.browserManager.getResourceUsage();
+-
+-      return {
+-        isHealthy,
+-        isInitialized: resourceUsage.isInitialized,
+-        activePages: resourceUsage.pages,
+-      };
+-    } catch (error) {
+-      this.errorHandler.logWarning('Failed to get browser status', { error });
+-      return {
+-        isHealthy: false,
+-        isInitialized: false,
+-        activePages: 0,
+-      };
++    /**
++ * Get browser status information
++ */
++    async getBrowserStatus(): Promise<{
++        isHealthy: boolean;
++        isInitialized: boolean;
++        activePages: number;
++    }> {
++        try {
++            const isHealthy = await this.browserManager.isBrowserHealthy();
++            const resourceUsage = this.browserManager.getResourceUsage();
++
++            return {
++                isHealthy,
++                isInitialized: resourceUsage.isInitialized,
++                activePages: resourceUsage.pages,
++            };
++        } catch (error) {
++            this.errorHandler.logWarning('Failed to get browser status', { error });
++            return {
++                isHealthy: false,
++                isInitialized: false,
++                activePages: 0,
++            };
++        }
+     }
+-  }
+ } 
+\ No newline at end of file

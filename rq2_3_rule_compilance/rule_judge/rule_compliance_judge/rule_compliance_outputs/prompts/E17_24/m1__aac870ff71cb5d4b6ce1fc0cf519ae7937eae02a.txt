@@ -1,0 +1,71 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: modified
+- Target Rule Content:
+-   - Prefer table-driven tests for multiple cases
++   - Prefer table-driven tests for multiple cases; avoid multiple calls to t.Run in the same function
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Go source code files, specifically test files (e.g., *_test.go).
+- Suggested Logic: Scan test functions (functions starting with 'Test' and accepting '*testing.T') to count the number of calls to the '.Run' method (e.g., 't.Run(...)'). If a single test function contains more than one call to 't.Run' outside of a loop structure, it violates the rule against multiple calls in favor of table-driven tests.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: Now disabling cells after move
+- Changed Files List: 
+web/static/index.html	+8	-2	after_lines=67
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── go.sum
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: web/static/index.html ---
+diff --git a/web/static/index.html b/web/static/index.html
+index ea23a56..3b999af 100644
+--- a/web/static/index.html
++++ b/web/static/index.html
+@@ -19,12 +19,17 @@
+             font-size: 2em;
+             cursor: pointer;
+         }
+-        .cell:hover {
++        .cell:not(:disabled):hover {
+             background: #f0f0f0;
+         }
+-        .cell:active {
++        .cell:not(:disabled):active {
+             background: #e0e0e0;
+         }
++        .cell:disabled {
++            cursor: not-allowed;
++            background: #f8f8f8;
++            color: #333;
++        }
+     </style>
+ </head>
+ <body>
+@@ -41,6 +46,7 @@
+                 const button = document.createElement('button');
+                 button.className = 'cell';
+                 button.textContent = cell || '';
++                button.disabled = cell !== ''; // Disable if cell is occupied
+                 button.onclick = () => {
+                     game.makeMove(index);
+                     renderBoard(); // Re-render after move
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

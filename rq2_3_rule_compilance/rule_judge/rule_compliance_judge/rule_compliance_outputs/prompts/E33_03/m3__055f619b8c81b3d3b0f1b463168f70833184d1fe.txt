@@ -1,0 +1,762 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Environment Configuration
+- Rule File Path: pkg/config/.cursor/rules/config.mdc
+- Change Type: added
+- Target Rule Content:
+// Database defaults
+v.SetDefault("database.host", "localhost")
+v.SetDefault("database.port", 5432)
+v.SetDefault("database.name", "mtsg")
+v.SetDefault("database.user", "mtsg_user")
+v.SetDefault("database.password", "")
+v.SetDefault("database.sslmode", "disable")
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically configuration initialization files (e.g., Go files using the Viper library).
+- Suggested Logic: Verify the presence of specific function calls: `v.SetDefault` with the exact key-value pairs specified in the rule (e.g., 'database.host' as 'localhost', 'database.port' as 5432, 'database.name' as 'mtsg', etc.).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: feat: complete database migration system implementation
+
+- Fix database connection issues (SSL, authentication, environment variables)
+- Update docker-compose.yml to use MTSG_DATABASE_* environment variables
+- Add PostgreSQL driver import to migration command
+- Fix migration file format with proper sql-migrate annotations
+- Update database configuration defaults to match docker setup
+- Successfully run migration and create users table
+- Add comprehensive README updates for database setup and migration workflow
+- Include troubleshooting section for database and migration issues
+
+Migration system is now fully functional with:
+- PostgreSQL database connection working
+- Users table created with all constraints and indexes
+- Migration commands (up/down) working correctly
+- Docker Compose integration complete
+- Changed Files List: 
+README.md	+76	-11	after_lines=298
+cmd/migration/migration.go	+3	-2	after_lines=95
+docker-compose.yml	+5	-5	after_lines=69
+go.mod	+1	-0	after_lines=74
+go.sum	+1	-0	after_lines=239
+internal/di/provider/pkg.go	+3	-5	after_lines=73
+migration/.cursor/rules/miration.mdc	+0	-19	after_lines=0
+migration/.cursor/rules/user.mdc	+111	-0	after_lines=111
+migration/001_create_users.down.sql	+19	-2	after_lines=21
+migration/001_create_users.up.sql	+23	-11	after_lines=29
+pkg/config/config.go	+2	-2	after_lines=123
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── global.mdc
+│       └── mock.mdc
+├── .env.example
+├── .gitignore
+├── .mockery.yml
+├── Makefile
+├── README.md
+├── cmd
+│   ├── .cursor
+│   │   └── rules
+│   │       └── migration.mdc
+│   ├── main.go
+│   └── migration
+│       └── migration.go
+├── config
+│   └── config.yaml
+├── docker-compose.yml
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+├── go.sum
+├── internal
+│   ├── .cursor
+│   │   └── rules
+│   │       └── dependency-injection.mdc
+│   ├── di
+│   │   ├── README.md
+│   │   ├── di_test.go
+│   │   ├── provider
+│   │   │   ├── container.go
+│   │   │   ├── pkg.go
+│   │   │   └── usecase.go
+│   │   ├── wire.go
+│   │   └── wire_gen.go
+│   ├── domain
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── entity.mdc
+│   │   │       ├── generic-types.mdc
+│   │   │       └── unit-test.mdc
+│   │   ├── authentication
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── credential.mdc
+│   │   │   │       └── session.mdc
+│   │   │   ├── authentication_test.go
+│   │   │   ├── credential.go
+│   │   │   ├── error.go
+│   │   │   └── session.go
+│   │   ├── project
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── project.mdc
+│   │   │   └── project.go
+│   │   ├── tenant
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── tenant.mdc
+│   │   │   └── tenant.go
+│   │   └── user
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── datatypes.mdc
+│   │       │       └── user.mdc
+│   │       ├── datatypes.go
+│   │       ├── datatypes_test.go
+│   │       └── user.go
+│   ├── presentation
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── presentation.mdc
+│   │   ├── dto
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── authentication.mdc
+│   │   │   │       └── dto.mdc
+│   │   │   ├── auth.go
+│   │   │   ├── auth_test.go
+│   │   │   ├── common.go
+│   │   │   └── common_test.go
+│   │   └── http
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── errorhandler.mdc
+│   │       │       ├── middleware.mdc
+│   │       │       ├── server.mdc
+│   │       │       └── swagger.mdc
+│   │       ├── docs
+│   │       │   ├── docs.go
+│   │       │   ├── swagger.json
+│   │       │   └── swagger.yaml
+│   │       ├── handler
+│   │       │   ├── .cursor
+│   │       │   │   └── rules
+│   │       │   │       └── authentication.mdc
+│   │       │   ├── auth.go
+│   │       │   ├── handlers.go
+│   │       │   └── ping.go
+│   │       ├── middleware
+│   │       │   ├── auth.go
+│   │       │   ├── container.go
+│   │       │   ├── cors.go
+│   │       │   ├── error.go
+│   │       │   ├── factory.go
+│   │       │   ├── logging.go
+│   │       │   ├── rate_limit.go
+│   │       │   ├── recovery.go
+│   │       │   └── validation.go
+│   │       └── server.go
+│   ├── repository
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── repository.mdc
+│   │   │       └── user.mdc
+│   │   └── user.go
+│   └── usecase
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── authentication.mdc
+│       │       └── usecase.mdc
+│       ├── authentication.go
+│       └── authentication_test.go
+├── migration
+│   ├── .cursor
+│   │   └── rules
+│   │       └── user.mdc
+│   ├── 001_create_users.down.sql
+│   └── 001_create_users.up.sql
+├── pkg
+│   ├── .cursor
+│   │   └── rules
+│   │       └── pkg.mdc
+│   ├── config
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── config.mdc
+│   │   ├── README.md
+│   │   ├── config.go
+│   │   └── config_test.go
+│   ├── error
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── http.mdc
+│   │   │       └── stacktraceable.mdc
+│   │   ├── http.go
+│   │   ├── http_test.go
+│   │   ├── stackerror.go
+│   │   └── stackerror_test.go
+│   ├── redis
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── redis.mdc
+│   │   └── redis.go
+│   └── token
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── service.mdc
+│       │       └── token.mdc
+│       ├── service.go
+│       ├── service_test.go
+│       └── token.go
+└── testmock
+    ├── AdapterRepository_mock.go
+    ├── Authentication_mock.go
+    ├── GeneratorRepository_mock.go
+    ├── UserRepository_mock.go
+    └── mock_redis_adapter.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 1d40892..28bbb45 100644
+--- a/README.md
++++ b/README.md
+@@ -11,8 +11,11 @@ Designed and coded with help from [Cursor](https://cursor.sh) – an AI-assisted
+ - Multi-tenant structure with tenant scoping at every layer
+ - Clean Architecture with dependency injection using Google Wire
+ - JWT-based authentication with Redis token storage
++- PostgreSQL database with sqlx integration
++- Database migration system with sql-migrate
+ - Swagger API documentation
+ - Comprehensive testing setup
++- Docker Compose for local development
+ - More features is coming soon
+ 
+ ---
+@@ -44,14 +47,22 @@ Designed and coded with help from [Cursor](https://cursor.sh) – an AI-assisted
+ ### Prerequisites
+ 
+ - Go 1.24.3 or later
+-- Redis server running locally (or configure remote Redis)
++- Docker and Docker Compose (for local development)
++- PostgreSQL database (or use Docker Compose)
++- Redis server (or use Docker Compose)
+ 
+ ### One-Command Setup
+ 
+ ```bash
++# Start database services (PostgreSQL + Redis)
++docker-compose up -d
++
+ # Complete development setup (installs tools, dependencies, generates code)
+ make dev-setup
+ 
++# Run database migrations
++./mtsg migration up
++
+ # Start the application
+ make dev
+ ```
+@@ -69,6 +80,11 @@ make dev
+    # Edit .env with your configuration
+    ```
+ 
++3. **Start database services:**
++   ```bash
++   docker-compose up -d
++   ```
++
+ 3. **Download dependencies:**
+    ```bash
+    make deps
+@@ -79,7 +95,12 @@ make dev
+    make generate
+    ```
+ 
+-5. **Run the application:**
++5. **Run database migrations:**
++   ```bash
++   ./mtsg migration up
++   ```
++
++6. **Run the application:**
+    ```bash
+    make dev
+    ```
+@@ -96,6 +117,14 @@ make dev-background   # Run in background
+ make quick-start      # Check deps, generate code, and run dev server
+ ```
+ 
++### 🗄️ Database Commands
++
++```bash
++./mtsg migration up    # Run database migrations up
++./mtsg migration down  # Rollback database migrations
++./mtsg server          # Start the HTTP server
++```
++
+ ### 🔨 Build Commands
+ 
+ ```bash
+@@ -147,6 +176,8 @@ make lint             # Run linter
+ ### 🐳 Docker
+ 
+ ```bash
++docker-compose up -d  # Start database services (PostgreSQL + Redis)
++docker-compose down   # Stop database services
+ make docker-build     # Build Docker image
+ make docker-run       # Run Docker container
+ ```
+@@ -167,13 +198,16 @@ make help             # Show all available commands
+ 
+ 2. Modify the `.env` file with your configuration:
+    ```bash
+-   # Server configuration
+-   MTSG_SERVER_PORT=8080
+-   MTSG_SERVER_ENVIRONMENT=development
++   # Database configuration
++   MTSG_POSTGRES_HOST=localhost
++   MTSG_POSTGRES_PORT=5432
++   MTSG_POSTGRES_USER=mtsg_user
++   MTSG_POSTGRES_PASSWORD=Password123!
++   MTSG_POSTGRES_DB=mtsg
+    
+    # Redis configuration
+-   MTSG_REDIS_HOST=localhost
+    MTSG_REDIS_PORT=6379
++   MTSG_REDIS_PASSWORD=guest
+    ```
+ 
+ ## Available Endpoints
+@@ -187,24 +221,34 @@ make help             # Show all available commands
+ 
+ ## Development Workflow
+ 
+-1. **Start development:**
++1. **Start database services:**
++   ```bash
++   docker-compose up -d
++   ```
++
++2. **Run migrations:**
++   ```bash
++   ./mtsg migration up
++   ```
++
++3. **Start development:**
+    ```bash
+    make dev
+    ```
+ 
+-2. **Make changes to code**
++4. **Make changes to code**
+ 
+-3. **Regenerate code if needed:**
++5. **Regenerate code if needed:**
+    ```bash
+    make generate
+    ```
+ 
+-4. **Run tests:**
++6. **Run tests:**
+    ```bash
+    make test
+    ```
+ 
+-5. **Format code:**
++7. **Format code:**
+    ```bash
+    make fmt
+    ```
+@@ -216,6 +260,27 @@ make help             # Show all available commands
+ make kill-port-8080
+ ```
+ 
++### Database Connection Issues
++```bash
++# Check if database services are running
++docker-compose ps
++
++# Restart database services
++docker-compose restart
++
++# Check database logs
++docker-compose logs postgres
++```
++
++### Migration Issues
++```bash
++# Check migration status
++./mtsg migration up
++
++# Rollback if needed
++./mtsg migration down
++```
++
+ ### Missing Tools
+ ```bash
+ make install-tools
+
+--- FILE: cmd/migration/migration.go ---
+diff --git a/cmd/migration/migration.go b/cmd/migration/migration.go
+index f0aa630..8ac5260 100644
+--- a/cmd/migration/migration.go
++++ b/cmd/migration/migration.go
+@@ -6,7 +6,8 @@ import (
+ 
+ 	"github.com/harungurubudi/mtsg/internal/di/provider"
+ 	"github.com/jmoiron/sqlx"
+-	"github.com/rubenv/sql-migrate"
++	_ "github.com/lib/pq" // PostgreSQL driver
++	migrate "github.com/rubenv/sql-migrate"
+ 	"github.com/spf13/cobra"
+ )
+ 
+@@ -91,4 +92,4 @@ func getDatabaseConnection() *sqlx.DB {
+ 	db := provider.ProvideSqlx(cfg)
+ 
+ 	return db
+-} 
+\ No newline at end of file
++}
+
+--- FILE: docker-compose.yml ---
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 1ac756f..d444293 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -5,19 +5,19 @@ services:
+     image: postgres:15-alpine
+     container_name: mtsg-postgres
+     ports:
+-      - "${MTSG_POSTGRES_PORT}:5432"
++      - "${MTSG_DATABASE_PORT}:5432"
+     volumes:
+       - .docker/postgres/data:/var/lib/postgresql/data
+       - .docker/postgres/init-scripts:/docker-entrypoint-initdb.d
+     environment:
+-      POSTGRES_DB: ${MTSG_POSTGRES_DB}
+-      POSTGRES_USER: ${MTSG_POSTGRES_USER}
+-      POSTGRES_PASSWORD: ${MTSG_POSTGRES_PASSWORD}
++      POSTGRES_DB: ${MTSG_DATABASE_NAME}
++      POSTGRES_USER: ${MTSG_DATABASE_USER}
++      POSTGRES_PASSWORD: ${MTSG_DATABASE_PASSWORD}
+     networks:
+       - mtsg-network
+     restart: unless-stopped
+     healthcheck:
+-      test: ["CMD-SHELL", "pg_isready -U ${MTSG_POSTGRES_USER} -d ${MTSG_POSTGRES_DB}"]
++      test: ["CMD-SHELL", "pg_isready -U ${MTSG_DATABASE_USER} -d ${MTSG_DATABASE_NAME}"]
+       interval: 30s
+       timeout: 10s
+       retries: 3
+
+--- FILE: go.mod ---
+diff --git a/go.mod b/go.mod
+index 9d4af84..ee39065 100644
+--- a/go.mod
++++ b/go.mod
+@@ -17,6 +17,7 @@ require (
+ require (
+ 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
+ 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
++	github.com/lib/pq v1.10.9 // indirect
+ 	github.com/rubenv/sql-migrate v1.8.0 // indirect
+ 	github.com/spf13/cobra v1.9.1 // indirect
+ )
+
+--- FILE: go.sum ---
+diff --git a/go.sum b/go.sum
+index 7d6a636..e730fb0 100644
+--- a/go.sum
++++ b/go.sum
+@@ -75,6 +75,7 @@ github.com/labstack/gommon v0.4.2 h1:F8qTUNXgG1+6WQmqoUWnz8WiEU60mXVVw0P4ht1WRA0
+ github.com/labstack/gommon v0.4.2/go.mod h1:QlUFxVM+SNXhDL/Z7YhocGIBYOiwB0mXm1+1bAPHPyU=
+ github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
+ github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
++github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
+ github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+ github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
+ github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
+
+--- FILE: internal/di/provider/pkg.go ---
+diff --git a/internal/di/provider/pkg.go b/internal/di/provider/pkg.go
+index 6f7b8c3..d129753 100644
+--- a/internal/di/provider/pkg.go
++++ b/internal/di/provider/pkg.go
+@@ -57,14 +57,12 @@ func ProvideTokenGenerator(redisAdapter redis.AdapterRepository) token.Generator
+ func ProvideSqlx(cfg *config.Config) *sqlx.DB {
+ 	var generateConnectionString = func() string {
+ 		return fmt.Sprintf(
+-			"host=%s port=%d dbname=%s user=%s password=%s sslmode=%s application_name=%s",
++			"postgres://%s:%s@%s:%d/%s?sslmode=disable",
++			cfg.Database.User,
++			cfg.Database.Password,
+ 			cfg.Database.Host,
+ 			cfg.Database.Port,
+ 			cfg.Database.Name,
+-			cfg.Database.User,
+-			cfg.Database.Password,
+-			cfg.Database.SSLMode,
+-			cfg.Server.Environment,
+ 		)
+ 	}
+ 	db, err := sqlx.Connect("postgres", generateConnectionString())
+
+--- FILE: migration/.cursor/rules/miration.mdc ---
+diff --git a/migration/.cursor/rules/miration.mdc b/migration/.cursor/rules/miration.mdc
+deleted file mode 100644
+index fa6e5d6..0000000
+--- a/migration/.cursor/rules/miration.mdc
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# Migration
+-
+-This rules represents how database migration applied. Included : 
+-- What library used
+-- How migration file generated
+-- How miggration applied (up and down)
+-
+-
+-## Libraries 
+-
+-The migration process utilize https://github.com/rubenv/sql-migrate library. All migration file stored in ``migration/`` directory
+-
+-## How to generate migration file 
+-
+-```bash
+-$ sql-migrate new <migration_name>
+-```
+-
+-## How Migration Applied
+\ No newline at end of file
+
+--- FILE: migration/.cursor/rules/user.mdc ---
+diff --git a/migration/.cursor/rules/user.mdc b/migration/.cursor/rules/user.mdc
+new file mode 100644
+index 0000000..0aaef3f
+--- /dev/null
++++ b/migration/.cursor/rules/user.mdc
+@@ -0,0 +1,111 @@
++# User Table Migration
++
++This is user table migration definition. This table should accommodate operational of User struct in internal/domain/user package.
++
++## Table Design
++
++### Users Table Schema
++
++| Column Name    | Data Type                    | Constraints                    | Description                                    |
++|----------------|------------------------------|--------------------------------|------------------------------------------------|
++| `id`           | `UUID`                       | `PRIMARY KEY`                  | Unique identifier for the user                 |
++| `tenant_id`    | `UUID`                       | `NOT NULL, FOREIGN KEY`        | Reference to tenants table                     |
++| `email`        | `VARCHAR(255)`               | `NOT NULL, UNIQUE`             | User's email address                           |
++| `name`         | `VARCHAR(255)`               | `NOT NULL`                     | User's full name                               |
++| `role`         | `VARCHAR(20)`                | `NOT NULL, CHECK`              | User role: 'admin' or 'member'                 |
++| `ciphertext`   | `VARCHAR(255)`               | `NOT NULL`                     | Bcrypt hashed password                         |
++| `status`       | `VARCHAR(20)`                | `NOT NULL, CHECK`              | User status: 'active' or 'inactive'            |
++| `created_at`   | `TIMESTAMP WITH TIME ZONE`   | `NOT NULL, DEFAULT NOW()`      | Timestamp of user creation                     |
++| `updated_at`   | `TIMESTAMP WITH TIME ZONE`   | `NOT NULL, DEFAULT NOW()`      | Timestamp of last update                       |
++| `deleted_at`   | `TIMESTAMP WITH TIME ZONE`   | `NULL`                         | Soft delete timestamp                          |
++| `is_deleted`   | `BOOLEAN`                    | `NOT NULL, DEFAULT FALSE`      | Soft delete flag                               |
++
++### Constraints
++
++#### Check Constraints
++```sql
++-- Role constraint
++CONSTRAINT chk_user_role CHECK (role IN ('admin', 'member'))
++
++-- Status constraint  
++CONSTRAINT chk_user_status CHECK (status IN ('active', 'inactive'))
++```
++
++#### Foreign Key Constraints
++```sql
++-- Tenant reference
++CONSTRAINT fk_users_tenant_id FOREIGN KEY (tenant_id) REFERENCES tenants(id)
++```
++
++#### Indexes
++```sql
++-- Primary key (automatic)
++PRIMARY KEY (id)
++
++-- Email uniqueness and lookup
++CREATE UNIQUE INDEX idx_users_email ON users(email) WHERE NOT is_deleted;
++
++-- Tenant lookup
++CREATE INDEX idx_users_tenant_id ON users(tenant_id);
++
++-- Status filtering
++CREATE INDEX idx_users_status ON users(status) WHERE status = 'active';
++
++-- Soft delete filtering
++CREATE INDEX idx_users_is_deleted ON users(is_deleted) WHERE is_deleted = false;
++
++-- Composite index for tenant + status queries
++CREATE INDEX idx_users_tenant_status ON users(tenant_id, status);
++```
++
++### Default Values
++
++| Column Name    | Default Value                | Description                                    |
++|----------------|------------------------------|------------------------------------------------|
++| `role`         | `'member'`                   | Default user role                              |
++| `status`       | `'active'`                   | Default user status                            |
++| `created_at`   | `CURRENT_TIMESTAMP`          | Auto-set creation timestamp                    |
++| `updated_at`   | `CURRENT_TIMESTAMP`          | Auto-set update timestamp                      |
++| `is_deleted`   | `FALSE`                      | Default soft delete flag                       |
++
++### Triggers
++
++#### Update Timestamp Trigger
++```sql
++CREATE OR REPLACE FUNCTION update_updated_at_column()
++RETURNS TRIGGER AS $$
++BEGIN
++    NEW.updated_at = CURRENT_TIMESTAMP;
++    RETURN NEW;
++END;
++$$ language 'plpgsql';
++
++CREATE TRIGGER update_users_updated_at 
++    BEFORE UPDATE ON users 
++    FOR EACH ROW 
++    EXECUTE FUNCTION update_updated_at_column();
++```
++
++### Business Rules
++
++1. **Email Uniqueness**: Email must be unique across all non-deleted users
++2. **Tenant Association**: Every user must belong to a valid tenant
++3. **Role Validation**: Role must be either 'admin' or 'member'
++4. **Status Validation**: Status must be either 'active' or 'inactive'
++5. **Soft Delete**: Users are soft deleted, not physically removed
++6. **Password Security**: Passwords are stored as bcrypt hashes (min 10 rounds)
++
++### Data Types Mapping
++
++| Go Type        | PostgreSQL Type              | Notes                                          |
++|----------------|------------------------------|------------------------------------------------|
++| `UserID`       | `UUID`                       | Custom type based on uuid.UUID                 |
++| `TenantID`     | `UUID`                       | Custom type based on uuid.UUID                 |
++| `Email`        | `VARCHAR(255)`               | String type with email validation              |
++| `UserRole`     | `VARCHAR(20)`                | Enum-like string with constraints              |
++| `CipherText`   | `VARCHAR(255)`               | Bcrypt hash storage                            |
++| `UserStatus`   | `VARCHAR(20)`                | Enum-like string with constraints              |
++| `time.Time`    | `TIMESTAMP WITH TIME ZONE`   | UTC timestamps                                 |
++| `*time.Time`   | `TIMESTAMP WITH TIME ZONE`   | Nullable timestamp for soft delete             |
++| `bool`         | `BOOLEAN`                    | Boolean flag                                   |
++
+
+--- FILE: migration/001_create_users.down.sql ---
+diff --git a/migration/001_create_users.down.sql b/migration/001_create_users.down.sql
+index fc6511b..21800bc 100644
+--- a/migration/001_create_users.down.sql
++++ b/migration/001_create_users.down.sql
+@@ -1,4 +1,21 @@
+--- Drop users table and related indexes
+-DROP INDEX IF EXISTS idx_users_is_active;
++-- +migrate Down
++-- Drop users table and all related objects
++
++-- Drop trigger first
++DROP TRIGGER IF EXISTS update_users_updated_at ON users;
++
++-- Drop trigger function
++DROP FUNCTION IF EXISTS update_updated_at_column();
++
++-- Drop indexes
++DROP INDEX IF EXISTS idx_users_tenant_status;
++DROP INDEX IF EXISTS idx_users_is_deleted;
++DROP INDEX IF EXISTS idx_users_status;
++DROP INDEX IF EXISTS idx_users_tenant_id;
+ DROP INDEX IF EXISTS idx_users_email;
++
++-- Drop foreign key constraint (if it was added)
++-- ALTER TABLE users DROP CONSTRAINT IF EXISTS fk_users_tenant_id;
++
++-- Drop the users table
+ DROP TABLE IF EXISTS users; 
+\ No newline at end of file
+
+--- FILE: migration/001_create_users.up.sql ---
+diff --git a/migration/001_create_users.up.sql b/migration/001_create_users.up.sql
+index 687e65f..e0916ac 100644
+--- a/migration/001_create_users.up.sql
++++ b/migration/001_create_users.up.sql
+@@ -1,17 +1,29 @@
++-- +migrate Up
+ -- Create users table
+ CREATE TABLE IF NOT EXISTS users (
+     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-    email VARCHAR(255) UNIQUE NOT NULL,
+-    password_hash VARCHAR(255) NOT NULL,
+-    first_name VARCHAR(100),
+-    last_name VARCHAR(100),
+-    is_active BOOLEAN DEFAULT true,
+-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
++    tenant_id UUID NOT NULL,
++    email VARCHAR(255) NOT NULL,
++    name VARCHAR(255) NOT NULL,
++    role VARCHAR(20) NOT NULL DEFAULT 'member',
++    ciphertext VARCHAR(255) NOT NULL,
++    status VARCHAR(20) NOT NULL DEFAULT 'active',
++    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
++    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
++    deleted_at TIMESTAMP WITH TIME ZONE NULL,
++    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
++    
++    -- Check constraints
++    CONSTRAINT chk_user_role CHECK (role IN ('admin', 'member')),
++    CONSTRAINT chk_user_status CHECK (status IN ('active', 'inactive'))
+ );
+ 
+--- Create index on email for faster lookups
+-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
++-- Create indexes
++CREATE UNIQUE INDEX idx_users_email ON users(email) WHERE NOT is_deleted;
++CREATE INDEX idx_users_tenant_id ON users(tenant_id);
++CREATE INDEX idx_users_status ON users(status) WHERE status = 'active';
++CREATE INDEX idx_users_is_deleted ON users(is_deleted) WHERE is_deleted = false;
++CREATE INDEX idx_users_tenant_status ON users(tenant_id, status);
+ 
+--- Create index on is_active for filtering
+-CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active); 
+\ No newline at end of file
++-- Add foreign key constraint (assuming tenants table exists)
++-- ALTER TABLE users ADD CONSTRAINT fk_users_tenant_id FOREIGN KEY (tenant_id) REFERENCES tenants(id); 
+\ No newline at end of file
+
+--- FILE: pkg/config/config.go ---
+diff --git a/pkg/config/config.go b/pkg/config/config.go
+index 66be9a3..3daf242 100644
+--- a/pkg/config/config.go
++++ b/pkg/config/config.go
+@@ -84,8 +84,8 @@ func setDefaults(v *viper.Viper) {
+ 	v.SetDefault("database.host", "localhost")
+ 	v.SetDefault("database.port", 5432)
+ 	v.SetDefault("database.name", "mtsg")
+-	v.SetDefault("database.user", "mtsg_user")
+-	v.SetDefault("database.password", "")
++	v.SetDefault("database.user", "user")
++	v.SetDefault("database.password", "Password123!")
+ 	v.SetDefault("database.sslmode", "disable")
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

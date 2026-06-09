@@ -1,0 +1,670 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Frontend Hosting: Cloudflare Pages
++ - Frontend Hosting: Cloudflare Workers with Static Assets
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Cloudflare configuration files (e.g., wrangler.toml) and package configuration files (e.g., package.json).
+- Suggested Logic: Search for 'wrangler.toml' in the repository. To verify 'Cloudflare Workers with Static Assets', check for the presence of the '[site]' block with a 'bucket' parameter or the 'assets' field. This distinguishes the setup from 'Cloudflare Pages', which typically uses a different configuration or is managed through the Cloudflare Dashboard/Pages-specific CLI settings.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: docs: add hosting information to frontend tech stack in README
+
+- Added Cloudflare Workers with Static Assets as hosting solution
+- Clarifies deployment architecture for the R2 File Explorer
+- Changed Files List: 
+.kiro/steering/tech.md	+4	-4	after_lines=60
+README.md	+16	-4	after_lines=146
+worker/SETUP.md	+22	-5	after_lines=135
+worker/src/index.ts	+195	-153	after_lines=255
+worker/src/types/index.ts	+1	-0	after_lines=64
+worker/wrangler.toml	+7	-2	after_lines=83
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index b642d83..2ced627 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -19,7 +19,7 @@
+ - **Compute**: Cloudflare Workers (serverless, global edge)
+ - **Storage**: Cloudflare R2 for object storage
+ - **Session Management**: Cloudflare KV
+-- **Frontend Hosting**: Cloudflare Pages
++- **Frontend Hosting**: Cloudflare Workers with Static Assets
+ - **CDN**: Cloudflare global network
+ 
+ ## Development Tools
+@@ -49,9 +49,9 @@ npm run test:worker            # Run Worker tests
+ 
+ ### Deployment
+ ```bash
+-# Deploy to production
+-wrangler publish --env production
+-npm run build && npm run deploy
++# Build frontend and deploy Worker with static assets
++cd frontend && npm run build
++cd ../worker && wrangler deploy --env production
+ ```
+ 
+ ## Configuration Files
+
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 5358f31..6b7d755 100644
+--- a/README.md
++++ b/README.md
+@@ -20,6 +20,7 @@ A web-based file management application that provides a familiar desktop file ma
+ - **Styling**: Tailwind CSS
+ - **File Uploads**: React Dropzone
+ - **HTTP Client**: Fetch API
++- **Hosting**: Cloudflare Workers with Static Assets
+ 
+ ### Backend
+ - **Runtime**: Cloudflare Workers
+@@ -108,15 +109,26 @@ wrangler publish               # Deploy to production
+ 
+ ## Deployment
+ 
+-### Frontend (Cloudflare Pages)
++The application is deployed as a single Cloudflare Worker with static assets serving the React frontend.
++
++### Build and Deploy
+ ```bash
++# Build the React frontend
++cd frontend
+ npm run build
+-# Deploy the dist/ folder to Cloudflare Pages
++
++# Deploy Worker with static assets
++cd ../worker
++wrangler deploy --env production
+ ```
+ 
+-### Worker
++### Environment-specific Deployments
+ ```bash
+-wrangler publish --env production
++# Deploy to staging
++wrangler deploy --env staging
++
++# Deploy to production
++wrangler deploy --env production
+ ```
+ 
+ ## Authentication
+
+--- FILE: worker/SETUP.md ---
+diff --git a/worker/SETUP.md b/worker/SETUP.md
+index eff635e..d20a722 100644
+--- a/worker/SETUP.md
++++ b/worker/SETUP.md
+@@ -42,26 +42,43 @@ The worker uses the following environment variables (configured in wrangler.toml
+ - `MAX_FILE_SIZE_MB`: Maximum file upload size in MB
+ - `ENVIRONMENT`: Current environment (development/staging/production)
+ 
+-### 4. Local Development
++### 4. Build Frontend Assets
++
++Before running the worker locally, build the React frontend:
++
++```bash
++# Build the React frontend
++cd ../frontend
++npm install
++npm run build
++
++# Return to worker directory
++cd ../worker
++```
++
++### 5. Local Development
+ 
+ ```bash
+-# Start the worker in development mode
++# Start the worker in development mode (serves both API and frontend)
+ wrangler dev --local --port 8787
+ 
+ # Or for remote development (uses actual Cloudflare resources)
+ wrangler dev --port 8787
+ ```
+ 
+-### 5. Testing the Setup
++### 6. Testing the Setup
+ 
+-Once the worker is running, you can test the endpoints:
++Once the worker is running, you can test both the API and frontend:
+ 
+ ```bash
+ # Health check
+ curl http://localhost:8787/health
+ 
+ # Basic API response
+-curl http://localhost:8787/
++curl http://localhost:8787/api
++
++# Frontend (React app)
++open http://localhost:8787
+ ```
+ 
+ ## Deployment
+
+--- FILE: worker/src/index.ts ---
+diff --git a/worker/src/index.ts b/worker/src/index.ts
+index 685bc4e..b126856 100644
+--- a/worker/src/index.ts
++++ b/worker/src/index.ts
+@@ -5,14 +5,15 @@ import { prettyJSON } from 'hono/pretty-json'
+ 
+ // Type definitions for Cloudflare Workers environment
+ type Bindings = {
+-  R2_BUCKET: R2Bucket
+-  KV_SESSIONS: KVNamespace
+-  ANALYTICS?: AnalyticsEngineDataset
+-  JWT_SECRET: string
+-  CORS_ORIGINS: string
+-  JWT_EXPIRY_HOURS: string
+-  MAX_FILE_SIZE_MB: string
+-  ENVIRONMENT: string
++    R2_BUCKET: R2Bucket
++    KV_SESSIONS: KVNamespace
++    ANALYTICS?: AnalyticsEngineDataset
++    ASSETS: Fetcher
++    JWT_SECRET: string
++    CORS_ORIGINS: string
++    JWT_EXPIRY_HOURS: string
++    MAX_FILE_SIZE_MB: string
++    ENVIRONMENT: string
+ }
+ 
+ // Create Hono app with type bindings
+@@ -24,190 +25,231 @@ app.use('*', prettyJSON())
+ 
+ // CORS middleware with dynamic origins
+ app.use('*', async (c, next) => {
+-  const corsOrigins = c.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+-  
+-  return cors({
+-    origin: corsOrigins,
+-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+-    allowHeaders: ['Content-Type', 'Authorization'],
+-    credentials: true,
+-  })(c, next)
++    const corsOrigins = c.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
++
++    return cors({
++        origin: corsOrigins,
++        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
++        allowHeaders: ['Content-Type', 'Authorization'],
++        credentials: true,
++    })(c, next)
+ })
+ 
+ // Health check endpoint
+ app.get('/health', (c) => {
+-  return c.json({
+-    status: 'healthy',
+-    timestamp: new Date().toISOString(),
+-    environment: c.env.ENVIRONMENT,
+-    version: '1.0.0'
+-  })
++    return c.json({
++        status: 'healthy',
++        timestamp: new Date().toISOString(),
++        environment: c.env.ENVIRONMENT,
++        version: '1.0.0'
++    })
+ })
+ 
+ // API root endpoint
+-app.get('/', (c) => {
+-  return c.json({
+-    name: 'R2 File Explorer API',
+-    version: '1.0.0',
+-    environment: c.env.ENVIRONMENT,
+-    endpoints: {
+-      health: '/health',
+-      auth: '/api/auth',
+-      files: '/api/files'
+-    }
+-  })
++app.get('/api', (c) => {
++    return c.json({
++        name: 'R2 File Explorer API',
++        version: '1.0.0',
++        environment: c.env.ENVIRONMENT,
++        endpoints: {
++            health: '/health',
++            auth: '/api/auth',
++            files: '/api/files'
++        }
++    })
+ })
+ 
+ // Authentication routes
+ app.post('/api/auth/login', async (c) => {
+-  // TODO: Implement authentication logic
+-  return c.json({ message: 'Authentication endpoint - to be implemented' })
++    // TODO: Implement authentication logic
++    return c.json({ message: 'Authentication endpoint - to be implemented' })
+ })
+ 
+ app.post('/api/auth/logout', async (c) => {
+-  // TODO: Implement logout logic
+-  return c.json({ message: 'Logout endpoint - to be implemented' })
++    // TODO: Implement logout logic
++    return c.json({ message: 'Logout endpoint - to be implemented' })
+ })
+ 
+ app.get('/api/auth/verify', async (c) => {
+-  // TODO: Implement token verification
+-  return c.json({ message: 'Token verification endpoint - to be implemented' })
++    // TODO: Implement token verification
++    return c.json({ message: 'Token verification endpoint - to be implemented' })
+ })
+ 
+ // File operation routes
+ app.get('/api/files', async (c) => {
+-  try {
+-    const bucket = c.env.R2_BUCKET
+-    const prefix = c.req.query('prefix') || ''
+-    
+-    const objects = await bucket.list({ prefix })
+-    
+-    return c.json({
+-      success: true,
+-      objects: objects.objects.map(obj => ({
+-        key: obj.key,
+-        size: obj.size,
+-        lastModified: obj.uploaded,
+-        etag: obj.etag
+-      })),
+-      truncated: objects.truncated,
+-      ...(objects.truncated && 'cursor' in objects ? { cursor: objects.cursor } : {})
+-    })
+-  } catch (error) {
+-    console.error('Error listing files:', error)
+-    return c.json({ 
+-      success: false, 
+-      error: 'Failed to list files' 
+-    }, 500)
+-  }
++    try {
++        const bucket = c.env.R2_BUCKET
++        const prefix = c.req.query('prefix') || ''
++
++        const objects = await bucket.list({ prefix })
++
++        return c.json({
++            success: true,
++            objects: objects.objects.map(obj => ({
++                key: obj.key,
++                size: obj.size,
++                lastModified: obj.uploaded,
++                etag: obj.etag
++            })),
++            truncated: objects.truncated,
++            ...(objects.truncated && 'cursor' in objects ? { cursor: objects.cursor } : {})
++        })
++    } catch (error) {
++        console.error('Error listing files:', error)
++        return c.json({
++            success: false,
++            error: 'Failed to list files'
++        }, 500)
++    }
+ })
+ 
+ app.post('/api/files/upload', async (c) => {
+-  try {
+-    const bucket = c.env.R2_BUCKET
+-    const maxSizeMB = parseInt(c.env.MAX_FILE_SIZE_MB)
+-    
+-    // Get file from request
+-    const body = await c.req.blob()
+-    
+-    // Check file size
+-    if (body.size > maxSizeMB * 1024 * 1024) {
+-      return c.json({
+-        success: false,
+-        error: `File size exceeds maximum of ${maxSizeMB}MB`
+-      }, 413)
++    try {
++        const bucket = c.env.R2_BUCKET
++        const maxSizeMB = parseInt(c.env.MAX_FILE_SIZE_MB)
++
++        // Get file from request
++        const body = await c.req.blob()
++
++        // Check file size
++        if (body.size > maxSizeMB * 1024 * 1024) {
++            return c.json({
++                success: false,
++                error: `File size exceeds maximum of ${maxSizeMB}MB`
++            }, 413)
++        }
++
++        // Get filename from query or generate one
++        const filename = c.req.query('filename') || `upload-${Date.now()}`
++
++        // Upload to R2
++        await bucket.put(filename, body)
++
++        return c.json({
++            success: true,
++            message: 'File uploaded successfully',
++            filename,
++            size: body.size
++        })
++    } catch (error) {
++        console.error('Error uploading file:', error)
++        return c.json({
++            success: false,
++            error: 'Failed to upload file'
++        }, 500)
+     }
+-    
+-    // Get filename from query or generate one
+-    const filename = c.req.query('filename') || `upload-${Date.now()}`
+-    
+-    // Upload to R2
+-    await bucket.put(filename, body)
+-    
+-    return c.json({
+-      success: true,
+-      message: 'File uploaded successfully',
+-      filename,
+-      size: body.size
+-    })
+-  } catch (error) {
+-    console.error('Error uploading file:', error)
+-    return c.json({
+-      success: false,
+-      error: 'Failed to upload file'
+-    }, 500)
+-  }
+ })
+ 
+ app.get('/api/files/:filename', async (c) => {
+-  try {
+-    const bucket = c.env.R2_BUCKET
+-    const filename = c.req.param('filename')
+-    
+-    const object = await bucket.get(filename)
+-    
+-    if (!object) {
+-      return c.json({
+-        success: false,
+-        error: 'File not found'
+-      }, 404)
++    try {
++        const bucket = c.env.R2_BUCKET
++        const filename = c.req.param('filename')
++
++        const object = await bucket.get(filename)
++
++        if (!object) {
++            return c.json({
++                success: false,
++                error: 'File not found'
++            }, 404)
++        }
++
++        return new Response(object.body, {
++            headers: {
++                'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
++                'Content-Length': object.size.toString(),
++                'ETag': object.etag,
++                'Last-Modified': object.uploaded.toUTCString()
++            }
++        })
++    } catch (error) {
++        console.error('Error downloading file:', error)
++        return c.json({
++            success: false,
++            error: 'Failed to download file'
++        }, 500)
+     }
+-    
+-    return new Response(object.body, {
+-      headers: {
+-        'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+-        'Content-Length': object.size.toString(),
+-        'ETag': object.etag,
+-        'Last-Modified': object.uploaded.toUTCString()
+-      }
+-    })
+-  } catch (error) {
+-    console.error('Error downloading file:', error)
+-    return c.json({
+-      success: false,
+-      error: 'Failed to download file'
+-    }, 500)
+-  }
+ })
+ 
+ app.delete('/api/files/:filename', async (c) => {
+-  try {
+-    const bucket = c.env.R2_BUCKET
+-    const filename = c.req.param('filename')
+-    
+-    await bucket.delete(filename)
+-    
+-    return c.json({
+-      success: true,
+-      message: 'File deleted successfully',
+-      filename
+-    })
+-  } catch (error) {
+-    console.error('Error deleting file:', error)
+-    return c.json({
+-      success: false,
+-      error: 'Failed to delete file'
+-    }, 500)
+-  }
++    try {
++        const bucket = c.env.R2_BUCKET
++        const filename = c.req.param('filename')
++
++        await bucket.delete(filename)
++
++        return c.json({
++            success: true,
++            message: 'File deleted successfully',
++            filename
++        })
++    } catch (error) {
++        console.error('Error deleting file:', error)
++        return c.json({
++            success: false,
++            error: 'Failed to delete file'
++        }, 500)
++    }
+ })
+ 
+-// 404 handler
++// Static asset serving for React frontend
++app.get('*', async (c) => {
++    try {
++        // Try to serve the requested static asset
++        const url = new URL(c.req.url)
++        const assetResponse = await c.env.ASSETS.fetch(c.req.raw)
++
++        // If asset found, return it
++        if (assetResponse.status !== 404) {
++            return assetResponse
++        }
++
++        // For SPA routing, serve index.html for non-API routes
++        if (!url.pathname.startsWith('/api/')) {
++            const indexResponse = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)))
++            if (indexResponse.status === 200) {
++                return new Response(indexResponse.body, {
++                    headers: {
++                        ...Object.fromEntries(indexResponse.headers),
++                        'Content-Type': 'text/html'
++                    }
++                })
++            }
++        }
++
++        // If no static asset found and not an API route, return 404
++        return c.json({
++            success: false,
++            error: 'Not Found',
++            message: 'The requested resource does not exist'
++        }, 404)
++    } catch (error) {
++        console.error('Error serving static asset:', error)
++        return c.json({
++            success: false,
++            error: 'Internal Server Error',
++            message: 'Failed to serve static asset'
++        }, 500)
++    }
++})
++
++// 404 handler for API routes (this won't be reached due to the catch-all above)
+ app.notFound((c) => {
+-  return c.json({
+-    success: false,
+-    error: 'Not Found',
+-    message: 'The requested endpoint does not exist'
+-  }, 404)
++    return c.json({
++        success: false,
++        error: 'Not Found',
++        message: 'The requested endpoint does not exist'
++    }, 404)
+ })
+ 
+ // Error handler
+ app.onError((err, c) => {
+-  console.error('Unhandled error:', err)
+-  return c.json({
+-    success: false,
+-    error: 'Internal Server Error',
+-    message: 'An unexpected error occurred'
+-  }, 500)
++    console.error('Unhandled error:', err)
++    return c.json({
++        success: false,
++        error: 'Internal Server Error',
++        message: 'An unexpected error occurred'
++    }, 500)
+ })
+ 
+ export default app
+\ No newline at end of file
+
+--- FILE: worker/src/types/index.ts ---
+diff --git a/worker/src/types/index.ts b/worker/src/types/index.ts
+index 0b4b8b2..7ae2109 100644
+--- a/worker/src/types/index.ts
++++ b/worker/src/types/index.ts
+@@ -4,6 +4,7 @@ export interface Bindings {
+   R2_BUCKET: R2Bucket
+   KV_SESSIONS: KVNamespace
+   ANALYTICS?: AnalyticsEngineDataset
++  ASSETS: Fetcher
+   JWT_SECRET: string
+   CORS_ORIGINS: string
+   JWT_EXPIRY_HOURS: string
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 09c656b..4b13f20 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -2,6 +2,11 @@ name = "r2-file-explorer-api"
+ main = "src/index.ts"
+ compatibility_date = "2024-01-01"
+ 
++# Static assets configuration for React frontend
++[assets]
++directory = "../frontend/dist"
++binding = "ASSETS"
++
+ # Development R2 bucket binding for file storage
+ [[r2_buckets]]
+ binding = "R2_BUCKET"
+@@ -46,7 +51,7 @@ binding = "ANALYTICS"
+ 
+ [env.staging.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_STAGING_SECRET"
+-CORS_ORIGINS = "https://r2-file-explorer-staging.pages.dev"
++CORS_ORIGINS = "https://r2-file-explorer-api-staging.your-subdomain.workers.dev"
+ JWT_EXPIRY_HOURS = "12"
+ MAX_FILE_SIZE_MB = "100"
+ ENVIRONMENT = "staging"
+@@ -72,7 +77,7 @@ binding = "ANALYTICS"
+ 
+ [env.production.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_PRODUCTION_SECRET"
+-CORS_ORIGINS = "https://r2-file-explorer.pages.dev"
++CORS_ORIGINS = "https://r2-file-explorer-api-prod.your-subdomain.workers.dev"
+ JWT_EXPIRY_HOURS = "8"
+ MAX_FILE_SIZE_MB = "200"
+ ENVIRONMENT = "production"
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

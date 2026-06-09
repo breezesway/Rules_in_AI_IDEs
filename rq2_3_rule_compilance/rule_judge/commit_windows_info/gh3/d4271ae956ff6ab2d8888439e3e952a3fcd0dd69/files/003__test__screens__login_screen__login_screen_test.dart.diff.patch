@@ -1,0 +1,105 @@
+diff --git a/test/screens/login_screen/login_screen_test.dart b/test/screens/login_screen/login_screen_test.dart
+index cf55502..798fd15 100644
+--- a/test/screens/login_screen/login_screen_test.dart
++++ b/test/screens/login_screen/login_screen_test.dart
+@@ -11,18 +11,87 @@ import 'login_screen_test.mocks.dart';
+ 
+ @GenerateMocks([GithubAuthClient, AuthService, AuthViewModel, LoginViewModel])
+ void main() {
+-  testWidgets('LoginScreen renders sign in button', (
+-    WidgetTester tester,
+-  ) async {
+-    final mockLoginViewModel = MockLoginViewModel();
+-    when(mockLoginViewModel.userCode).thenReturn(null);
+-    when(mockLoginViewModel.isLoading).thenReturn(false);
+-    when(mockLoginViewModel.errorMessage).thenReturn(null);
+-    when(mockLoginViewModel.isAuthorized).thenReturn(false);
+-
+-    await tester.pumpWidget(
+-      MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
+-    );
+-    expect(find.text('Sign in with GitHub'), findsOneWidget);
++  group('LoginScreen', () {
++    late MockLoginViewModel mockLoginViewModel;
++
++    setUp(() {
++      mockLoginViewModel = MockLoginViewModel();
++      when(mockLoginViewModel.userCode).thenReturn(null);
++      when(mockLoginViewModel.isLoading).thenReturn(false);
++      when(mockLoginViewModel.errorMessage).thenReturn(null);
++      when(mockLoginViewModel.isAuthorized).thenReturn(false);
++    });
++
++    testWidgets('renders sign in button', (WidgetTester tester) async {
++      await tester.pumpWidget(
++        MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++      );
++      expect(find.text('Sign in with GitHub'), findsOneWidget);
++    });
++
++    testWidgets('shows user code when available', (WidgetTester tester) async {
++      when(mockLoginViewModel.userCode).thenReturn('ABC123');
++
++      await tester.pumpWidget(
++        MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++      );
++
++      expect(find.text('Your user code is: ABC123'), findsOneWidget);
++      expect(find.text('Copy and Open browser'), findsOneWidget);
++    });
++
++    testWidgets('shows loading state', (WidgetTester tester) async {
++      when(mockLoginViewModel.isLoading).thenReturn(true);
++
++      await tester.pumpWidget(
++        MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++      );
++
++      expect(find.byType(CircularProgressIndicator), findsOneWidget);
++    });
++
++    testWidgets('shows error message when present', (WidgetTester tester) async {
++      when(mockLoginViewModel.errorMessage).thenReturn('Login failed');
++
++      await tester.pumpWidget(
++        MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++      );
++
++      expect(find.text('Login failed'), findsOneWidget);
++    });
++
++    group('Lifecycle Management', () {
++      testWidgets('should add listeners properly', (WidgetTester tester) async {
++        await tester.pumpWidget(
++          MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++        );
++
++        // Verify that the viewModel was set up with listeners
++        verify(mockLoginViewModel.addListener(any)).called(1);
++      });
++
++      testWidgets('should remove listeners when widget is disposed', (
++        WidgetTester tester,
++      ) async {
++        await tester.pumpWidget(
++          MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++        );
++        await tester.pumpWidget(Container()); // Replace with empty widget
++
++        verify(mockLoginViewModel.removeListener(any)).called(1);
++      });
++
++      testWidgets('should dispose ViewModel when widget is disposed', (
++        WidgetTester tester,
++      ) async {
++        await tester.pumpWidget(
++          MaterialApp(home: LoginScreen(viewModel: mockLoginViewModel)),
++        );
++        await tester.pumpWidget(Container()); // Replace with empty widget
++
++        // Verify that the ViewModel's dispose method was called
++        verify(mockLoginViewModel.dispose()).called(1);
++      });
++    });
+   });
+ }

@@ -1,0 +1,518 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: a0.5.0
+- Changed Files List: 
+public/changelog.md	+1	-3	after_lines=145
+src/GameApp.vue	+0	-1	after_lines=135
+src/components/ActionPanel.vue	+15	-3	after_lines=122
+src/components/BattleScreen.vue	+0	-2	after_lines=106
+src/components/SkillsHand.vue	+7	-3	after_lines=392
+src/data/animationInstructionHelpers.js	+6	-8	after_lines=465
+src/data/animationSequencer.js	+1	-1	after_lines=134
+src/data/battle.js	+21	-18	after_lines=430
+src/data/gameState.js	+0	-3	after_lines=74
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationInstructionHelpers.js
+│   │   ├── animationSequencer.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: public/changelog.md ---
+diff --git a/public/changelog.md b/public/changelog.md
+index 9ed909d..72f523f 100644
+--- a/public/changelog.md
++++ b/public/changelog.md
+@@ -2,7 +2,7 @@
+ - 签名：Hineven
+ 
+ ### 新增
+-- 动画引擎重构
++- 动画引擎重构，引入异步动画队列，支持并行多发动画
+ - 部分卡牌和技能
+ - 部分后端重构，修改器机制引入
+ 
+@@ -12,8 +12,6 @@
+ ### 已知问题
+ - 重新开始游戏时状态异常
+ - 闪避动画消失
+-- 结束回合按钮点击后锁定操作界面动画逻辑存在问题
+-- 目前动画模型存在问题，需要继续改进
+ 
+ ## 2025.9.29 [Alpha 0.4.5 hotfix]
+ - 签名：Hineven
+
+--- FILE: src/GameApp.vue ---
+diff --git a/src/GameApp.vue b/src/GameApp.vue
+index 8e81363..bb17f8e 100644
+--- a/src/GameApp.vue
++++ b/src/GameApp.vue
+@@ -11,7 +11,6 @@
+       v-else-if="gameState.gameStage === 'battle'"
+       :player="gameState.player"
+       :enemy="gameState.enemy"
+-      :is-control-disabled="gameState.controlDisableCount > 0"
+       :is-player-turn="!gameState.isEnemyTurn"
+       :level="gameState.battleCount"
+     />
+
+--- FILE: src/components/ActionPanel.vue ---
+diff --git a/src/components/ActionPanel.vue b/src/components/ActionPanel.vue
+index e0b8fb8..7399146 100644
+--- a/src/components/ActionPanel.vue
++++ b/src/components/ActionPanel.vue
+@@ -44,12 +44,12 @@ export default {
+   components: { SkillsHand, DeckIcon, DeckOverlayPanel },
+   props: {
+     player: { type: Object, required: true },
+-    isControlDisabled: { type: Boolean, default: false },
+     isPlayerTurn: { type: Boolean, default: true }
+   },
+   data() {
+     return {
+-      showDeckOverlay: false
++      showDeckOverlay: false,
++      isControlDisabled: true // 可以通过外部事件控制面板禁用
+     };
+   },
+   computed: {
+@@ -75,6 +75,18 @@ export default {
+       const el = r && r.$el ? r.$el : r;
+       if (el) orchestrator.deckAnchorEl = el;
+     });
++    // 监听控制面板禁用事件
++    frontendEventBus.on('disable-controls', () => {
++      console.log('ActionPanel: disable-controls received');
++      this.isControlDisabled = true;
++    });
++    frontendEventBus.on('enable-controls', () => {
++      this.isControlDisabled = false;
++    });
++  },
++  beforeUnmount() {
++    frontendEventBus.off('disable-controls');
++    frontendEventBus.off('enable-controls');
+   },
+   methods: {
+     onEndTurnButtonClicked() {
+@@ -102,7 +114,7 @@ export default {
+ }
+ 
+ .action-panel.disabled {
+-  filter: brightness(50%);
++  /* filter: brightness(50%); */
+   pointer-events: none;
+ }
+
+--- FILE: src/components/BattleScreen.vue ---
+diff --git a/src/components/BattleScreen.vue b/src/components/BattleScreen.vue
+index 0ec3b57..f476b17 100644
+--- a/src/components/BattleScreen.vue
++++ b/src/components/BattleScreen.vue
+@@ -27,7 +27,6 @@
+     <!-- 操作面板 -->
+     <ActionPanel
+       :player="player"
+-      :is-control-disabled="isControlDisabled"
+       :is-player-turn="isPlayerTurn"
+     />
+   </div>
+@@ -51,7 +50,6 @@ export default {
+   props: {
+     player: { type: Object, required: true },
+     enemy: { type: Object, required: true },
+-    isControlDisabled: { type: Boolean, default: false },
+     isPlayerTurn: { type: Boolean, default: true },
+     level: { type: Number, default: 1 }
+   },
+
+--- FILE: src/components/SkillsHand.vue ---
+diff --git a/src/components/SkillsHand.vue b/src/components/SkillsHand.vue
+index c2475ec..6e5d162 100644
+--- a/src/components/SkillsHand.vue
++++ b/src/components/SkillsHand.vue
+@@ -28,6 +28,7 @@ import SkillCard from './SkillCard.vue';
+ import frontendEventBus from '../frontendEventBus.js';
+ import backendEventBus, { EventNames } from '../backendEventBus';
+ import { registerCardEl, unregisterCardEl } from '../utils/cardDomRegistry.js';
++import {backendGameState} from "../data/gameState";
+ 
+ function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+ 
+@@ -244,9 +245,12 @@ export default {
+     scheduleAppearFallback(id) {
+       setTimeout(() => { if (this.appearing[id]) delete this.appearing[id]; }, 1500);
+     },
+-    canUseSkill(skill) {
+-      const p = (this.player && typeof this.player.getModifiedPlayer === 'function') ? this.player.getModifiedPlayer() : this.player;
+-      return skill && typeof skill.canUse === 'function' && skill.canUse(p) && skill.usesLeft !== 0;
++    canUseSkill(frontEndSkill) {
++      // 直接使用后端玩家状态和后端技能状态判断是否可用，避免因前端 player 状态不同步导致的误判
++      const player = backendGameState.player;
++      const p = (player && typeof player.getModifiedPlayer === 'function') ? player.getModifiedPlayer() : player;
++      const skill = player.frontierSkills.find(s => s.uniqueID === frontEndSkill.uniqueID);
++      return skill && typeof skill.canUse === 'function' && skill.canUse(p);
+     },
+     onSkillCardClicked(skill, event) {
+       if (this.draggable || this.isControlDisabled || !this.isPlayerTurn) return; // 休整/不可控制/非玩家会和时禁用技能使用
+
+--- FILE: src/data/animationInstructionHelpers.js ---
+diff --git a/src/data/animationInstructionHelpers.js b/src/data/animationInstructionHelpers.js
+index 9b5a5b9..f092736 100644
+--- a/src/data/animationInstructionHelpers.js
++++ b/src/data/animationInstructionHelpers.js
+@@ -427,23 +427,21 @@ export function enqueueClearCardAnimations({ tags = ['ui'], waitTags, durationMs
+   });
+ }
+ 
+-// 控制锁定/解锁（直接修改 display 层计数，立即完成）
++// 控制锁定/解锁
+ export function enqueueLockControl(options = {}) {
+-  console.log('lock!');
+   return enqueueInstruction({
+     tags: ['ui', 'locking'],
+-    waitTags: ['locking'], // 锁定时不等待任何前序（除了解锁/锁定），尽快生效
++    waitTags: ['unlocking', 'mount'], // 锁定时不等待任何前序（除了解锁锁定和前端组件挂载），尽快生效，防止二次点击
+     durationMs: options.duration ?? 0,
+-    start: () => { displayGameState.controlDisableCount = 1; },
++    start: () => { frontendEventBus.emit('disable-controls'); },
+   });
+ }
+ export function enqueueUnlockControl(options = {}) {
+-  console.log('unlock!');
+   return enqueueInstruction({
+-    tags: ['ui', 'locking'],
+-    waitTags: ['all'], // 解锁时总是等待所有前序完成，避免过早解锁
++    tags: ['ui', 'unlocking'],
++    waitTags: ['all'], // 解锁时总是等待所有前序动画完成，避免过早解锁，防止误操作
+     durationMs: options.duration ?? 0,
+-    start: () => { displayGameState.controlDisableCount = 0; },
++    start: () => { frontendEventBus.emit('enable-controls'); },
+   });
+ }
+
+--- FILE: src/data/animationSequencer.js ---
+diff --git a/src/data/animationSequencer.js b/src/data/animationSequencer.js
+index dc5d093..1931e2f 100644
+--- a/src/data/animationSequencer.js
++++ b/src/data/animationSequencer.js
+@@ -9,7 +9,7 @@
+ //   start: (ctx) => void      // 启动逻辑，在进入 running 时触发
+ //   meta?: any                // 透传数据（可选）
+ // - 可执行判定（假设更符合直觉的语义）：
+-//   指令 X 可以开始执行，当且仅当 序列中位于 X 之前、且与 X.waitTags 存在“交集”的所有指令均已 finished。
++//   指令 X 可以开始执行，当且仅当 序列中“位于 X 之前且与 X.waitTags 存在“交集”的所有指令”均已 finished。
+ //   这样等待标签表示“我需要等待的类别”，默认 ['all'] 即等待所有前序指令。
+ // - 结束条件：
+ //   1) 前端通过事件总线发出 'animation-instruction-finished'，携带 { id }；或
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 0e1838f..59743ce 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -9,7 +9,7 @@ import {
+   enqueueDelay,
+   enqueueUnlockControl,
+   enqueueAnimateCardById,
+-  enqueueLockControl, enqueueClearCardAnimations, enqueueState
++  enqueueLockControl, enqueueClearCardAnimations, enqueueState, captureSnapshot
+ } from './animationInstructionHelpers.js'
+ import {burnSkillCard, drawSkillCard, dropSkillCard} from "./battleUtils";
+ 
+@@ -30,8 +30,10 @@ export function enterBattleStage() {
+ 
+   // 切换游戏状态到战斗状态
+   gameState.gameStage = 'battle';
+-  // 等待一下，方便战斗界面组件挂载
+-  enqueueDelay(500);
++  // 马上切换状态，阻塞，但是无延迟
++  enqueueState(captureSnapshot(), 0);
++  // 小等一下，方便战斗界面组件挂载 特殊类型: mount，依赖挂载的指令可以等待这个类型
++  enqueueDelay(300, {tags: ['ui', 'mount']});
+ 
+   // 进入游戏控制流
+   backendEventBus.emit(EventNames.Battle.BATTLE_START);
+@@ -52,8 +54,8 @@ function startBattle() {
+   gameState.player.backupSkills = [...gameState.player.skills];
+   gameState.player.frontierSkills = [];
+ 
+-  // 填充前台技能
+-  fillFrontierSkills(gameState.player);
++  // 搞定后立刻锁定操作面板
++  enqueueLockControl();
+ 
+   // 调用技能的onBattleStart方法
+   gameState.player.skills.forEach(skill => {
+@@ -73,26 +75,30 @@ function startPlayerTurn() {
+   gameState.player.remainingActionPoints = gameState.player.maxActionPoints;
+ 
+   // 进行技能冷却
+-  gameState.player.skills.forEach(skill => {
++  gameState.player.frontierSkills.forEach(skill => {
++    skill.coldDown();
++  });
++  gameState.player.backupSkills.forEach(skill => {
+     skill.coldDown();
+   });
+ 
+-  // 填充前台技能
+-  fillFrontierSkills(gameState.player);
+-
+-  enqueueDelay(300);
+   // 回合开始时结算效果（使用修正后的玩家对象）
+   const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
+   const isStunned = processStartOfTurnEffects(modPlayer);
+   if(checkBattleVictory()) return ;
+ 
++  // 解锁操作面板
++  enqueueUnlockControl();
++
++  // 填充前台技能
++  fillFrontierSkills(gameState.player);
++
+   if (isStunned) {
+     addSystemLog('你被眩晕，跳过回合！');
+     // 触发玩家回合结束事件
+     backendEventBus.emit(EventNames.Battle.PLAYER_END_TURN, {});
+-    return;
++    return ;
+   }
+-  enqueueUnlockControl();
+ 
+   // 等待玩家操作
+   // 玩家操作通过BattleScreen组件的事件处理
+@@ -215,8 +221,6 @@ function enemyTurn() {
+   // 敌人行动逻辑
+   gameState.isEnemyTurn = true;
+ 
+-  enqueueLockControl();
+-
+   addEnemyActionLog(`/red{${gameState.enemy.name}} 的回合！`);
+ 
+   enqueueDelay(500);
+@@ -262,7 +266,6 @@ function battleVictory(isVictory) {
+   gameState.player.shield = 0;
+   // 清空战斗技能数组
+   gameState.player.skills = [];
+-
+   // 锁定操作面板
+   gameState.isEnemyTurn = true;
+   
+@@ -275,13 +278,13 @@ function battleVictory(isVictory) {
+ 
+   // 添加延迟，让玩家体验到胜利或失败的感觉
+   enqueueDelay(3000);
++  // 之后再把前台和后备技能列表清空
++  gameState.player.frontierSkills = [];
++  gameState.player.backupSkills = [];
+ 
+   // 清理掉卡牌ghost
+   enqueueClearCardAnimations();
+ 
+-  // 解锁操作面板
+-  enqueueUnlockControl();
+-
+   // 战斗结束事件
+   backendEventBus.emit(EventNames.Game.POST_BATTLE, {
+     battleCount : gameState.battleCount,
+
+--- FILE: src/data/gameState.js ---
+diff --git a/src/data/gameState.js b/src/data/gameState.js
+index 6a468a7..873f68f 100644
+--- a/src/data/gameState.js
++++ b/src/data/gameState.js
+@@ -23,9 +23,6 @@ export function createGameState() {
+       return !this.isEnemyTurn;
+     },
+ 
+-    // 冻结玩家的控制面板计数
+-    controlDisableCount: 0,
+-
+     // 玩家数据
+     player: reactive(new Player()),
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

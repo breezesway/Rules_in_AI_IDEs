@@ -1,0 +1,35 @@
+diff --git a/tests/integration/setup.ts b/tests/integration/setup.ts
+index 888e9a1..48ea91e 100644
+--- a/tests/integration/setup.ts
++++ b/tests/integration/setup.ts
+@@ -14,11 +14,30 @@ beforeAll(async () => {
+     // Suppress error logging during tests
+     errorHandler.setLogLevel('error');
+ 
++    // Set up test database environment
++    (global as any).testUtils.database.setupTestEnvironment();
++
++    // Clean up any existing test data before running integration tests
++    try {
++        await (global as any).testUtils.database.cleanupTestData();
++        console.log('Integration test database cleanup completed');
++    } catch (error) {
++        console.warn('Integration test database cleanup failed:', error);
++    }
++
+     console.log('Integration test environment initialized');
+ });
+ 
+ // Global teardown for integration tests
+ afterAll(async () => {
++    // Clean up any remaining test data
++    try {
++        await (global as any).testUtils.database.cleanupTestData();
++        console.log('Integration test final database cleanup completed');
++    } catch (error) {
++        console.warn('Integration test final database cleanup failed:', error);
++    }
++
+     // Clean up any remaining resources
+     console.log('Integration test environment cleaned up');
+ });

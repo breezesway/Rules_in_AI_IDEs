@@ -1,0 +1,467 @@
+project: eformLockerRoom
+branch: main
+commit: a3ef576f22708878b7c6e3c6e5e34aba2deb7540
+message:
+FIX PANEL RELAY ROUTES: Fix route registration and port conflicts
+
+- Fix relay routes import and registration
+- Add Gateway API fallback when Kiosk service is using serial port
+- Direct relay buttons now use Gateway API when port is busy
+- Should resolve 404 errors and port conflict issues
+
+modified files:
+app/panel/src/index.ts	+7	-2	after_lines=607
+app/panel/src/routes/relay-routes.ts	+43	-3	after_lines=498
+
+skipped_files_count: 0
+
+project_tree_after_this_commit:
+├── .env.example
+├── .gitattributes
+├── .github
+│   └── workflows
+│       └── e2e-tests.yml
+├── .gitignore
+├── .kiro
+│   └── specs
+│       ├── admin-panel-relay-control
+│       │   ├── design.md
+│       │   ├── requirements.md
+│       │   └── tasks.md
+│       ├── eform-locker-system
+│       │   ├── design.md
+│       │   ├── requirements.md
+│       │   └── tasks.md
+│       ├── errors.md
+│       └── raspberry-pi-auto-setup
+│           ├── design.md
+│           ├── requirements.md
+│           └── tasks.md
+├── .nvmrc
+├── COMMAND_QUEUE_DATABASE_PATH_ISSUE_REPORT.md
+├── CROSS_PLATFORM_IMPROVEMENTS.md
+├── DEPLOYMENT.md
+├── DIRECT_RELAY_TROUBLESHOOTING_REPORT.md
+├── LICENSE
+├── PRODUCTION_READY_SUMMARY.md
+├── RASPBERRY_PI_ENVIRONMENT_SETUP.md
+├── RASPBERRY_PI_MIGRATION_FIX.md
+├── README.md
+├── app
+│   ├── agent
+│   │   ├── README.md
+│   │   ├── eform-agent.service
+│   │   ├── jest.config.js
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   └── setup.ts
+│   │   │   ├── index.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── update-agent.test.js
+│   │   │   │   │   └── update-agent.test.ts
+│   │   │   │   ├── update-agent.js
+│   │   │   │   └── update-agent.ts
+│   │   │   └── types
+│   │   │       └── update-types.ts
+│   │   ├── test-build.js
+│   │   └── tsconfig.json
+│   ├── gateway
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   ├── failure-scenarios
+│   │   │   │   │   └── system-resilience.test.ts
+│   │   │   │   ├── integration
+│   │   │   │   │   ├── database-test.test.ts
+│   │   │   │   │   ├── full-system-integration.test.ts
+│   │   │   │   │   ├── multi-room-coordination.test.ts
+│   │   │   │   │   └── multi-service-integration.test.ts
+│   │   │   │   └── validation
+│   │   │   │       ├── comprehensive-performance-validation.test.ts
+│   │   │   │       ├── comprehensive-system-validation.test.ts
+│   │   │   │       ├── power-interruption-validation.test.ts
+│   │   │   │       └── system-validation.test.ts
+│   │   │   ├── controllers
+│   │   │   │   ├── configuration.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   ├── index.ts
+│   │   │   ├── routes
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── heartbeat.test.ts
+│   │   │   │   ├── admin.ts
+│   │   │   │   ├── configuration.ts
+│   │   │   │   ├── heartbeat.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── locker-coordination.test.ts
+│   │   │   │   ├── configuration.ts
+│   │   │   │   ├── locker-coordination.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   └── utils
+│   │   │       ├── config-test.ts
+│   │   │       └── provision.ts
+│   │   └── tsconfig.json
+│   ├── kiosk
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   ├── e2e
+│   │   │   │   │   └── complete-user-flows.test.ts
+│   │   │   │   ├── heartbeat-commands-vip.test.ts
+│   │   │   │   ├── integration
+│   │   │   │   │   └── rfid-qr-integration.test.ts
+│   │   │   │   ├── master-pin.test.ts
+│   │   │   │   ├── qr-security.test.ts
+│   │   │   │   ├── rfid-integration.test.ts
+│   │   │   │   ├── soak
+│   │   │   │   │   ├── hardware-endurance.test.ts
+│   │   │   │   │   └── simple-test.test.ts
+│   │   │   │   ├── ui-controller.test.ts
+│   │   │   │   └── validation
+│   │   │   │       ├── actual-hardware-validation.test.ts
+│   │   │   │       └── hardware-integration-validation.test.ts
+│   │   │   ├── controllers
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── i18n-controller.test.ts
+│   │   │   │   │   ├── qr-handler-vip.test.ts
+│   │   │   │   │   └── qr-handler.test.ts
+│   │   │   │   ├── i18n-controller.ts
+│   │   │   │   ├── qr-handler.ts
+│   │   │   │   └── ui-controller.ts
+│   │   │   ├── hardware
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── modbus-controller.test.ts
+│   │   │   │   │   ├── modbus-error-handling.test.ts
+│   │   │   │   │   ├── rfid-handler.test.ts
+│   │   │   │   │   └── rs485-diagnostics.test.ts
+│   │   │   │   ├── modbus-controller.ts
+│   │   │   │   ├── rfid-handler.ts
+│   │   │   │   └── rs485-diagnostics.ts
+│   │   │   ├── index.ts
+│   │   │   ├── middleware
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── security-middleware.test.ts
+│   │   │   │   └── security-middleware.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── heartbeat-client.test.ts
+│   │   │   │   │   ├── rate-limiter.test.ts
+│   │   │   │   │   ├── rfid-user-flow-vip.test.ts
+│   │   │   │   │   └── rfid-user-flow.test.ts
+│   │   │   │   ├── heartbeat-client.ts
+│   │   │   │   ├── rate-limiter.ts
+│   │   │   │   └── rfid-user-flow.ts
+│   │   │   ├── types
+│   │   │   │   └── node-hid.d.ts
+│   │   │   └── ui
+│   │   │       ├── index.html
+│   │   │       └── static
+│   │   │           ├── app.js
+│   │   │           ├── i18n.js
+│   │   │           └── styles.css
+│   │   ├── tsconfig.json
+│   │   └── vitest.config.ts
+│   └── panel
+│       ├── config
+│       │   └── system.json
+│       ├── package.json
+│       ├── src
+│       │   ├── __tests__
+│       │   │   ├── auth-middleware.test.ts
+│       │   │   ├── auth-service.test.ts
+│       │   │   ├── command-status.test.ts
+│       │   │   ├── integration
+│       │   │   │   └── vip-workflow-integration.test.ts
+│       │   │   ├── locker-routes-vip.test.ts
+│       │   │   ├── performance
+│       │   │   │   └── panel-performance.test.ts
+│       │   │   ├── permission-service.test.ts
+│       │   │   ├── session-manager.test.ts
+│       │   │   ├── setup.ts
+│       │   │   ├── validation
+│       │   │   │   └── end-of-day-csv-validation.test.ts
+│       │   │   └── vip-routes.test.ts
+│       │   ├── controllers
+│       │   │   ├── __tests__
+│       │   │   │   └── i18n-controller.test.ts
+│       │   │   ├── config-controller.ts
+│       │   │   └── i18n-controller.ts
+│       │   ├── index.ts
+│       │   ├── middleware
+│       │   │   ├── __tests__
+│       │   │   │   └── security-middleware.test.ts
+│       │   │   ├── auth-middleware.ts
+│       │   │   └── security-middleware.ts
+│       │   ├── routes
+│       │   │   ├── auth-routes.ts
+│       │   │   ├── locker-routes.ts
+│       │   │   ├── relay-routes.ts
+│       │   │   └── vip-routes.ts
+│       │   ├── services
+│       │   │   ├── __tests__
+│       │   │   │   └── authorization-service.test.ts
+│       │   │   ├── auth-service.ts
+│       │   │   ├── authorization-service.ts
+│       │   │   ├── permission-service.ts
+│       │   │   ├── pin-rotation-service.ts
+│       │   │   └── session-manager.ts
+│       │   ├── types
+│       │   │   └── fastify.d.ts
+│       │   ├── validation
+│       │   │   ├── simple-validation.js
+│       │   │   ├── task-8.4-implementation-summary.md
+│       │   │   └── vip-transfer-validation.ts
+│       │   └── views
+│       │       ├── config.html
+│       │       ├── configuration-panel.html
+│       │       ├── csp-test.html
+│       │       ├── dashboard.html
+│       │       ├── lockers.html
+│       │       ├── login.html
+│       │       ├── relay.html
+│       │       ├── static
+│       │       │   └── i18n.js
+│       │       └── vip.html
+│       ├── tsconfig.json
+│       └── vitest.config.ts
+├── assets
+│   ├── index-D_ryMEPs.js
+│   └── index-X8b7Z_4p.css
+├── config
+│   ├── README.md
+│   ├── development.json
+│   ├── production-final.json
+│   ├── production.json
+│   └── system.json
+├── docs
+│   ├── configuration-system.md
+│   ├── kiosk-startup-troubleshooting.md
+│   ├── operational-runbook.md
+│   ├── project-structure.md
+│   ├── raspberry-pi-deployment-guide.md
+│   └── raspberry-pi-setup-guide.md
+├── favicon.ico
+├── favicon.svg
+├── migrations
+│   ├── 001_initial_schema.sql
+│   ├── 002_provisioning_and_config.sql
+│   ├── 003_complete_schema.sql
+│   ├── 004_staff_users.sql
+│   ├── 005_vip_transfer_audit.sql
+│   ├── 006_pin_rotation_system.sql
+│   ├── 007_soak_testing_tables.sql
+│   ├── 008_clean_default_users.sql
+│   └── 015_add_command_duration.sql
+├── package-lock.json
+├── package.json
+├── scripts
+│   ├── README.md
+│   ├── backup.sh
+│   ├── canary-deploy.sh
+│   ├── check-command-status-remote.js
+│   ├── check-javascript-error.js
+│   ├── check-rfid-devices.js
+│   ├── create-test-command.js
+│   ├── debug-database-paths.js
+│   ├── debug-hardware-communication.js
+│   ├── debug-pi-commands.sh
+│   ├── debug-relay-behavior.js
+│   ├── deploy-to-pi.sh
+│   ├── deploy.sh
+│   ├── deployment-monitor.sh
+│   ├── diagnose-modbus-issue.js
+│   ├── e2e-admin-panel-relay-test.js
+│   ├── e2e-hardware-validation.js
+│   ├── e2e-production-checklist.js
+│   ├── e2e-setup-report.json
+│   ├── e2e-smoke-tests.js
+│   ├── e2e-test-completion-summary.md
+│   ├── e2e-test-documentation.md
+│   ├── emergency-close-relay-direct.js
+│   ├── emergency-close-relay.js
+│   ├── emergency-relay-reset.js
+│   ├── final-e2e-validation.js
+│   ├── fix-database-path.js
+│   ├── fix-duplicate-migrations.js
+│   ├── fix-kiosk-startup.sh
+│   ├── fix-migration-checksums.js
+│   ├── fix-panel-port.sh
+│   ├── hardware-diagnostics.js
+│   ├── hardware-validation-summary.md
+│   ├── health-check.sh
+│   ├── init-database-manual.sh
+│   ├── install-production.sh
+│   ├── install.sh
+│   ├── migrate.ts
+│   ├── package.sh
+│   ├── pi-database-fix.sh
+│   ├── pre-e2e-validation.js
+│   ├── prepare-release.sh
+│   ├── production-startup.js
+│   ├── quick-fix-validation.sh
+│   ├── reset-users.js
+│   ├── resolve-serial-port.js
+│   ├── restore-auth.js
+│   ├── restore.sh
+│   ├── run-comprehensive-tests.ps1
+│   ├── run-comprehensive-tests.sh
+│   ├── run-cookie-diagnostics.sh
+│   ├── run-e2e-admin-panel-tests.js
+│   ├── run-integration-tests.ps1
+│   ├── run-system-validation.ps1
+│   ├── run-system-validation.sh
+│   ├── setup-config.js
+│   ├── setup-database.sh
+│   ├── setup-logs-dir.sh
+│   ├── setup-pi-environment.sh
+│   ├── sign-package.sh
+│   ├── simple-relay-test.js
+│   ├── start-all-clean.sh
+│   ├── start-all-services.sh
+│   ├── start-all.js
+│   ├── start-kiosk-clean.sh
+│   ├── start-services-properly.sh
+│   ├── systemd
+│   │   ├── eform-agent.service
+│   │   ├── eform-gateway.service
+│   │   ├── eform-kiosk.service
+│   │   └── eform-panel.service
+│   ├── task-8-verification-summary.md
+│   ├── test-admin-panel-e2e.ps1
+│   ├── test-admin-panel-e2e.sh
+│   ├── test-basic-relay-control.js
+│   ├── test-command-processing.js
+│   ├── test-command-queue-direct.js
+│   ├── test-command-status-polling.js
+│   ├── test-command-status-simple.js
+│   ├── test-direct-relay-only.js
+│   ├── test-hardware-simple.js
+│   ├── test-kiosk-modbus.js
+│   ├── test-locker-mapping.js
+│   ├── test-modbus-config-validation.js
+│   ├── test-modbus-controller-mapping.js
+│   ├── test-modbus-direct.js
+│   ├── test-modbus-simple.js
+│   ├── test-modbus-standalone.js
+│   ├── test-panel-access.js
+│   ├── test-panel-port-config.js
+│   ├── test-queue-vs-direct.js
+│   ├── test-relay-10-control.js
+│   ├── test-relay-activation.js
+│   ├── test-relay-off-variations.js
+│   ├── test-relays-1-8.js
+│   ├── test-rfid-simple.js
+│   ├── test-serial-basic.js
+│   ├── test-services-quick.js
+│   ├── test-services-startup.js
+│   ├── uninstall.sh
+│   ├── upgrade-nodejs.ps1
+│   ├── upgrade-nodejs.sh
+│   ├── validate-e2e-setup.js
+│   ├── validate-hardware-integration.js
+│   ├── validate-integration.js
+│   ├── validate-nodejs20-compatibility.js
+│   ├── validate-system-requirements.js
+│   ├── validate-ui-feedback.js
+│   ├── validate-waveshare-hardware.js
+│   ├── verify-panel-config.js
+│   └── verify-task-7-implementation.js
+├── shared
+│   ├── controllers
+│   │   ├── __tests__
+│   │   │   └── health-controller.test.ts
+│   │   └── health-controller.ts
+│   ├── database
+│   │   ├── __tests__
+│   │   │   ├── command-queue-repository.test.ts
+│   │   │   ├── database-manager.test.ts
+│   │   │   └── locker-repository.test.ts
+│   │   ├── base-repository.ts
+│   │   ├── command-queue-repository.ts
+│   │   ├── connection.ts
+│   │   ├── database-manager.ts
+│   │   ├── event-repository.ts
+│   │   ├── index.ts
+│   │   ├── kiosk-heartbeat-repository.ts
+│   │   ├── locker-repository.ts
+│   │   ├── migration-runner.ts
+│   │   ├── repository-factory.ts
+│   │   ├── schema.sql
+│   │   ├── vip-contract-repository.ts
+│   │   ├── vip-history-repository.ts
+│   │   ├── vip-transfer-repository.ts
+│   │   └── vitest.config.ts
+│   ├── package.json
+│   ├── services
+│   │   ├── __tests__
+│   │   │   ├── command-queue-manager.test.ts
+│   │   │   ├── config-manager.test.ts
+│   │   │   ├── event-logger.test.ts
+│   │   │   ├── hardware-soak-tester.test.ts
+│   │   │   ├── health-monitor.test.ts
+│   │   │   ├── i18n-regression.test.ts
+│   │   │   ├── i18n-service.test.ts
+│   │   │   ├── locker-assignment-release.test.ts
+│   │   │   ├── locker-state-manager-simple.test.ts
+│   │   │   ├── locker-state-manager.test.ts
+│   │   │   ├── log-retention-manager.test.ts
+│   │   │   ├── rate-limiter.test.ts
+│   │   │   └── security-validation.test.ts
+│   │   ├── command-queue-manager.ts
+│   │   ├── config-manager.ts
+│   │   ├── cookie-cleanup-service.ts
+│   │   ├── cookie-manager.ts
+│   │   ├── event-logger.ts
+│   │   ├── hardware-soak-tester.ts
+│   │   ├── health-monitor.ts
+│   │   ├── heartbeat-manager.ts
+│   │   ├── i18n-service.ts
+│   │   ├── locker-state-manager.ts
+│   │   ├── log-retention-manager.ts
+│   │   ├── rate-limiter.ts
+│   │   ├── security-validation.ts
+│   │   └── session-conflict-detector.ts
+│   ├── tsconfig.json
+│   └── types
+│       ├── core-entities.ts
+│       ├── index.ts
+│       └── system-config.ts
+├── src
+│   ├── cli
+│   │   ├── config-test.ts
+│   │   └── provision.ts
+│   ├── controllers
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── database
+│   │   ├── connection.ts
+│   │   └── schema.sql
+│   ├── index.ts
+│   ├── routes
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── services
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── types
+│   │   ├── core-entities.d.ts
+│   │   ├── core-entities.d.ts.map
+│   │   ├── core-entities.js
+│   │   ├── core-entities.js.map
+│   │   ├── core-entities.ts
+│   │   └── index.ts
+│   └── views
+│       └── configuration-panel.html
+└── tsconfig.json

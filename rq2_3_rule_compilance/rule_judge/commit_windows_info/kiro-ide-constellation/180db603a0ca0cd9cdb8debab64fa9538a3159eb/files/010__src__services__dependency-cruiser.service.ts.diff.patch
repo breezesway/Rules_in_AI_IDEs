@@ -1,0 +1,24 @@
+diff --git a/src/services/dependency-cruiser.service.ts b/src/services/dependency-cruiser.service.ts
+index 0d182ad..6a29c7f 100644
+--- a/src/services/dependency-cruiser.service.ts
++++ b/src/services/dependency-cruiser.service.ts
+@@ -19,15 +19,14 @@ interface DependencyAnalysisResult {
+  * Detects and validates the current workspace
+  * @returns WorkspaceInfo object or null if no workspace is available
+  */
++import { getWorkspaceRoot } from './workspace.service.js';
++
+ function detectWorkspace(): WorkspaceInfo | null {
+-    // Check if any workspace folders are open
+-    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
++    const workspaceRoot = getWorkspaceRoot();
++    if (!workspaceRoot) {
+         return null;
+     }
+ 
+-    // Use the first workspace folder
+-    const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+-
+     // Check for TypeScript config
+     const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
+     const hasTsConfig = fs.existsSync(tsconfigPath);

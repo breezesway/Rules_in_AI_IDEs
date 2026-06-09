@@ -1,0 +1,21 @@
+diff --git a/src/preload.ts b/src/preload.ts
+index 0868a20..36aaaaa 100644
+--- a/src/preload.ts
++++ b/src/preload.ts
+@@ -54,9 +54,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   // 图片压缩相关API
+   selectImages: () => ipcRenderer.invoke('select-images'),
+   selectSaveLocation: () => ipcRenderer.invoke('select-save-location'),
+-  compressImages: (filePaths: string[], settings: Record<string, unknown>) => 
++    compressImages: (filePaths: string[], settings: Record<string, unknown>) =>
+     ipcRenderer.invoke('compress-images', filePaths, settings),
+   
++  generateImagePreview: (filePath: string, settings: Record<string, unknown>) =>
++    ipcRenderer.invoke('generate-image-preview', filePath, settings),
++  
++  cleanupImagePreview: (previewPath: string) =>
++    ipcRenderer.invoke('cleanup-image-preview', previewPath),
++  
+   // 监听压缩进度
+   onCompressionProgress: (callback: (progress: {
+     currentFile: string;

@@ -1,0 +1,163 @@
+diff --git a/src/main/utils/ipc-handlers.ts b/src/main/utils/ipc-handlers.ts
+new file mode 100644
+index 0000000..6a7ca6a
+--- /dev/null
++++ b/src/main/utils/ipc-handlers.ts
+@@ -0,0 +1,156 @@
++import { ipcMain, IpcMainInvokeEvent } from 'electron';
++import { HistoryManager } from './history-manager';
++import { ConfigManager } from './config-manager';
++import {
++  PdfMergeOptions,
++  ImageCompressionSettings,
++  ImagePreviewSettings,
++  AppConfig
++} from './types';
++import {
++  selectSavePath,
++  getDownloadsPath,
++  selectPdfFiles,
++  selectImages,
++  selectSaveLocation,
++  openFileLocation,
++  mergePdfs,
++  generateImagePreview,
++  cleanupImagePreview,
++  compressImages
++} from './index';
++
++// 注册所有IPC处理器
++export function registerIpcHandlers(
++  historyManager: HistoryManager,
++  configManager: ConfigManager
++) {
++  // PDF相关处理器
++  registerPdfHandlers(historyManager, configManager);
++  
++  // 图片相关处理器
++  registerImageHandlers(historyManager, configManager);
++  
++  // 文件对话框处理器
++  registerDialogHandlers();
++  
++  // 历史记录处理器
++  registerHistoryHandlers(historyManager);
++  
++  // 配置处理器
++  registerConfigHandlers(configManager);
++}
++
++// PDF相关处理器
++function registerPdfHandlers(historyManager: HistoryManager, configManager: ConfigManager) {
++  ipcMain.handle('merge-pdfs', async (event: IpcMainInvokeEvent, options: PdfMergeOptions) => {
++    return await mergePdfs(
++      options,
++      configManager,
++      historyManager,
++      (progressData) => {
++        event.sender.send('merge-progress', progressData);
++      }
++    );
++  });
++}
++
++// 图片相关处理器
++function registerImageHandlers(historyManager: HistoryManager, configManager: ConfigManager) {
++  ipcMain.handle('generate-image-preview', async (event: IpcMainInvokeEvent, filePath: string, settings: ImagePreviewSettings) => {
++    return await generateImagePreview(filePath, settings);
++  });
++
++  ipcMain.handle('cleanup-image-preview', async (event: IpcMainInvokeEvent, previewPath: string) => {
++    return await cleanupImagePreview(previewPath);
++  });
++
++  ipcMain.handle('compress-images', async (event: IpcMainInvokeEvent, filePaths: string[], settings: ImageCompressionSettings) => {
++    return await compressImages(
++      filePaths,
++      settings,
++      configManager,
++      historyManager,
++      (progressData) => {
++        event.sender.send('compression-progress', progressData);
++      }
++    );
++  });
++}
++
++// 文件对话框处理器
++function registerDialogHandlers() {
++  ipcMain.handle('select-save-path', selectSavePath);
++  ipcMain.handle('get-downloads-path', getDownloadsPath);
++  ipcMain.handle('select-pdf-files', selectPdfFiles);
++  ipcMain.handle('select-images', selectImages);
++  ipcMain.handle('select-save-location', selectSaveLocation);
++  
++  ipcMain.handle('open-file-location', async (event: IpcMainInvokeEvent, filePath: string) => {
++    await openFileLocation(filePath);
++  });
++}
++
++// 历史记录处理器
++function registerHistoryHandlers(historyManager: HistoryManager) {
++  ipcMain.handle('get-operation-history', async () => {
++    try {
++      return await historyManager.getHistory();
++    } catch (error) {
++      console.error('获取历史记录失败:', error);
++      return [];
++    }
++  });
++
++  ipcMain.handle('clear-operation-history', async () => {
++    try {
++      await historyManager.clearHistory();
++      return { success: true };
++    } catch (error) {
++      console.error('清除历史记录失败:', error);
++      return { success: false, error: error instanceof Error ? error.message : '清除失败' };
++    }
++  });
++
++  ipcMain.handle('delete-history-record', async (event: IpcMainInvokeEvent, id: string) => {
++    try {
++      await historyManager.deleteRecord(id);
++      return { success: true };
++    } catch (error) {
++      console.error('删除历史记录失败:', error);
++      return { success: false, error: error instanceof Error ? error.message : '删除失败' };
++    }
++  });
++}
++
++// 配置处理器
++function registerConfigHandlers(configManager: ConfigManager) {
++  ipcMain.handle('get-app-config', async () => {
++    try {
++      return await configManager.getConfig();
++    } catch (error) {
++      console.error('获取配置失败:', error);
++      return configManager.getDefaultConfig();
++    }
++  });
++
++  ipcMain.handle('update-app-config', async (event: IpcMainInvokeEvent, config: Partial<AppConfig>) => {
++    try {
++      await configManager.updateConfig(config);
++      return { success: true };
++    } catch (error) {
++      console.error('更新配置失败:', error);
++      return { success: false, error: error instanceof Error ? error.message : '更新失败' };
++    }
++  });
++
++  ipcMain.handle('reset-app-config', async () => {
++    try {
++      await configManager.resetConfig();
++      return { success: true };
++    } catch (error) {
++      console.error('重置配置失败:', error);
++      return { success: false, error: error instanceof Error ? error.message : '重置失败' };
++    }
++  });
++} 
+\ No newline at end of file

@@ -1,0 +1,937 @@
+diff --git a/playwright/tests/utils/pdf-generators/pdf-template-generator.ts b/playwright/tests/utils/pdf-generators/pdf-template-generator.ts
+index a0f4ae0..1f3c32a 100644
+--- a/playwright/tests/utils/pdf-generators/pdf-template-generator.ts
++++ b/playwright/tests/utils/pdf-generators/pdf-template-generator.ts
+@@ -1,16 +1,33 @@
+ import { SiteWideAccessibilityReport } from '../accessibility-test-orchestrator';
+ 
++interface ViolationItem {
++    id: string;
++    // Add other properties as needed
++}
++
++interface PriorityMatrix {
++    'high-low': ViolationItem[];
++    'high-medium': ViolationItem[];
++    'high-high': ViolationItem[];
++    'medium-low': ViolationItem[];
++    'medium-medium': ViolationItem[];
++    'medium-high': ViolationItem[];
++    'low-low': ViolationItem[];
++    'low-medium': ViolationItem[];
++    'low-high': ViolationItem[];
++}
++
+ export class PdfTemplateGenerator {
+-  /**
+-   * Generates audience-specific HTML template
+-   */
+-  generateAudienceSpecificTemplate(
+-    report: SiteWideAccessibilityReport,
+-    audience: string,
+-    displayName: string,
+-    screenshotPath?: string | null
+-  ): string {
+-    return `
++    /**
++     * Generates audience-specific HTML template
++     */
++    generateAudienceSpecificTemplate(
++        report: SiteWideAccessibilityReport,
++        audience: string,
++        displayName: string,
++        screenshotPath?: string | null
++    ): string {
++        return `
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+@@ -27,13 +44,13 @@ export class PdfTemplateGenerator {
+     ${this.generateFooter()}
+ </body>
+ </html>`;
+-  }
++    }
+ 
+-  /**
+-   * Generates PDF-specific CSS styles
+-   */
+-  private getPdfStyles(): string {
+-    return `
++    /**
++     * Generates PDF-specific CSS styles
++     */
++    private getPdfStyles(): string {
++        return `
+         @page {
+             size: A4;
+             margin: 0.75in;
+@@ -624,26 +641,26 @@ export class PdfTemplateGenerator {
+             gap: 20px;
+         }
+     `;
+-  }
+-
+-  /**
+-   * Generates header section
+-   */
+-  private generateHeader(
+-    report: SiteWideAccessibilityReport,
+-    audience: string,
+-    displayName: string,
+-    screenshotPath?: string | null
+-  ): string {
+-    const date = new Date(report.timestamp).toLocaleDateString('en-GB', {
+-      day: 'numeric',
+-      month: 'long',
+-      year: 'numeric',
+-    });
+-
+-    // Generate screenshot section if screenshot path is provided
+-    const screenshotSection = screenshotPath
+-      ? `
++    }
++
++    /**
++     * Generates header section
++     */
++    private generateHeader(
++        report: SiteWideAccessibilityReport,
++        audience: string,
++        displayName: string,
++        screenshotPath?: string | null
++    ): string {
++        const date = new Date(report.timestamp).toLocaleDateString('en-GB', {
++            day: 'numeric',
++            month: 'long',
++            year: 'numeric',
++        });
++
++        // Generate screenshot section if screenshot path is provided
++        const screenshotSection = screenshotPath
++            ? `
+         <div class="screenshot-section">
+             <div class="screenshot-title">Main Page Preview</div>
+             <div class="screenshot-container">
+@@ -652,9 +669,9 @@ export class PdfTemplateGenerator {
+             </div>
+         </div>
+     `
+-      : '';
++            : '';
+ 
+-    return `
++        return `
+         <div class="header">
+             <div class="header-content">
+                 <h1>Accessibility Report</h1>
+@@ -668,33 +685,33 @@ export class PdfTemplateGenerator {
+             </div>
+         </div>
+     `;
+-  }
+-
+-  /**
+-   * Generates content based on audience
+-   */
+-  private generateContent(report: SiteWideAccessibilityReport, audience: string): string {
+-    switch (audience) {
+-      case 'stakeholders':
+-        return this.generateStakeholderContent(report);
+-      case 'researchers':
+-        return this.generateResearcherContent(report);
+-      case 'developers':
+-        return this.generateDeveloperContent(report);
+-      default:
+-        return this.generateGenericContent(report);
+     }
+-  }
+ 
+-  /**
+-   * Generates content for stakeholders
+-   */
+-  private generateStakeholderContent(report: SiteWideAccessibilityReport): string {
+-    const complianceScore = Math.round(report.summary.compliancePercentage);
+-    const totalIssues = report.summary.totalViolations;
+-    const criticalIssues = report.summary.criticalViolations;
++    /**
++     * Generates content based on audience
++     */
++    private generateContent(report: SiteWideAccessibilityReport, audience: string): string {
++        switch (audience) {
++            case 'stakeholders':
++                return this.generateStakeholderContent(report);
++            case 'researchers':
++                return this.generateResearcherContent(report);
++            case 'developers':
++                return this.generateDeveloperContent(report);
++            default:
++                return this.generateGenericContent(report);
++        }
++    }
++
++    /**
++     * Generates content for stakeholders
++     */
++    private generateStakeholderContent(report: SiteWideAccessibilityReport): string {
++        const complianceScore = Math.round(report.summary.compliancePercentage);
++        const totalIssues = report.summary.totalViolations;
++        const criticalIssues = report.summary.criticalViolations;
+ 
+-    return `
++        return `
+         <div class="section">
+             <h2>Executive Summary</h2>
+             <div class="summary-card">
+@@ -736,12 +753,12 @@ export class PdfTemplateGenerator {
+             <h3>Immediate Actions (High Priority)</h3>
+             <ul>
+                 ${report.summary.mostCommonViolations
+-                  .slice(0, 3)
+-                  .map(
++                .slice(0, 3)
++                .map(
+                     violation =>
+-                      `<li>Address <strong>${violation.id}</strong> issues across ${violation.affectedPages} pages</li>`
+-                  )
+-                  .join('')}
++                        `<li>Address <strong>${violation.id}</strong> issues across ${violation.affectedPages} pages</li>`
++                )
++                .join('')}
+             </ul>
+             
+             <h3>Recommended Timeline</h3>
+@@ -752,13 +769,13 @@ export class PdfTemplateGenerator {
+             </ul>
+         </div>
+     `;
+-  }
++    }
+ 
+-  /**
+-   * Generates content for researchers
+-   */
+-  private generateResearcherContent(report: SiteWideAccessibilityReport): string {
+-    return `
++    /**
++     * Generates content for researchers
++     */
++    private generateResearcherContent(report: SiteWideAccessibilityReport): string {
++        return `
+         <div class="section">
+             <h2>User Experience Impact Analysis</h2>
+             <div class="summary-card">
+@@ -786,8 +803,8 @@ export class PdfTemplateGenerator {
+                 </thead>
+                 <tbody>
+                     ${report.summary.mostCommonViolations
+-                      .map(
+-                        violation => `
++                .map(
++                    violation => `
+                         <tr>
+                             <td>${violation.id}</td>
+                             <td>${violation.affectedPages}</td>
+@@ -796,8 +813,8 @@ export class PdfTemplateGenerator {
+                             <td>${this.getUserGroupsAffected(violation.id)}</td>
+                         </tr>
+                     `
+-                      )
+-                      .join('')}
++                )
++                .join('')}
+                 </tbody>
+             </table>
+         </div>
+@@ -813,16 +830,16 @@ export class PdfTemplateGenerator {
+             </ul>
+         </div>
+     `;
+-  }
++    }
+ 
+-  /**
+-   * Generates content for developers
+-   */
+-  private generateDeveloperContent(report: SiteWideAccessibilityReport): string {
+-    const priorityMatrix = this.generatePriorityMatrix(report);
+-    const topViolations = report.summary.mostCommonViolations.slice(0, 8);
++    /**
++     * Generates content for developers
++     */
++    private generateDeveloperContent(report: SiteWideAccessibilityReport): string {
++        const priorityMatrix = this.generatePriorityMatrix(report);
++        const topViolations = report.summary.mostCommonViolations.slice(0, 8);
+ 
+-    return `
++        return `
+         <div class="section">
+             <h2>🚨 Critical Issues - Fix Immediately</h2>
+             <div class="summary-card">
+@@ -844,15 +861,14 @@ export class PdfTemplateGenerator {
+                         <div class="label">Compliance Score</div>
+                     </div>
+                 </div>
+-                ${
+-                  report.summary.criticalViolations > 0
+-                    ? `
++                ${report.summary.criticalViolations > 0
++                ? `
+                     <div class="alert-critical">
+                         <strong>⚠️ Action Required:</strong> ${report.summary.criticalViolations} critical issues must be fixed before deployment.
+                     </div>
+                 `
+-                    : ''
+-                }
++                : ''
++            }
+             </div>
+         </div>
+ 
+@@ -974,22 +990,22 @@ npm run test:wcag-compliance
+             </div>
+         </div>
+     `;
+-  }
+-
+-  /**
+-   * Generates detailed violation card with actionable information
+-   */
+-  private generateDetailedViolationCard(
+-    violation: any,
+-    report: SiteWideAccessibilityReport
+-  ): string {
+-    const violationData = report.violationsByType[violation.id];
+-    const impactIcon = this.getImpactIcon(violation.impact);
+-    const wcagLevel = this.getWcagLevelFromViolationId(violation.id);
+-    const effort = this.estimateFixEffort(violation.id);
+-    const priority = this.calculatePriority(violation.impact, effort, violation.affectedPages);
+-
+-    return `
++    }
++
++    /**
++     * Generates detailed violation card with actionable information
++     */
++    private generateDetailedViolationCard(
++        violation: any,
++        report: SiteWideAccessibilityReport
++    ): string {
++        const violationData = report.violationsByType[violation.id];
++        const impactIcon = this.getImpactIcon(violation.impact);
++        const wcagLevel = this.getWcagLevelFromViolationId(violation.id);
++        const effort = this.estimateFixEffort(violation.id);
++        const priority = this.calculatePriority(violation.impact, effort, violation.affectedPages);
++
++        return `
+         <div class="violation-card">
+             <div class="violation-header">
+                 <div class="violation-title">
+@@ -1012,12 +1028,11 @@ npm run test:wcag-compliance
+             <div class="violation-pages">
+                 <strong>Most Affected Pages:</strong>
+                 <ul>
+-                    ${
+-                      violationData?.pages
+-                        ?.slice(0, 3)
+-                        .map(page => `<li><code>${page}</code></li>`)
+-                        .join('') || '<li>Page details not available</li>'
+-                    }
++                    ${violationData?.pages
++                ?.slice(0, 3)
++                .map(page => `<li><code>${page}</code></li>`)
++                .join('') || '<li>Page details not available</li>'
++            }
+                 </ul>
+             </div>
+ 
+@@ -1039,182 +1054,180 @@ npm run test:wcag-compliance
+             </div>
+         </div>
+     `;
+-  }
+-
+-  /**
+-   * Generates priority matrix for visual impact vs effort analysis
+-   */
+-  // @ts-ignore - Suppress TypeScript errors for complex template literals and dynamic object access
+-  private generatePriorityMatrix(report: SiteWideAccessibilityReport): string {
+-    const violations = report.summary.mostCommonViolations;
+-    const matrix = {
+-      'high-low': [],
+-      'high-medium': [],
+-      'high-high': [],
+-      'medium-low': [],
+-      'medium-medium': [],
+-      'medium-high': [],
+-      'low-low': [],
+-      'low-medium': [],
+-      'low-high': [],
+-    };
+-
+-    violations.forEach(violation => {
+-      const impact = this.getBusinessImpact(violation.impact, violation.affectedPages);
+-      const effort = this.estimateFixEffort(violation.id);
+-      const key = `${impact}-${effort}`;
+-      // @ts-ignore - Dynamic object property access
+-      matrix[key]?.push(violation);
+-    });
+-
+-    return `
++    }
++
++    /**
++ * Generates priority matrix for visual impact vs effort analysis
++ */
++    private generatePriorityMatrix(report: SiteWideAccessibilityReport): string {
++        const violations = report.summary.mostCommonViolations;
++        const matrix: PriorityMatrix = {
++            'high-low': [],
++            'high-medium': [],
++            'high-high': [],
++            'medium-low': [],
++            'medium-medium': [],
++            'medium-high': [],
++            'low-low': [],
++            'low-medium': [],
++            'low-high': [],
++        };
++
++        violations.forEach(violation => {
++            const impact = this.getBusinessImpact(violation.impact, violation.affectedPages);
++            const effort = this.estimateFixEffort(violation.id);
++            const key = `${impact}-${effort}` as keyof PriorityMatrix;
++            if (matrix[key]) {
++                matrix[key].push(violation as ViolationItem);
++            }
++        });
++
++        return `
+         <div class="matrix-row">
+             <div class="matrix-cell impact-label">High Impact</div>
+-            <div class="matrix-cell quick-wins">${/* @ts-ignore */ matrix['high-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell major-projects">${/* @ts-ignore */ matrix['high-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell major-projects">${/* @ts-ignore */ matrix['high-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell quick-wins">${matrix['high-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell major-projects">${matrix['high-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell major-projects">${matrix['high-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+         </div>
+         <div class="matrix-row">
+             <div class="matrix-cell impact-label">Medium Impact</div>
+-            <div class="matrix-cell fill-ins">${/* @ts-ignore */ matrix['medium-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell fill-ins">${/* @ts-ignore */ matrix['medium-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell thankless">${/* @ts-ignore */ matrix['medium-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell fill-ins">${matrix['medium-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell fill-ins">${matrix['medium-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell thankless">${matrix['medium-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+         </div>
+         <div class="matrix-row">
+             <div class="matrix-cell impact-label">Low Impact</div>
+-            <div class="matrix-cell fill-ins">${/* @ts-ignore */ matrix['low-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell thankless">${/* @ts-ignore */ matrix['low-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+-            <div class="matrix-cell thankless">${/* @ts-ignore */ matrix['low-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell fill-ins">${matrix['low-low']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell thankless">${matrix['low-medium']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
++            <div class="matrix-cell thankless">${matrix['low-high']?.map(v => `<div class="matrix-item">${v.id}</div>`).join('') || ''}</div>
+         </div>`;
+-  }
+-
+-  /**
+-   * Gets violations by impact level
+-   */
+-  private getViolationsByImpact(report: SiteWideAccessibilityReport, impact: string): any[] {
+-    return report.summary.mostCommonViolations.filter(v => v.impact === impact);
+-  }
+-
+-  /**
+-   * Gets impact icon for visualization
+-   */
+-  private getImpactIcon(impact: string): string {
+-    switch (impact) {
+-      case 'critical':
+-        return '🚨';
+-      case 'serious':
+-        return '⚠️';
+-      case 'moderate':
+-        return '🟡';
+-      case 'minor':
+-        return '🔵';
+-      default:
+-        return '⚪';
+     }
+-  }
+-
+-  /**
+-   * Estimates fix effort based on violation type
+-   */
+-  private estimateFixEffort(violationId: string): 'low' | 'medium' | 'high' {
+-    const lowEffort = ['image-alt', 'label', 'link-name', 'button-name', 'document-title'];
+-    const highEffort = [
+-      'color-contrast',
+-      'keyboard-navigation',
+-      'focus-management',
+-      'aria-complex',
+-    ];
+-
+-    if (lowEffort.some(id => violationId.includes(id))) return 'low';
+-    if (highEffort.some(id => violationId.includes(id))) return 'high';
+-    return 'medium';
+-  }
+-
+-  /**
+-   * Gets business impact level
+-   */
+-  private getBusinessImpact(impact: string, affectedPages: number): 'low' | 'medium' | 'high' {
+-    if (impact === 'critical' || (impact === 'serious' && affectedPages > 5)) return 'high';
+-    if (impact === 'serious' || (impact === 'moderate' && affectedPages > 10)) return 'medium';
+-    return 'low';
+-  }
+-
+-  /**
+-   * Calculates overall priority
+-   */
+-  private calculatePriority(
+-    impact: string,
+-    effort: string,
+-    affectedPages: number
+-  ): 'High' | 'Medium' | 'Low' {
+-    if (impact === 'critical') return 'High';
+-    if (impact === 'serious' && effort === 'low') return 'High';
+-    if (impact === 'serious' && affectedPages > 5) return 'High';
+-    if (impact === 'moderate' && effort === 'low' && affectedPages > 10) return 'Medium';
+-    return 'Low';
+-  }
+-
+-  /**
+-   * Gets WCAG level from violation ID
+-   */
+-  private getWcagLevelFromViolationId(violationId: string): 'A' | 'AA' | 'AAA' {
+-    // This would ideally use the actual WCAG data from the violation
+-    const aaaViolations = ['color-contrast-enhanced', 'focus-visible'];
+-    const aViolations = ['image-alt', 'form-label', 'keyboard-navigation'];
+-
+-    if (aaaViolations.some(id => violationId.includes(id))) return 'AAA';
+-    if (aViolations.some(id => violationId.includes(id))) return 'A';
+-    return 'AA';
+-  }
+-
+-  /**
+-   * Gets detailed violation description
+-   */
+-  private getViolationDescription(violationId: string): string {
+-    const descriptions = {
+-      'color-contrast': 'Text lacks sufficient color contrast against background',
+-      'image-alt': 'Images missing alternative text descriptions',
+-      label: 'Form elements lack proper labels',
+-      'link-name': 'Links lack descriptive text',
+-      'button-name': 'Buttons lack accessible names',
+-      'keyboard-navigation': 'Elements not keyboard accessible',
+-      'focus-management': 'Focus indicators not visible',
+-      'aria-label': 'ARIA labels missing or incorrect',
+-      'heading-order': 'Headings not in logical order',
+-      'landmark-navigation': 'Page lacks navigation landmarks',
+-    };
+-
+-    // @ts-ignore - Dynamic object property access
+-    return descriptions[violationId] || 'Accessibility violation detected';
+-  }
+-
+-  /**
+-   * Gets user impact description
+-   */
+-  private getUserImpactDescription(violationId: string): string {
+-    const impacts = {
+-      'color-contrast': 'Creates barriers for users with visual impairments',
+-      'image-alt': 'Screen reader users cannot access image content',
+-      label: 'Form completion impossible without visual cues',
+-      'link-name': 'Navigation unclear for screen reader users',
+-      'button-name': 'Actions unclear for assistive technology users',
+-      'keyboard-navigation': 'Excludes users who cannot use mouse',
+-      'focus-management': 'Keyboard users cannot track current position',
+-      'aria-label': 'Screen readers provide incorrect information',
+-      'heading-order': 'Document structure unclear to screen readers',
+-      'landmark-navigation': 'Page navigation inefficient for screen readers',
+-    };
+-
+-    // @ts-ignore - Dynamic object property access
+-    return impacts[violationId] || 'Creates barriers for users with disabilities';
+-  }
+-
+-  /**
+-   * Gets specific remediation steps
+-   */
+-  private getRemediationSteps(violationId: string): string {
+-    const steps = {
+-      'color-contrast': `
++
++    /**
++     * Gets violations by impact level
++     */
++    private getViolationsByImpact(report: SiteWideAccessibilityReport, impact: string): any[] {
++        return report.summary.mostCommonViolations.filter(v => v.impact === impact);
++    }
++
++    /**
++     * Gets impact icon for visualization
++     */
++    private getImpactIcon(impact: string): string {
++        switch (impact) {
++            case 'critical':
++                return '🚨';
++            case 'serious':
++                return '⚠️';
++            case 'moderate':
++                return '🟡';
++            case 'minor':
++                return '🔵';
++            default:
++                return '⚪';
++        }
++    }
++
++    /**
++     * Estimates fix effort based on violation type
++     */
++    private estimateFixEffort(violationId: string): 'low' | 'medium' | 'high' {
++        const lowEffort = ['image-alt', 'label', 'link-name', 'button-name', 'document-title'];
++        const highEffort = [
++            'color-contrast',
++            'keyboard-navigation',
++            'focus-management',
++            'aria-complex',
++        ];
++
++        if (lowEffort.some(id => violationId.includes(id))) return 'low';
++        if (highEffort.some(id => violationId.includes(id))) return 'high';
++        return 'medium';
++    }
++
++    /**
++     * Gets business impact level
++     */
++    private getBusinessImpact(impact: string, affectedPages: number): 'low' | 'medium' | 'high' {
++        if (impact === 'critical' || (impact === 'serious' && affectedPages > 5)) return 'high';
++        if (impact === 'serious' || (impact === 'moderate' && affectedPages > 10)) return 'medium';
++        return 'low';
++    }
++
++    /**
++     * Calculates overall priority
++     */
++    private calculatePriority(
++        impact: string,
++        effort: string,
++        affectedPages: number
++    ): 'High' | 'Medium' | 'Low' {
++        if (impact === 'critical') return 'High';
++        if (impact === 'serious' && effort === 'low') return 'High';
++        if (impact === 'serious' && affectedPages > 5) return 'High';
++        if (impact === 'moderate' && effort === 'low' && affectedPages > 10) return 'Medium';
++        return 'Low';
++    }
++
++    /**
++     * Gets WCAG level from violation ID
++     */
++    private getWcagLevelFromViolationId(violationId: string): 'A' | 'AA' | 'AAA' {
++        // This would ideally use the actual WCAG data from the violation
++        const aaaViolations = ['color-contrast-enhanced', 'focus-visible'];
++        const aViolations = ['image-alt', 'form-label', 'keyboard-navigation'];
++
++        if (aaaViolations.some(id => violationId.includes(id))) return 'AAA';
++        if (aViolations.some(id => violationId.includes(id))) return 'A';
++        return 'AA';
++    }
++
++    /**
++     * Gets detailed violation description
++     */
++    private getViolationDescription(violationId: string): string {
++        const descriptions: Record<string, string> = {
++            'color-contrast': 'Text lacks sufficient color contrast against background',
++            'image-alt': 'Images missing alternative text descriptions',
++            label: 'Form elements lack proper labels',
++            'link-name': 'Links lack descriptive text',
++            'button-name': 'Buttons lack accessible names',
++            'keyboard-navigation': 'Elements not keyboard accessible',
++            'focus-management': 'Focus indicators not visible',
++            'aria-label': 'ARIA labels missing or incorrect',
++            'heading-order': 'Headings not in logical order',
++            'landmark-navigation': 'Page lacks navigation landmarks',
++        };
++
++        return descriptions[violationId] || 'Accessibility violation detected';
++    }
++
++    /**
++     * Gets user impact description
++     */
++    private getUserImpactDescription(violationId: string): string {
++        const impacts: Record<string, string> = {
++            'color-contrast': 'Creates barriers for users with visual impairments',
++            'image-alt': 'Screen reader users cannot access image content',
++            label: 'Form completion impossible without visual cues',
++            'link-name': 'Navigation unclear for screen reader users',
++            'button-name': 'Actions unclear for assistive technology users',
++            'keyboard-navigation': 'Excludes users who cannot use mouse',
++            'focus-management': 'Keyboard users cannot track current position',
++            'aria-label': 'Screen readers provide incorrect information',
++            'heading-order': 'Document structure unclear to screen readers',
++            'landmark-navigation': 'Page navigation inefficient for screen readers',
++        };
++
++        return impacts[violationId] || 'Creates barriers for users with disabilities';
++    }
++
++    /**
++     * Gets specific remediation steps
++     */
++    private getRemediationSteps(violationId: string): string {
++        const steps: Record<string, string> = {
++            'color-contrast': `
+         <ol>
+           <li>Check current contrast ratio using browser dev tools</li>
+           <li>Ensure minimum 4.5:1 ratio for normal text, 3:1 for large text</li>
+@@ -1222,7 +1235,7 @@ npm run test:wcag-compliance
+           <li>Test with automated tools to verify compliance</li>
+         </ol>
+       `,
+-      'image-alt': `
++            'image-alt': `
+         <ol>
+           <li>Add descriptive alt text to all informative images</li>
+           <li>Use alt="" for decorative images</li>
+@@ -1230,7 +1243,7 @@ npm run test:wcag-compliance
+           <li>Test with screen reader to verify effectiveness</li>
+         </ol>
+       `,
+-      label: `
++            label: `
+         <ol>
+           <li>Add proper label elements associated with form controls</li>
+           <li>Use for/id attributes to create explicit associations</li>
+@@ -1238,12 +1251,11 @@ npm run test:wcag-compliance
+           <li>Test with screen reader to verify label announcements</li>
+         </ol>
+       `,
+-    };
++        };
+ 
+-    return (
+-      // @ts-ignore - Dynamic object property access
+-      steps[violationId] ||
+-      `
++        return (
++            steps[violationId] ||
++            `
+       <ol>
+         <li>Review WCAG documentation for specific requirements</li>
+         <li>Implement necessary changes following best practices</li>
+@@ -1251,29 +1263,29 @@ npm run test:wcag-compliance
+         <li>Validate with automated accessibility tools</li>
+       </ol>
+     `
+-    );
+-  }
+-
+-  /**
+-   * Gets code example for fixing violation
+-   */
+-  private getCodeExample(violationId: string): string {
+-    const examples = {
+-      'color-contrast': `
++        );
++    }
++
++    /**
++     * Gets code example for fixing violation
++     */
++    private getCodeExample(violationId: string): string {
++        const examples: Record<string, string> = {
++            'color-contrast': `
+ <!-- Bad: Insufficient contrast -->
+ <p style="color: #999; background: #fff;">Text content</p>
+ 
+ <!-- Good: Sufficient contrast -->
+ <p style="color: #333; background: #fff;">Text content</p>
+       `,
+-      'image-alt': `
++            'image-alt': `
+ <!-- Bad: Missing alt text -->
+ <img src="chart.png">
+ 
+ <!-- Good: Descriptive alt text -->
+ <img src="chart.png" alt="Sales increased 25% from Q1 to Q2">
+       `,
+-      label: `
++            label: `
+ <!-- Bad: Missing label -->
+ <input type="email" placeholder="Enter email">
+ 
+@@ -1281,25 +1293,24 @@ npm run test:wcag-compliance
+ <label for="email">Email address</label>
+ <input type="email" id="email" placeholder="Enter email">
+       `,
+-    };
++        };
+ 
+-    return (
+-      // @ts-ignore - Dynamic object property access
+-      examples[violationId] ||
+-      `
++        return (
++            examples[violationId] ||
++            `
+ <!-- Review violation-specific documentation -->
+ <!-- Implement following WCAG guidelines -->
+ <!-- Test with assistive technologies -->
+     `
+-    );
+-  }
+-
+-  /**
+-   * Gets testing instructions
+-   */
+-  private getTestingInstructions(violationId: string): string {
+-    const instructions = {
+-      'color-contrast': `
++        );
++    }
++
++    /**
++     * Gets testing instructions
++     */
++    private getTestingInstructions(violationId: string): string {
++        const instructions: Record<string, string> = {
++            'color-contrast': `
+         <ul>
+           <li>Use Chrome DevTools Lighthouse audit</li>
+           <li>Install axe DevTools browser extension</li>
+@@ -1307,7 +1318,7 @@ npm run test:wcag-compliance
+           <li>Verify with users who have visual impairments</li>
+         </ul>
+       `,
+-      'image-alt': `
++            'image-alt': `
+         <ul>
+           <li>Use screen reader (VoiceOver on Mac, NVDA on Windows)</li>
+           <li>Test with axe DevTools to check for missing alt text</li>
+@@ -1315,7 +1326,7 @@ npm run test:wcag-compliance
+           <li>Check that decorative images are marked appropriately</li>
+         </ul>
+       `,
+-      label: `
++            label: `
+         <ul>
+           <li>Test with screen reader to verify label announcements</li>
+           <li>Use keyboard navigation to ensure proper focus</li>
+@@ -1323,12 +1334,11 @@ npm run test:wcag-compliance
+           <li>Verify labels are programmatically associated</li>
+         </ul>
+       `,
+-    };
++        };
+ 
+-    return (
+-      // @ts-ignore - Dynamic object property access
+-      instructions[violationId] ||
+-      `
++        return (
++            instructions[violationId] ||
++            `
+       <ul>
+         <li>Test with keyboard navigation only</li>
+         <li>Use screen reader to verify accessibility</li>
+@@ -1336,14 +1346,14 @@ npm run test:wcag-compliance
+         <li>Validate with real users when possible</li>
+       </ul>
+     `
+-    );
+-  }
+-
+-  /**
+-   * Generates generic content
+-   */
+-  private generateGenericContent(report: SiteWideAccessibilityReport): string {
+-    return `
++        );
++    }
++
++    /**
++     * Generates generic content
++     */
++    private generateGenericContent(report: SiteWideAccessibilityReport): string {
++        return `
+         <div class="section">
+             <h2>Accessibility Overview</h2>
+             <p>This report provides a comprehensive analysis of accessibility issues found across ${report.summary.totalPages} pages.</p>
+@@ -1362,41 +1372,41 @@ npm run test:wcag-compliance
+             </div>
+         </div>
+     `;
+-  }
++    }
+ 
+-  /**
+-   * Generates footer
+-   */
+-  private generateFooter(): string {
+-    return `
++    /**
++     * Generates footer
++     */
++    private generateFooter(): string {
++        return `
+         <div class="footer">
+             <p>Generated by Nimble Accessibility Testing Suite | Report created on ${new Date().toLocaleDateString('en-GB')}</p>
+             <p>For questions about this report, please contact your accessibility team.</p>
+         </div>
+     `;
+-  }
+-
+-  /**
+-   * Counts violations by type pattern
+-   */
+-  private countViolationType(report: SiteWideAccessibilityReport, pattern: string): number {
+-    const regex = new RegExp(pattern, 'i');
+-    return Object.keys(report.violationsByType).filter(id => regex.test(id)).length;
+-  }
+-
+-  /**
+-   * Gets user groups affected by violation type
+-   */
+-  private getUserGroupsAffected(violationId: string): string {
+-    if (violationId.includes('color') || violationId.includes('contrast')) {
+-      return 'Visually impaired, colour blind';
+     }
+-    if (violationId.includes('aria') || violationId.includes('label')) {
+-      return 'Screen reader users';
++
++    /**
++     * Counts violations by type pattern
++     */
++    private countViolationType(report: SiteWideAccessibilityReport, pattern: string): number {
++        const regex = new RegExp(pattern, 'i');
++        return Object.keys(report.violationsByType).filter(id => regex.test(id)).length;
+     }
+-    if (violationId.includes('keyboard') || violationId.includes('focus')) {
+-      return 'Keyboard users, motor impaired';
++
++    /**
++     * Gets user groups affected by violation type
++     */
++    private getUserGroupsAffected(violationId: string): string {
++        if (violationId.includes('color') || violationId.includes('contrast')) {
++            return 'Visually impaired, colour blind';
++        }
++        if (violationId.includes('aria') || violationId.includes('label')) {
++            return 'Screen reader users';
++        }
++        if (violationId.includes('keyboard') || violationId.includes('focus')) {
++            return 'Keyboard users, motor impaired';
++        }
++        return 'All users';
+     }
+-    return 'All users';
+-  }
+ }

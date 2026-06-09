@@ -1,0 +1,621 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Build command: npm run build
++ Build command: pnpm run build
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Package manager lock files (pnpm-lock.yaml, package-lock.json), CI/CD configuration files (e.g., .github/workflows/*.yml, Jenkinsfile), and project documentation (README.md).
+- Suggested Logic: 1. Verify the presence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' in the root directory. 
+2. Search CI/CD configuration files and documentation for the string 'pnpm run build' and ensure 'npm run build' is no longer present.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: ✨ Add interactive service with inquirer prompts
+- Changed Files List: 
+.kiro/specs/taptik-build-command/tasks.md	+1	-1	after_lines=148
+src/modules/build/build.module.ts	+3	-2	after_lines=10
+src/modules/build/commands/build.command.ts	+19	-1	after_lines=29
+src/modules/build/interfaces/build-config.interface.ts	+20	-2	after_lines=53
+src/modules/build/services/interactive.service.spec.ts	+134	-0	after_lines=134
+src/modules/build/services/interactive.service.ts	+87	-0	after_lines=87
+vitest.e2e.config.ts	+2	-2	after_lines=11
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── build
+│   │   │   ├── build.module.ts
+│   │   │   ├── commands
+│   │   │   │   └── build.command.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── build-config.interface.ts
+│   │   │   │   ├── settings-data.interface.ts
+│   │   │   │   └── taptik-format.interface.ts
+│   │   │   └── services
+│   │   │       ├── interactive.service.spec.ts
+│   │   │       └── interactive.service.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+index 49a03fd..5e08ca4 100644
+--- a/.kiro/specs/taptik-build-command/tasks.md
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -7,7 +7,7 @@
+   - _Requirements: 1.1, 2.1_
+ 
+ - [ ] 2. Implement interactive user interface service
+-  - [ ] 2.1 Create InteractiveService with platform selection functionality
++  - [x] 2.1 Create InteractiveService with platform selection functionality
+     - Implement platform selection menu with "Kiro", "Cursor", "Claude Code" options
+     - Add timeout handling for 30-second inactivity
+     - Handle "Coming soon" message for Cursor and Claude Code
+
+--- FILE: src/modules/build/build.module.ts ---
+diff --git a/src/modules/build/build.module.ts b/src/modules/build/build.module.ts
+index 2f10ce4..cf6b400 100644
+--- a/src/modules/build/build.module.ts
++++ b/src/modules/build/build.module.ts
+@@ -1,9 +1,10 @@
+ import { Module } from '@nestjs/common';
+ 
+ import { BuildCommand } from './commands/build.command';
++import { InteractiveService } from './services/interactive.service';
+ 
+ @Module({
+-  providers: [BuildCommand],
+-  exports: [BuildCommand],
++  providers: [BuildCommand, InteractiveService],
++  exports: [BuildCommand, InteractiveService],
+ })
+ export class BuildModule {}
+\ No newline at end of file
+
+--- FILE: src/modules/build/commands/build.command.ts ---
+diff --git a/src/modules/build/commands/build.command.ts b/src/modules/build/commands/build.command.ts
+index 548e10a..3e10ade 100644
+--- a/src/modules/build/commands/build.command.ts
++++ b/src/modules/build/commands/build.command.ts
+@@ -1,11 +1,29 @@
+ import { Command, CommandRunner } from 'nest-commander';
+ 
++import { InteractiveService } from '../services/interactive.service';
++
+ @Command({
+   name: 'build',
+   description: 'Build taptik-compatible context files from Kiro settings',
+ })
+ export class BuildCommand extends CommandRunner {
++  constructor(private readonly interactiveService: InteractiveService) {
++    super();
++  }
++
+   async run(): Promise<void> {
+-    console.log('Build command executed - implementation coming soon...');
++    try {
++      const platform = await this.interactiveService.selectPlatform();
++      const categories = await this.interactiveService.selectCategories();
++      
++      console.log('\n✅ Configuration complete!');
++      console.log(`Platform: ${platform}`);
++      console.log(`Categories: ${categories.map(c => c.name).join(', ')}`);
++      console.log('\n🚧 Build implementation coming soon...');
++    } catch (error) {
++      console.error('\n❌ Build process interrupted:', error.message);
++      // eslint-disable-next-line unicorn/no-process-exit
++      process.exit(1);
++    }
+   }
+ }
+\ No newline at end of file
+
+--- FILE: src/modules/build/interfaces/build-config.interface.ts ---
+diff --git a/src/modules/build/interfaces/build-config.interface.ts b/src/modules/build/interfaces/build-config.interface.ts
+index 0ec2053..c323404 100644
+--- a/src/modules/build/interfaces/build-config.interface.ts
++++ b/src/modules/build/interfaces/build-config.interface.ts
+@@ -1,9 +1,27 @@
++/**
++ * Supported platforms for taptik builds
++ */
++export enum BuildPlatform {
++  KIRO = 'kiro',
++  CURSOR = 'cursor',
++  CLAUDE_CODE = 'claude-code'
++}
++
++/**
++ * Available category types for build data
++ */
++export enum BuildCategoryName {
++  PERSONAL_CONTEXT = 'personal-context',
++  PROJECT_CONTEXT = 'project-context',
++  PROMPT_TEMPLATES = 'prompt-templates'
++}
++
+ /**
+  * Configuration for a taptik build process
+  */
+ export interface BuildConfig {
+   /** Target platform for the build (currently only 'kiro' is supported) */
+-  platform: 'kiro' | 'cursor' | 'claude-code';
++  platform: BuildPlatform;
+   /** Categories of data to include in the build */
+   categories: BuildCategory[];
+   /** Directory where build output will be generated */
+@@ -19,7 +37,7 @@ export interface BuildConfig {
+  */
+ export interface BuildCategory {
+   /** Type of context data */
+-  name: 'personal-context' | 'project-context' | 'prompt-templates';
++  name: BuildCategoryName;
+   /** Whether this category should be included in the build */
+   enabled: boolean;
+ }
+
+--- FILE: src/modules/build/services/interactive.service.spec.ts ---
+diff --git a/src/modules/build/services/interactive.service.spec.ts b/src/modules/build/services/interactive.service.spec.ts
+new file mode 100644
+index 0000000..adaecb4
+--- /dev/null
++++ b/src/modules/build/services/interactive.service.spec.ts
+@@ -0,0 +1,134 @@
++import { Test, TestingModule } from '@nestjs/testing';
++import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
++import { InteractiveService } from './interactive.service';
++import { BuildPlatform, BuildCategoryName } from '../interfaces/build-config.interface';
++
++// Mock the @inquirer/prompts module
++vi.mock('@inquirer/prompts', () => ({
++  select: vi.fn(),
++  checkbox: vi.fn(),
++}));
++
++describe('InteractiveService', () => {
++  let service: InteractiveService;
++
++  beforeEach(async () => {
++    const module: TestingModule = await Test.createTestingModule({
++      providers: [InteractiveService],
++    }).compile();
++
++    service = module.get<InteractiveService>(InteractiveService);
++  });
++
++  afterEach(() => {
++    vi.clearAllMocks();
++  });
++
++  describe('selectPlatform', () => {
++    it('should return BuildPlatform.KIRO when user selects kiro platform', async () => {
++      const { select } = await import('@inquirer/prompts');
++      (select as any).mockResolvedValue(BuildPlatform.KIRO);
++
++      const result = await service.selectPlatform();
++
++      expect(result).toBe(BuildPlatform.KIRO);
++      expect(select).toHaveBeenCalledWith({
++        message: '🚀 Select a platform for your Taptik build:',
++        choices: expect.arrayContaining([
++          expect.objectContaining({ value: BuildPlatform.KIRO, name: 'Kiro (Ready)' })
++        ]),
++        default: BuildPlatform.KIRO
++      });
++    });
++
++    it('should return BuildPlatform.CURSOR when user selects cursor platform', async () => {
++      const { select } = await import('@inquirer/prompts');
++      (select as any).mockResolvedValue(BuildPlatform.CURSOR);
++
++      const result = await service.selectPlatform();
++
++      expect(result).toBe(BuildPlatform.CURSOR);
++    });
++
++    it('should return BuildPlatform.CLAUDE_CODE when user selects claude-code platform', async () => {
++      const { select } = await import('@inquirer/prompts');
++      (select as any).mockResolvedValue(BuildPlatform.CLAUDE_CODE);
++
++      const result = await service.selectPlatform();
++
++      expect(result).toBe(BuildPlatform.CLAUDE_CODE);
++    });
++
++    it('should have disabled options for cursor and claude-code', async () => {
++      const { select } = await import('@inquirer/prompts');
++      (select as any).mockResolvedValue(BuildPlatform.KIRO);
++
++      await service.selectPlatform();
++
++      const selectCall = (select as any).mock.calls[0][0];
++      const choices = selectCall.choices;
++      
++      const cursorChoice = choices.find((c: any) => c.value === BuildPlatform.CURSOR);
++      const claudeCodeChoice = choices.find((c: any) => c.value === BuildPlatform.CLAUDE_CODE);
++      
++      expect(cursorChoice.disabled).toBe('(Coming soon)');
++      expect(claudeCodeChoice.disabled).toBe('(Coming soon)');
++    });
++  });
++
++  describe('selectCategories', () => {
++    it('should return selected categories when user makes valid selection', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      (checkbox as any).mockResolvedValue([BuildCategoryName.PERSONAL_CONTEXT, BuildCategoryName.PROJECT_CONTEXT]);
++      
++      const result = await service.selectCategories();
++
++      expect(Array.isArray(result)).toBe(true);
++      expect(result).toHaveLength(2);
++      expect(result[0].name).toBe(BuildCategoryName.PERSONAL_CONTEXT);
++      expect(result[0].enabled).toBe(true);
++      expect(result[1].name).toBe(BuildCategoryName.PROJECT_CONTEXT);
++      expect(result[1].enabled).toBe(true);
++    });
++
++    it('should call checkbox with correct configuration', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      (checkbox as any).mockResolvedValue([BuildCategoryName.PERSONAL_CONTEXT]);
++
++      await service.selectCategories();
++
++      expect(checkbox).toHaveBeenCalledWith({
++        message: '📁 Select categories to include in your build:',
++        choices: expect.arrayContaining([
++          expect.objectContaining({ 
++            value: BuildCategoryName.PERSONAL_CONTEXT,
++            name: 'Personal Context'
++          }),
++          expect.objectContaining({ 
++            value: BuildCategoryName.PROJECT_CONTEXT,
++            name: 'Project Context'
++          }),
++          expect.objectContaining({ 
++            value: BuildCategoryName.PROMPT_TEMPLATES,
++            name: 'Prompt Templates'
++          })
++        ]),
++        required: true,
++        validate: expect.any(Function)
++      });
++    });
++
++    it('should validate that at least one category is selected', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      (checkbox as any).mockResolvedValue([BuildCategoryName.PERSONAL_CONTEXT]);
++
++      await service.selectCategories();
++
++      const checkboxCall = (checkbox as any).mock.calls[0][0];
++      const validateFn = checkboxCall.validate;
++      
++      expect(validateFn([])).toBe('At least one category must be selected.');
++      expect(validateFn([BuildCategoryName.PERSONAL_CONTEXT])).toBe(true);
++    });
++  });
++});
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/interactive.service.ts ---
+diff --git a/src/modules/build/services/interactive.service.ts b/src/modules/build/services/interactive.service.ts
+new file mode 100644
+index 0000000..7ded675
+--- /dev/null
++++ b/src/modules/build/services/interactive.service.ts
+@@ -0,0 +1,87 @@
++import { Injectable } from '@nestjs/common';
++
++import { select, checkbox } from '@inquirer/prompts';
++
++import { BuildCategory, BuildPlatform, BuildCategoryName } from '../interfaces/build-config.interface';
++
++/**
++ * Service for handling interactive user input during the build process
++ */
++@Injectable()
++export class InteractiveService {
++  private readonly TIMEOUT_MS = 30_000; // 30 seconds
++
++  /**
++   * Prompts user to select a platform for the build
++   * @returns Promise resolving to the selected platform
++   * @throws Error if timeout occurs or invalid selection
++   */
++  async selectPlatform(): Promise<BuildPlatform> {
++    const platform = await select<BuildPlatform>({
++      message: '🚀 Select a platform for your Taptik build:',
++      choices: [
++        {
++          name: 'Kiro (Ready)',
++          value: BuildPlatform.KIRO,
++          description: 'Build from Kiro settings - fully supported'
++        },
++        {
++          name: 'Cursor (Coming soon)',
++          value: BuildPlatform.CURSOR,
++          description: 'Cursor integration is in development',
++          disabled: '(Coming soon)'
++        },
++        {
++          name: 'Claude Code (Coming soon)',
++          value: BuildPlatform.CLAUDE_CODE, 
++          description: 'Claude Code integration is in development',
++          disabled: '(Coming soon)'
++        }
++      ],
++      default: BuildPlatform.KIRO
++    });
++
++    return platform;
++  }
++
++  /**
++   * Prompts user to select categories to include in the build
++   * @returns Promise resolving to array of selected categories
++   * @throws Error if timeout occurs or no categories selected
++   */
++  async selectCategories(): Promise<BuildCategory[]> {
++    const selectedCategoryNames = await checkbox<BuildCategoryName>({
++      message: '📁 Select categories to include in your build:',
++      choices: [
++        {
++          name: 'Personal Context',
++          value: BuildCategoryName.PERSONAL_CONTEXT,
++          description: 'User preferences, work style, and communication settings'
++        },
++        {
++          name: 'Project Context', 
++          value: BuildCategoryName.PROJECT_CONTEXT,
++          description: 'Project information, technical stack, and development guidelines'
++        },
++        {
++          name: 'Prompt Templates',
++          value: BuildCategoryName.PROMPT_TEMPLATES,
++          description: 'Reusable prompt templates for AI interactions'
++        }
++      ],
++      required: true,
++      validate: (choices) => {
++        if (choices.length === 0) {
++          return 'At least one category must be selected.';
++        }
++        return true;
++      }
++    });
++
++    return selectedCategoryNames.map(name => ({
++      name,
++      enabled: true
++    }));
++  }
++
++}
+\ No newline at end of file
+
+--- FILE: vitest.e2e.config.ts ---
+diff --git a/vitest.e2e.config.ts b/vitest.e2e.config.ts
+index c9c7bcd..92ea40d 100644
+--- a/vitest.e2e.config.ts
++++ b/vitest.e2e.config.ts
+@@ -3,8 +3,8 @@ import { defineConfig } from 'vitest/config';
+ export default defineConfig({
+   test: {
+     include: ['**/*.e2e.spec.ts'],
+-    testTimeout: 30000,
+-    hookTimeout: 30000,
++    testTimeout: 30_000,
++    hookTimeout: 30_000,
+     globals: true,
+     environment: 'node',
+   },
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

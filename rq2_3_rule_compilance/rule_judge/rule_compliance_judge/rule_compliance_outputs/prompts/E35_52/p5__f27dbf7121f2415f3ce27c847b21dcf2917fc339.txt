@@ -1,0 +1,365 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .cursor/rules/develop.mdc
+- Change Type: added
+- Target Rule Content:
+│   ├── theme-selector.tsx           # 主题选择器组件
+│   ├── operation-history.tsx       # 操作历史组件
+│   └── app-settings.tsx            # 应用设置组件
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code filenames.
+- Suggested Logic: Verify the existence of the specific files 'theme-selector.tsx', 'operation-history.tsx', and 'app-settings.tsx' in the project directory based on the provided tree structure.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: 🐛 修复图片压缩和保存位置设置问题
+
+✨ 图片压缩功能增强：
+- 修复高质量压缩时文件变大的问题
+- 实现按文件大小压缩功能
+- 完善按图片尺寸压缩功能
+- 添加智能质量控制机制，防止文件意外变大
+- 修复PNG格式压缩参数错误（使用compressionLevel而非quality）
+- 使用临时文件机制验证压缩效果
+
+🔧 保存位置设置修复：
+- 修复应用设置中修改保存位置不生效的问题
+- 工具组件每次打开时重新获取最新配置
+- 修复useEffect依赖条件错误导致的配置缓存问题
+- 确保设置修改后立即生效，无需重启应用
+
+📚 文档更新：
+- 更新product.md，记录重要bug修复过程
+- 更新project.mdc开发规范，添加配置管理和图片压缩规范
+- 完善功能实现状态和技术架构文档
+- Changed Files List: 
+product.md	+55	-5	after_lines=537
+src/components/image-compressor.tsx	+5	-3	after_lines=326
+src/components/pdf-merger.tsx	+5	-4	after_lines=442
+src/main.ts	+83	-4	after_lines=912
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── project.mdc
+├── .eslintrc.json
+├── .gitignore
+├── .npmrc
+├── README.md
+├── forge.config.ts
+├── forge.env.d.ts
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.js
+├── product.md
+├── src
+│   ├── App.tsx
+│   ├── components
+│   │   ├── app-settings.tsx
+│   │   ├── image-compressor.tsx
+│   │   ├── operation-history.tsx
+│   │   └── pdf-merger.tsx
+│   ├── hooks
+│   │   └── use-dropzone.ts
+│   ├── index.css
+│   ├── lib
+│   │   └── utils.ts
+│   ├── main.ts
+│   ├── preload.ts
+│   ├── renderer.ts
+│   ├── types
+│   │   └── electron.d.ts
+│   └── ui
+│       ├── button.tsx
+│       ├── feature-card.tsx
+│       ├── modal.tsx
+│       └── save-location-selector.tsx
+├── tailwind.config.js
+├── tsconfig.json
+├── vite.main.config.ts
+├── vite.preload.config.ts
+└── vite.renderer.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: product.md ---
+diff --git a/product.md b/product.md
+index b6bb5a5..3d6bcef 100644
+--- a/product.md
++++ b/product.md
+@@ -340,6 +340,53 @@
+   - 统一配置加载失败的处理逻辑
+   - 提供优雅的降级方案
+ 
++## 重要Bug修复记录
++
++### 图片压缩质量问题修复（2024-12-29）
++- **问题描述**：选择高质量等级压缩时，生成的图片文件比原图更大
++- **根本原因**：
++  1. PNG格式错误使用了`quality`参数（PNG不支持此参数）
++  2. 缺少按文件大小压缩的实现逻辑
++  3. 高质量压缩时未检查输出文件大小
++- **修复方案**：
++  1. **PNG格式优化**：改用`compressionLevel`参数，添加`progressive: true`
++  2. **智能质量控制**：高质量设置时先保存临时文件检查大小，如果变大则自动降低质量
++  3. **完整压缩方式**：实现按文件大小压缩，根据目标大小智能估算质量级别
++  4. **尺寸压缩增强**：为按尺寸压缩添加适中的质量设置
++- **技术细节**：
++  - 使用临时文件机制检查压缩效果
++  - 不同格式使用正确的压缩参数（JPEG用quality，PNG用compressionLevel，WebP用quality）
++  - 添加文件大小保护机制，确保压缩后文件不会意外变大
++
++### 保存位置设置不生效问题修复（2024-12-29）
++- **问题描述**：在应用设置中修改默认保存位置后，工具中实际保存位置未更新
++- **根本原因**：
++  1. 工具组件的useEffect依赖条件错误：`if (isOpen && !saveLocation)`
++  2. 保存位置作为依赖项，一旦设置后就不会再触发更新
++  3. 组件缓存了第一次获取的保存位置，不响应配置变化
++- **修复方案**：
++  1. **修改初始化逻辑**：每次打开工具时都重新获取最新配置
++  2. **移除错误依赖**：从useEffect依赖数组中移除`saveLocation`
++  3. **配置清理机制**：如果用户清空了默认保存位置，工具也相应清空缓存
++- **技术细节**：
++  ```typescript
++  // 修复前（有问题）
++  React.useEffect(() => {
++    if (isOpen && !saveLocation) { // ❌ 条件错误
++      // 获取配置...
++    }
++  }, [isOpen, saveLocation]); // ❌ 依赖项问题
++
++  // 修复后（正确）
++  React.useEffect(() => {
++    if (isOpen) { // ✅ 每次打开都获取
++      // 获取配置并清理旧设置...
++    }
++  }, [isOpen]); // ✅ 只依赖isOpen
++  ```
++- **影响范围**：图片压缩工具和PDF合并工具都进行了相同修复
++- **用户体验改进**：设置修改后立即生效，无需重启应用
++
+ # 应用级功能
+ 
+ ## 操作历史记录
+@@ -405,17 +452,21 @@
+ 
+ ### 图片压缩工具
+ - [x] **文件选择**：Electron 原生对话框，支持图片格式过滤
+-- [x] **按质量压缩**：10%-100% 可调节质量滑块
+-- [x] **格式转换**：支持 JPEG、PNG、WebP 格式转换
++- [x] **按质量压缩**：10%-100% 可调节质量滑块，包含高质量文件大小保护机制
++- [x] **按文件大小压缩**：智能估算质量级别，达到目标文件大小
++- [x] **按图片尺寸压缩**：调整图片宽度和高度，保持原始比例
++- [x] **格式转换**：支持 JPEG、PNG、WebP 格式转换，正确处理各格式压缩参数
+ - [x] **批量处理**：支持多文件同时压缩
+ - [x] **输出设置**：自定义文件名后缀，保存位置使用应用级别配置
+ - [x] **错误容错**：单文件失败不影响其他文件
+ - [x] **原生模块集成**：Sharp 库动态加载和 Vite 配置优化
++- [x] **智能质量控制**：高质量设置时防止文件变大，自动调整压缩参数
+ 
+ ### 应用级功能
+ - [x] **操作历史**：完整的历史记录管理系统
+ - [x] **应用配置**：文件重名处理、默认保存位置等配置选项
+-- [x] **保存位置统一管理**：应用级别的默认保存位置配置
++- [x] **保存位置统一管理**：应用级别的默认保存位置配置，实时同步到所有工具
++- [x] **配置实时更新**：工具组件每次打开时重新获取最新配置，确保设置立即生效
+ - [x] **通知系统**：React Toast 集成
+ - [x] **IPC 通信**：完整的主进程与渲染进程通信
+ - [x] **通用UI组件**：SaveLocationSelector 等可复用组件
+@@ -423,10 +474,9 @@
+ ## 🔄 部分完成功能
+ 
+ ### 图片压缩扩展
+-- [ ] **按文件大小压缩**：压缩到指定目标大小
+-- [ ] **按图片尺寸压缩**：调整图片宽度和高度
+ - [ ] **压缩进度显示**：实时进度条和文件状态更新
+ - [ ] **压缩预览**：压缩前后效果对比
++- [ ] **压缩结果统计**：显示压缩前后文件大小对比和压缩率
+ 
+ ## 📋 技术债务和优化项
+
+--- FILE: src/components/image-compressor.tsx ---
+diff --git a/src/components/image-compressor.tsx b/src/components/image-compressor.tsx
+index 7ba3235..e9aa62f 100644
+--- a/src/components/image-compressor.tsx
++++ b/src/components/image-compressor.tsx
+@@ -29,18 +29,20 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   const [saveLocation, setSaveLocation] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
+ 
+-  // 初始化保存位置
++  // 初始化保存位置 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+-    if (isOpen && !saveLocation) {
++    if (isOpen) {
+       window.electronAPI.getAppConfig().then(config => {
+         if (config.defaultSaveLocation) {
+           setSaveLocation(config.defaultSaveLocation);
++        } else {
++          setSaveLocation(''); // 如果没有设置默认位置，清空当前设置
+         }
+       }).catch(err => {
+         console.error('获取应用配置失败:', err);
+       });
+     }
+-  }, [isOpen, saveLocation]);
++  }, [isOpen]); // 移除 saveLocation 依赖，确保每次打开都重新获取
+ 
+   const handleFileSelect = async () => {
+     try {
+
+--- FILE: src/components/pdf-merger.tsx ---
+diff --git a/src/components/pdf-merger.tsx b/src/components/pdf-merger.tsx
+index 2112407..3a744f5 100644
+--- a/src/components/pdf-merger.tsx
++++ b/src/components/pdf-merger.tsx
+@@ -28,18 +28,19 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+ 
+-  // 初始化默认保存路径
++  // 初始化默认保存路径 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+-    if (isOpen && !outputPath) {
++    if (isOpen) {
+       window.electronAPI?.getAppConfig().then(config => {
+         if (config.defaultSaveLocation) {
+           setOutputPath(config.defaultSaveLocation);
++          return config.defaultSaveLocation;
+         } else {
+           // 如果没有设置默认保存位置，使用下载目录
+           return window.electronAPI?.getDownloadsPath();
+         }
+       }).then(path => {
+-        if (path && !outputPath) {
++        if (path) {
+           setOutputPath(path);
+         }
+       }).catch(err => {
+@@ -47,7 +48,7 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+         setOutputPath('');
+       });
+     }
+-  }, [isOpen, outputPath]);
++  }, [isOpen]); // 移除 outputPath 依赖，确保每次打开都重新获取
+ 
+   const validateFile = (fileInfo: { name: string; size: number }): { valid: boolean; error?: string } => {
+     if (!fileInfo.name.toLowerCase().endsWith('.pdf')) {
+
+--- FILE: src/main.ts ---
+diff --git a/src/main.ts b/src/main.ts
+index 9c902fa..9b6017c 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -708,13 +708,47 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+            if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+              sharpInstance = sharpInstance.jpeg({ quality });
+            } else if (outputFormat === 'png') {
++             // PNG格式使用压缩级别，质量越高压缩级别越低
++             const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
+              sharpInstance = sharpInstance.png({ 
+-               quality,
+-               compressionLevel: Math.round((100 - quality) / 10)
++               compressionLevel,
++               progressive: true
+              });
+            } else if (outputFormat === 'webp') {
+              sharpInstance = sharpInstance.webp({ quality });
+            }
++         } else if (settings.method === 'size') {
++           // 按文件大小压缩 - 通过调整质量来达到目标大小
++           const targetSizeKB = settings.targetSize || 500;
++           const targetSizeBytes = targetSizeKB * 1024;
++           
++           // 获取原始文件大小
++           const originalStats = await fs.stat(filePath);
++           const originalSize = originalStats.size;
++           
++           // 如果原始文件已经小于目标大小，使用较高质量
++           if (originalSize <= targetSizeBytes) {
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               sharpInstance = sharpInstance.jpeg({ quality: 85 });
++             } else if (outputFormat === 'png') {
++               sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++             } else if (outputFormat === 'webp') {
++               sharpInstance = sharpInstance.webp({ quality: 85 });
++             }
++           } else {
++                           // 估算需要的质量级别
++              const compressionRatio = targetSizeBytes / originalSize;
++              const estimatedQuality = Math.max(10, Math.min(90, Math.round(compressionRatio * 100)));
++             
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               sharpInstance = sharpInstance.jpeg({ quality: estimatedQuality });
++             } else if (outputFormat === 'png') {
++               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - estimatedQuality) / 10)));
++               sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++             } else if (outputFormat === 'webp') {
++               sharpInstance = sharpInstance.webp({ quality: estimatedQuality });
++             }
++           }
+          } else if (settings.method === 'dimension') {
+            // 按尺寸压缩
+            const maxDimension = settings.maxDimension || 1920;
+@@ -722,10 +756,55 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+              fit: 'inside',
+              withoutEnlargement: true
+            });
++           
++           // 尺寸压缩时也应用适中的质量设置
++           if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++             sharpInstance = sharpInstance.jpeg({ quality: 80 });
++           } else if (outputFormat === 'png') {
++             sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++           } else if (outputFormat === 'webp') {
++             sharpInstance = sharpInstance.webp({ quality: 80 });
++           }
+          }
+          
+-         // 保存处理后的图片
+-         await sharpInstance.toFile(finalOutputPath);
++         // 对于高质量设置，添加文件大小检查以避免文件变大
++         if (settings.method === 'quality' && (settings.quality || 70) > 85) {
++           const originalStats = await fs.stat(filePath);
++           const originalSize = originalStats.size;
++           
++           // 先保存到临时文件检查大小
++           const tempPath = finalOutputPath + '.tmp';
++           await sharpInstance.toFile(tempPath);
++           
++           const tempStats = await fs.stat(tempPath);
++           const compressedSize = tempStats.size;
++           
++           // 如果压缩后文件更大，使用原始文件或降低质量
++           if (compressedSize > originalSize) {
++             await fs.unlink(tempPath); // 删除临时文件
++             
++             // 使用更低的质量重新压缩
++             const adjustedQuality = Math.max(70, (settings.quality || 70) - 15);
++             let adjustedInstance = sharp.default(filePath);
++             
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               adjustedInstance = adjustedInstance.jpeg({ quality: adjustedQuality });
++             } else if (outputFormat === 'png') {
++               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - adjustedQuality) / 10)));
++               adjustedInstance = adjustedInstance.png({ compressionLevel, progressive: true });
++             } else if (outputFormat === 'webp') {
++               adjustedInstance = adjustedInstance.webp({ quality: adjustedQuality });
++             }
++             
++             await adjustedInstance.toFile(finalOutputPath);
++           } else {
++             // 压缩后文件更小，重命名临时文件为最终文件
++             await fs.rename(tempPath, finalOutputPath);
++           }
++         } else {
++           // 正常保存
++           await sharpInstance.toFile(finalOutputPath);
++         }
+         
+         processedCount++;
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

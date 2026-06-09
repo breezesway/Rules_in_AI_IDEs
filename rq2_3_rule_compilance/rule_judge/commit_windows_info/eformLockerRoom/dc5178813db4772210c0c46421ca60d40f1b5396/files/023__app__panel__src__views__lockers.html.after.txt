@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dolap Yönetimi - Eform Panel</title>
+    <script>
+        // Early service worker registration prevention
+        if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
+            if (!navigator.serviceWorker.register) {
+                navigator.serviceWorker.register = function() {
+                    console.log('🔧 Service worker registration stubbed (early)');
+                    return Promise.resolve();
+                };
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .actions {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .locker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .locker-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .locker-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .locker-card.selected {
+            border-left-color: #667eea;
+            background: #e3f2fd;
+            border: 2px solid #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .locker-card.free {
+            border-left-color: #28a745;
+        }
+
+        .locker-card.owned {
+            border-left-color: #ffc107;
+        }
+
+        .locker-card.reserved {
+            border-left-color: #17a2b8;
+        }
+
+        .locker-card.blocked {
+            border-left-color: #dc3545;
+        }
+
+        .locker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .locker-display-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+            flex: 1;
+        }
+
+        .locker-relay-number {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .locker-state-chip {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Turkish state chip colors - using consistent states: Boş, Dolu, Açılıyor, Hata, Engelli */
+        .state-bos {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .state-dolu {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .state-aciliyor {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .state-hata {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .state-engelli {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Legacy status support for backward compatibility */
+        .status-free {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-owned {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-reserved {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-blocked {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .last-change-time {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .locker-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .locker-details div {
+            margin-bottom: 0.25rem;
+        }
+
+        .locker-actions {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-sm:active {
+            transform: translateY(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border: 1px solid #fcc;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #363;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border: 1px solid #cfc;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .kiosk-status {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .kiosk-status h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .kiosk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .kiosk-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+        }
+
+        .kiosk-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #e9ecef;
+        }
+
+        .kiosk-card.online {
+            border-left-color: #28a745;
+        }
+
+        .kiosk-card.offline {
+            border-left-color: #dc3545;
+        }
+
+        .kiosk-card.maintenance {
+            border-left-color: #ffc107;
+        }
+
+        .kiosk-card.error {
+            border-left-color: #fd7e14;
+        }
+
+        .kiosk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .kiosk-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .kiosk-status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .kiosk-status-badge.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .kiosk-status-badge.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .kiosk-status-badge.maintenance {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .kiosk-status-badge.error {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .kiosk-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .kiosk-details div {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Toast notification system */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 10px;
+            padding: 16px;
+            border-left: 4px solid #28a745;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: #28a745;
+        }
+
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+
+        .toast.info {
+            border-left-color: #17a2b8;
+        }
+
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        .toast-body {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .toast-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toast-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Real-time update animation - Task 12 */
+        .locker-card.real-time-update {
+            animation: realTimeUpdate 1s ease-in-out;
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes realTimeUpdate {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dolap Yönetimi</h1>
+        <div class="nav-links">
+            <a href="/dashboard">Ana Sayfa</a>
+            <a href="/lockers" style="background: #f0f0f0;">Dolaplar</a>
+            <a href="/locker-naming">İsimlendirme</a>
+            <a href="/performance">Performans</a>
+            <a href="/vip">VIP Sözleşmeler</a>
+            <a href="#" onclick="logout()">Çıkış</a>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="main-content">
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <!-- Statistics -->
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="stat-total">-</div>
+                <div class="stat-label">Toplam Dolap</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-free">-</div>
+                <div class="stat-label">Boş</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-owned">-</div>
+                <div class="stat-label">Dolu</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-reserved">-</div>
+                <div class="stat-label">Rezerve</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-blocked">-</div>
+                <div class="stat-label">Engelli</div>
+            </div>
+        </div>
+
+        <!-- Kiosk Status -->
+        <div class="kiosk-status" id="kiosk-status" style="display: none;">
+            <h3>Kiosk Durumu</h3>
+            <div class="kiosk-grid" id="kiosk-grid"></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="zone-filter">Bölge</label>
+                <select id="zone-filter">
+                    <option value="">Tüm Bölgeler</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="kiosk-filter">Kiosk</label>
+                <select id="kiosk-filter">
+                    <option value="">Tüm Kiosklar</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="status-filter">Durum</label>
+                <select id="status-filter">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="Free">Boş</option>
+                    <option value="Owned">Dolu</option>
+                    <option value="Reserved">Rezerve</option>
+                    <option value="Blocked">Engelli</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="name-search">İsim Arama</label>
+                <input type="text" id="name-search" placeholder="Dolap ismi ara...">
+            </div>
+            <div class="filter-group">
+                <label for="sort-by">Sıralama</label>
+                <select id="sort-by">
+                    <option value="name">İsim</option>
+                    <option value="relay">Röle</option>
+                    <option value="state">Durum</option>
+                    <option value="lastChanged">Son Değişiklik</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="sort-order">Sıra</label>
+                <select id="sort-order">
+                    <option value="asc">Artan</option>
+                    <option value="desc">Azalan</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" onclick="applyFilters()">Filtrele</button>
+                <button class="btn btn-primary" onclick="loadData()">Yenile</button>
+            </div>
+        </div>
+
+        <!-- Opening Methods Info -->
+        <div class="actions" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
+            <div style="flex: 1;">
+                <strong>💡 Locker Opening Methods:</strong><br>
+                <span style="color: #666; font-size: 0.9rem;">
+                    🔓 <strong>Open:</strong> Via command queue (normal method) | 
+                    ⚡ <strong>Direct:</strong> Hardware activation (like relay page, always works)
+                </span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openSelectedLockers()" id="open-btn" disabled>
+                Select lockers first
+            </button>
+            <button class="btn btn-success" onclick="releaseSelectedLockers()" id="release-btn" disabled>
+                Select lockers first
+            </button>
+            <button class="btn btn-primary" onclick="refreshSelectedLockers()" id="refresh-btn" disabled>
+                Select lockers first
+            </button>
+            <button class="btn btn-danger" onclick="blockSelectedLockers()" id="block-btn" disabled>
+                Select lockers first
+            </button>
+            <button class="btn btn-success" onclick="unblockSelectedLockers()" id="unblock-btn" disabled>
+                Select lockers first
+            </button>
+            <button class="btn btn-danger" onclick="showEndOfDayModal()">
+                Gün Sonu Açma
+            </button>
+        </div>
+
+        <!-- Locker Grid -->
+        <div id="loading" class="loading">Dolaplar yükleniyor...</div>
+        <div class="locker-grid" id="locker-grid" style="display: none;"></div>
+    </div>
+
+    <!-- Action Modal -->
+    <div id="action-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">İşlem</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="action-form">
+                <div class="form-group">
+                    <label for="reason">Sebep</label>
+                    <textarea id="reason" name="reason" placeholder="Bu işlem için sebep girin..."></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="modal-submit-btn">Gönder</button>
+                    <button type="button" class="btn" onclick="closeModal()">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- End of Day Modal -->
+    <div id="eod-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>End of Day Opening</h2>
+                <span class="close" onclick="closeEodModal()">&times;</span>
+            </div>
+            <form id="eod-form">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="exclude-vip" checked> Exclude VIP lockers
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="eod-kiosk">Kiosk (optional)</label>
+                    <select id="eod-kiosk">
+                        <option value="">All Kiosks</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-danger">Generate Report & Open All</button>
+                    <button type="button" class="btn" onclick="closeEodModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let csrfToken = null;
+        let lockers = [];
+        let filteredLockers = [];
+        let kiosks = [];
+        let zones = [];
+        let selectedLockers = new Set();
+        
+        // WebSocket connection for real-time updates - Task 12
+        let websocket = null;
+        let wsReconnectAttempts = 0;
+        let maxWsReconnectAttempts = 10;
+        let wsReconnectDelay = 1000;
+        let wsMaxReconnectDelay = 30000;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserInfo();
+            await loadData();
+            updateSelectedCount(); // Initialize button states
+            setupFilterEventListeners();
+            initWebSocketConnection(); // Initialize real-time updates
+        });
+
+        // Toast notification system
+        function showToast(title, message, type = 'success', commandId = null) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const toastId = 'toast-' + Date.now();
+            toast.id = toastId;
+            
+            let linkHtml = '';
+            if (commandId) {
+                linkHtml = `<br><a href="#" class="toast-link" onclick="showCommandDetails('${commandId}')">Komut detayları</a>`;
+            }
+            
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <div class="toast-title">${title}</div>
+                    <button class="toast-close" onclick="closeToast('${toastId}')">&times;</button>
+                </div>
+                <div class="toast-body">${message}${linkHtml}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => closeToast(toastId), 5000);
+        }
+
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        function showCommandDetails(commandId) {
+            // Open command details in a new tab or modal
+            window.open(`/commands/${commandId}`, '_blank');
+        }
+
+        // WebSocket connection management - Task 12
+        function initWebSocketConnection() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsPort = 8080; // Default WebSocket port
+            const wsUrl = `${wsProtocol}//${window.location.hostname}:${wsPort}`;
+            
+            console.log('🔌 Admin Panel: Initializing WebSocket connection to:', wsUrl);
+            
+            try {
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = () => {
+                    console.log('✅ Admin Panel: WebSocket connected');
+                    wsReconnectAttempts = 0;
+                    wsReconnectDelay = 1000; // Reset delay
+                    showConnectionStatus('online');
+                };
+                
+                websocket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        handleWebSocketMessage(message);
+                    } catch (error) {
+                        console.error('🚨 Admin Panel: Failed to parse WebSocket message:', error);
+                    }
+                };
+                
+                websocket.onclose = (event) => {
+                    console.warn('🔌 Admin Panel: WebSocket connection closed:', event.code, event.reason);
+                    websocket = null;
+                    showConnectionStatus('offline');
+                    scheduleWebSocketReconnect();
+                };
+                
+                websocket.onerror = (error) => {
+                    console.error('🚨 Admin Panel: WebSocket error:', error);
+                    if (websocket) {
+                        websocket.close();
+                    }
+                };
+                
+            } catch (error) {
+                console.error('🚨 Admin Panel: Failed to create WebSocket connection:', error);
+                scheduleWebSocketReconnect();
+            }
+        }
+
+        function scheduleWebSocketReconnect() {
+            if (wsReconnectAttempts >= maxWsReconnectAttempts) {
+                console.error('🚨 Admin Panel: Max WebSocket reconnection attempts reached');
+                showConnectionStatus('offline');
+                return;
+            }
+            
+            wsReconnectAttempts++;
+            showConnectionStatus('reconnecting');
+            
+            console.log(`🔄 Admin Panel: Scheduling WebSocket reconnection attempt ${wsReconnectAttempts} in ${wsReconnectDelay}ms`);
+            
+            setTimeout(() => {
+                initWebSocketConnection();
+            }, wsReconnectDelay);
+            
+            // Exponential backoff with jitter
+            wsReconnectDelay = Math.min(
+                wsReconnectDelay * 2 + Math.random() * 1000,
+                wsMaxReconnectDelay
+            );
+        }
+
+        function handleWebSocketMessage(message) {
+            console.log('📨 Admin Panel: WebSocket message received:', message.type);
+            
+            switch (message.type) {
+                case 'state_update':
+                    handleLockerStateUpdate(message.data);
+                    break;
+                case 'connection_status':
+                    handleConnectionStatusUpdate(message.data);
+                    break;
+                case 'heartbeat':
+                    // Respond to heartbeat if needed
+                    if (message.data.ping && websocket && websocket.readyState === WebSocket.OPEN) {
+                        websocket.send(JSON.stringify({
+                            type: 'ping',
+                            timestamp: new Date().toISOString()
+                        }));
+                    }
+                    break;
+                case 'error':
+                    console.error('🚨 Admin Panel: WebSocket server error:', message.data);
+                    showError('Real-time connection error: ' + message.data.error);
+                    break;
+                default:
+                    console.log('📨 Admin Panel: Unknown WebSocket message type:', message.type);
+            }
+        }
+
+        function handleLockerStateUpdate(update) {
+            console.log('🔄 Admin Panel: Locker state update:', update);
+            
+            // Find and update the locker in our local data
+            const lockerIndex = lockers.findIndex(l => 
+                l.kiosk_id === update.kioskId && l.id === update.lockerId
+            );
+            
+            if (lockerIndex !== -1) {
+                // Update the locker data
+                lockers[lockerIndex].status = update.state;
+                lockers[lockerIndex].updated_at = update.lastChanged;
+                lockers[lockerIndex].owner_key = update.ownerKey;
+                lockers[lockerIndex].owner_type = update.ownerType;
+                lockers[lockerIndex].display_name = update.displayName;
+                
+                // Re-apply filters and re-render
+                applyFilters();
+                
+                // Show visual feedback
+                showLockerUpdateAnimation(update);
+            }
+        }
+
+        function handleConnectionStatusUpdate(status) {
+            console.log('🔌 Admin Panel: Connection status update:', status);
+            showConnectionStatus(status.status);
+        }
+
+        function showConnectionStatus(status) {
+            // Create or update connection status indicator
+            let statusIndicator = document.getElementById('connection-status');
+            if (!statusIndicator) {
+                statusIndicator = document.createElement('div');
+                statusIndicator.id = 'connection-status';
+                statusIndicator.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    z-index: 1000;
+                    transition: all 0.3s ease;
+                `;
+                document.body.appendChild(statusIndicator);
+            }
+            
+            switch (status) {
+                case 'online':
+                    statusIndicator.textContent = '🟢 Canlı Bağlantı';
+                    statusIndicator.style.background = '#d4edda';
+                    statusIndicator.style.color = '#155724';
+                    statusIndicator.style.border = '1px solid #c3e6cb';
+                    break;
+                case 'offline':
+                    statusIndicator.textContent = '🔴 Çevrimdışı';
+                    statusIndicator.style.background = '#f8d7da';
+                    statusIndicator.style.color = '#721c24';
+                    statusIndicator.style.border = '1px solid #f1b0b7';
+                    break;
+                case 'reconnecting':
+                    statusIndicator.textContent = '🟡 Yeniden Bağlanıyor...';
+                    statusIndicator.style.background = '#fff3cd';
+                    statusIndicator.style.color = '#856404';
+                    statusIndicator.style.border = '1px solid #ffeaa7';
+                    break;
+            }
+        }
+
+        function showLockerUpdateAnimation(update) {
+            // Find the locker card by matching onclick attribute (fallback approach)
+            const lockerCards = document.querySelectorAll('.locker-card');
+            lockerCards.forEach(card => {
+                const onclickAttr = card.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`'${update.kioskId}', ${update.lockerId}`)) {
+                    card.classList.add('real-time-update');
+                    setTimeout(() => {
+                        card.classList.remove('real-time-update');
+                    }, 1000);
+                }
+            });
+        }
+
+        // Cleanup WebSocket on page unload
+        window.addEventListener('beforeunload', () => {
+            if (websocket) {
+                websocket.close();
+            }
+        });
+
+        // Setup filter event listeners
+        function setupFilterEventListeners() {
+            document.getElementById('name-search').addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('sort-by').addEventListener('change', applyFilters);
+            document.getElementById('sort-order').addEventListener('change', applyFilters);
+            document.getElementById('status-filter').addEventListener('change', applyFilters);
+        }
+
+        // Debounce function for search input
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/auth/me');
+                const data = await response.json();
+
+                if (response.ok && data.user) {
+                    currentUser = data.user;
+                    csrfToken = data.csrfToken;
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                showError('Failed to load user information');
+            }
+        }
+
+        async function loadData() {
+            try {
+                showLoading(true);
+                
+                // Load kiosks and heartbeat data
+                await loadKiosks();
+                
+                // Load lockers with filters
+                await loadLockers();
+                
+            } catch (error) {
+                showError('Network error loading data');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadKiosks() {
+            try {
+                const response = await fetch('/api/heartbeat/kiosks');
+                const data = await response.json();
+
+                if (response.ok) {
+                    kiosks = data.data.kiosks;
+                    zones = data.data.zones;
+                    renderKiosks();
+                    updateFilters();
+                } else {
+                    console.error('Failed to load kiosks:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error loading kiosks:', error);
+            }
+        }
+
+        async function loadLockers() {
+            const zoneFilter = document.getElementById('zone-filter').value;
+            const kioskFilter = document.getElementById('kiosk-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+
+            // Check if kioskId is required - if no kiosk filter is selected, show message
+            if (!kioskFilter) {
+                showError('Select a kiosk');
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams();
+                if (kioskFilter) params.append('kioskId', kioskFilter);
+                if (statusFilter) params.append('status', statusFilter);
+
+                console.log('🔍 Making API request to:', `/api/lockers?${params}`);
+                
+                const response = await fetch(`/api/lockers?${params}`, {
+                    credentials: 'same-origin'
+                });
+
+                console.log('📡 API Response status:', response.status);
+                console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
+
+                if (!response.ok) {
+                    // Enhanced error parsing: try response.json(), fallback to response.text()
+                    let message = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        message = errorData.message || errorData.error || message;
+                    } catch {
+                        // Fallback to text if JSON parsing fails (e.g., HTML error pages)
+                        try {
+                            const textResponse = await response.text();
+                            if (textResponse && textResponse.length < 200) {
+                                message = textResponse;
+                            }
+                        } catch {
+                            // Keep original HTTP status message
+                        }
+                    }
+                    
+                    // Handle three main error cases with clear server error messages
+                    if (response.status === 401) {
+                        // 401 session error - show "login required" message
+                        message = message.includes('login required') ? message : 'login required';
+                    } else if (response.status === 403) {
+                        // 403 permission error - show appropriate permission message
+                        message = message.includes('permission') ? message : 'permission denied';
+                    } else if (response.status >= 500) {
+                        // 500 server error - show "try again" message
+                        message = message.includes('try again') ? message : 'try again';
+                    }
+                    
+                    throw new Error(message);
+                }
+
+                const responseText = await response.text();
+                console.log('📄 Raw API response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('📊 Parsed API data:', data);
+                } catch (parseError) {
+                    console.error('❌ Failed to parse JSON response:', parseError);
+                    console.log('Raw response was:', responseText);
+                    throw new Error('Server returned invalid JSON');
+                }
+                
+                // Validate response format
+                console.log('🔍 Validating response format...');
+                console.log('- data exists:', !!data);
+                console.log('- data.lockers exists:', !!data.lockers);
+                console.log('- data.lockers is array:', Array.isArray(data.lockers));
+                console.log('- data.lockers length:', data.lockers ? data.lockers.length : 'N/A');
+                
+                if (!data || !Array.isArray(data.lockers)) {
+                    console.error('❌ Invalid response format. Expected: {lockers: [...]}');
+                    console.error('❌ Actual response:', data);
+                    throw new Error('Invalid response format from server');
+                }
+                
+                lockers = data.lockers;
+                console.log('✅ Successfully loaded', lockers.length, 'lockers');
+                
+                // Filter by zone if selected
+                if (zoneFilter && Array.isArray(lockers) && Array.isArray(kiosks)) {
+                    const kioskIdsInZone = kiosks
+                        .filter(k => k.zone === zoneFilter)
+                        .map(k => k.kiosk_id);
+                    lockers = lockers.filter(l => kioskIdsInZone.includes(l.kiosk_id));
+                }
+                
+                applyFilters();
+                updateStats();
+            } catch (error) {
+                // Display clear error messages from server response
+                // Handle three main error cases: 401 session, 403 permission, 500 server error
+                const errorMessage = error.message;
+                
+                // Show single Refresh button on error (no exponential backoff)
+                // Show retry for 403 permission and 500 server errors, and network errors
+                // Don't show retry for "Select a kiosk" message or 401 session errors (login required)
+                const shouldShowRetry = !errorMessage.includes('Select a kiosk') && 
+                                       !errorMessage.includes('login required') &&
+                                       !errorMessage.includes('401');
+                
+                showError(errorMessage, shouldShowRetry);
+                console.error('Locker loading failed:', error);
+            }
+        }
+
+        // Apply filters and sorting
+        function applyFilters() {
+            if (!Array.isArray(lockers)) {
+                filteredLockers = [];
+                renderLockers();
+                return;
+            }
+
+            const nameSearch = document.getElementById('name-search').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const sortBy = document.getElementById('sort-by').value;
+            const sortOrder = document.getElementById('sort-order').value;
+
+            // Filter lockers
+            filteredLockers = lockers.filter(locker => {
+                // Name search filter
+                if (nameSearch) {
+                    const displayName = (locker.display_name || `Dolap ${locker.id}`).toLowerCase();
+                    if (!displayName.includes(nameSearch)) {
+                        return false;
+                    }
+                }
+
+                // Status filter
+                if (statusFilter && locker.status !== statusFilter) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Sort lockers
+            filteredLockers.sort((a, b) => {
+                let aValue, bValue;
+
+                switch (sortBy) {
+                    case 'name':
+                        aValue = (a.display_name || `Dolap ${a.id}`).toLowerCase();
+                        bValue = (b.display_name || `Dolap ${b.id}`).toLowerCase();
+                        break;
+                    case 'relay':
+                        aValue = a.id;
+                        bValue = b.id;
+                        break;
+                    case 'state':
+                        const stateMapping = {
+                            'Free': 'Boş',
+                            'Owned': 'Dolu', 
+                            'Reserved': 'Dolu',
+                            'Opening': 'Açılıyor',
+                            'Error': 'Hata',
+                            'Blocked': 'Engelli'
+                        };
+                        aValue = stateMapping[a.status] || a.status;
+                        bValue = stateMapping[b.status] || b.status;
+                        break;
+                    case 'lastChanged':
+                        aValue = new Date(a.updated_at || 0);
+                        bValue = new Date(b.updated_at || 0);
+                        break;
+                    default:
+                        aValue = a.id;
+                        bValue = b.id;
+                }
+
+                if (sortOrder === 'desc') {
+                    return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+                } else {
+                    return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+                }
+            });
+
+            renderLockers();
+        }
+
+        function renderLockers() {
+            const grid = document.getElementById('locker-grid');
+            
+            if (!Array.isArray(filteredLockers) || filteredLockers.length === 0) {
+                grid.innerHTML = '<div class="loading">No lockers found</div>';
+                grid.style.display = 'block';
+                return;
+            }
+
+            grid.innerHTML = filteredLockers.map(locker => {
+                // Get display name or fallback to "Dolap [relay_number]"
+                const displayName = locker.display_name || `Dolap ${locker.id}`;
+                
+                // Map old status names to new Turkish state names
+                const stateMapping = {
+                    'Free': 'Boş',
+                    'Owned': 'Dolu', 
+                    'Reserved': 'Dolu',
+                    'Opening': 'Açılıyor',
+                    'Error': 'Hata',
+                    'Blocked': 'Engelli'
+                };
+                const turkishState = stateMapping[locker.status] || locker.status;
+                
+                // Format last change time
+                const lastChanged = locker.updated_at ? 
+                    new Date(locker.updated_at).toLocaleString('tr-TR', {
+                        day: '2-digit',
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'Bilinmiyor';
+
+                return `
+                    <div class="locker-card ${locker.status.toLowerCase()} ${selectedLockers.has(locker.kiosk_id + '-' + locker.id) ? 'selected' : ''}" 
+                         onclick="toggleLocker('${locker.kiosk_id}', ${locker.id})">
+                        <div class="locker-header">
+                            <div class="locker-display-name">${displayName}</div>
+                            <div class="locker-state-chip state-${turkishState.toLowerCase().replace('ç', 'c').replace('ğ', 'g').replace('ı', 'i').replace('ö', 'o').replace('ş', 's').replace('ü', 'u')}">${turkishState}</div>
+                        </div>
+                        <div class="locker-relay-number">Röle: ${locker.id}</div>
+                        <div class="locker-details">
+                            ${locker.is_vip ? '<div><strong>VIP Dolap</strong></div>' : ''}
+                            ${locker.owner_type ? `<div>Sahip: ${locker.owner_type}</div>` : ''}
+                            <div class="last-change-time">Son değişiklik: ${lastChanged}</div>
+                        </div>
+                        <div class="locker-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-sm btn-primary" onclick="openSingleLocker('${locker.kiosk_id}', ${locker.id})" 
+                                    title="Komut kuyruğu ile aç">
+                                🔓 Aç
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="directOpenLocker(${locker.id})" 
+                                    title="Doğrudan donanım aktivasyonu">
+                                ⚡ Direkt
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.style.display = 'grid';
+        }
+
+        function updateStats() {
+            // Safety check: ensure lockers is an array
+            if (!Array.isArray(lockers)) {
+                console.warn('updateStats called but lockers is not an array:', lockers);
+                lockers = []; // Reset to empty array
+            }
+            
+            const stats = {
+                total: lockers.length,
+                free: lockers.filter(l => l.status === 'Free' || l.status === 'Boş').length,
+                owned: lockers.filter(l => l.status === 'Owned' || l.status === 'Reserved' || l.status === 'Dolu').length,
+                reserved: 0, // Combined with owned for Turkish states
+                blocked: lockers.filter(l => l.status === 'Blocked' || l.status === 'Engelli').length
+            };
+
+            document.getElementById('stat-total').textContent = stats.total;
+            document.getElementById('stat-free').textContent = stats.free;
+            document.getElementById('stat-owned').textContent = stats.owned;
+            document.getElementById('stat-reserved').textContent = stats.reserved;
+            document.getElementById('stat-blocked').textContent = stats.blocked;
+        }
+
+        function renderKiosks() {
+            const kioskStatusDiv = document.getElementById('kiosk-status');
+            const kioskGrid = document.getElementById('kiosk-grid');
+            
+            if (kiosks.length === 0) {
+                kioskStatusDiv.style.display = 'none';
+                return;
+            }
+
+            kioskGrid.innerHTML = kiosks.map(kiosk => `
+                <div class="kiosk-card ${kiosk.status}" onclick="selectKiosk('${kiosk.kiosk_id}')">
+                    <div class="kiosk-header">
+                        <div class="kiosk-name">${kiosk.kiosk_id}</div>
+                        <div class="kiosk-status-badge ${kiosk.status}">${kiosk.status.toUpperCase()}</div>
+                    </div>
+                    <div class="kiosk-details">
+                        <div><strong>Zone:</strong> ${kiosk.zone}</div>
+                        <div><strong>Version:</strong> ${kiosk.version}</div>
+                        <div><strong>Last Seen:</strong> ${new Date(kiosk.last_seen).toLocaleString()}</div>
+                        ${kiosk.hardware_id ? `<div><strong>Hardware:</strong> ${kiosk.hardware_id}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            kioskStatusDiv.style.display = 'block';
+        }
+
+        function selectKiosk(kioskId) {
+            console.log('🏢 Kiosk card clicked:', kioskId);
+            
+            // Update the kiosk filter dropdown
+            const kioskFilter = document.getElementById('kiosk-filter');
+            kioskFilter.value = kioskId;
+            
+            // Clear any selected lockers since we're changing kiosk
+            selectedLockers.clear();
+            updateSelectedCount();
+            
+            // Clear filters when changing kiosk
+            document.getElementById('name-search').value = '';
+            document.getElementById('status-filter').value = '';
+            
+            // Load lockers for the selected kiosk
+            loadLockers();
+        }
+
+        function updateFilters() {
+            const zoneFilter = document.getElementById('zone-filter');
+            const kioskFilter = document.getElementById('kiosk-filter');
+            const eodKiosk = document.getElementById('eod-kiosk');
+            
+            const currentZone = zoneFilter.value;
+            const currentKiosk = kioskFilter.value;
+            
+            // Update zone filter
+            zoneFilter.innerHTML = '<option value="">All Zones</option>' +
+                zones.map(z => `<option value="${z}">${z}</option>`).join('');
+            zoneFilter.value = currentZone;
+            
+            // Update kiosk filter based on selected zone
+            let availableKiosks = kiosks;
+            if (currentZone) {
+                availableKiosks = kiosks.filter(k => k.zone === currentZone);
+            }
+            
+            kioskFilter.innerHTML = '<option value="">All Kiosks</option>' +
+                availableKiosks.map(k => `<option value="${k.kiosk_id}">${k.kiosk_id} (${k.status})</option>`).join('');
+            
+            eodKiosk.innerHTML = '<option value="">All Kiosks</option>' +
+                availableKiosks.map(k => `<option value="${k.kiosk_id}">${k.kiosk_id} (${k.status})</option>`).join('');
+            
+            // Restore kiosk selection if still valid
+            if (currentKiosk && availableKiosks.some(k => k.kiosk_id === currentKiosk)) {
+                kioskFilter.value = currentKiosk;
+            }
+            
+            // Add zone filter change handler
+            zoneFilter.onchange = () => {
+                updateFilters();
+                loadLockers();
+            };
+        }
+
+        function toggleLocker(kioskId, lockerId) {
+            const key = kioskId + '-' + lockerId;
+            console.log('🎯 Locker clicked:', key);
+            
+            if (selectedLockers.has(key)) {
+                selectedLockers.delete(key);
+                console.log('➖ Locker deselected:', key);
+            } else {
+                selectedLockers.add(key);
+                console.log('➕ Locker selected:', key);
+            }
+            
+            console.log('📊 Total selected:', selectedLockers.size, Array.from(selectedLockers));
+            updateSelectedCount();
+            renderLockers();
+        }
+
+        function updateSelectedCount() {
+            const count = selectedLockers.size;
+            
+            const openBtn = document.getElementById('open-btn');
+            const releaseBtn = document.getElementById('release-btn');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const blockBtn = document.getElementById('block-btn');
+            const unblockBtn = document.getElementById('unblock-btn');
+            
+            if (count === 0) {
+                openBtn.innerHTML = 'Select lockers first';
+                releaseBtn.innerHTML = 'Select lockers first';
+                refreshBtn.innerHTML = 'Select lockers first';
+                blockBtn.innerHTML = 'Select lockers first';
+                unblockBtn.innerHTML = 'Select lockers first';
+                
+                openBtn.disabled = true;
+                releaseBtn.disabled = true;
+                refreshBtn.disabled = true;
+                blockBtn.disabled = true;
+                unblockBtn.disabled = true;
+            } else {
+                openBtn.innerHTML = `Aç ${count} dolap${count > 1 ? '' : ''}`;
+                releaseBtn.innerHTML = `Serbest Bırak ${count} dolap${count > 1 ? '' : ''}`;
+                refreshBtn.innerHTML = `Yenile ${count} dolap${count > 1 ? '' : ''}`;
+                blockBtn.innerHTML = `Blokla ${count} dolap${count > 1 ? '' : ''}`;
+                unblockBtn.innerHTML = `Blok Kaldır ${count} dolap${count > 1 ? '' : ''}`;
+                
+                openBtn.disabled = false;
+                releaseBtn.disabled = false;
+                refreshBtn.disabled = false;
+                blockBtn.disabled = false;
+                unblockBtn.disabled = false;
+            }
+        }
+
+        async function openSelectedLockers() {
+            if (selectedLockers.size === 0) return;
+            
+            showActionModal('Dolapları Aç', 'open');
+        }
+
+        async function blockSelectedLockers() {
+            if (selectedLockers.size === 0) return;
+            
+            showActionModal('Dolapları Blokla', 'block');
+        }
+
+        async function unblockSelectedLockers() {
+            if (selectedLockers.size === 0) return;
+            
+            showActionModal('Blokları Kaldır', 'unblock');
+        }
+
+        async function releaseSelectedLockers() {
+            if (selectedLockers.size === 0) return;
+            
+            showActionModal('Dolapları Serbest Bırak', 'release');
+        }
+
+        async function refreshSelectedLockers() {
+            if (selectedLockers.size === 0) return;
+            
+            showToast('Yenileme', 'Seçili dolaplar yenileniyor...', 'info');
+            
+            try {
+                await loadLockers();
+                showToast('Başarılı', `${selectedLockers.size} dolap durumu yenilendi`, 'success');
+            } catch (error) {
+                showToast('Hata', 'Dolaplar yenilenemedi: ' + error.message, 'error');
+            }
+        }
+
+        function showActionModal(title, action) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('action-modal').style.display = 'block';
+            
+            const form = document.getElementById('action-form');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                await performAction(action);
+            };
+        }
+
+        async function performAction(action) {
+            const reason = document.getElementById('reason').value;
+            const selectedArray = Array.from(selectedLockers).map(key => {
+                // Split from the right to handle kiosk IDs with dashes (e.g., 'kiosk-1-1' -> kioskId='kiosk-1', lockerId='1')
+                const lastDashIndex = key.lastIndexOf('-');
+                const kioskId = key.substring(0, lastDashIndex);
+                const lockerId = key.substring(lastDashIndex + 1);
+                return { kioskId, lockerId: parseInt(lockerId) };
+            });
+
+            try {
+                if (action === 'open') {
+                    // Use single locker API for single selections, bulk API for multiple
+                    if (selectedArray.length === 1) {
+                        await performSingleOpen(selectedArray[0], reason);
+                    } else {
+                        await performBulkOpen(selectedArray, reason);
+                    }
+                } else if (action === 'release') {
+                    await performBulkRelease(selectedArray, reason);
+                } else {
+                    await performIndividualActions(action, selectedArray, reason);
+                }
+                
+                closeModal();
+                selectedLockers.clear();
+                updateSelectedCount();
+                await loadLockers();
+            } catch (error) {
+                showError('Action failed: ' + error.message);
+            }
+        }
+
+        async function pollCommand(command_id, onDone) {
+            for (let i = 0; i < 40; i++) {
+                const r = await fetch(`/api/lockers/commands/${command_id}`, { credentials: 'include' });
+                const s = await r.json();
+                if (s.status === 'completed') return onDone('ok');
+                if (s.status === 'failed') return onDone('fail');
+                await new Promise(res => setTimeout(res, 1000));
+            }
+            onDone('timeout');
+        }
+
+        async function performSingleOpen(locker, reason) {
+            const { kioskId, lockerId } = locker;
+            
+            try {
+                const response = await fetch(`/api/lockers/${kioskId}/${lockerId}/open`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        reason: reason || 'Manual open',
+                        override: false
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorMessage = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch {
+                        // Keep HTTP status if JSON parsing fails
+                    }
+                    
+                    // Handle specific error responses with clear error messages
+                    if (response.status === 400) {
+                        throw new Error(errorMessage);
+                    } else if (response.status === 401) {
+                        throw new Error('Login required');
+                    } else if (response.status === 409) {
+                        throw new Error(errorMessage); // Conflict - duplicate command or locker locked
+                    } else if (response.status >= 500) {
+                        throw new Error('Server error - please try again');
+                    } else {
+                        throw new Error(errorMessage);
+                    }
+                }
+
+                const data = await response.json();
+                
+                // Handle 202 Accepted response with command_id for status polling
+                if (response.status === 202) {
+                    showToast('Komut Kuyruğa Alındı', `Dolap ${lockerId} açma komutu kuyruğa alındı`, 'info', data.command_id);
+                    
+                    console.log(`Single locker open queued - Command ID: ${data.command_id}, Locker: ${kioskId}-${lockerId}`);
+                    
+                    // Poll command status and refresh when done
+                    pollCommand(data.command_id, (result) => {
+                        if (result === 'ok') {
+                            showToast('İşlem Tamamlandı', `Dolap ${lockerId} başarıyla açıldı`, 'success');
+                        } else if (result === 'fail') {
+                            showToast('İşlem Başarısız', `Dolap ${lockerId} açılamadı`, 'error');
+                        } else if (result === 'timeout') {
+                            showToast('İşlem Başarısız', `Dolap ${lockerId} açma işlemi zaman aşımına uğradı`, 'error');
+                        }
+                        loadLockers();
+                    });
+                } else {
+                    // Fallback for other success responses
+                    showToast('İşlem Tamamlandı', `Dolap ${lockerId} başarıyla açıldı`, 'success');
+                }
+            } catch (error) {
+                // Add error handling for 400/401/500 responses with specific error messages
+                console.error('Single locker open failed:', error);
+                throw error;
+            }
+        }
+
+        async function performBulkOpen(lockers, reason) {
+            // Get the selected kiosk ID
+            const kioskId = document.getElementById('kiosk-filter').value;
+            if (!kioskId) {
+                throw new Error('Select a kiosk first');
+            }
+
+            // Extract locker IDs from the lockers array
+            const lockerIds = lockers.map(locker => locker.lockerId);
+            
+            // Default interval for bulk operations (1000ms)
+            const interval_ms = 1000;
+            
+            try {
+                // Modify performBulkOpen() to POST to /api/lockers/bulk/open route
+                const response = await fetch('/api/lockers/bulk/open', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'same-origin',
+                    // Send kioskId, lockerIds, reason, exclude_vip, interval_ms in request body (snake_case)
+                    body: JSON.stringify({
+                        kioskId,
+                        lockerIds,
+                        reason: reason || 'Bulk open operation',
+                        exclude_vip: true,
+                        interval_ms
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Handle 202 Accepted response with command_id for status polling
+                if (response.status === 202) {
+                    const processedCount = data.processed || lockerIds.length;
+                    showToast('Komut Kuyruğa Alındı', `${processedCount} dolap için toplu açma komutu kuyruğa alındı`, 'info', data.command_id);
+                    
+                    console.log(`Bulk open queued - Command ID: ${data.command_id}, Processed: ${processedCount}, Estimated completion: ${processedCount * interval_ms + 2000}ms`);
+                    
+                    // Use polling for bulk operations (reuse single locker polling pattern)
+                    pollCommand(data.command_id, (result) => {
+                        if (result === 'ok') {
+                            showToast('İşlem Tamamlandı', `Toplu açma tamamlandı: ${processedCount} dolap başarıyla işlendi`, 'success');
+                        } else if (result === 'fail') {
+                            showToast('İşlem Başarısız', `Toplu açma bazı dolaplar için başarısız oldu`, 'error');
+                        } else if (result === 'timeout') {
+                            showToast('İşlem Başarısız', `Toplu açma zaman aşımına uğradı - bazı dolaplar açılmamış olabilir`, 'error');
+                        }
+                        loadLockers();
+                    });
+                } else {
+                    // Fallback for other success responses
+                    const processedCount = data.processed || lockerIds.length;
+                    showToast('İşlem Tamamlandı', `Toplu açma tamamlandı: ${processedCount} dolap işlendi`, 'success');
+                }
+            } catch (error) {
+                // Handle bulk operation errors and show appropriate user feedback
+                console.error('Bulk open failed:', error);
+                throw error;
+            }
+        }
+
+        async function performBulkRelease(lockers, reason) {
+            // Get the selected kiosk ID
+            const kioskId = document.getElementById('kiosk-filter').value;
+            if (!kioskId) {
+                throw new Error('Select a kiosk first');
+            }
+
+            // Extract locker IDs from the lockers array
+            const lockerIds = lockers.map(locker => locker.lockerId);
+            
+            try {
+                showToast('İşlem Başlatıldı', `${lockerIds.length} dolap serbest bırakılıyor...`, 'info');
+                
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (const { kioskId: lockerKioskId, lockerId } of lockers) {
+                    try {
+                        const response = await fetch(`/api/lockers/${lockerKioskId}/${lockerId}/release`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                reason: reason || 'Bulk release operation'
+                            })
+                        });
+
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (error) {
+                        failCount++;
+                        console.error(`Failed to release locker ${lockerKioskId}-${lockerId}:`, error);
+                    }
+                    
+                    // Small delay between operations
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                if (successCount > 0) {
+                    showToast('İşlem Tamamlandı', `${successCount} dolap başarıyla serbest bırakıldı`, 'success');
+                }
+                if (failCount > 0) {
+                    showToast('Kısmi Başarısız', `${failCount} dolap serbest bırakılamadı`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Bulk release failed:', error);
+                throw error;
+            }
+        }
+
+        async function performIndividualActions(action, lockers, reason) {
+            let successCount = 0;
+            
+            for (const { kioskId, lockerId } of lockers) {
+                try {
+                    const endpoint = action === 'block' ? 'block' : 'unblock';
+                    const body = action === 'block' ? { reason: reason || 'Manual block' } : {};
+                    
+                    // Enhanced logging for debugging API calls
+                    console.log('🔧 API Call Debug Info:', {
+                        action: action,
+                        endpoint: endpoint,
+                        kioskId: kioskId,
+                        lockerId: lockerId,
+                        reason: reason,
+                        body: body,
+                        bodyString: JSON.stringify(body),
+                        csrfToken: csrfToken ? 'present' : 'missing'
+                    });
+                    
+                    const response = await fetch(`/api/lockers/${kioskId}/${lockerId}/${endpoint}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    }
+                } catch (error) {
+                    console.error(`Failed to ${action} locker ${kioskId}-${lockerId}:`, error);
+                }
+            }
+            
+            const actionName = action === 'block' ? 'blokla' : 'blok kaldır';
+            if (successCount === lockers.length) {
+                showToast('İşlem Tamamlandı', `${successCount} dolap başarıyla ${actionName}ndı`, 'success');
+            } else if (successCount > 0) {
+                showToast('Kısmi Başarılı', `${successCount}/${lockers.length} dolap ${actionName}ndı`, 'info');
+            } else {
+                showToast('İşlem Başarısız', `Hiçbir dolap ${actionName}namadı`, 'error');
+            }
+        }
+
+        function showEndOfDayModal() {
+            document.getElementById('eod-modal').style.display = 'block';
+            
+            const form = document.getElementById('eod-form');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                await performEndOfDay();
+            };
+        }
+
+        async function performEndOfDay() {
+            const excludeVip = document.getElementById('exclude-vip').checked;
+            const kioskId = document.getElementById('eod-kiosk').value;
+
+            try {
+                const response = await fetch('/api/lockers/end-of-day', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({
+                        excludeVip,
+                        kioskId: kioskId || undefined
+                    })
+                });
+
+                if (response.ok) {
+                    // Download the report
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `end-of-day-report-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showSuccess('End of day operation completed and report downloaded');
+                    closeEodModal();
+                    await loadLockers();
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showError('End of day operation failed: ' + error.message);
+            }
+        }
+
+        async function performEndOfDay() {
+            const excludeVip = document.getElementById('exclude-vip').checked;
+            const kioskId = document.getElementById('eod-kiosk').value;
+
+            try {
+                const response = await fetch('/api/lockers/end-of-day', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({
+                        excludeVip,
+                        kioskId: kioskId || undefined
+                    })
+                });
+
+                if (response.ok) {
+                    // Download the CSV file
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `end-of-day-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showSuccess('End of day operation completed and report downloaded');
+                    closeEodModal();
+                    await loadLockers();
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showError('End of day operation failed: ' + error.message);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('action-modal').style.display = 'none';
+            document.getElementById('reason').value = '';
+        }
+
+        function closeEodModal() {
+            document.getElementById('eod-modal').style.display = 'none';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('locker-grid').style.display = show ? 'none' : 'grid';
+        }
+
+        function showError(message, showRetry = false) {
+            // Use toast for errors
+            showToast('Hata', message, 'error');
+            
+            // Also show in the old error div for compatibility
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = ''; // Clear previous content
+            
+            // Add error message
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            errorDiv.appendChild(messageSpan);
+            
+            // Add single Refresh button if showRetry is true (no exponential backoff)
+            if (showRetry) {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.textContent = 'Refresh';
+                refreshBtn.className = 'btn btn-primary';
+                refreshBtn.style.marginLeft = '10px';
+                refreshBtn.onclick = () => {
+                    // Hide error message and retry loading
+                    errorDiv.style.display = 'none';
+                    loadLockers();
+                };
+                errorDiv.appendChild(refreshBtn);
+            }
+            
+            errorDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds only if no retry button
+            if (!showRetry) {
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
+            }
+        }
+
+        function showSuccess(message) {
+            // Use toast for success messages
+            showToast('Başarılı', message, 'success');
+            
+            // Also show in the old success div for compatibility
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 5000);
+        }
+
+        async function logout() {
+            try {
+                await fetch('/auth/logout', { method: 'POST' });
+                window.location.href = '/login.html';
+            } catch (error) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Direct relay activation (bypasses command queue)
+        async function directOpenLocker(lockerId) {
+            try {
+                console.log(`⚡ Direct opening locker ${lockerId} via relay activation`);
+                
+                const response = await fetch('/api/relay/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        relay_number: lockerId,
+                        staff_user: 'admin',
+                        reason: 'Direct locker activation from lockers page'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`⚡ Locker ${lockerId} activated directly! You should hear the relay click.`);
+                    console.log(`✅ Direct relay activation successful for locker ${lockerId}`);
+                    
+                    // Refresh after a short delay
+                    setTimeout(() => {
+                        loadLockers();
+                    }, 1000);
+                } else {
+                    showError(`❌ Direct activation failed: ${data.error}`);
+                }
+                
+            } catch (error) {
+                showError(`❌ Direct activation error: ${error.message}`);
+                console.error('❌ Direct activation error:', error);
+            }
+        }
+
+        // Individual locker operations
+        async function openSingleLocker(kioskId, lockerId) {
+            const reason = prompt('Enter reason for opening this locker:', 'Manual admin open');
+            if (!reason) return;
+
+            try {
+                showLoading(true);
+                console.log(`🔓 Opening single locker: ${kioskId}-${lockerId}`);
+
+                const response = await fetch(`/api/lockers/${kioskId}/${lockerId}/open`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({
+                        reason: reason,
+                        force: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(`Locker ${kioskId}-${lockerId} opening command sent! You should hear the relay click.`);
+                    console.log(`✅ Locker open command sent - Command ID: ${data.command_id}`);
+                    
+                    // Refresh the locker data after a short delay
+                    setTimeout(() => {
+                        loadLockers();
+                    }, 2000);
+                } else {
+                    showError(`Failed to open locker: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                showError(`Network error opening locker: ${error.message}`);
+                console.error('❌ Open locker error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+
+
+        
+    // Enhanced Button Function Logging
+    console.log('🔧 Enhanced button logging initialized');
+    
+    // Override button functions with logging
+    const originalOpenSelectedLockers = window.openSelectedLockers;
+    window.openSelectedLockers = function() {
+        console.log('🔓 openSelectedLockers called');
+        console.log('📊 Selected lockers count:', selectedLockers.size);
+        console.log('📊 Selected lockers:', Array.from(selectedLockers));
+        console.log('📊 CSRF token:', csrfToken ? 'present' : 'missing');
+        console.log('📊 Current user:', currentUser);
+        
+        if (selectedLockers.size === 0) {
+            console.log('⚠️ No lockers selected - function will return early');
+            return;
+        }
+        
+        try {
+            const result = originalOpenSelectedLockers.call(this);
+            console.log('✅ openSelectedLockers completed');
+            return result;
+        } catch (error) {
+            console.error('❌ openSelectedLockers failed:', error);
+            throw error;
+        }
+    };
+    
+    const originalBlockSelectedLockers = window.blockSelectedLockers;
+    window.blockSelectedLockers = function() {
+        console.log('🚫 blockSelectedLockers called');
+        console.log('📊 Selected lockers count:', selectedLockers.size);
+        console.log('📊 Selected lockers:', Array.from(selectedLockers));
+        console.log('📊 CSRF token:', csrfToken ? 'present' : 'missing');
+        
+        if (selectedLockers.size === 0) {
+            console.log('⚠️ No lockers selected - function will return early');
+            return;
+        }
+        
+        try {
+            const result = originalBlockSelectedLockers.call(this);
+            console.log('✅ blockSelectedLockers completed');
+            return result;
+        } catch (error) {
+            console.error('❌ blockSelectedLockers failed:', error);
+            throw error;
+        }
+    };
+    
+    const originalUnblockSelectedLockers = window.unblockSelectedLockers;
+    window.unblockSelectedLockers = function() {
+        console.log('✅ unblockSelectedLockers called');
+        console.log('📊 Selected lockers count:', selectedLockers.size);
+        console.log('📊 Selected lockers:', Array.from(selectedLockers));
+        console.log('📊 CSRF token:', csrfToken ? 'present' : 'missing');
+        
+        if (selectedLockers.size === 0) {
+            console.log('⚠️ No lockers selected - function will return early');
+            return;
+        }
+        
+        try {
+            const result = originalUnblockSelectedLockers.call(this);
+            console.log('✅ unblockSelectedLockers completed');
+            return result;
+        } catch (error) {
+            console.error('❌ unblockSelectedLockers failed:', error);
+            throw error;
+        }
+    };
+    
+    const originalShowEndOfDayModal = window.showEndOfDayModal;
+    window.showEndOfDayModal = function() {
+        console.log('🌅 showEndOfDayModal called');
+        console.log('📊 CSRF token:', csrfToken ? 'present' : 'missing');
+        
+        try {
+            const result = originalShowEndOfDayModal.call(this);
+            console.log('✅ showEndOfDayModal completed');
+            return result;
+        } catch (error) {
+            console.error('❌ showEndOfDayModal failed:', error);
+            throw error;
+        }
+    };
+    
+    const originalLoadData = window.loadData;
+    window.loadData = function() {
+        console.log('🔄 loadData called (Refresh button)');
+        console.log('📊 Current user:', currentUser);
+        console.log('📊 CSRF token:', csrfToken ? 'present' : 'missing');
+        
+        try {
+            const result = originalLoadData.call(this);
+            console.log('✅ loadData completed');
+            return result;
+        } catch (error) {
+            console.error('❌ loadData failed:', error);
+            throw error;
+        }
+    };
+    
+    const originalToggleLocker = window.toggleLocker;
+    window.toggleLocker = function(kioskId, lockerId) {
+        console.log('🎯 toggleLocker called');
+        console.log('📊 Kiosk ID:', kioskId);
+        console.log('📊 Locker ID:', lockerId);
+        console.log('📊 Current selection count:', selectedLockers.size);
+        
+        try {
+            const result = originalToggleLocker.call(this, kioskId, lockerId);
+            console.log('📊 New selection count:', selectedLockers.size);
+            console.log('✅ toggleLocker completed');
+            return result;
+        } catch (error) {
+            console.error('❌ toggleLocker failed:', error);
+            throw error;
+        }
+    };
+    
+    // Log button click events
+    document.addEventListener('click', function(event) {
+        const target = event.target;
+        
+        if (target.tagName === 'BUTTON') {
+            console.log('🖱️ Button clicked:', {
+                text: target.textContent.trim(),
+                id: target.id,
+                className: target.className,
+                disabled: target.disabled,
+                onclick: target.onclick ? target.onclick.toString() : 'none'
+            });
+            
+            // Check if button is disabled
+            if (target.disabled) {
+                console.log('⚠️ Button is disabled - click will be ignored');
+            }
+        }
+    });
+    
+    // Log modal events
+    const originalShowActionModal = window.showActionModal;
+    if (originalShowActionModal) {
+        window.showActionModal = function(title, action) {
+            console.log('📋 showActionModal called');
+            console.log('📊 Title:', title);
+            console.log('📊 Action:', action);
+            
+            try {
+                const result = originalShowActionModal.call(this, title, action);
+                console.log('✅ showActionModal completed');
+                return result;
+            } catch (error) {
+                console.error('❌ showActionModal failed:', error);
+                throw error;
+            }
+        };
+    }
+    
+    const originalPerformAction = window.performAction;
+    if (originalPerformAction) {
+        window.performAction = function(action) {
+            console.log('⚡ performAction called');
+            console.log('📊 Action:', action);
+            console.log('📊 Reason field value:', document.getElementById('reason')?.value);
+            
+            try {
+                const result = originalPerformAction.call(this, action);
+                console.log('✅ performAction completed');
+                return result;
+            } catch (error) {
+                console.error('❌ performAction failed:', error);
+                throw error;
+            }
+        };
+    }
+    
+    // Log state changes
+    const originalUpdateSelectedCount = window.updateSelectedCount;
+    if (originalUpdateSelectedCount) {
+        window.updateSelectedCount = function() {
+            console.log('📊 updateSelectedCount called');
+            console.log('📊 Selected count:', selectedLockers.size);
+            
+            try {
+                const result = originalUpdateSelectedCount.call(this);
+                
+                // Log button states after update
+                const openBtn = document.getElementById('open-btn');
+                const blockBtn = document.getElementById('block-btn');
+                const unblockBtn = document.getElementById('unblock-btn');
+                
+                console.log('📊 Button states after update:', {
+                    openBtn: openBtn ? { disabled: openBtn.disabled, text: openBtn.textContent } : 'not found',
+                    blockBtn: blockBtn ? { disabled: blockBtn.disabled, text: blockBtn.textContent } : 'not found',
+                    unblockBtn: unblockBtn ? { disabled: unblockBtn.disabled, text: unblockBtn.textContent } : 'not found'
+                });
+                
+                console.log('✅ updateSelectedCount completed');
+                return result;
+            } catch (error) {
+                console.error('❌ updateSelectedCount failed:', error);
+                throw error;
+            }
+        };
+    }
+    
+    console.log('✅ Enhanced button logging setup complete');
+
+
+      // Close modals when clicking outside
+        window.onclick = function(event) {
+            const actionModal = document.getElementById('action-modal');
+            const eodModal = document.getElementById('eod-modal');
+            
+            if (event.target === actionModal) {
+                closeModal();
+            }
+            if (event.target === eodModal) {
+                closeEodModal();
+            }
+        }
+    </script>
+    
+    <!-- Global error handler for debugging -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('🚨 Global JavaScript Error:', {
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                error: e.error,
+                stack: e.error?.stack
+            });
+        });
+        
+        // Prevent service worker registration errors
+        if (typeof navigator !== 'undefined' && navigator.serviceWorker && !navigator.serviceWorker.register) {
+            navigator.serviceWorker.register = function() {
+                console.log('🔧 Service worker registration stubbed');
+                return Promise.resolve();
+            };
+        }
+    </script>
+    
+    <!-- Include i18n script -->
+    <script src="/static/i18n.js"></script>
+</body>
+</html>

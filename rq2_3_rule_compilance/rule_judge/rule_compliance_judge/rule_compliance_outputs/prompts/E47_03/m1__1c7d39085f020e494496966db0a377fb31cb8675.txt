@@ -1,0 +1,292 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+TARGET macOS 15.6 as minimum deployment target
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Xcode project configuration files (*.pbxproj), build configuration files (*.xcconfig), Swift Package Manager manifest (Package.swift), or CocoaPods Podfile.
+- Suggested Logic: Statically parse project configuration files for deployment target keys such as 'MACOSX_DEPLOYMENT_TARGET' or 'platforms: [.macOS(...)]' and verify that the version value is set to '15.6' or higher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: Fix toolbar configuration: remove duplicates and add proper labels
+
+- Remove duplicate 'space1' item, keep only 'flexibleSpace'
+- Add proper labels to all toolbar buttons using Label(title:, systemImage:)
+- Remove duplicate button definitions in ContentView.swift
+- Improve toolbar usability with clear icon and text labels
+- Update default toolbar configuration to be cleaner and more organized
+
+Baseline for testing toolbar functionality.
+- Changed Files List: 
+SwiftFlash/SwiftFlash/ContentView.swift	+9	-97	after_lines=939
+SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift	+2	-4	after_lines=67
+
+- Project Directory Tree (Snapshot after commit):
+├── .DS_Store
+├── .cursorrules
+├── .gitignore
+├── LICENSE
+├── README.md
+└── SwiftFlash
+    ├── .DS_Store
+    ├── AppIcon.icon
+    │   ├── Assets
+    │   │   └── icon.png
+    │   └── icon.json
+    ├── SwiftFlash
+    │   ├── AboutView.swift
+    │   ├── Assets.xcassets
+    │   │   ├── AccentColor.colorset
+    │   │   │   └── Contents.json
+    │   │   ├── Contents.json
+    │   │   ├── Logo.imageset
+    │   │   │   ├── 367EF6FC-80F4-462E-B123-9A80CEB05E49_1_201_a.jpeg
+    │   │   │   └── Contents.json
+    │   │   └── icon.png
+    │   ├── ContentView.swift
+    │   ├── DeviceInventory.swift
+    │   ├── DriveDetectionService.swift
+    │   ├── DriveInspectorView.swift
+    │   ├── DriveModel.swift
+    │   ├── DropZoneView.swift
+    │   ├── FlashConfirmationDialog.swift
+    │   ├── FlashProgressView.swift
+    │   ├── ImageFileModel.swift
+    │   ├── ImageFileService.swift
+    │   ├── ImageFileView.swift
+    │   ├── ImageFlashService.swift
+    │   ├── ImageHistoryService.swift
+    │   ├── ImageHistoryView.swift
+    │   ├── ImageInspectorView.swift
+    │   ├── InspectorFonts.swift
+    │   ├── LabelAndPicker.swift
+    │   ├── LabelAndStatus.swift
+    │   ├── LabelAndText.swift
+    │   ├── LabelAndTextField.swift
+    │   ├── SettingsView.swift
+    │   ├── SwiftFlashApp.swift
+    │   └── ToolbarConfigurationService.swift
+    └── SwiftFlash.xcodeproj
+        ├── project.pbxproj
+        └── project.xcworkspace
+            └── contents.xcworkspacedata
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: SwiftFlash/SwiftFlash/ContentView.swift ---
+diff --git a/SwiftFlash/SwiftFlash/ContentView.swift b/SwiftFlash/SwiftFlash/ContentView.swift
+index e093195..38d9c37 100644
+--- a/SwiftFlash/SwiftFlash/ContentView.swift
++++ b/SwiftFlash/SwiftFlash/ContentView.swift
+@@ -85,8 +85,8 @@ struct ContentView: View {
+                     }
+                 }
+                 
+-                if toolbarConfig.toolbarItems.contains("space1") {
+-                    ToolbarItem(id: "space1", placement: .automatic) {
++                if toolbarConfig.toolbarItems.contains("flexibleSpace") {
++                    ToolbarItem(id: "flexibleSpace", placement: .automatic) {
+                         Spacer()
+                     }
+                 }
+@@ -103,12 +103,6 @@ struct ContentView: View {
+                     }
+                 }
+                 
+-                if toolbarConfig.toolbarItems.contains("flexibleSpace") {
+-                    ToolbarItem(id: "flexibleSpace", placement: .automatic) {
+-                        Spacer()
+-                    }
+-                }
+-                
+                 if toolbarConfig.toolbarItems.contains("tags") {
+                     ToolbarItem(id: "tags", placement: .automatic) {
+                         tagsButton
+@@ -356,7 +350,7 @@ struct ContentView: View {
+         Button(action: {
+             showInspector.toggle()
+         }) {
+-            Image(systemName: showInspector ? "sidebar.right" : "sidebar.right")
++            Label("Inspector", systemImage: showInspector ? "sidebar.right" : "sidebar.right")
+                 .opacity(showInspector ? 1.0 : 0.5)
+         }
+         .help("Toggle Inspector")
+@@ -366,7 +360,7 @@ struct ContentView: View {
+         Button(action: {
+             driveService.refreshDrives()
+         }) {
+-            Image(systemName: "arrow.clockwise")
++            Label("Refresh", systemImage: "arrow.clockwise")
+         }
+         .help("Refresh Drives")
+         .disabled(driveService.isScanning)
+@@ -378,7 +372,7 @@ struct ContentView: View {
+                 Button(action: {
+                     printDiskArbitrationInfo(for: selectedDrive)
+                 }) {
+-                    Image(systemName: "ladybug")
++                    Label("Debug", systemImage: "ladybug")
+                 }
+                 .help("Print Disk Arbitration Debug Info")
+             }
+@@ -389,7 +383,7 @@ struct ContentView: View {
+         Button(action: {
+             showAboutDialog = true
+         }) {
+-            Image(systemName: "info.circle")
++            Label("About", systemImage: "info.circle")
+         }
+         .help("About SwiftFlash")
+     }
+@@ -398,7 +392,7 @@ struct ContentView: View {
+         Button(action: {
+             showFlashConfirmation = true
+         }) {
+-            Image(systemName: "bolt.fill")
++            Label("Flash", systemImage: "bolt.fill")
+         }
+         .help("Flash Image to Drive")
+         .disabled(!canFlash)
+@@ -419,7 +413,7 @@ struct ContentView: View {
+             // TODO: Implement eject functionality
+             print("⏏️ [DEBUG] Eject button pressed for drive: \(selectedDrive?.displayName ?? "none")")
+         }) {
+-            Image(systemName: "eject.fill")
++            Label("Eject", systemImage: "eject.fill")
+         }
+         .help("Eject Drive")
+         .disabled(selectedDrive == nil)
+@@ -430,7 +424,7 @@ struct ContentView: View {
+             // TODO: Implement tags functionality
+             print("🏷️ [DEBUG] Tags button pressed")
+         }) {
+-            Image(systemName: "tag")
++            Label("Tags", systemImage: "tag")
+         }
+         .help("Edit Tags")
+     }
+@@ -839,88 +833,6 @@ struct PreviewContentView: View {
+         }
+     }
+     
+-    // MARK: - Toolbar Buttons
+-    
+-    private var inspectorToggleButton: some View {
+-        Button(action: {
+-            showInspector.toggle()
+-        }) {
+-            Image(systemName: showInspector ? "sidebar.right" : "sidebar.right")
+-                .opacity(showInspector ? 1.0 : 0.5)
+-        }
+-        .help("Toggle Inspector")
+-    }
+-    
+-    private var refreshButton: some View {
+-        Button(action: {
+-            // No-op for preview
+-        }) {
+-            Image(systemName: "arrow.clockwise")
+-        }
+-        .help("Refresh Drives")
+-    }
+-    
+-    private var debugButton: some View {
+-        Group {
+-            if selectedDrive != nil {
+-                Button(action: {
+-                    // No-op for preview
+-                }) {
+-                    Image(systemName: "ladybug")
+-                }
+-                .help("Print Disk Arbitration Debug Info")
+-            }
+-        }
+-    }
+-    
+-    private var aboutButton: some View {
+-        Button(action: {
+-            showAboutDialog = true
+-        }) {
+-            Image(systemName: "info.circle")
+-        }
+-        .help("About SwiftFlash")
+-    }
+-    
+-    private var flashButton: some View {
+-        Button(action: {
+-            showFlashConfirmation = true
+-        }) {
+-            Image(systemName: "bolt.fill")
+-        }
+-        .help("Flash Image to Drive")
+-        .disabled(!canFlash)
+-    }
+-    
+-    private var canFlash: Bool {
+-        guard let selectedDrive = selectedDrive,
+-              let selectedImage = imageService.selectedImage else {
+-            return false
+-        }
+-        
+-        // Check all preconditions
+-        return !selectedDrive.isReadOnly && selectedImage.size < selectedDrive.size
+-    }
+-    
+-    private var ejectButton: some View {
+-        Button(action: {
+-            // No-op for preview
+-        }) {
+-            Image(systemName: "eject.fill")
+-        }
+-        .help("Eject Drive")
+-        .disabled(selectedDrive == nil)
+-    }
+-    
+-    private var tagsButton: some View {
+-        Button(action: {
+-            // No-op for preview
+-        }) {
+-            Image(systemName: "tag")
+-        }
+-        .help("Edit Tags")
+-    }
+-    
+     // MARK: - Helper Functions
+     
+     private func performFlash() async {
+
+--- FILE: SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift ---
+diff --git a/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift b/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift
+index 1abbc5f..2e33192 100644
+--- a/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift
++++ b/SwiftFlash/SwiftFlash/ToolbarConfigurationService.swift
+@@ -9,10 +9,9 @@ class ToolbarConfigurationService {
+     // Default toolbar configuration
+     var toolbarItems: [String] = [
+         "refresh",
+-        "space1", 
++        "flexibleSpace",
+         "flash",
+         "eject",
+-        "flexibleSpace",
+         "tags",
+         "debug",
+         "about",
+@@ -36,10 +35,9 @@ class ToolbarConfigurationService {
+     func resetToDefault() {
+         toolbarItems = [
+             "refresh",
+-            "space1", 
++            "flexibleSpace",
+             "flash",
+             "eject",
+-            "flexibleSpace",
+             "tags",
+             "debug",
+             "about",
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

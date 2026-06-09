@@ -1,0 +1,151 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Frontend Hosting: Cloudflare Pages
++ - Frontend Hosting: Cloudflare Workers with Static Assets
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Cloudflare configuration files (e.g., wrangler.toml) and package configuration files (e.g., package.json).
+- Suggested Logic: Search for 'wrangler.toml' in the repository. To verify 'Cloudflare Workers with Static Assets', check for the presence of the '[site]' block with a 'bucket' parameter or the 'assets' field. This distinguishes the setup from 'Cloudflare Pages', which typically uses a different configuration or is managed through the Cloudflare Dashboard/Pages-specific CLI settings.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Configure multi-environment setup in wrangler.toml
+
+- Add development, staging, and production environment configurations
+- Update R2 bucket and KV namespace bindings with environment-specific names
+- Configure environment variables for JWT, CORS, and file size limits
+- Add Analytics Engine bindings for staging and production
+- Improve naming consistency for development resources
+- Changed Files List: 
+worker/wrangler.toml	+35	-5	after_lines=78
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── Cargo.lock
+    ├── Cargo.toml
+    ├── SETUP.md
+    ├── src
+    │   ├── lib.rs
+    │   └── utils.rs
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index f2ce253..aaf0d21 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -2,16 +2,16 @@ name = "r2-file-explorer-api"
+ main = "pkg/r2_file_explorer_worker.js"
+ compatibility_date = "2024-01-01"
+ 
+-# R2 bucket binding for file storage
++# Development R2 bucket binding for file storage
+ [[r2_buckets]]
+ binding = "R2_BUCKET"
+-bucket_name = "file-explorer-storage"
++bucket_name = "file-explorer-storage-dev"
+ 
+-# KV namespace for session storage
++# Development KV namespace for session storage
+ [[kv_namespaces]]
+ binding = "KV_SESSIONS"
+-id = "session-storage-namespace"
+-preview_id = "session-storage-namespace-preview"
++id = "file-explorer-sessions-dev"
++preview_id = "file-explorer-sessions-dev-preview"
+ 
+ # Analytics Engine binding for observability (disabled in local dev)
+ # [[analytics_engine_datasets]]
+@@ -29,6 +29,21 @@ ENVIRONMENT = "development"
+ [env.staging]
+ name = "r2-file-explorer-api-staging"
+ 
++# Staging R2 bucket binding
++[[env.staging.r2_buckets]]
++binding = "R2_BUCKET"
++bucket_name = "file-explorer-storage-staging"
++
++# Staging KV namespace binding
++[[env.staging.kv_namespaces]]
++binding = "KV_SESSIONS"
++id = "file-explorer-sessions-staging"
++preview_id = "file-explorer-sessions-staging-preview"
++
++# Staging Analytics Engine binding
++[[env.staging.analytics_engine_datasets]]
++binding = "ANALYTICS"
++
+ [env.staging.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_STAGING_SECRET"
+ CORS_ORIGINS = "https://r2-file-explorer-staging.pages.dev"
+@@ -40,6 +55,21 @@ ENVIRONMENT = "staging"
+ [env.production]
+ name = "r2-file-explorer-api-prod"
+ 
++# Production R2 bucket binding
++[[env.production.r2_buckets]]
++binding = "R2_BUCKET"
++bucket_name = "file-explorer-storage-prod"
++
++# Production KV namespace binding
++[[env.production.kv_namespaces]]
++binding = "KV_SESSIONS"
++id = "file-explorer-sessions-prod"
++preview_id = "file-explorer-sessions-prod-preview"
++
++# Production Analytics Engine binding
++[[env.production.analytics_engine_datasets]]
++binding = "ANALYTICS"
++
+ [env.production.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_PRODUCTION_SECRET"
+ CORS_ORIGINS = "https://r2-file-explorer.pages.dev"
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

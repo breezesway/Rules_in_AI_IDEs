@@ -1,0 +1,275 @@
+diff --git a/app/src/components/TodoForm.jsx b/app/src/components/TodoForm.jsx
+index 81d6f93..6d755e4 100644
+--- a/app/src/components/TodoForm.jsx
++++ b/app/src/components/TodoForm.jsx
+@@ -1,7 +1,9 @@
+ import React, { useState } from 'react';
++import { useTranslation } from 'react-i18next';
+ import './TodoForm.css';
+ 
+ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) => {
++    const { t } = useTranslation('todo');
+     const [formData, setFormData] = useState({
+         title: initialData?.title || '',
+         description: initialData?.description || '',
+@@ -43,13 +45,13 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+         const newErrors = {};
+         
+         if (!formData.title.trim()) {
+-            newErrors.title = 'Title is required';
++            newErrors.title = t('validation.title_required', { defaultValue: 'Title is required' });
+         } else if (formData.title.length > 100) {
+-            newErrors.title = 'Title must not exceed 100 characters';
++            newErrors.title = t('validation.title_too_long', { defaultValue: 'Title must not exceed 100 characters' });
+         }
+         
+         if (formData.description && formData.description.length > 500) {
+-            newErrors.description = 'Description must not exceed 500 characters';
++            newErrors.description = t('validation.description_too_long', { defaultValue: 'Description must not exceed 500 characters' });
+         }
+ 
+         // Validate deadline if set
+@@ -57,7 +59,7 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+             const selectedDate = new Date(formData.deadline);
+             const now = getCurrentLocalTime();
+             if (selectedDate <= now) {
+-                newErrors.deadline = 'Deadline must be in the future';
++                newErrors.deadline = t('validation.deadline_past', { defaultValue: 'Deadline must be in the future' });
+             }
+         }
+         
+@@ -98,145 +100,105 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+         
+         // Clear error when user starts typing
+         if (errors[name]) {
+-            setErrors(prev => ({
+-                ...prev,
+-                [name]: ''
+-            }));
+-        }
+-    };
+-
+-    const clearDeadline = () => {
+-        setFormData(prev => ({ ...prev, deadline: '' }));
+-        if (errors.deadline) {
+-            setErrors(prev => ({ ...prev, deadline: '' }));
+-        }
+-    };
+-
+-    const setQuickDeadline = (hours) => {
+-        // Use local time instead of UTC
+-        const now = getCurrentLocalTime();
+-        const deadline = new Date(now.getTime() + hours * 60 * 60 * 1000);
+-        
+-        // Format for datetime-local input (preserves local timezone)
+-        const formattedDeadline = formatDateForInput(deadline.toISOString());
+-        setFormData(prev => ({ ...prev, deadline: formattedDeadline }));
+-        if (errors.deadline) {
+-            setErrors(prev => ({ ...prev, deadline: '' }));
++            setErrors(prev => ({ ...prev, [name]: '' }));
+         }
+     };
+ 
+     return (
+-        <div className="todo-form-container">
+-            <h2>{isEdit ? 'Edit Todo' : 'Add New Todo'}</h2>
+-            <form onSubmit={handleSubmit} className="todo-form">
+-                <div className="form-group">
+-                    <label htmlFor="title">Title *</label>
++        <form onSubmit={handleSubmit} className="todo-form">
++            <div className="form-header">
++                <h2>{isEdit ? t('form.edit.title') : t('form.create_form.title')}</h2>
++            </div>
++
++            <div className="form-group">
++                <label htmlFor="title">{t('form.title.label')}</label>
++                <input
++                    type="text"
++                    id="title"
++                    name="title"
++                    value={formData.title}
++                    onChange={handleChange}
++                    placeholder={t('form.title.placeholder')}
++                    className={errors.title ? 'error' : ''}
++                    disabled={loading}
++                />
++                {errors.title && <span className="error-message">{errors.title}</span>}
++            </div>
++
++            <div className="form-group">
++                <label htmlFor="description">{t('form.description.label')}</label>
++                <textarea
++                    id="description"
++                    name="description"
++                    value={formData.description}
++                    onChange={handleChange}
++                    placeholder={t('form.description.placeholder')}
++                    rows="3"
++                    className={errors.description ? 'error' : ''}
++                    disabled={loading}
++                />
++                {errors.description && <span className="error-message">{errors.description}</span>}
++            </div>
++
++            <div className="form-group">
++                <label htmlFor="deadline">{t('form.deadline.label')}</label>
++                <input
++                    type="datetime-local"
++                    id="deadline"
++                    name="deadline"
++                    value={formData.deadline}
++                    onChange={handleChange}
++                    className={errors.deadline ? 'error' : ''}
++                    disabled={loading}
++                />
++                {errors.deadline && <span className="error-message">{errors.deadline}</span>}
++                <small className="form-help">
++                    {t('form.deadline.help')}
++                </small>
++            </div>
++
++            <div className="form-group checkbox-group">
++                <label className="checkbox-label">
+                     <input
+-                        type="text"
+-                        id="title"
+-                        name="title"
+-                        value={formData.title}
++                        type="checkbox"
++                        name="completed"
++                        checked={formData.completed}
+                         onChange={handleChange}
+-                        placeholder="Enter todo title..."
+-                        className={errors.title ? 'error' : ''}
+                         disabled={loading}
+                     />
+-                    {errors.title && <span className="error-message">{errors.title}</span>}
+-                </div>
+-
+-                <div className="form-group">
+-                    <label htmlFor="description">Description</label>
+-                    <textarea
+-                        id="description"
+-                        name="description"
+-                        value={formData.description}
+-                        onChange={handleChange}
+-                        placeholder="Enter todo description (optional)..."
+-                        rows="3"
+-                        className={errors.description ? 'error' : ''}
+-                        disabled={loading}
+-                    />
+-                    {errors.description && <span className="error-message">{errors.description}</span>}
+-                </div>
+-
+-                {isEdit && (
+-                    <div className="form-group checkbox-group">
+-                        <label className="checkbox-label">
+-                            <input
+-                                type="checkbox"
+-                                name="completed"
+-                                checked={formData.completed}
+-                                onChange={handleChange}
+-                                disabled={loading}
+-                            />
+-                            <span className="checkmark"></span>
+-                            Mark as completed
+-                        </label>
+-                    </div>
+-                )}
+-
+-                <div className="form-group">
+-                    <label htmlFor="deadline">Deadline (Optional)</label>
+-                    <div className="deadline-input-group">
+-                        <input
+-                            type="datetime-local"
+-                            id="deadline"
+-                            name="deadline"
+-                            value={formData.deadline}
+-                            onChange={handleChange}
+-                            className={errors.deadline ? 'error' : ''}
+-                            disabled={loading}
+-                        />
+-                        {formData.deadline && (
+-                            <button
+-                                type="button"
+-                                onClick={clearDeadline}
+-                                className="clear-deadline-btn"
+-                                disabled={loading}
+-                            >
+-                                Clear
+-                            </button>
+-                        )}
+-                    </div>
+-                    {errors.deadline && <span className="error-message">{errors.deadline}</span>}
+-                    
+-                    <div className="quick-deadline-buttons">
+-                        <button
+-                            type="button"
+-                            onClick={() => setQuickDeadline(1)}
+-                            className="quick-deadline-btn"
+-                            disabled={loading}
+-                        >
+-                            +1 Hour
+-                        </button>
+-                        <button
+-                            type="button"
+-                            onClick={() => setQuickDeadline(24)}
+-                            className="quick-deadline-btn"
+-                            disabled={loading}
+-                        >
+-                            +1 Day
+-                        </button>
+-                        <button
+-                            type="button"
+-                            onClick={() => setQuickDeadline(168)}
+-                            className="quick-deadline-btn"
+-                            disabled={loading}
+-                        >
+-                            +1 Week
+-                        </button>
+-                    </div>
+-                </div>
+-
+-                <button 
+-                    type="submit" 
+-                    className="submit-btn"
+-                    disabled={loading || !formData.title.trim()}
++                    <span className="checkmark"></span>
++                    {t('form.completed')}
++                </label>
++            </div>
++
++            <div className="form-actions">
++                <button
++                    type="submit"
++                    className="btn btn-primary"
++                    disabled={loading}
+                 >
+-                    {loading ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update Todo' : 'Add Todo')}
++                    {loading ? (
++                        <span className="loading-text">
++                            <span className="loading-spinner"></span>
++                            {t('form.saving')}
++                        </span>
++                    ) : (
++                        isEdit ? t('form.update') : t('form.create')
++                    )}
+                 </button>
+-            </form>
+-        </div>
++                
++                {isEdit && (
++                    <button
++                        type="button"
++                        className="btn btn-secondary"
++                        onClick={() => window.history.back()}
++                        disabled={loading}
++                    >
++                        {t('form.cancel')}
++                    </button>
++                )}
++            </div>
++        </form>
+     );
+ };
+ 

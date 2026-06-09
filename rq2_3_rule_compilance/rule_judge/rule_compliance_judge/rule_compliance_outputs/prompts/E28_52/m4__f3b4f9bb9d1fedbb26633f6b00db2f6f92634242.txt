@@ -1,0 +1,312 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- dependency-cruiser.service.ts: Background dependency scanning integration
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and source code files (specifically 'dependency-cruiser.service.ts').
+- Suggested Logic: Verify that the file 'dependency-cruiser.service.ts' exists in the file system and perform a simple text search or AST check within that file to confirm it imports or references 'dependency-cruiser' logic.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: Clean up webview ui structure
+- Changed Files List: 
+src/extension.ts	+13	-6	after_lines=125
+src/graph-view-provider.ts	+27	-0	after_lines=27
+src/services/messenger.service.ts	+22	-0	after_lines=22
+src/side-panel-view-provider.ts	+7	-4	after_lines=31
+webview-ui/src/services/messenger.ts	+28	-0	after_lines=28
+webview-ui/src/views/SidePanelView.tsx	+3	-6	after_lines=16
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── graph-view-provider.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index 326c485..9be292d 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -4,7 +4,8 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
+ import { isNodeVersionSupported } from "./services/node-version.service.js";
+ import { SidePanelViewProvider } from "./side-panel-view-provider.js";
+ import { runScan } from "./services/dependency-cruiser.service.js";
+-import * as path from "node:path";
++
++let graphPanel: vscode.WebviewPanel | undefined;
+ 
+ export async function activate(context: vscode.ExtensionContext) {
+   try {
+@@ -89,21 +90,27 @@ export async function activate(context: vscode.ExtensionContext) {
+             }
+           }),
+           vscode.commands.registerCommand("constellation.openGraphView", async () => {
+-            const panel = vscode.window.createWebviewPanel(
+-              'constellation.graph',
++            // Singleton: if already open, just reveal
++            if (graphPanel) {
++              graphPanel.reveal(vscode.ViewColumn.Active, true);
++              return;
++            }
++            graphPanel = vscode.window.createWebviewPanel(
++              'constellation.graphPanel',
+               'Constellation Graph',
+               vscode.ViewColumn.Active,
+               {
+                 enableScripts: true,
++                retainContextWhenHidden: true,
+                 localResourceRoots: [
+                   vscode.Uri.joinPath(context.extensionUri, 'out'),
+                   vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
+                 ],
+               }
+             );
+-
+-            const { renderHtml } = await import('./services/webview.service.js')
+-            panel.webview.html = renderHtml(panel.webview, context.extensionUri, 'graph', 'Constellation Graph')
++            const { renderHtml } = await import('./services/webview.service.js');
++            graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
++            graphPanel.onDidDispose(() => { graphPanel = undefined; });
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: src/graph-view-provider.ts ---
+diff --git a/src/graph-view-provider.ts b/src/graph-view-provider.ts
+new file mode 100644
+index 0000000..5ff97f7
+--- /dev/null
++++ b/src/graph-view-provider.ts
+@@ -0,0 +1,27 @@
++import * as vscode from "vscode";
++import { renderHtml } from "./services/webview.service.js";
++
++export class GraphViewProvider implements vscode.WebviewViewProvider {
++  public static readonly viewType = "constellation.graphView";
++
++  constructor(private readonly extensionUri: vscode.Uri) {}
++
++  resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
++    const { webview } = webviewView;
++    webview.options = {
++      enableScripts: true,
++      localResourceRoots: [
++        vscode.Uri.joinPath(this.extensionUri, "out"),
++        vscode.Uri.joinPath(this.extensionUri, "out", "ui"),
++      ],
++    };
++
++    // Handle messages if needed (e.g., future graph interactions)
++    webview.onDidReceiveMessage((msg) => {
++      // Placeholder for graph-specific messages
++    });
++
++    webview.html = renderHtml(webview, this.extensionUri, "graph", "Constellation Graph");
++  }
++}
++
+
+--- FILE: src/services/messenger.service.ts ---
+diff --git a/src/services/messenger.service.ts b/src/services/messenger.service.ts
+new file mode 100644
+index 0000000..6ceea74
+--- /dev/null
++++ b/src/services/messenger.service.ts
+@@ -0,0 +1,22 @@
++// Centralized message broker for webview <-> extension communication
++// Define allowed message shapes in one place.
++
++export type InboundMessage =
++  | { type: 'open-graph-view' }
++  | { type: 'ping' }
++
++export function handleWebviewMessage(msg: unknown, ctx: { revealGraphView: () => void; log: (s: string) => void }) {
++  if (!msg || typeof (msg as any).type !== 'string') return
++  const m = msg as InboundMessage
++  switch (m.type) {
++    case 'open-graph-view':
++      ctx.revealGraphView()
++      break
++    case 'ping':
++      ctx.log('webview ping')
++      break
++    default:
++      break
++  }
++}
++
+
+--- FILE: src/side-panel-view-provider.ts ---
+diff --git a/src/side-panel-view-provider.ts b/src/side-panel-view-provider.ts
+index 8f01c3c..b2af686 100644
+--- a/src/side-panel-view-provider.ts
++++ b/src/side-panel-view-provider.ts
+@@ -9,11 +9,14 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
+     const { webview } = webviewView;
+ 
+-    // Handle messages from the webview (e.g., open Graph View)
++    // Handle messages via centralized messenger
+     webview.onDidReceiveMessage((msg) => {
+-      if (msg?.type === 'open-graph-view') {
+-        void vscode.commands.executeCommand('constellation.openGraphView');
+-      }
++      import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
++        handleWebviewMessage(msg, {
++          revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
++          log: (s) => console.log(s),
++        })
++      ).catch(() => {/* ignore */})
+     });
+     webview.options = {
+       enableScripts: true,
+
+--- FILE: webview-ui/src/services/messenger.ts ---
+diff --git a/webview-ui/src/services/messenger.ts b/webview-ui/src/services/messenger.ts
+new file mode 100644
+index 0000000..17030bf
+--- /dev/null
++++ b/webview-ui/src/services/messenger.ts
+@@ -0,0 +1,28 @@
++// Simple message bus for the webview UI
++// Centralized here so views/components can communicate and post to extension
++
++type Message =
++  | { type: 'open-graph-view' }
++  | { type: 'ping' }
++
++function getApi() {
++  return typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined
++}
++
++class Messenger {
++  private api = getApi()
++
++  post<T extends Message['type']>(type: T, payload?: Extract<Message, { type: T }> extends { [K in keyof any]: never } ? never : Omit<Extract<Message, { type: T }>, 'type'>) {
++    this.api?.postMessage?.({ type, ...(payload as any) })
++  }
++
++  on(handler: (msg: Message) => void) {
++    window.addEventListener('message', (e) => {
++      const msg = e.data as Message
++      if (msg && typeof (msg as any).type === 'string') handler(msg)
++    })
++  }
++}
++
++export const messenger = new Messenger()
++
+
+--- FILE: webview-ui/src/views/SidePanelView.tsx ---
+diff --git a/webview-ui/src/views/SidePanelView.tsx b/webview-ui/src/views/SidePanelView.tsx
+index ea43d0e..fc19d39 100644
+--- a/webview-ui/src/views/SidePanelView.tsx
++++ b/webview-ui/src/views/SidePanelView.tsx
+@@ -1,18 +1,15 @@
+ import { Button } from '../components/Button'
+-
+-// Simple event service for cross-view communication (typed via global declaration in src/types)
+-const vscodeApi = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined
++import { messenger } from '../services/messenger'
+ 
+ export function SidePanelView() {
+   const openGraph = () => {
+-    // Ask extension to open the graph view webview tab
+-    vscodeApi?.postMessage?.({ type: 'open-graph-view' })
++    messenger.post('open-graph-view')
+   }
+   return (
+     <div>
+       <h1>Constellation</h1>
+       <p>Side Panel</p>
+-      <Button onClick={openGraph}>Ossspen Graph View</Button>
++      <Button onClick={openGraph}>Open Graph View</Button>
+     </div>
+   )
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

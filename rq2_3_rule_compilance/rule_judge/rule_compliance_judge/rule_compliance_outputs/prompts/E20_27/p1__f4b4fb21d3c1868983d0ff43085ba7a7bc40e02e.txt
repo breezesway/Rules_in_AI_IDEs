@@ -1,0 +1,287 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Business Logic
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Validation Rules (Java Annotations):
+- Username: @NotBlank, @Size(3-50), @Pattern(alphanumeric)
+- Email: @NotBlank, @Email, @Size(max 100)
+- Password: @NotBlank, @Size(8-100), @Pattern(complex chars)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Java source code files, specifically DTOs, Entities, or Request models containing field definitions.
+- Suggested Logic: Scan Java files for class fields (variables) named 'username', 'email', or 'password'. Verify that these fields are decorated with the specified Bean Validation annotations (@NotBlank, @Size, @Email, @Pattern). Specifically check annotation parameters: for username, @Size must have min=3 and max=50; for email, @Size must have max=100; for password, @Size must have min=8 and max=100.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: [front] Add CORS & Modify front
+- Changed Files List: 
+app/src/services/todoService.js	+64	-7	after_lines=126
+backend/src/main/java/com/example/todoapp/TodoApplication.java	+19	-0	after_lines=31
+backend/src/main/java/com/example/todoapp/controller/TodoController.java	+13	-0	after_lines=72
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── app
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   └── src
+│       ├── App.css
+│       ├── App.js
+│       ├── App.test.js
+│       ├── components
+│       │   ├── TodoForm.css
+│       │   ├── TodoForm.jsx
+│       │   ├── TodoItem.css
+│       │   ├── TodoItem.jsx
+│       │   ├── TodoList.css
+│       │   └── TodoList.jsx
+│       ├── hooks
+│       │   └── useTodos.js
+│       ├── index.css
+│       ├── index.js
+│       ├── logo.svg
+│       ├── reportWebVitals.js
+│       ├── services
+│       │   └── todoService.js
+│       └── setupTests.js
+└── backend
+    ├── HELP.md
+    ├── build.gradle
+    ├── gradle
+    │   └── wrapper
+    │       └── gradle-wrapper.properties
+    ├── gradlew
+    ├── gradlew.bat
+    ├── settings.gradle
+    └── src
+        ├── main
+        │   ├── java
+        │   │   └── com
+        │   │       └── example
+        │   │           └── todoapp
+        │   │               ├── TodoApplication.java
+        │   │               ├── controller
+        │   │               │   └── TodoController.java
+        │   │               ├── dto
+        │   │               │   ├── TodoRequestDto.java
+        │   │               │   └── TodoResponseDto.java
+        │   │               ├── entity
+        │   │               │   └── Todo.java
+        │   │               ├── exception
+        │   │               │   └── GlobalExceptionHandler.java
+        │   │               ├── repository
+        │   │               │   └── TodoRepository.java
+        │   │               └── service
+        │   │                   ├── TodoService.java
+        │   │                   └── impl
+        │   │                       └── TodoServiceImpl.java
+        │   └── resources
+        │       └── application.properties
+        └── test
+            └── java
+                └── com
+                    └── example
+                        └── todoapp
+                            └── TodoApplicationTests.java
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: app/src/services/todoService.js ---
+diff --git a/app/src/services/todoService.js b/app/src/services/todoService.js
+index a7c8082..b27d483 100644
+--- a/app/src/services/todoService.js
++++ b/app/src/services/todoService.js
+@@ -1,12 +1,69 @@
+ import axios from "axios";
+ 
+-const API_BASE_URL = "http://localhost:8080/api/todos";
++// 여기! 환경별 API URL 설정 추가
++const API_BASE_URL =
++  process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api/todos";
++
++// 여기! Axios 인스턴스 생성 및 기본 설정 추가
++const apiClient = axios.create({
++  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api",
++  timeout: 10000,
++  headers: {
++    "Content-Type": "application/json",
++  },
++});
++
++// 여기! 요청 인터셉터 추가 (로깅용)
++apiClient.interceptors.request.use(
++  (config) => {
++    console.log(
++      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
++    );
++    return config;
++  },
++  (error) => {
++    return Promise.reject(error);
++  }
++);
++
++// 여기! 응답 인터셉터 추가 (에러 처리 개선)
++apiClient.interceptors.response.use(
++  (response) => {
++    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
++    return response;
++  },
++  (error) => {
++    console.error(
++      `❌ API Error: ${error.response?.status} ${error.config?.url}`,
++      error
++    );
++    return Promise.reject(error);
++  }
++);
+ 
+ const todoService = {
++  // 여기! 백엔드 연결 상태 확인 메서드 추가
++  async checkBackendHealth() {
++    try {
++      const response = await apiClient.get("/todos/health");
++      return {
++        isConnected: true,
++        status: response.data.status,
++        timestamp: response.data.timestamp,
++      };
++    } catch (error) {
++      return {
++        isConnected: false,
++        error: error.message,
++        timestamp: Date.now(),
++      };
++    }
++  },
++
+   // Get all todos
+   async getAllTodos() {
+     try {
+-      const response = await axios.get(API_BASE_URL);
++      const response = await apiClient.get("/todos");
+       return response.data;
+     } catch (error) {
+       throw new Error(error.response?.data?.message || "Failed to fetch todos");
+@@ -16,7 +73,7 @@ const todoService = {
+   // Get todo by ID
+   async getTodoById(id) {
+     try {
+-      const response = await axios.get(`${API_BASE_URL}/${id}`);
++      const response = await apiClient.get(`/todos/${id}`);
+       return response.data;
+     } catch (error) {
+       throw new Error(error.response?.data?.message || "Failed to fetch todo");
+@@ -26,7 +83,7 @@ const todoService = {
+   // Create new todo
+   async createTodo(todoData) {
+     try {
+-      const response = await axios.post(API_BASE_URL, todoData);
++      const response = await apiClient.post("/todos", todoData);
+       return response.data;
+     } catch (error) {
+       throw new Error(error.response?.data?.message || "Failed to create todo");
+@@ -36,7 +93,7 @@ const todoService = {
+   // Update todo
+   async updateTodo(id, todoData) {
+     try {
+-      const response = await axios.put(`${API_BASE_URL}/${id}`, todoData);
++      const response = await apiClient.put(`/todos/${id}`, todoData);
+       return response.data;
+     } catch (error) {
+       throw new Error(error.response?.data?.message || "Failed to update todo");
+@@ -46,7 +103,7 @@ const todoService = {
+   // Toggle todo completion status
+   async toggleTodoStatus(id) {
+     try {
+-      const response = await axios.patch(`${API_BASE_URL}/${id}/toggle`);
++      const response = await apiClient.patch(`/todos/${id}/toggle`);
+       return response.data;
+     } catch (error) {
+       throw new Error(
+@@ -58,7 +115,7 @@ const todoService = {
+   // Delete todo
+   async deleteTodo(id) {
+     try {
+-      await axios.delete(`${API_BASE_URL}/${id}`);
++      await apiClient.delete(`/todos/${id}`);
+       return true;
+     } catch (error) {
+       throw new Error(error.response?.data?.message || "Failed to delete todo");
+
+--- FILE: backend/src/main/java/com/example/todoapp/TodoApplication.java ---
+diff --git a/backend/src/main/java/com/example/todoapp/TodoApplication.java b/backend/src/main/java/com/example/todoapp/TodoApplication.java
+index a00725a..d98bcdc 100644
+--- a/backend/src/main/java/com/example/todoapp/TodoApplication.java
++++ b/backend/src/main/java/com/example/todoapp/TodoApplication.java
+@@ -2,6 +2,9 @@ package com.example.todoapp;
+ 
+ import org.springframework.boot.SpringApplication;
+ import org.springframework.boot.autoconfigure.SpringBootApplication;
++import org.springframework.context.annotation.Bean;
++import org.springframework.web.servlet.config.annotation.CorsRegistry;
++import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+ 
+ @SpringBootApplication
+ public class TodoApplication {
+@@ -9,4 +12,20 @@ public class TodoApplication {
+     public static void main(String[] args) {
+         SpringApplication.run(TodoApplication.class, args);
+     }
++
++    // 여기! 전역 CORS 설정 추가
++    @Bean
++    public WebMvcConfigurer corsConfigurer() {
++        return new WebMvcConfigurer() {
++            @Override
++            public void addCorsMappings(CorsRegistry registry) {
++                registry.addMapping("/api/**")
++                        .allowedOrigins("http://localhost:3000")
++                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
++                        .allowedHeaders("*")
++                        .allowCredentials(true)
++                        .maxAge(3600);
++            }
++        };
++    }
+ }
+
+--- FILE: backend/src/main/java/com/example/todoapp/controller/TodoController.java ---
+diff --git a/backend/src/main/java/com/example/todoapp/controller/TodoController.java b/backend/src/main/java/com/example/todoapp/controller/TodoController.java
+index ec78f60..bef1778 100644
+--- a/backend/src/main/java/com/example/todoapp/controller/TodoController.java
++++ b/backend/src/main/java/com/example/todoapp/controller/TodoController.java
+@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
+ import org.springframework.web.bind.annotation.*;
+ 
+ import java.util.List;
++import java.util.Map;
+ 
+ @RestController
+ @RequestMapping("/api/todos")
+@@ -19,6 +20,18 @@ public class TodoController {
+ 
+     private final TodoService todoService;
+ 
++    // 여기! 헬스체크 엔드포인트 추가
++    @GetMapping("/health")
++    public ResponseEntity<Map<String, Object>> healthCheck() {
++        Map<String, Object> healthInfo = Map.of(
++            "status", "UP",
++            "service", "Todo Application",
++            "timestamp", System.currentTimeMillis(),
++            "version", "1.0.0"
++        );
++        return ResponseEntity.ok(healthInfo);
++    }
++
+     @GetMapping
+     public ResponseEntity<List<TodoResponseDto>> getAllTodos() {
+         List<TodoResponseDto> todos = todoService.getAllTodos();
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

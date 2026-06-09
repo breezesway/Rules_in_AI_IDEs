@@ -1,0 +1,69 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - Use go mod for dependency management
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure, specifically checking for the presence of 'go.mod' and 'go.sum' files in the project root or module directories.
+- Suggested Logic: Check for the existence of the 'go.mod' file in the repository. The presence of this file is the standard indicator that Go modules are being used for dependency management.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Capitalization works
+- Changed Files List: 
+main.go	+5	-1	after_lines=18
+main_test.go	+5	-0	after_lines=36
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── go.mod
+├── main.go
+└── main_test.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: main.go ---
+diff --git a/main.go b/main.go
+index d73e222..8490763 100644
+--- a/main.go
++++ b/main.go
+@@ -1,11 +1,15 @@
+ package main
+ 
+-import "fmt"
++import (
++	"fmt"
++	"strings"
++)
+ 
+ func getGreeting(name string) string {
+ 	if name == "" {
+ 		return "Hello, World!"
+ 	}
++	name = strings.ToUpper(name[:1]) + name[1:]
+ 	return "Hello, " + name + "!"
+ }
+
+--- FILE: main_test.go ---
+diff --git a/main_test.go b/main_test.go
+index 1b9c393..128c133 100644
+--- a/main_test.go
++++ b/main_test.go
+@@ -18,6 +18,11 @@ func TestGetGreeting(t *testing.T) {
+ 			input:    "All",
+ 			expected: "Hello, All!",
+ 		},
++		{
++			name:     "capitalizes input",
++			input:    "alice",
++			expected: "Hello, Alice!",
++		},
+ 	}
+ 
+ 	for _, tt := range tests {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

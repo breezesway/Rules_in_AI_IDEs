@@ -1,0 +1,1453 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- `*_route.dart` - Typed route class extending AppRoute for type-safe navigation
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File names in the repository and source code contents of Dart files.
+- Suggested Logic: 1. Identify all files matching the pattern '*_route.dart'. 
+2. For each identified file, use a simple AST parser or regex to verify that it contains a class definition extending 'AppRoute' (e.g., matching the pattern `class \w+ extends AppRoute`).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: refactor: Convert ViewModels to factory pattern for modular navigation
+
+- Implements HomeViewModelFactory, LoginViewModelFactory, and UserDetailsViewModelFactory with injectable annotations
+- Removes @injectable from ViewModels; ViewModels are now created via factories, not registered with DI
+- Updates UserDetailsScreen to receive ViewModel via constructor and manage lifecycle
+- Updates Gh3App and DI config to use factories for ViewModel instantiation
+- Adds comprehensive unit tests for all factories, ensuring correct dependency injection and instance independence
+- Marks Task 3 (Convert ViewModels to factory pattern) as complete in modular-navigation-architecture/tasks.md
+- Changed Files List: 
+.kiro/specs/modular-navigation-architecture/tasks.md	+9	-8	after_lines=126
+lib/main.dart	+3	-0	after_lines=34
+lib/src/init.config.dart	+22	-3	after_lines=104
+lib/src/screens/app/auth_viewmodel.dart	+2	-0	after_lines=32
+lib/src/screens/app/gh3_app.dart	+8	-2	after_lines=99
+lib/src/screens/home_screen/home_viewmodel.dart	+0	-2	after_lines=128
+lib/src/screens/home_screen/home_viewmodel_factory.dart	+14	-0	after_lines=14
+lib/src/screens/login_screen/login_viewmodel_factory.dart	+24	-0	after_lines=24
+lib/src/screens/user_details/user_details_screen.dart	+34	-7	after_lines=58
+lib/src/screens/user_details/user_details_viewmodel.dart	+29	-0	after_lines=29
+lib/src/screens/user_details/user_details_viewmodel_factory.dart	+13	-0	after_lines=13
+test/app_start_test.dart	+3	-0	after_lines=130
+test/screens/home_screen/home_viewmodel_factory_test.dart	+208	-0	after_lines=208
+test/screens/home_screen/home_viewmodel_factory_test.mocks.dart	+216	-0	after_lines=216
+test/screens/login_screen/login_viewmodel_factory_test.dart	+51	-0	after_lines=51
+test/screens/login_screen/login_viewmodel_factory_test.mocks.dart	+211	-0	after_lines=211
+test/screens/user_details/user_details_viewmodel_factory_test.dart	+49	-0	after_lines=49
+
+- Project Directory Tree (Snapshot after commit):
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   └── home_viewmodel_factory.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   └── user_details
+│       │       ├── user_details_route.dart
+│       │       ├── user_details_screen.dart
+│       │       ├── user_details_viewmodel.dart
+│       │       └── user_details_viewmodel_factory.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── home_screen
+    │   │   ├── home_route_test.dart
+    │   │   ├── home_screen_test.dart
+    │   │   ├── home_screen_test.mocks.dart
+    │   │   ├── home_viewmodel_factory_test.dart
+    │   │   ├── home_viewmodel_factory_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   └── home_viewmodel_test.mocks.dart
+    │   ├── loading_screen
+    │   │   ├── loading_route_test.dart
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   ├── login_screen
+    │   │   ├── login_route_test.dart
+    │   │   ├── login_screen_test.dart
+    │   │   ├── login_screen_test.mocks.dart
+    │   │   ├── login_viewmodel_factory_test.dart
+    │   │   ├── login_viewmodel_factory_test.mocks.dart
+    │   │   ├── login_viewmodel_test.dart
+    │   │   └── login_viewmodel_test.mocks.dart
+    │   └── user_details
+    │       ├── user_details_route_test.dart
+    │       └── user_details_viewmodel_factory_test.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/modular-navigation-architecture/tasks.md ---
+diff --git a/.kiro/specs/modular-navigation-architecture/tasks.md b/.kiro/specs/modular-navigation-architecture/tasks.md
+index 2599b12..78e0e84 100644
+--- a/.kiro/specs/modular-navigation-architecture/tasks.md
++++ b/.kiro/specs/modular-navigation-architecture/tasks.md
+@@ -28,23 +28,24 @@
+     - Write unit tests for UserDetailsRoute with different usernames
+     - _Requirements: 5.1, 5.2, 5.5_
+ 
+-- [ ] 3. Convert ViewModels to factory pattern
+-  - [ ] 3.1 Create HomeViewModelFactory
++- [x] 3. Convert ViewModels to factory pattern
++  - [x] 3.1 Create HomeViewModelFactory
+     - Remove @injectable annotation from HomeViewModel
+     - Create injectable HomeViewModelFactory with create() method
+     - Update HomeViewModel to not be registered with DI
+     - Write unit tests for factory creation and dependency injection
+     - _Requirements: 1.1, 1.4, 1.5, 4.1, 4.2_
+   
+-  - [ ] 3.2 Create LoginViewModelFactory
++  - [x] 3.2 Create LoginViewModelFactory
+     - Create injectable LoginViewModelFactory with create() method accepting required dependencies
+     - Update LoginViewModel to not be registered with DI
+     - Write unit tests for factory creation with multiple dependencies
+     - _Requirements: 1.1, 1.4, 1.5, 4.1, 4.2_
+   
+-  - [ ] 3.3 Create UserDetailsViewModelFactory (if needed)
+-    - Create injectable factory with create(String username) method
+-    - Implement proper dependency injection for GraphQL client
++  - [x] 3.3 Create UserDetailsViewModelFactory (if needed)
++    - Created placeholder UserDetailsViewModel with login parameter
++    - Create injectable factory with create(String login) method
++    - Updated UserDetailsScreen to use ViewModel pattern
+     - Write unit tests for parameterized factory creation
+     - _Requirements: 1.1, 1.4, 1.5, 4.1, 4.2_
+ 
+@@ -70,8 +71,8 @@
+   
+   - [ ] 4.4 Create UserDetailsRouteProvider
+     - Implement RouteProvider interface with parameterized route
+-    - Configure GoRoute to extract username from path parameters
+-    - Use UserDetailsViewModelFactory.create(username) for ViewModel creation
++    - Configure GoRoute to extract login from path parameters
++    - Use UserDetailsViewModelFactory.create(login) for ViewModel creation
+     - Write unit tests for parameterized route handling
+     - _Requirements: 2.1, 2.2, 2.3_
+
+--- FILE: lib/main.dart ---
+diff --git a/lib/main.dart b/lib/main.dart
+index 2148c0a..1f9e7b1 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -4,6 +4,7 @@ import 'package:gh3/src/init.dart';
+ import 'package:gh3/src/screens/app/gh3_app.dart';
+ import 'package:gh3/src/screens/home_screen/home_viewmodel.dart';
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart';
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+ import 'package:gh3/src/services/github_auth_client.dart';
+ 
+@@ -15,6 +16,7 @@ Future<void> main() async {
+   final authService = getIt<AuthService>();
+   final githubAuthClient = getIt<GithubAuthClient>();
+   final homeViewModel = await GetIt.instance.getAsync<HomeViewModel>();
++  final userDetailsViewModelFactory = getIt<UserDetailsViewModelFactory>();
+ 
+   // Create ViewModels manually with their dependencies
+   final authVM = AuthViewModel(authService);
+@@ -26,6 +28,7 @@ Future<void> main() async {
+       authService: authService,
+       githubAuthClient: githubAuthClient,
+       homeViewModel: homeViewModel,
++      userDetailsViewModelFactory: userDetailsViewModelFactory,
+     ),
+   );
+ }
+
+--- FILE: lib/src/init.config.dart ---
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 48ec81e..076d9e9 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -13,7 +13,13 @@ import 'package:ferry/ferry.dart' as _i25;
+ import 'package:get_it/get_it.dart' as _i174;
+ import 'package:gh3/src/env/env.dart' as _i589;
+ import 'package:gh3/src/routing/route_collection_service.dart' as _i482;
+-import 'package:gh3/src/screens/home_screen/home_viewmodel.dart' as _i630;
++import 'package:gh3/src/screens/app/auth_viewmodel.dart' as _i850;
++import 'package:gh3/src/screens/home_screen/home_viewmodel_factory.dart'
++    as _i1013;
++import 'package:gh3/src/screens/login_screen/login_viewmodel_factory.dart'
++    as _i76;
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart'
++    as _i627;
+ import 'package:gh3/src/services/auth_service.dart' as _i336;
+ import 'package:gh3/src/services/ferry_client_service.dart' as _i564;
+ import 'package:gh3/src/services/ferry_module.dart' as _i762;
+@@ -37,6 +43,9 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.factory<_i482.RouteCollectionService>(
+       () => _i482.RouteCollectionService(),
+     );
++    gh.factory<_i627.UserDetailsViewModelFactory>(
++      () => _i627.UserDetailsViewModelFactory(),
++    );
+     gh.lazySingleton<_i589.Env>(() => envModule.env);
+     gh.lazySingleton<_i519.Client>(() => githubAuthHttpClientModule.httpClient);
+     gh.lazySingleton<_i1066.TimerService>(() => _i1066.DefaultTimerService());
+@@ -71,8 +80,18 @@ extension GetItInjectableX on _i174.GetIt {
+         gh<_i1066.TimerService>(),
+       ),
+     );
+-    gh.factoryAsync<_i630.HomeViewModel>(
+-      () async => _i630.HomeViewModel(await getAsync<_i25.Client>()),
++    gh.factoryAsync<_i1013.HomeViewModelFactory>(
++      () async => _i1013.HomeViewModelFactory(await getAsync<_i25.Client>()),
++    );
++    gh.factory<_i850.AuthViewModel>(
++      () => _i850.AuthViewModel(gh<_i336.AuthService>()),
++    );
++    gh.factory<_i76.LoginViewModelFactory>(
++      () => _i76.LoginViewModelFactory(
++        gh<_i1035.GithubAuthClient>(),
++        gh<_i336.AuthService>(),
++        gh<_i850.AuthViewModel>(),
++      ),
+     );
+     return this;
+   }
+
+--- FILE: lib/src/screens/app/auth_viewmodel.dart ---
+diff --git a/lib/src/screens/app/auth_viewmodel.dart b/lib/src/screens/app/auth_viewmodel.dart
+index 2c2b216..a43be6f 100644
+--- a/lib/src/screens/app/auth_viewmodel.dart
++++ b/lib/src/screens/app/auth_viewmodel.dart
+@@ -1,7 +1,9 @@
+ import 'package:flutter/foundation.dart';
++import 'package:injectable/injectable.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+ 
+ /// ViewModel exposing AuthService init and login state for GoRouter refresh/redirect.
++@injectable
+ class AuthViewModel extends ChangeNotifier {
+   final AuthService _authService;
+   bool loading = true;
+
+--- FILE: lib/src/screens/app/gh3_app.dart ---
+diff --git a/lib/src/screens/app/gh3_app.dart b/lib/src/screens/app/gh3_app.dart
+index bf4e220..a2d1539 100644
+--- a/lib/src/screens/app/gh3_app.dart
++++ b/lib/src/screens/app/gh3_app.dart
+@@ -9,6 +9,7 @@ import 'package:gh3/src/screens/login_screen/login_screen.dart';
+ import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
+ import 'package:gh3/src/screens/login_screen/login_route.dart';
+ import 'package:gh3/src/screens/user_details/user_details_screen.dart';
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+ import 'package:gh3/src/services/github_auth_client.dart';
+ import 'package:go_router/go_router.dart';
+@@ -18,6 +19,7 @@ class Gh3App extends StatelessWidget {
+   final AuthService authService;
+   final GithubAuthClient githubAuthClient;
+   final HomeViewModel homeViewModel;
++  final UserDetailsViewModelFactory userDetailsViewModelFactory;
+ 
+   const Gh3App({
+     super.key,
+@@ -25,6 +27,7 @@ class Gh3App extends StatelessWidget {
+     required this.authService,
+     required this.githubAuthClient,
+     required this.homeViewModel,
++    required this.userDetailsViewModelFactory,
+   });
+ 
+   @override
+@@ -63,8 +66,11 @@ class Gh3App extends StatelessWidget {
+         ),
+         GoRoute(
+           path: '/:login',
+-          builder: (context, state) =>
+-              UserDetailsScreen(login: state.pathParameters['login']!),
++          builder: (context, state) => UserDetailsScreen(
++            viewModel: userDetailsViewModelFactory.create(
++              state.pathParameters['login']!,
++            ),
++          ),
+         ),
+       ],
+       redirect: (context, state) {
+
+--- FILE: lib/src/screens/home_screen/home_viewmodel.dart ---
+diff --git a/lib/src/screens/home_screen/home_viewmodel.dart b/lib/src/screens/home_screen/home_viewmodel.dart
+index 9e403dc..8f5a7f8 100644
+--- a/lib/src/screens/home_screen/home_viewmodel.dart
++++ b/lib/src/screens/home_screen/home_viewmodel.dart
+@@ -4,9 +4,7 @@ import 'package:ferry/ferry.dart';
+ import '__generated__/home_viewmodel.req.gql.dart';
+ import '__generated__/home_viewmodel.data.gql.dart';
+ import '__generated__/home_viewmodel.var.gql.dart';
+-import 'package:injectable/injectable.dart';
+ 
+-@injectable
+ class HomeViewModel extends ChangeNotifier {
+   final Client _ferryClient;
+
+--- FILE: lib/src/screens/home_screen/home_viewmodel_factory.dart ---
+diff --git a/lib/src/screens/home_screen/home_viewmodel_factory.dart b/lib/src/screens/home_screen/home_viewmodel_factory.dart
+new file mode 100644
+index 0000000..4856580
+--- /dev/null
++++ b/lib/src/screens/home_screen/home_viewmodel_factory.dart
+@@ -0,0 +1,14 @@
++import 'package:ferry/ferry.dart';
++import 'package:injectable/injectable.dart';
++import 'home_viewmodel.dart';
++
++@injectable
++class HomeViewModelFactory {
++  final Client _ferryClient;
++
++  HomeViewModelFactory(this._ferryClient);
++
++  HomeViewModel create() {
++    return HomeViewModel(_ferryClient);
++  }
++}
+
+--- FILE: lib/src/screens/login_screen/login_viewmodel_factory.dart ---
+diff --git a/lib/src/screens/login_screen/login_viewmodel_factory.dart b/lib/src/screens/login_screen/login_viewmodel_factory.dart
+new file mode 100644
+index 0000000..9015fe1
+--- /dev/null
++++ b/lib/src/screens/login_screen/login_viewmodel_factory.dart
+@@ -0,0 +1,24 @@
++import 'package:injectable/injectable.dart';
++import '../../services/github_auth_client.dart';
++import '../../services/auth_service.dart';
++import '../app/auth_viewmodel.dart';
++import 'login_viewmodel.dart';
++
++/// Factory for creating LoginViewModel instances with proper dependency injection.
++@injectable
++class LoginViewModelFactory {
++  final GithubAuthClient _authClient;
++  final AuthService _authService;
++  final AuthViewModel _authViewModel;
++
++  LoginViewModelFactory(
++    this._authClient,
++    this._authService,
++    this._authViewModel,
++  );
++
++  /// Creates a new LoginViewModel instance with injected dependencies.
++  LoginViewModel create() {
++    return LoginViewModel(_authClient, _authService, _authViewModel);
++  }
++}
+
+--- FILE: lib/src/screens/user_details/user_details_screen.dart ---
+diff --git a/lib/src/screens/user_details/user_details_screen.dart b/lib/src/screens/user_details/user_details_screen.dart
+index 5ed16c3..372b95c 100644
+--- a/lib/src/screens/user_details/user_details_screen.dart
++++ b/lib/src/screens/user_details/user_details_screen.dart
+@@ -1,9 +1,34 @@
+ import 'package:flutter/material.dart';
+ import 'package:go_router/go_router.dart';
++import 'user_details_viewmodel.dart';
+ 
+-class UserDetailsScreen extends StatelessWidget {
+-  final String login;
+-  const UserDetailsScreen({super.key, required this.login});
++class UserDetailsScreen extends StatefulWidget {
++  final UserDetailsViewModel viewModel;
++
++  const UserDetailsScreen({super.key, required this.viewModel});
++
++  @override
++  State<UserDetailsScreen> createState() => _UserDetailsScreenState();
++}
++
++class _UserDetailsScreenState extends State<UserDetailsScreen> {
++  late final UserDetailsViewModel _viewModel;
++
++  void _onViewModelChanged() => setState(() {});
++
++  @override
++  void initState() {
++    super.initState();
++    _viewModel = widget.viewModel;
++    _viewModel.addListener(_onViewModelChanged);
++    _viewModel.init();
++  }
++
++  @override
++  void dispose() {
++    _viewModel.removeListener(_onViewModelChanged);
++    super.dispose();
++  }
+ 
+   @override
+   Widget build(BuildContext context) {
+@@ -21,10 +46,12 @@ class UserDetailsScreen extends StatelessWidget {
+         title: const Text('User Details'),
+       ),
+       body: Center(
+-        child: Text(
+-          'User: $login',
+-          style: Theme.of(context).textTheme.headlineMedium,
+-        ),
++        child: _viewModel.isLoading
++            ? const CircularProgressIndicator()
++            : Text(
++                'User: ${_viewModel.login}',
++                style: Theme.of(context).textTheme.headlineMedium,
++              ),
+       ),
+     );
+   }
+
+--- FILE: lib/src/screens/user_details/user_details_viewmodel.dart ---
+diff --git a/lib/src/screens/user_details/user_details_viewmodel.dart b/lib/src/screens/user_details/user_details_viewmodel.dart
+new file mode 100644
+index 0000000..215afb4
+--- /dev/null
++++ b/lib/src/screens/user_details/user_details_viewmodel.dart
+@@ -0,0 +1,29 @@
++import 'package:flutter/foundation.dart';
++
++/// ViewModel for handling user details screen logic.
++class UserDetailsViewModel extends ChangeNotifier {
++  final String _login;
++
++  UserDetailsViewModel(this._login);
++
++  /// The user login being displayed.
++  String get login => _login;
++
++  bool _isLoading = false;
++
++  /// Whether data is currently being loaded.
++  bool get isLoading => _isLoading;
++
++  /// Initialize the view model and load user data.
++  Future<void> init() async {
++    _isLoading = true;
++    notifyListeners();
++
++    // TODO: Load user details from GraphQL API
++    // This is a placeholder implementation
++    await Future.delayed(const Duration(milliseconds: 500));
++
++    _isLoading = false;
++    notifyListeners();
++  }
++}
+
+--- FILE: lib/src/screens/user_details/user_details_viewmodel_factory.dart ---
+diff --git a/lib/src/screens/user_details/user_details_viewmodel_factory.dart b/lib/src/screens/user_details/user_details_viewmodel_factory.dart
+new file mode 100644
+index 0000000..6aba683
+--- /dev/null
++++ b/lib/src/screens/user_details/user_details_viewmodel_factory.dart
+@@ -0,0 +1,13 @@
++import 'package:injectable/injectable.dart';
++import 'user_details_viewmodel.dart';
++
++/// Factory for creating UserDetailsViewModel instances with proper dependency injection.
++@injectable
++class UserDetailsViewModelFactory {
++  UserDetailsViewModelFactory();
++
++  /// Creates a new UserDetailsViewModel instance for the specified user login.
++  UserDetailsViewModel create(String login) {
++    return UserDetailsViewModel(login);
++  }
++}
+
+--- FILE: test/app_start_test.dart ---
+diff --git a/test/app_start_test.dart b/test/app_start_test.dart
+index 0aaf306..701a1af 100644
+--- a/test/app_start_test.dart
++++ b/test/app_start_test.dart
+@@ -17,6 +17,7 @@ import 'package:gh3/src/services/scope_service.dart';
+ import 'package:gh3/src/services/timer_service.dart';
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart';
+ import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
+ 
+ @GenerateNiceMocks([
+   MockSpec<Client>(),
+@@ -69,6 +70,7 @@ void main() {
+         authService: mockAuthService,
+         githubAuthClient: mockAuthClient,
+         homeViewModel: HomeViewModel(mockFerryClient),
++        userDetailsViewModelFactory: UserDetailsViewModelFactory(),
+       ),
+     );
+ 
+@@ -114,6 +116,7 @@ void main() {
+         authService: mockAuthService,
+         githubAuthClient: mockAuthClient,
+         homeViewModel: HomeViewModel(mockFerryClient),
++        userDetailsViewModelFactory: UserDetailsViewModelFactory(),
+       ),
+     );
+
+--- FILE: test/screens/home_screen/home_viewmodel_factory_test.dart ---
+diff --git a/test/screens/home_screen/home_viewmodel_factory_test.dart b/test/screens/home_screen/home_viewmodel_factory_test.dart
+new file mode 100644
+index 0000000..bd80676
+--- /dev/null
++++ b/test/screens/home_screen/home_viewmodel_factory_test.dart
+@@ -0,0 +1,208 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:gh3/src/screens/home_screen/home_viewmodel_factory.dart';
++import 'package:gh3/src/screens/home_screen/home_viewmodel.dart';
++import 'package:mockito/annotations.dart';
++import 'package:mockito/mockito.dart';
++import 'package:ferry/ferry.dart';
++
++@GenerateNiceMocks([MockSpec<Client>()])
++import 'home_viewmodel_factory_test.mocks.dart';
++
++void main() {
++  group('HomeViewModelFactory', () {
++    late MockClient mockClient;
++    late HomeViewModelFactory factory;
++
++    setUp(() {
++      mockClient = MockClient();
++      factory = HomeViewModelFactory(mockClient);
++    });
++
++    group('Factory Creation', () {
++      test('should create factory with ferry client dependency', () {
++        expect(factory, isNotNull);
++        expect(factory, isA<HomeViewModelFactory>());
++      });
++
++      test(
++        'should create HomeViewModel instance with injected dependencies',
++        () {
++          // Arrange
++          when(
++            mockClient.request<dynamic, dynamic>(any),
++          ).thenAnswer((_) => const Stream.empty());
++
++          // Act
++          final viewModel = factory.create();
++
++          // Assert
++          expect(viewModel, isNotNull);
++          expect(viewModel, isA<HomeViewModel>());
++        },
++      );
++
++      test('should create multiple independent HomeViewModel instances', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act
++        final viewModel1 = factory.create();
++        final viewModel2 = factory.create();
++
++        // Assert
++        expect(viewModel1, isNotNull);
++        expect(viewModel2, isNotNull);
++        expect(viewModel1, isNot(same(viewModel2)));
++        expect(viewModel1, isA<HomeViewModel>());
++        expect(viewModel2, isA<HomeViewModel>());
++      });
++
++      test('should create ViewModels with same ferry client dependency', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act
++        final viewModel1 = factory.create();
++        final viewModel2 = factory.create();
++
++        // Assert - Both ViewModels should have the same client instance
++        // We can't directly test this without exposing the client, but we can
++        // verify they both work with the same mock
++        expect(viewModel1.isLoading, isTrue);
++        expect(viewModel2.isLoading, isTrue);
++
++        // Clean up
++        viewModel1.dispose();
++        viewModel2.dispose();
++      });
++    });
++
++    group('Dependency Injection', () {
++      test('should inject ferry client correctly', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act
++        final viewModel = factory.create();
++
++        // Assert - Verify the client is working by checking initial state
++        expect(viewModel.isLoading, isTrue);
++        expect(viewModel.isEmpty, isTrue);
++        expect(viewModel.followingUsers, isEmpty);
++        expect(viewModel.error, isNull);
++
++        // Clean up
++        viewModel.dispose();
++      });
++
++      test('should handle factory creation with null client gracefully', () {
++        // This test ensures the factory handles edge cases
++        expect(() => HomeViewModelFactory(mockClient), returnsNormally);
++      });
++    });
++
++    group('ViewModel Lifecycle', () {
++      test('should create ViewModels that can be disposed independently', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act
++        final viewModel1 = factory.create();
++        final viewModel2 = factory.create();
++
++        // Assert - Should be able to dispose one without affecting the other
++        expect(() => viewModel1.dispose(), returnsNormally);
++        expect(() => viewModel2.dispose(), returnsNormally);
++      });
++
++      test('should create ViewModels with proper initial state', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act
++        final viewModel = factory.create();
++
++        // Assert - Check all initial state properties
++        expect(viewModel.isLoading, isTrue);
++        expect(viewModel.isEmpty, isTrue);
++        expect(viewModel.followingUsers, isEmpty);
++        expect(viewModel.error, isNull);
++        expect(viewModel.hasMore, isTrue);
++        expect(viewModel.following, isNull);
++
++        // Clean up
++        viewModel.dispose();
++      });
++    });
++
++    group('Factory Pattern Validation', () {
++      test('should maintain factory pattern principles', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act & Assert - Factory should create new instances each time
++        final instances = List.generate(5, (_) => factory.create());
++
++        // All instances should be different objects
++        for (int i = 0; i < instances.length; i++) {
++          for (int j = i + 1; j < instances.length; j++) {
++            expect(instances[i], isNot(same(instances[j])));
++          }
++        }
++
++        // All instances should be of the same type
++        for (final instance in instances) {
++          expect(instance, isA<HomeViewModel>());
++        }
++
++        // Clean up
++        for (final instance in instances) {
++          instance.dispose();
++        }
++      });
++
++      test('should support concurrent factory usage', () {
++        // Arrange
++        when(
++          mockClient.request<dynamic, dynamic>(any),
++        ).thenAnswer((_) => const Stream.empty());
++
++        // Act - Create multiple instances concurrently
++        final futures = List.generate(
++          3,
++          (_) => Future.microtask(() => factory.create()),
++        );
++
++        // Assert
++        expect(
++          Future.wait(futures).then((viewModels) {
++            // All should be created successfully
++            expect(viewModels.length, equals(3));
++            for (final vm in viewModels) {
++              expect(vm, isA<HomeViewModel>());
++            }
++
++            // Clean up
++            for (final vm in viewModels) {
++              vm.dispose();
++            }
++            return true;
++          }),
++          completion(isTrue),
++        );
++      });
++    });
++  });
++}
+
+--- FILE: test/screens/home_screen/home_viewmodel_factory_test.mocks.dart ---
+diff --git a/test/screens/home_screen/home_viewmodel_factory_test.mocks.dart b/test/screens/home_screen/home_viewmodel_factory_test.mocks.dart
+new file mode 100644
+index 0000000..69323ce
+--- /dev/null
++++ b/test/screens/home_screen/home_viewmodel_factory_test.mocks.dart
+@@ -0,0 +1,216 @@
++// Mocks generated by Mockito 5.4.6 from annotations
++// in gh3/test/screens/home_screen/home_viewmodel_factory_test.dart.
++// Do not manually edit this file.
++
++// ignore_for_file: no_leading_underscores_for_library_prefixes
++import 'dart:async' as _i3;
++
++import 'package:ferry/ferry.dart' as _i4;
++import 'package:ferry/src/fetch_policy_typed_link.dart' as _i2;
++import 'package:gql/ast.dart' as _i5;
++import 'package:mockito/mockito.dart' as _i1;
++
++// ignore_for_file: type=lint
++// ignore_for_file: avoid_redundant_argument_values
++// ignore_for_file: avoid_setters_without_getters
++// ignore_for_file: comment_references
++// ignore_for_file: deprecated_member_use
++// ignore_for_file: deprecated_member_use_from_same_package
++// ignore_for_file: implementation_imports
++// ignore_for_file: invalid_use_of_visible_for_testing_member
++// ignore_for_file: must_be_immutable
++// ignore_for_file: prefer_const_constructors
++// ignore_for_file: unnecessary_parenthesis
++// ignore_for_file: camel_case_types
++// ignore_for_file: subtype_of_sealed_class
++
++class _FakeLink_0 extends _i1.SmartFake implements _i2.Link {
++  _FakeLink_0(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++}
++
++class _FakeCache_1 extends _i1.SmartFake implements _i2.Cache {
++  _FakeCache_1(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++}
++
++class _FakeStreamController_2<T> extends _i1.SmartFake
++    implements _i3.StreamController<T> {
++  _FakeStreamController_2(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++}
++
++class _FakeTypedLink_3 extends _i1.SmartFake implements _i2.TypedLink {
++  _FakeTypedLink_3(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++}
++
++/// A class which mocks [Client].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockClient extends _i1.Mock implements _i4.Client {
++  @override
++  _i2.Link get link =>
++      (super.noSuchMethod(
++            Invocation.getter(#link),
++            returnValue: _FakeLink_0(this, Invocation.getter(#link)),
++            returnValueForMissingStub: _FakeLink_0(
++              this,
++              Invocation.getter(#link),
++            ),
++          )
++          as _i2.Link);
++
++  @override
++  Map<String, _i2.TypePolicy> get typePolicies =>
++      (super.noSuchMethod(
++            Invocation.getter(#typePolicies),
++            returnValue: <String, _i2.TypePolicy>{},
++            returnValueForMissingStub: <String, _i2.TypePolicy>{},
++          )
++          as Map<String, _i2.TypePolicy>);
++
++  @override
++  Map<String, Function> get updateCacheHandlers =>
++      (super.noSuchMethod(
++            Invocation.getter(#updateCacheHandlers),
++            returnValue: <String, Function>{},
++            returnValueForMissingStub: <String, Function>{},
++          )
++          as Map<String, Function>);
++
++  @override
++  Map<_i5.OperationType, _i2.FetchPolicy> get defaultFetchPolicies =>
++      (super.noSuchMethod(
++            Invocation.getter(#defaultFetchPolicies),
++            returnValue: <_i5.OperationType, _i2.FetchPolicy>{},
++            returnValueForMissingStub: <_i5.OperationType, _i2.FetchPolicy>{},
++          )
++          as Map<_i5.OperationType, _i2.FetchPolicy>);
++
++  @override
++  bool get addTypename =>
++      (super.noSuchMethod(
++            Invocation.getter(#addTypename),
++            returnValue: false,
++            returnValueForMissingStub: false,
++          )
++          as bool);
++
++  @override
++  _i2.Cache get cache =>
++      (super.noSuchMethod(
++            Invocation.getter(#cache),
++            returnValue: _FakeCache_1(this, Invocation.getter(#cache)),
++            returnValueForMissingStub: _FakeCache_1(
++              this,
++              Invocation.getter(#cache),
++            ),
++          )
++          as _i2.Cache);
++
++  @override
++  _i3.StreamController<_i2.OperationRequest<dynamic, dynamic>>
++  get requestController =>
++      (super.noSuchMethod(
++            Invocation.getter(#requestController),
++            returnValue:
++                _FakeStreamController_2<_i2.OperationRequest<dynamic, dynamic>>(
++                  this,
++                  Invocation.getter(#requestController),
++                ),
++            returnValueForMissingStub:
++                _FakeStreamController_2<_i2.OperationRequest<dynamic, dynamic>>(
++                  this,
++                  Invocation.getter(#requestController),
++                ),
++          )
++          as _i3.StreamController<_i2.OperationRequest<dynamic, dynamic>>);
++
++  @override
++  set cache(_i2.Cache? _cache) => super.noSuchMethod(
++    Invocation.setter(#cache, _cache),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  set requestController(
++    _i3.StreamController<_i2.OperationRequest<dynamic, dynamic>>?
++    _requestController,
++  ) => super.noSuchMethod(
++    Invocation.setter(#requestController, _requestController),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  _i3.Future<void> dispose() =>
++      (super.noSuchMethod(
++            Invocation.method(#dispose, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++
++  @override
++  _i3.Stream<_i2.OperationResponse<TData, TVars>> request<TData, TVars>(
++    _i2.OperationRequest<TData, TVars>? request, [
++    _i2.NextTypedLink<TData, TVars>? forward,
++  ]) =>
++      (super.noSuchMethod(
++            Invocation.method(#request, [request, forward]),
++            returnValue:
++                _i3.Stream<_i2.OperationResponse<TData, TVars>>.empty(),
++            returnValueForMissingStub:
++                _i3.Stream<_i2.OperationResponse<TData, TVars>>.empty(),
++          )
++          as _i3.Stream<_i2.OperationResponse<TData, TVars>>);
++
++  @override
++  _i2.TypedLink concat(_i2.TypedLink? next) =>
++      (super.noSuchMethod(
++            Invocation.method(#concat, [next]),
++            returnValue: _FakeTypedLink_3(
++              this,
++              Invocation.method(#concat, [next]),
++            ),
++            returnValueForMissingStub: _FakeTypedLink_3(
++              this,
++              Invocation.method(#concat, [next]),
++            ),
++          )
++          as _i2.TypedLink);
++
++  @override
++  _i2.TypedLink route(_i2.TypedLinkRouter<dynamic, dynamic>? route) =>
++      (super.noSuchMethod(
++            Invocation.method(#route, [route]),
++            returnValue: _FakeTypedLink_3(
++              this,
++              Invocation.method(#route, [route]),
++            ),
++            returnValueForMissingStub: _FakeTypedLink_3(
++              this,
++              Invocation.method(#route, [route]),
++            ),
++          )
++          as _i2.TypedLink);
++
++  @override
++  _i2.TypedLink split(
++    bool Function<TData, TVars>(_i2.OperationRequest<TData, TVars>)? test,
++    _i2.TypedLink? left, [
++    _i2.TypedLink? right = const _i2.PassthroughTypedLink(),
++  ]) =>
++      (super.noSuchMethod(
++            Invocation.method(#split, [test, left, right]),
++            returnValue: _FakeTypedLink_3(
++              this,
++              Invocation.method(#split, [test, left, right]),
++            ),
++            returnValueForMissingStub: _FakeTypedLink_3(
++              this,
++              Invocation.method(#split, [test, left, right]),
++            ),
++          )
++          as _i2.TypedLink);
++}
+
+--- FILE: test/screens/login_screen/login_viewmodel_factory_test.dart ---
+diff --git a/test/screens/login_screen/login_viewmodel_factory_test.dart b/test/screens/login_screen/login_viewmodel_factory_test.dart
+new file mode 100644
+index 0000000..b84e79b
+--- /dev/null
++++ b/test/screens/login_screen/login_viewmodel_factory_test.dart
+@@ -0,0 +1,51 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:mockito/annotations.dart';
++
++import 'package:gh3/src/screens/login_screen/login_viewmodel_factory.dart';
++import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
++import 'package:gh3/src/services/github_auth_client.dart';
++import 'package:gh3/src/services/auth_service.dart';
++import 'package:gh3/src/screens/app/auth_viewmodel.dart';
++
++import 'login_viewmodel_factory_test.mocks.dart';
++
++@GenerateMocks([GithubAuthClient, AuthService, AuthViewModel])
++void main() {
++  group('LoginViewModelFactory', () {
++    late MockGithubAuthClient mockAuthClient;
++    late MockAuthService mockAuthService;
++    late MockAuthViewModel mockAuthViewModel;
++    late LoginViewModelFactory factory;
++
++    setUp(() {
++      mockAuthClient = MockGithubAuthClient();
++      mockAuthService = MockAuthService();
++      mockAuthViewModel = MockAuthViewModel();
++
++      factory = LoginViewModelFactory(
++        mockAuthClient,
++        mockAuthService,
++        mockAuthViewModel,
++      );
++    });
++
++    test('should create LoginViewModel with correct type', () {
++      // Act
++      final viewModel = factory.create();
++
++      // Assert
++      expect(viewModel, isA<LoginViewModel>());
++    });
++
++    test('should create multiple independent LoginViewModel instances', () {
++      // Act
++      final viewModel1 = factory.create();
++      final viewModel2 = factory.create();
++
++      // Assert
++      expect(viewModel1, isA<LoginViewModel>());
++      expect(viewModel2, isA<LoginViewModel>());
++      expect(viewModel1, isNot(same(viewModel2)));
++    });
++  });
++}
+
+--- FILE: test/screens/login_screen/login_viewmodel_factory_test.mocks.dart ---
+diff --git a/test/screens/login_screen/login_viewmodel_factory_test.mocks.dart b/test/screens/login_screen/login_viewmodel_factory_test.mocks.dart
+new file mode 100644
+index 0000000..886d25d
+--- /dev/null
++++ b/test/screens/login_screen/login_viewmodel_factory_test.mocks.dart
+@@ -0,0 +1,211 @@
++// Mocks generated by Mockito 5.4.6 from annotations
++// in gh3/test/screens/login_screen/login_viewmodel_factory_test.dart.
++// Do not manually edit this file.
++
++// ignore_for_file: no_leading_underscores_for_library_prefixes
++import 'dart:async' as _i3;
++import 'dart:ui' as _i7;
++
++import 'package:gh3/src/screens/app/auth_viewmodel.dart' as _i6;
++import 'package:gh3/src/services/auth_service.dart' as _i5;
++import 'package:gh3/src/services/github_auth_client.dart' as _i2;
++import 'package:mockito/mockito.dart' as _i1;
++import 'package:mockito/src/dummies.dart' as _i4;
++
++// ignore_for_file: type=lint
++// ignore_for_file: avoid_redundant_argument_values
++// ignore_for_file: avoid_setters_without_getters
++// ignore_for_file: comment_references
++// ignore_for_file: deprecated_member_use
++// ignore_for_file: deprecated_member_use_from_same_package
++// ignore_for_file: implementation_imports
++// ignore_for_file: invalid_use_of_visible_for_testing_member
++// ignore_for_file: must_be_immutable
++// ignore_for_file: prefer_const_constructors
++// ignore_for_file: unnecessary_parenthesis
++// ignore_for_file: camel_case_types
++// ignore_for_file: subtype_of_sealed_class
++
++class _FakeGithubDeviceCodeResult_0 extends _i1.SmartFake
++    implements _i2.GithubDeviceCodeResult {
++  _FakeGithubDeviceCodeResult_0(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++}
++
++/// A class which mocks [GithubAuthClient].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockGithubAuthClient extends _i1.Mock implements _i2.GithubAuthClient {
++  MockGithubAuthClient() {
++    _i1.throwOnMissingStub(this);
++  }
++
++  @override
++  _i3.Future<_i2.GithubDeviceCodeResult> createDeviceCode(
++    List<String>? scopes,
++  ) =>
++      (super.noSuchMethod(
++            Invocation.method(#createDeviceCode, [scopes]),
++            returnValue: _i3.Future<_i2.GithubDeviceCodeResult>.value(
++              _FakeGithubDeviceCodeResult_0(
++                this,
++                Invocation.method(#createDeviceCode, [scopes]),
++              ),
++            ),
++          )
++          as _i3.Future<_i2.GithubDeviceCodeResult>);
++
++  @override
++  _i3.Future<String> createAccessTokenFromDeviceCode(String? deviceCode) =>
++      (super.noSuchMethod(
++            Invocation.method(#createAccessTokenFromDeviceCode, [deviceCode]),
++            returnValue: _i3.Future<String>.value(
++              _i4.dummyValue<String>(
++                this,
++                Invocation.method(#createAccessTokenFromDeviceCode, [
++                  deviceCode,
++                ]),
++              ),
++            ),
++          )
++          as _i3.Future<String>);
++}
++
++/// A class which mocks [AuthService].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockAuthService extends _i1.Mock implements _i5.AuthService {
++  MockAuthService() {
++    _i1.throwOnMissingStub(this);
++  }
++
++  @override
++  bool get isLoggedIn =>
++      (super.noSuchMethod(Invocation.getter(#isLoggedIn), returnValue: false)
++          as bool);
++
++  @override
++  _i3.Future<void> init() =>
++      (super.noSuchMethod(
++            Invocation.method(#init, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++
++  @override
++  _i3.Future<String> login() =>
++      (super.noSuchMethod(
++            Invocation.method(#login, []),
++            returnValue: _i3.Future<String>.value(
++              _i4.dummyValue<String>(this, Invocation.method(#login, [])),
++            ),
++          )
++          as _i3.Future<String>);
++
++  @override
++  _i3.Future<String> loginWithDeviceCode(String? deviceCode) =>
++      (super.noSuchMethod(
++            Invocation.method(#loginWithDeviceCode, [deviceCode]),
++            returnValue: _i3.Future<String>.value(
++              _i4.dummyValue<String>(
++                this,
++                Invocation.method(#loginWithDeviceCode, [deviceCode]),
++              ),
++            ),
++          )
++          as _i3.Future<String>);
++
++  @override
++  _i3.Future<void> logout() =>
++      (super.noSuchMethod(
++            Invocation.method(#logout, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++}
++
++/// A class which mocks [AuthViewModel].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockAuthViewModel extends _i1.Mock implements _i6.AuthViewModel {
++  MockAuthViewModel() {
++    _i1.throwOnMissingStub(this);
++  }
++
++  @override
++  bool get loading =>
++      (super.noSuchMethod(Invocation.getter(#loading), returnValue: false)
++          as bool);
++
++  @override
++  bool get loggedIn =>
++      (super.noSuchMethod(Invocation.getter(#loggedIn), returnValue: false)
++          as bool);
++
++  @override
++  set loading(bool? _loading) => super.noSuchMethod(
++    Invocation.setter(#loading, _loading),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  set loggedIn(bool? _loggedIn) => super.noSuchMethod(
++    Invocation.setter(#loggedIn, _loggedIn),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  bool get hasListeners =>
++      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
++          as bool);
++
++  @override
++  _i3.Future<void> init() =>
++      (super.noSuchMethod(
++            Invocation.method(#init, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++
++  @override
++  _i3.Future<void> logout() =>
++      (super.noSuchMethod(
++            Invocation.method(#logout, []),
++            returnValue: _i3.Future<void>.value(),
++            returnValueForMissingStub: _i3.Future<void>.value(),
++          )
++          as _i3.Future<void>);
++
++  @override
++  void updateAuthState() => super.noSuchMethod(
++    Invocation.method(#updateAuthState, []),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
++    Invocation.method(#addListener, [listener]),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
++    Invocation.method(#removeListener, [listener]),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  void dispose() => super.noSuchMethod(
++    Invocation.method(#dispose, []),
++    returnValueForMissingStub: null,
++  );
++
++  @override
++  void notifyListeners() => super.noSuchMethod(
++    Invocation.method(#notifyListeners, []),
++    returnValueForMissingStub: null,
++  );
++}
+
+--- FILE: test/screens/user_details/user_details_viewmodel_factory_test.dart ---
+diff --git a/test/screens/user_details/user_details_viewmodel_factory_test.dart b/test/screens/user_details/user_details_viewmodel_factory_test.dart
+new file mode 100644
+index 0000000..6ef041c
+--- /dev/null
++++ b/test/screens/user_details/user_details_viewmodel_factory_test.dart
+@@ -0,0 +1,49 @@
++import 'package:flutter_test/flutter_test.dart';
++
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
++import 'package:gh3/src/screens/user_details/user_details_viewmodel.dart';
++
++void main() {
++  group('UserDetailsViewModelFactory', () {
++    late UserDetailsViewModelFactory factory;
++
++    setUp(() {
++      factory = UserDetailsViewModelFactory();
++    });
++
++    test('should create UserDetailsViewModel with correct type', () {
++      // Act
++      final viewModel = factory.create('testuser');
++
++      // Assert
++      expect(viewModel, isA<UserDetailsViewModel>());
++    });
++
++    test('should create UserDetailsViewModel with correct login', () {
++      // Arrange
++      const login = 'testuser';
++
++      // Act
++      final viewModel = factory.create(login);
++
++      // Assert
++      expect(viewModel.login, login);
++    });
++
++    test(
++      'should create multiple independent UserDetailsViewModel instances',
++      () {
++        // Act
++        final viewModel1 = factory.create('user1');
++        final viewModel2 = factory.create('user2');
++
++        // Assert
++        expect(viewModel1, isA<UserDetailsViewModel>());
++        expect(viewModel2, isA<UserDetailsViewModel>());
++        expect(viewModel1, isNot(same(viewModel2)));
++        expect(viewModel1.login, 'user1');
++        expect(viewModel2.login, 'user2');
++      },
++    );
++  });
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

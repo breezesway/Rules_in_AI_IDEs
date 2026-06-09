@@ -1,0 +1,174 @@
+diff --git a/src/core/utils/browser-manager.ts b/src/core/utils/browser-manager.ts
+index 3db4e54..ca3cf6c 100644
+--- a/src/core/utils/browser-manager.ts
++++ b/src/core/utils/browser-manager.ts
+@@ -5,8 +5,8 @@ import {
+   Page,
+   BrowserContextOptions as PlaywrightBrowserContextOptions,
+ } from 'playwright';
+-import { ErrorHandlerService } from '../../../playwright/tests/utils/services/error-handler-service';
+-import { ConfigurationService } from '../../../playwright/tests/utils/services/configuration-service';
++import { ErrorHandlerService } from '../../utils/services/error-handler-service';
++import { ConfigurationService } from '../../utils/services/configuration-service';
+ 
+ export interface CustomBrowserContextOptions {
+   viewport?: { width: number; height: number };
+@@ -26,7 +26,7 @@ export class BrowserManager {
+   private config = ConfigurationService.getInstance();
+   private isInitialized = false;
+ 
+-  private constructor() {}
++  private constructor() { }
+ 
+   static getInstance(): BrowserManager {
+     if (!BrowserManager.instance) {
+@@ -36,13 +36,30 @@ export class BrowserManager {
+   }
+ 
+   async initialize(): Promise<void> {
+-    if (this.isInitialized) {
+-      return;
++    if (this.isInitialized && this.browser) {
++      // Check if the existing browser is still healthy
++      try {
++        const isHealthy = await this.isBrowserHealthy();
++        if (isHealthy) {
++          return; // Browser is already initialized and healthy
++        }
++      } catch (error) {
++        this.errorHandler.logWarning('Existing browser health check failed, reinitializing...');
++      }
+     }
+ 
+     try {
+       this.errorHandler.logInfo('Initializing browser manager');
+ 
++      // Clean up any existing browser instance
++      if (this.browser) {
++        try {
++          await this.cleanupAll();
++        } catch (error) {
++          this.errorHandler.logWarning('Error during cleanup of existing browser: ' + (error instanceof Error ? error.message : 'Unknown error'));
++        }
++      }
++
+       // Launch browser with optimized settings
+       this.browser = await chromium.launch({
+         headless: true,
+@@ -81,16 +98,43 @@ export class BrowserManager {
+     }
+   }
+ 
++  async forceReinitialize(): Promise<void> {
++    this.errorHandler.logInfo('Force reinitializing browser manager');
++    this.isInitialized = false;
++    this.browser = null;
++    this.contexts.clear();
++    this.pages.clear();
++    await this.initialize();
++  }
++
+   async getContext(
+     sessionId: string,
+     options: CustomBrowserContextOptions = {}
+   ): Promise<BrowserContext> {
+-    if (!this.browser) {
+-      throw new Error('Browser not initialized. Call initialize() first.');
++    // Check if browser is still valid, reinitialize if needed
++    if (!this.browser || !this.isInitialized) {
++      this.errorHandler.logInfo('Browser not initialized or closed, reinitializing...');
++      await this.initialize();
+     }
+ 
+     if (this.contexts.has(sessionId)) {
+-      return this.contexts.get(sessionId)!;
++      const context = this.contexts.get(sessionId)!;
++      // Check if context is still valid
++      try {
++        // Check if context is still connected to the browser
++        if (context.pages().length === 0) {
++          // Context exists but has no pages, which is fine
++          return context;
++        }
++
++        // Try to create a new page to test if context is still working
++        const testPage = await context.newPage();
++        await testPage.close();
++        return context;
++      } catch (error) {
++        this.errorHandler.logWarning(`Context ${sessionId} is no longer valid, creating new one: ${error instanceof Error ? error.message : 'Unknown error'}`);
++        this.contexts.delete(sessionId);
++      }
+     }
+ 
+     this.errorHandler.logInfo(`Creating new browser context for session: ${sessionId}`);
+@@ -107,7 +151,7 @@ export class BrowserManager {
+         extraHTTPHeaders: options.extraHTTPHeaders || {},
+       };
+ 
+-      const context = await this.browser.newContext(contextOptions);
++      const context = await this.browser!.newContext(contextOptions);
+       this.contexts.set(sessionId, context);
+ 
+       this.errorHandler.logSuccess(`Browser context created for session: ${sessionId}`);
+@@ -136,7 +180,43 @@ export class BrowserManager {
+       this.errorHandler.logInfo(`Created new page for session: ${sessionId}, page: ${pageId}`);
+     }
+ 
+-    return this.pages.get(pageKey)!;
++    const page = this.pages.get(pageKey)!;
++
++    // Check if page is still valid - use a more robust check
++    try {
++      // Check if the page is still connected to the browser
++      if (page.isClosed()) {
++        this.errorHandler.logWarning(`Page ${pageKey} is closed, creating new one`);
++        this.pages.delete(pageKey);
++        return this.getPage(sessionId, pageId);
++      }
++
++      // Try a simple operation to verify the page is working
++      await page.evaluate(() => true);
++      return page;
++    } catch (error) {
++      this.errorHandler.logWarning(`Page ${pageKey} is no longer valid, creating new one: ${error instanceof Error ? error.message : 'Unknown error'}`);
++      this.pages.delete(pageKey);
++      return this.getPage(sessionId, pageId);
++    }
++  }
++
++  async isBrowserHealthy(): Promise<boolean> {
++    if (!this.browser || !this.isInitialized) {
++      return false;
++    }
++
++    try {
++      // Try to create a test context to verify browser is working
++      const testContext = await this.browser.newContext();
++      const testPage = await testContext.newPage();
++      await testPage.close();
++      await testContext.close();
++      return true;
++    } catch (error) {
++      this.errorHandler.logWarning('Browser health check failed, browser needs reinitialization');
++      return false;
++    }
+   }
+ 
+   async closePage(sessionId: string, pageId: string = 'default'): Promise<void> {
+@@ -182,13 +262,13 @@ export class BrowserManager {
+       this.errorHandler.logInfo('Cleaning up all browser resources');
+ 
+       // Close all pages
+-      for (const [pageKey, page] of this.pages) {
++      for (const [_pageKey, page] of this.pages) {
+         await page.close();
+       }
+       this.pages.clear();
+ 
+       // Close all contexts
+-      for (const [sessionId, context] of this.contexts) {
++      for (const [_sessionId, context] of this.contexts) {
+         await context.close();
+       }
+       this.contexts.clear();

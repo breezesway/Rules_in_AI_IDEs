@@ -1,0 +1,72 @@
+diff --git a/src/main/utils/history-manager.ts b/src/main/utils/history-manager.ts
+new file mode 100644
+index 0000000..f178067
+--- /dev/null
++++ b/src/main/utils/history-manager.ts
+@@ -0,0 +1,65 @@
++import { app } from 'electron';
++import path from 'node:path';
++import fs from 'node:fs/promises';
++import { HistoryRecord } from './types';
++
++export class HistoryManager {
++  private historyFilePath: string;
++  private maxRecords = 100;
++
++  constructor() {
++    const userDataPath = app.getPath('userData');
++    this.historyFilePath = path.join(userDataPath, 'operation-history.json');
++  }
++
++  async getHistory(): Promise<HistoryRecord[]> {
++    try {
++      const data = await fs.readFile(this.historyFilePath, 'utf-8');
++      const history = JSON.parse(data) as HistoryRecord[];
++      return history.sort((a, b) => b.timestamp - a.timestamp);
++    } catch (error) {
++      return [];
++    }
++  }
++
++  async addRecord(record: Omit<HistoryRecord, 'id' | 'timestamp'>): Promise<void> {
++    try {
++      const history = await this.getHistory();
++      
++      const newRecord: HistoryRecord = {
++        ...record,
++        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
++        timestamp: Date.now()
++      };
++
++      history.unshift(newRecord);
++
++      if (history.length > this.maxRecords) {
++        history.splice(this.maxRecords);
++      }
++
++      await fs.mkdir(path.dirname(this.historyFilePath), { recursive: true });
++      await fs.writeFile(this.historyFilePath, JSON.stringify(history, null, 2));
++    } catch (error) {
++      console.error('保存历史记录失败:', error);
++    }
++  }
++
++  async clearHistory(): Promise<void> {
++    try {
++      await fs.unlink(this.historyFilePath);
++    } catch (error) {
++      // 文件可能不存在，忽略错误
++    }
++  }
++
++  async deleteRecord(id: string): Promise<void> {
++    try {
++      const history = await this.getHistory();
++      const filteredHistory = history.filter(record => record.id !== id);
++      await fs.writeFile(this.historyFilePath, JSON.stringify(filteredHistory, null, 2));
++    } catch (error) {
++      console.error('删除历史记录失败:', error);
++    }
++  }
++} 
+\ No newline at end of file

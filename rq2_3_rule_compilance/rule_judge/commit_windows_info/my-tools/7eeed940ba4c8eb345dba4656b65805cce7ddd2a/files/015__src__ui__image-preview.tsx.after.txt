@@ -1,0 +1,206 @@
+import React from 'react';
+import { X, Download, FileImage, Zap } from 'lucide-react';
+import { formatFileSize } from '../lib/utils';
+
+interface ImagePreviewProps {
+  isOpen: boolean;
+  onClose: () => void;
+  preview: {
+    originalPath: string;
+    previewPath: string;
+    originalBase64: string;
+    compressedBase64: string;
+    original: {
+      size: number;
+      width: number;
+      height: number;
+      format: string;
+    };
+    compressed: {
+      size: number;
+      width: number;
+      height: number;
+      format: string;
+    };
+    compressionRatio: number;
+    sizeDifference: number;
+  } | null;
+  onConfirm: () => void;
+  isGenerating: boolean;
+}
+
+export function ImagePreview({ 
+  isOpen, 
+  onClose, 
+  preview, 
+  onConfirm, 
+  isGenerating 
+}: ImagePreviewProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-[60] p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        {/* 头部 */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-xl">
+              <FileImage className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">压缩预览</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">查看压缩前后的效果对比</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors duration-200"
+          >
+            <X className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+          </button>
+        </div>
+
+        {/* 内容区域 */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">正在生成预览...</p>
+            </div>
+          ) : preview ? (
+            <div className="space-y-6">
+              {/* 统计信息卡片 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">压缩前</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {formatFileSize(preview.original.size)}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {preview.original.width} × {preview.original.height}
+                  </p>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-green-900 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">压缩后</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {formatFileSize(preview.compressed.size)}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {preview.compressed.width} × {preview.compressed.height}
+                  </p>
+                </div>
+                
+                <div className="bg-blue-50 dark:bg-blue-900 rounded-xl p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">压缩效果</span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {preview.compressionRatio > 0 ? '-' : '+'}{Math.abs(preview.compressionRatio)}%
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {preview.sizeDifference > 0 ? '节省' : '增加'} {formatFileSize(Math.abs(preview.sizeDifference))}
+                  </p>
+                </div>
+              </div>
+
+              {/* 图片对比 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 原图 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">原图</h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                      {preview.original.format.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-700">
+                    <img
+                      src={preview.originalBase64}
+                      alt="原图"
+                      className="w-full h-auto max-h-80 object-contain"
+                      style={{ imageRendering: 'auto' }}
+                    />
+                  </div>
+                </div>
+
+                {/* 压缩后 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">压缩后</h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                      {preview.compressed.format.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="border-2 border-green-200 dark:border-green-600 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-700">
+                    <img
+                      src={preview.compressedBase64}
+                      alt="压缩后"
+                      className="w-full h-auto max-h-80 object-contain"
+                      style={{ imageRendering: 'auto' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 详细信息 */}
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">详细信息</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">原始格式:</span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">{preview.original.format.toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">输出格式:</span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">{preview.compressed.format.toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">原始尺寸:</span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">{preview.original.width} × {preview.original.height}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">压缩后尺寸:</span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">{preview.compressed.width} × {preview.compressed.height}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-2xl mb-4">
+                <FileImage className="h-12 w-12 text-gray-400" />
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">无法生成预览</p>
+            </div>
+          )}
+        </div>
+
+        {/* 底部操作栏 */}
+        <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 text-gray-900 dark:text-gray-100"
+          >
+            取消
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!preview || isGenerating}
+            className="px-6 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+          >
+            <Download className="h-4 w-4" />
+            <span>确认压缩</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+} 

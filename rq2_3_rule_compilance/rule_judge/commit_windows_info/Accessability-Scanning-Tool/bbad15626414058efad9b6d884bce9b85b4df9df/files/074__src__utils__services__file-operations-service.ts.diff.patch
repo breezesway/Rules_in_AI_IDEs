@@ -1,0 +1,155 @@
+diff --git a/src/utils/services/file-operations-service.ts b/src/utils/services/file-operations-service.ts
+index 2ceefed..3e1e45c 100644
+--- a/src/utils/services/file-operations-service.ts
++++ b/src/utils/services/file-operations-service.ts
+@@ -240,51 +240,7 @@ export class FileOperationsService {
+     }
+   }
+ 
+-  /**
+-   * Cleans up old report files based on age
+-   * @param maxAgeInDays Maximum age in days before files are deleted (default: 7)
+-   * @returns FileOperationResult indicating success or failure
+-   */
+-  cleanupOldReports(maxAgeInDays: number = 7): FileOperationResult {
+-    try {
+-      const reportsDir = path.resolve(this.config.getReportingConfiguration().reportsDirectory);
+-
+-      if (!fs.existsSync(reportsDir)) {
+-        return {
+-          success: true,
+-          message: 'Reports directory does not exist, no cleanup needed',
+-        };
+-      }
+ 
+-      const files = fs.readdirSync(reportsDir);
+-      const cutoffDate = new Date(Date.now() - maxAgeInDays * 24 * 60 * 60 * 1000);
+-      let deletedCount = 0;
+-
+-      for (const file of files) {
+-        const filePath = path.join(reportsDir, file);
+-        const stats = fs.statSync(filePath);
+-
+-        if (stats.mtime < cutoffDate) {
+-          if (stats.isDirectory()) {
+-            fs.rmSync(filePath, { recursive: true, force: true });
+-          } else {
+-            fs.unlinkSync(filePath);
+-          }
+-          deletedCount++;
+-        }
+-      }
+-
+-      return {
+-        success: true,
+-        message: `Cleanup completed: ${deletedCount} old files/directories removed`,
+-      };
+-    } catch (error) {
+-      return {
+-        success: false,
+-        message: `Failed to cleanup old reports: ${error}`,
+-      };
+-    }
+-  }
+ 
+   /**
+    * Generates a unique filename with timestamp
+@@ -369,52 +325,7 @@ export class FileOperationsService {
+     }
+   }
+ 
+-  /**
+-   * Lists files in a directory with optional extension filtering
+-   * @param dirPath The directory path to list files from
+-   * @param extension Optional file extension to filter by (e.g., '.pdf')
+-   * @returns FileOperationResult with optional files property containing array of filenames
+-   */
+-  listFiles(dirPath: string, extension?: string): FileOperationResult & { files?: string[] } {
+-    try {
+-      // Security validation
+-      const pathValidation = this.securityService.validateFilePath(dirPath);
+-      if (!pathValidation.isValid) {
+-        return {
+-          success: false,
+-          message: `Security validation failed: ${pathValidation.error}`,
+-        };
+-      }
+ 
+-      const fullPath = path.resolve(dirPath);
+-
+-      if (!fs.existsSync(fullPath)) {
+-        return {
+-          success: false,
+-          message: 'Directory does not exist',
+-        };
+-      }
+-
+-      const files = fs.readdirSync(fullPath);
+-      let filteredFiles = files;
+-
+-      if (extension) {
+-        filteredFiles = files.filter(file => file.endsWith(extension));
+-      }
+-
+-      return {
+-        success: true,
+-        message: `Found ${filteredFiles.length} files in directory`,
+-        files: filteredFiles,
+-        filePath: dirPath,
+-      };
+-    } catch (error) {
+-      return {
+-        success: false,
+-        message: `Failed to list directory: ${error}`,
+-      };
+-    }
+-  }
+ 
+   /**
+    * Checks if a file exists
+@@ -453,45 +364,7 @@ export class FileOperationsService {
+    * @param filePath The file path to get statistics for
+    * @returns FileOperationResult with optional stats property
+    */
+-  getFileStats(filePath: string): FileOperationResult & { stats?: any } {
+-    try {
+-      // Security validation
+-      const pathValidation = this.securityService.validateFilePath(filePath);
+-      if (!pathValidation.isValid) {
+-        return {
+-          success: false,
+-          message: `Security validation failed: ${pathValidation.error}`,
+-        };
+-      }
+-
+-      const fullPath = path.resolve(filePath);
+-
+-      if (!fs.existsSync(fullPath)) {
+-        return {
+-          success: false,
+-          message: 'File does not exist',
+-        };
+-      }
+ 
+-      const stats = fs.statSync(fullPath);
+-      return {
+-        success: true,
+-        message: 'File statistics retrieved successfully',
+-        stats: {
+-          size: stats.size,
+-          ctime: stats.ctime,
+-          mtime: stats.mtime,
+-          isDirectory: stats.isDirectory(),
+-          isFile: stats.isFile(),
+-        },
+-      };
+-    } catch (error) {
+-      return {
+-        success: false,
+-        message: `Failed to get file statistics: ${error}`,
+-      };
+-    }
+-  }
+ 
+   /**
+    * Cleans up old files in a directory

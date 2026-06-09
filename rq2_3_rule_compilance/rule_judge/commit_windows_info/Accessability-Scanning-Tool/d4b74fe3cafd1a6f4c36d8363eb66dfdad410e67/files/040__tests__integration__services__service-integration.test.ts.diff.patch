@@ -1,0 +1,510 @@
+diff --git a/tests/integration/services/service-integration.test.ts b/tests/integration/services/service-integration.test.ts
+index cd5f48d..35b86c0 100644
+--- a/tests/integration/services/service-integration.test.ts
++++ b/tests/integration/services/service-integration.test.ts
+@@ -23,7 +23,13 @@ describe('Service Integration Tests', () => {
+         testFile = path.join(testDir, 'test-integration.txt');
+     });
+ 
+-    beforeEach(() => {
++    beforeEach(async () => {
++        // Set up test database environment
++        (global as any).testUtils.database.setupTestEnvironment();
++
++        // Clean up any existing test data before each test
++        await (global as any).testUtils.database.cleanupTestData();
++
+         // Clean up test directory
+         if (fs.existsSync(testDir)) {
+             fs.rmSync(testDir, { recursive: true, force: true });
+@@ -31,6 +37,14 @@ describe('Service Integration Tests', () => {
+         fs.mkdirSync(testDir, { recursive: true });
+     });
+ 
++    afterEach(async () => {
++        // Clean up test data after each test
++        await (global as any).testUtils.database.cleanupTestData();
++
++        // Verify cleanup was successful
++        await (global as any).testUtils.database.verifyCleanup();
++    });
++
+     afterAll(() => {
+         // Clean up test directory
+         if (fs.existsSync(testDir)) {
+@@ -38,271 +52,271 @@ describe('Service Integration Tests', () => {
+         }
+     });
+ 
+-    describe('ErrorHandler + Configuration Integration', () => {
+-        test('should handle configuration errors with proper error handling', async () => {
+-            // Test configuration access with error handling
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                const config = configService.getConfiguration();
+-                return config.axe.timeout;
+-            }, 'Configuration access test');
++    describe('Service Singleton Pattern', () => {
++        test('should return same instances for all services', () => {
++            const errorHandler1 = ErrorHandlerService.getInstance();
++            const errorHandler2 = ErrorHandlerService.getInstance();
++            expect(errorHandler1).toBe(errorHandler2);
++
++            const configService1 = ConfigurationService.getInstance();
++            const configService2 = ConfigurationService.getInstance();
++            expect(configService1).toBe(configService2);
+ 
+-            expect(result.success).toBe(true);
+-            expect(result.data).toBe(30000);
++            const fileService1 = FileOperationsService.getInstance();
++            const fileService2 = FileOperationsService.getInstance();
++            expect(fileService1).toBe(fileService2);
++
++            const securityService1 = SecurityValidationService.getInstance();
++            const securityService2 = SecurityValidationService.getInstance();
++            expect(securityService1).toBe(securityService2);
+         });
++    });
++
++    describe('Error Handler Service Integration', () => {
++        test('should handle errors consistently across services', () => {
++            const testError = new Error('Test error message');
+ 
+-        test('should handle configuration validation with error recovery', async () => {
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                // Access configuration that exists
+-                const config = configService.getConfiguration();
+-                return config.pa11y.standard;
+-            }, 'Configuration validation test');
++            const result1 = errorHandler.handleError(testError, 'Service 1 context');
++            const result2 = errorHandler.handleError(testError, 'Service 2 context');
+ 
+-            expect(result.success).toBe(true);
+-            expect(result.data).toBe('WCAG2AA');
++            expect(result1.success).toBe(false);
++            expect(result2.success).toBe(false);
++            expect(result1.message).toContain('Service 1 context');
++            expect(result2.message).toContain('Service 2 context');
+         });
+ 
+-        test('should handle configuration timeout scenarios', async () => {
+-            const result = await errorHandler.withTimeout(
+-                new Promise(resolve => setTimeout(() => resolve('delayed'), 100)),
+-                50,
+-                'Timeout test'
+-            );
++        test('should log errors with proper context', () => {
++            const testError = new Error('Integration test error');
++            const result = errorHandler.handleError(testError, 'Integration test context');
+ 
+             expect(result.success).toBe(false);
+-            expect(result.error?.message).toContain('timed out');
++            expect(result.message).toContain('Integration test context');
++            expect(result.data).toBeNull();
+         });
+     });
+ 
+-    describe('FileOperations + SecurityValidation Integration', () => {
+-        test('should create and validate files with security checks', async () => {
+-            const testContent = 'Integration test content';
+-
+-            // Create file with security validation
+-            const createResult = fileService.writeFile(testFile, testContent);
+-            expect(createResult.success).toBe(true);
++    describe('Configuration Service Integration', () => {
++        test('should persist configuration across service calls', () => {
++            const testKey = 'integration.test.key';
++            const testValue = 'integration-test-value';
+ 
+-            // Validate file exists and is secure
+-            const existsResult = fileService.fileExists(testFile);
+-            expect(existsResult.success).toBe(true);
+-            expect(existsResult.exists).toBe(true);
++            configService.set(testKey, testValue);
++            const retrievedValue = configService.get(testKey);
+ 
+-            // Read file with security validation
+-            const readResult = fileService.readFile(testFile);
+-            expect(readResult.success).toBe(true);
+-            expect(readResult.content).toBe(testContent);
++            expect(retrievedValue).toBe(testValue);
+         });
+ 
+-        test('should handle security validation failures gracefully', async () => {
+-            // Test with a path that contains directory traversal
+-            const dangerousPath = path.join(testDir, '..', '..', '..', 'dangerous-file.txt');
++        test('should handle configuration with default values', () => {
++            const nonExistentKey = 'non.existent.key';
++            const defaultValue = 'default-value';
+ 
+-            const result = fileService.writeFile(dangerousPath, 'test');
+-            // The security validation might not catch all cases, so just check the operation
+-            expect(result).toBeDefined();
+-            expect(typeof result.success).toBe('boolean');
++            const result = configService.get(nonExistentKey, defaultValue);
++            expect(result).toBe(defaultValue);
+         });
+ 
+-        test('should handle file operations with error recovery', async () => {
+-            // Create a file
+-            const createResult = fileService.writeFile(testFile, 'test content');
+-            expect(createResult.success).toBe(true);
+-
+-            // Move file with error handling
+-            const newPath = path.join(testDir, 'moved-file.txt');
+-            const moveResult = fileService.moveFile(testFile, newPath);
+-            expect(moveResult.success).toBe(true);
++        test('should handle nested configuration', () => {
++            const nestedKey = 'integration.nested.test';
++            const nestedValue = { key: 'value', number: 42 };
+ 
+-            // Verify original file doesn't exist
+-            const originalExists = fileService.fileExists(testFile);
+-            expect(originalExists.success).toBe(true);
+-            expect(originalExists.exists).toBe(false);
++            configService.set(nestedKey, nestedValue);
++            const retrievedValue = configService.get(nestedKey);
+ 
+-            // Verify new file exists
+-            const newExists = fileService.fileExists(newPath);
+-            expect(newExists.success).toBe(true);
+-            expect(newExists.exists).toBe(true);
++            expect(retrievedValue).toEqual(nestedValue);
+         });
+     });
+ 
+-    describe('Multi-Service Workflow Integration', () => {
+-        test('should handle complete file lifecycle with all services', async () => {
+-            const filename = 'workflow-test.txt';
+-            const filepath = path.join(testDir, filename);
+-            const content = 'Workflow integration test content';
++    describe('File Operations Service Integration', () => {
++        test('should create and read files consistently', async () => {
++            const testContent = 'Integration test content';
++            const testFilePath = path.join(testDir, 'integration-test.txt');
+ 
+-            // Step 1: Create file with configuration and error handling
+-            const createResult = await errorHandler.executeWithErrorHandling(async () => {
+-                return fileService.writeFile(filepath, content);
+-            }, 'File creation test');
++            // Create file
++            const createResult = await fileService.writeFile(testFilePath, testContent);
+             expect(createResult.success).toBe(true);
+ 
+-            // Step 2: Read file with validation
+-            const readResult = await errorHandler.executeWithErrorHandling(async () => {
+-                return fileService.readFile(filepath);
+-            }, 'File reading test');
++            // Read file
++            const readResult = await fileService.readFile(testFilePath);
+             expect(readResult.success).toBe(true);
+-            expect(readResult.data?.content).toBe(content);
+-
+-            // Step 3: Generate unique filename using configuration
+-            const uniqueResult = await errorHandler.executeWithErrorHandling(async () => {
+-                const config = configService.getConfiguration();
+-                const prefix = 'test';
+-                return fileService.generateUniqueFilename('.txt', prefix);
+-            }, 'Filename generation test');
+-            expect(uniqueResult.success).toBe(true);
+-            expect(uniqueResult.data).toContain('.txt');
+-
+-            // Step 4: Move file with security validation
+-            const newPath = path.join(testDir, 'moved-workflow.txt');
+-            const moveResult = await errorHandler.executeWithErrorHandling(async () => {
+-                return fileService.moveFile(filepath, newPath);
+-            }, 'File move test');
+-            expect(moveResult.success).toBe(true);
+-
+-            // Step 5: Clean up with error handling
+-            const cleanupResult = await errorHandler.executeWithErrorHandling(async () => {
+-                return fileService.deleteFile(newPath);
+-            }, 'File cleanup test');
+-            expect(cleanupResult.success).toBe(true);
++            expect(readResult.data).toBe(testContent);
+         });
+ 
+-        test('should handle service failures with proper error propagation', async () => {
+-            // Test scenario where file service fails but error handler catches it
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                return fileService.readFile('non-existent-file.txt');
+-            }, 'File read failure test');
++        test('should handle file operations with error handling', async () => {
++            const nonExistentFile = path.join(testDir, 'non-existent.txt');
+ 
+-            // The file service might handle this gracefully, so just check the result structure
+-            expect(result).toBeDefined();
+-            expect(typeof result.success).toBe('boolean');
++            const readResult = await fileService.readFile(nonExistentFile);
++            expect(readResult.success).toBe(false);
++            expect(readResult.message).toContain('File not found');
+         });
+ 
+-        test('should handle configuration changes affecting file operations', async () => {
+-            // Test configuration access for file operations
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                const config = configService.getConfiguration();
+-                const reportsDir = config.reporting.reportsDirectory;
+-                return fileService.writeFile(testFile, `test mode content - reports dir: ${reportsDir}`);
+-            }, 'Configuration integration test');
++        test('should create directories and list contents', async () => {
++            const subDir = path.join(testDir, 'subdirectory');
++            const testFile = path.join(subDir, 'test.txt');
++
++            // Create directory
++            const mkdirResult = await fileService.createDirectory(subDir);
++            expect(mkdirResult.success).toBe(true);
+ 
+-            expect(result.success).toBe(true);
++            // Create file in subdirectory
++            await fileService.writeFile(testFile, 'test content');
++
++            // List directory contents
++            const listResult = await fileService.listDirectory(subDir);
++            expect(listResult.success).toBe(true);
++            expect(listResult.data).toContain('test.txt');
+         });
+     });
+ 
+-    describe('Error Recovery and Resilience', () => {
+-        test('should recover from temporary file system issues', async () => {
+-            // Simulate temporary file system issue
+-            const originalWriteFile = fileService['writeFile'];
+-            let callCount = 0;
+-
+-            fileService['writeFile'] = jest.fn().mockImplementation((path: string, content: string) => {
+-                callCount++;
+-                if (callCount === 1) {
+-                    return { success: false, message: 'Temporary file system error' };
+-                }
+-                return originalWriteFile.call(fileService, path, content);
++    describe('Security Validation Service Integration', () => {
++        test('should validate URLs consistently', () => {
++            const validUrls = [
++                'https://example.com',
++                'http://localhost:3000',
++                'https://subdomain.example.co.uk/path?param=value'
++            ];
++
++            const invalidUrls = [
++                'invalid-url',
++                'ftp://example.com',
++                'javascript:alert("xss")'
++            ];
++
++            validUrls.forEach(url => {
++                const result = securityService.validateUrl(url);
++                expect(result.success).toBe(true);
+             });
+ 
+-            const result = await errorHandler.retryWithBackoff(
+-                async () => fileService.writeFile(testFile, 'retry test content'),
+-                3,
+-                'File write retry test',
+-                100
+-            );
++            invalidUrls.forEach(url => {
++                const result = securityService.validateUrl(url);
++                expect(result.success).toBe(false);
++            });
++        });
+ 
+-            expect(result.success).toBe(true);
+-            // The retry mechanism might not work as expected, so just check the result
+-            expect(result).toBeDefined();
+-            expect(typeof result.success).toBe('boolean');
++        test('should validate file paths securely', () => {
++            const validPaths = [
++                './test-file.txt',
++                '../relative/path/file.json',
++                '/absolute/path/file.pdf'
++            ];
++
++            const invalidPaths = [
++                '../../../etc/passwd',
++                'C:\\Windows\\System32\\config\\SAM',
++                '/etc/shadow'
++            ];
++
++            validPaths.forEach(filePath => {
++                const result = securityService.validateFilePath(filePath);
++                expect(result.success).toBe(true);
++            });
+ 
+-            // Restore original method
+-            fileService['writeFile'] = originalWriteFile;
++            invalidPaths.forEach(filePath => {
++                const result = securityService.validateFilePath(filePath);
++                expect(result.success).toBe(false);
++            });
+         });
+ 
+-        test('should handle configuration service failures gracefully', async () => {
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                // Try to access configuration that exists
+-                const config = configService.getConfiguration();
+-                return config.reporting.maxConcurrency;
+-            }, 'Configuration access test');
++        test('should sanitize user input', () => {
++            const maliciousInputs = [
++                '<script>alert("xss")</script>',
++                'javascript:alert("xss")',
++                'data:text/html,<script>alert("xss")</script>',
++                'onload="alert(\'xss\')"'
++            ];
+ 
+-            expect(result.success).toBe(true);
+-            expect(result.data).toBe(5);
++            maliciousInputs.forEach(input => {
++                const result = securityService.sanitizeInput(input);
++                expect(result.success).toBe(true);
++                expect(result.data).not.toContain('<script>');
++                expect(result.data).not.toContain('javascript:');
++                expect(result.data).not.toContain('onload=');
++            });
+         });
++    });
+ 
+-        test('should handle security validation with fallback', async () => {
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                // Test security validation with safe path
+-                const safePath = path.join(testDir, 'safe-file.txt');
+-                return fileService.writeFile(safePath, 'safe content');
+-            }, 'Security validation test');
++    describe('Cross-Service Communication', () => {
++        test('should handle errors across multiple services', async () => {
++            const testError = new Error('Cross-service error');
+ 
+-            expect(result.success).toBe(true);
++            // Simulate error in file service
++            const fileResult = await fileService.readFile('non-existent-file.txt');
++            expect(fileResult.success).toBe(false);
++
++            // Error should be handled by error handler service
++            const errorResult = errorHandler.handleError(fileResult.error || new Error('File read failed'), 'File service error');
++            expect(errorResult.success).toBe(false);
+         });
+-    });
+ 
+-    describe('Performance and Resource Management', () => {
+-        test('should handle multiple concurrent file operations', async () => {
+-            const operations = [];
+-            const fileCount = 5;
+-
+-            for (let i = 0; i < fileCount; i++) {
+-                const filepath = path.join(testDir, `concurrent-${i}.txt`);
+-                operations.push(
+-                    errorHandler.executeWithErrorHandling(async () =>
+-                        fileService.writeFile(filepath, `content ${i}`)
+-                        , `Concurrent file operation ${i}`)
+-                );
+-            }
++        test('should use configuration across services', async () => {
++            const testConfig = {
++                maxFileSize: 1024,
++                allowedExtensions: ['.txt', '.json'],
++                timeout: 5000
++            };
+ 
+-            const results = await Promise.all(operations);
++            // Set configuration
++            configService.set('file.operations', testConfig);
+ 
+-            results.forEach(result => {
+-                expect(result.success).toBe(true);
+-            });
++            // Use configuration in file service
++            const config = configService.get('file.operations', {});
++            expect(config.maxFileSize).toBe(1024);
++            expect(config.allowedExtensions).toContain('.txt');
++        });
++
++        test('should validate security across services', async () => {
++            const testUrl = 'https://example.com';
++            const testFilePath = './test-file.txt';
++
++            // Validate URL
++            const urlValidation = securityService.validateUrl(testUrl);
++            expect(urlValidation.success).toBe(true);
+ 
+-            // Verify all files were created
+-            for (let i = 0; i < fileCount; i++) {
+-                const filepath = path.join(testDir, `concurrent-${i}.txt`);
+-                const exists = fileService.fileExists(filepath);
+-                expect(exists.success).toBe(true);
+-                expect(exists.exists).toBe(true);
++            // Validate file path
++            const pathValidation = securityService.validateFilePath(testFilePath);
++            expect(pathValidation.success).toBe(true);
++
++            // Use validated data in file service
++            if (urlValidation.success && pathValidation.success) {
++                const fileResult = await fileService.writeFile(testFilePath, `URL: ${testUrl}`);
++                expect(fileResult.success).toBe(true);
+             }
+         });
++    });
+ 
+-        test('should handle large file operations with timeout', async () => {
+-            const largeContent = 'x'.repeat(1000000); // 1MB content
++    describe('Error Recovery and Resilience', () => {
++        test('should recover from file system errors', async () => {
++            const invalidPath = '/invalid/path/that/does/not/exist/file.txt';
+ 
+-            const result = await errorHandler.withTimeout(
+-                Promise.resolve(fileService.writeFile(testFile, largeContent)),
+-                5000, // 5 second timeout
+-                'Large file operation test'
+-            );
++            const result = await fileService.writeFile(invalidPath, 'test content');
++            expect(result.success).toBe(false);
+ 
+-            expect(result.success).toBe(true);
++            // Should still be able to write to valid path
++            const validPath = path.join(testDir, 'recovery-test.txt');
++            const recoveryResult = await fileService.writeFile(validPath, 'recovery content');
++            expect(recoveryResult.success).toBe(true);
+         });
+-    });
+ 
+-    describe('Configuration Persistence and Recovery', () => {
+-        test('should persist configuration changes across service instances', async () => {
+-            // Test that configuration is consistent across instances
+-            const config1 = configService.getConfiguration();
+-            const newConfigService = ConfigurationService.getInstance();
+-            const config2 = newConfigService.getConfiguration();
++        test('should handle configuration errors gracefully', () => {
++            const invalidKey = null;
++            const defaultValue = 'default';
+ 
+-            expect(config1.axe.timeout).toBe(config2.axe.timeout);
+-            expect(config1.pa11y.standard).toBe(config2.pa11y.standard);
++            const result = configService.get(invalidKey as any, defaultValue);
++            expect(result).toBe(defaultValue);
+         });
+ 
+-        test('should handle configuration validation with error recovery', async () => {
+-            const result = await errorHandler.executeWithErrorHandling(async () => {
+-                // Access valid configuration
+-                const config = configService.getConfiguration();
+-                return config.reporting.delayBetweenPages;
+-            }, 'Configuration validation test');
++        test('should maintain service state after errors', () => {
++            const testKey = 'error.recovery.test';
++            const testValue = 'recovery-value';
++
++            // Set value
++            configService.set(testKey, testValue);
++
++            // Simulate error
++            const errorResult = errorHandler.handleError(new Error('Test error'), 'Error recovery test');
++            expect(errorResult.success).toBe(false);
+ 
+-            expect(result.success).toBe(true);
+-            expect(result.data).toBe(500);
++            // Configuration should still be intact
++            const retrievedValue = configService.get(testKey);
++            expect(retrievedValue).toBe(testValue);
+         });
+     });
+ }); 
+\ No newline at end of file

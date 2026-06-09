@@ -1,0 +1,64 @@
+diff --git a/lib/src/services/ferry_client_service.dart b/lib/src/services/ferry_client_service.dart
+index 669b5ad..b921458 100644
+--- a/lib/src/services/ferry_client_service.dart
++++ b/lib/src/services/ferry_client_service.dart
+@@ -3,7 +3,8 @@ import 'package:gql_http_link/gql_http_link.dart';
+ import 'package:injectable/injectable.dart';
+ import 'token_storage.dart';
+ 
+-/// Service for configuring and providing Ferry GraphQL client
++/// Service for configuring and providing Ferry GraphQL client with GitHub's GraphQL endpoint
++/// Handles automatic authentication token injection and error handling for GraphQL operations
+ @injectable
+ class FerryClientService {
+   final ITokenStorage _tokenStorage;
+@@ -11,7 +12,7 @@ class FerryClientService {
+ 
+   FerryClientService(this._tokenStorage);
+ 
+-  /// Get or create Ferry client instance
++  /// Get or create Ferry client instance with authentication integration
+   Future<Client> getClient() async {
+     if (_client != null) return _client!;
+ 
+@@ -19,14 +20,16 @@ class FerryClientService {
+     return _client!;
+   }
+ 
+-  /// Create a new Ferry client with authentication
++  /// Create a new Ferry client with GitHub GraphQL endpoint and authentication link
+   Future<Client> _createClient() async {
+     final token = await _tokenStorage.getToken();
+ 
++    // Configure HTTP link with GitHub GraphQL endpoint and authentication headers
+     final httpLink = HttpLink(
+       'https://api.github.com/graphql',
+       defaultHeaders: {
+         'User-Agent': 'gh3-flutter-app',
++        'Accept': 'application/vnd.github.v4+json',
+         if (token != null) 'Authorization': 'Bearer $token',
+       },
+     );
+@@ -36,18 +39,19 @@ class FerryClientService {
+     return Client(link: httpLink, cache: cache);
+   }
+ 
+-  /// Update authentication token and recreate client
++  /// Update authentication token and recreate client for automatic header updates
++  /// Handles token refresh scenarios by forcing client recreation
+   Future<void> updateAuthToken(String? token) async {
+     _client = null; // Force recreation with new token
+     _client = await _createClient();
+   }
+ 
+-  /// Clear cache (useful for logout)
++  /// Clear cache (useful for logout scenarios)
+   void clearCache() {
+     _client?.cache.clear();
+   }
+ 
+-  /// Dispose resources
++  /// Dispose resources and clean up subscriptions
+   void dispose() {
+     _client?.dispose();
+     _client = null;

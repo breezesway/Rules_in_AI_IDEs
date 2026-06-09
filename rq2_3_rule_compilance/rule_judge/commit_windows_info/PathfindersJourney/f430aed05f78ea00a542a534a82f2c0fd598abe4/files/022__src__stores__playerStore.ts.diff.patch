@@ -1,0 +1,31 @@
+diff --git a/src/stores/playerStore.ts b/src/stores/playerStore.ts
+index afbc13e..46c8355 100644
+--- a/src/stores/playerStore.ts
++++ b/src/stores/playerStore.ts
+@@ -77,8 +77,10 @@ export const usePlayerStore = defineStore('player', {
+       
+       if (character) {
+         this.characterId = characterId;
+-        this.health = character.healthPoints;
+-        this.maxHealth = character.healthPoints;
++        // Use health or healthPoints property, with a fallback default value
++        const healthValue = character.health || character.healthPoints || 10;
++        this.health = healthValue;
++        this.maxHealth = healthValue;
+         this.resourceCapacity = character.resourceCapacity;
+         
+         // Add starting resources if any
+@@ -88,6 +90,13 @@ export const usePlayerStore = defineStore('player', {
+           });
+         }
+         
++        // Also check for startingItems (used in character model)
++        if (character.startingItems) {
++          character.startingItems.forEach(resourceId => {
++            this.addResource(resourceId);
++          });
++        }
++        
+         // Add starting companions if any
+         if (character.startingCompanion) {
+           this.addAnimalCompanion(character.startingCompanion);

@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# C4 Model Architecture for Promptyoo-1 (after coding)
+
+## Context Level
+
+At the context level, Promptyoo-1 is an AI prompt optimization web application that helps users improve their initial prompts. The system consists of:
+
+- **End Users**: Individuals who need to optimize their AI prompts without having to answer multiple questions.
+- **Promptyoo-1 System**: The web application that processes user inputs and delivers optimized prompts.
+- **DeepSeek API**: An external AI service that performs the actual prompt optimization based on the RABPOC model.
+
+The core interaction flow involves users submitting an original prompt to Promptyoo-1, which then forwards it to the DeepSeek API for optimization according to the RABPOC model, and finally returns the enhanced prompt with streaming response capability.
+
+## Containers Level
+
+The Promptyoo-1 system is divided into two main containers:
+
+1. **Frontend Container**:
+   - Built with React 18, Vite, TypeScript, and Tailwind CSS
+   - Provides the user interface for submitting prompts and viewing results
+   - Handles streaming responses with a responsive UI
+   - Communicates with the backend via RESTful API
+   - Manages local state with React hooks
+
+2. **Backend Container**:
+   - Built with Node.js, Express, and TypeScript
+   - Acts as a proxy between the frontend and DeepSeek API
+   - Implements RESTful API endpoints for prompt optimization
+   - Handles both standard and streaming responses
+   - Protects the DeepSeek API key from direct exposure
+
+The containers communicate via HTTP/JSON through defined API endpoints, with the backend serving as the secure intermediary to the external DeepSeek AI service.
+
+## Components Level
+
+### Frontend Components
+
+1. **Page Components**:
+   - `Index.tsx`: The main page component that orchestrates prompt optimization
+   - `NotFound.tsx`: Error page for non-existent routes
+
+2. **UI Components**:
+   - `PromptForm.tsx`: Captures the user's purpose and original prompt
+   - `OptimizedResult.tsx`: Displays the optimized prompt with streaming capability
+   - `Sidebar.tsx`: Provides navigation and contextual information
+   - `LoadingIndicator.tsx`: Shows loading state during API calls
+   - `ui/*`: Various UI framework components (buttons, forms, toasts, etc.)
+
+3. **Service Components**:
+   - `api.ts`: Handles communication with the backend
+     - `optimizePrompt()`: Standard API call
+     - `optimizePromptStream()`: Streaming API call with SSE handling
+
+4. **Routing Components**:
+   - React Router with routes defined in `App.tsx`
+
+5. **State Management**:
+   - Local component state using React hooks
+   - React Query for API state management
+
+### Backend Components
+
+1. **API Router**:
+   - `prompt.routes.ts`: Defines the RESTful API endpoints:
+     - `/api/prompt/optimize`: Standard optimization endpoint
+     - `/api/prompt/optimize/stream`: Streaming optimization endpoint
+
+2. **Controllers**:
+   - `PromptController`: Handles API requests and delegates to services
+     - `optimizePrompt()`: Standard optimization
+     - `streamOptimizePrompt()`: Streaming optimization
+
+3. **Services**:
+   - `DeepSeekService`: Interacts with the DeepSeek API
+     - Configures and manages the OpenAI client for DeepSeek API
+     - Handles both standard and streaming requests
+
+4. **Middleware**:
+   - Error handling middleware
+   - Security middleware (Helmet)
+   - CORS configuration
+   - Request logging (Pino)
+
+5. **Dependency Injection**:
+   - `container.ts`: Registers and manages service dependencies using TSyringe
+
+6. **Types**:
+   - `api.ts`: Defines TypeScript interfaces for request/response data
+
+The architecture follows a clear separation of concerns with dependency injection for testability. The frontend focuses on user experience with streaming responses, while the backend securely manages the DeepSeek API integration, aligning with the RABPOC model optimization requirements specified in the project requirements.

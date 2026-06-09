@@ -1,0 +1,69 @@
+diff --git a/backend/src/controllers/prompt.controller.ts b/backend/src/controllers/prompt.controller.ts
+index fb898af..d37a7bf 100644
+--- a/backend/src/controllers/prompt.controller.ts
++++ b/backend/src/controllers/prompt.controller.ts
+@@ -1,8 +1,22 @@
+ import { Request, Response } from 'express';
+-import deepseekService from '../services/deepseek.service';
++import deepseekServiceDefault from '../services/deepseek.service';
++import type { IDeepSeekService } from '../services/deepseek.service';
+ import { OptimizePromptRequest } from '../types/api';
++import { injectable, singleton, inject } from 'tsyringe';
++
++export interface IPromptController {
++  optimizePrompt(req: Request, res: Response): Promise<void>;
++  streamOptimizePrompt(req: Request, res: Response): Promise<void>;
++}
++
++@injectable()
++export class PromptController implements IPromptController {
++  private deepseekService: IDeepSeekService;
++
++  constructor(@inject("IDeepSeekService") deepseekService: IDeepSeekService) {
++    this.deepseekService = deepseekService;
++  }
+ 
+-export class PromptController {
+   /**
+    * Handle the request to optimize a prompt
+    */
+@@ -15,7 +29,7 @@ export class PromptController {
+         return;
+       }
+       
+-      const optimizedPrompt = await deepseekService.optimizePrompt(data);
++      const optimizedPrompt = await this.deepseekService.optimizePrompt(data);
+       
+       res.status(200).json({ optimizedPrompt });
+     } catch (error: any) {
+@@ -44,7 +58,7 @@ export class PromptController {
+       }
+       
+       console.log('Starting stream optimization for prompt');
+-      await deepseekService.optimizePromptStream(data, res);
++      await this.deepseekService.optimizePromptStream(data, res);
+       // Note: The response is handled within the service
+       
+     } catch (error: any) {
+@@ -64,4 +78,18 @@ export class PromptController {
+   }
+ }
+ 
+-export default new PromptController(); 
+\ No newline at end of file
++@singleton()
++export class PromptControllerSingleton extends PromptController {
++  constructor(@inject("IDeepSeekService") deepseekService: IDeepSeekService) {
++    super(deepseekService);
++  }
++}
++
++// Export a default instance for backward compatibility
++class DefaultPromptController extends PromptController {
++  constructor() {
++    super(deepseekServiceDefault);
++  }
++}
++
++export default new DefaultPromptController(); 
+\ No newline at end of file

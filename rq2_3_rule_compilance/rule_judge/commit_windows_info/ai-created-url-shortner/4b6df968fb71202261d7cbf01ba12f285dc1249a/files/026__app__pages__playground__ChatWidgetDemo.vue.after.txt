@@ -1,0 +1,152 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  timestamp: Date;
+  sender: "user" | "bot";
+  avatar?: string;
+}
+
+const allMessages = ref<ChatMessage[]>([]);
+
+const handleMessagesUpdate = (messages: ChatMessage[]) => {
+  allMessages.value = messages;
+};
+
+const handleMinimizeToggle = (minimized: boolean) => {
+  console.log("Chat widget minimized:", minimized);
+};
+</script>
+
+<template>
+  <div class="max-w-4xl mx-auto space-y-8">
+    <div>
+      <h1 class="text-3xl font-bold mb-4">Chat Widget Demo</h1>
+      <p class="text-muted-foreground mb-6">
+        A fully functional chat widget with local state management,
+        auto-responses, and a clean UI.
+      </p>
+      <Button
+        variant="outline"
+        @click.prevent.stop="openReadme('app/components/ChatWidget/README.md')"
+      >
+        <Icon name="lucide:file-text" class="w-4 h-4 mr-2" />
+        View README
+      </Button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Demo Widget -->
+      <div class="space-y-4">
+        <h2 class="text-xl font-semibold">Interactive Demo</h2>
+        <div class="flex justify-center p-8 bg-muted/20 rounded-lg">
+          <ChatWidget
+            title="Support Chat"
+            @messages-sent="handleMessagesUpdate"
+            @minimize-toggle="handleMinimizeToggle"
+          />
+        </div>
+        <p class="text-sm text-muted-foreground">
+          Try typing messages and see the bot respond! Click the header to
+          minimize/maximize.
+        </p>
+      </div>
+
+      <!-- Features List -->
+      <div class="space-y-4">
+        <h2 class="text-xl font-semibold">Features</h2>
+        <Card class="p-6">
+          <ul class="space-y-3 text-sm">
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Real-time message sending and receiving</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Auto-scroll to latest messages</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Minimize/maximize functionality</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Keyboard shortcuts (Enter to send)</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Timestamps for each message</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Responsive design with proper message styling</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Local state management (no server required)</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <Icon name="lucide:check" class="w-4 h-4 mt-0.5 text-green-600" />
+              <span>Auto-responses for demonstration</span>
+            </li>
+          </ul>
+        </Card>
+      </div>
+    </div>
+
+    <!-- Usage Examples -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold">Usage Examples</h2>
+
+      <Card class="p-6">
+        <h3 class="text-lg font-medium mb-3">Basic Usage</h3>
+        <pre
+          class="bg-muted p-4 rounded-lg text-sm overflow-x-auto"
+        ><code>&lt;template&gt;
+  &lt;ChatWidget /&gt;
+&lt;/template&gt;</code></pre>
+      </Card>
+
+      <Card class="p-6">
+        <h3 class="text-lg font-medium mb-3">With Custom Props</h3>
+        <pre
+          class="bg-muted p-4 rounded-lg text-sm overflow-x-auto"
+        ><code>&lt;template&gt;
+  &lt;ChatWidget 
+    title="Customer Support"
+    class="custom-chat-styles"
+    @messages-sent="handleMessages"
+    @minimize-toggle="handleMinimize"
+  /&gt;
+&lt;/template&gt;</code></pre>
+      </Card>
+
+      <Card class="p-6">
+        <h3 class="text-lg font-medium mb-3">Current Messages</h3>
+        <div class="bg-muted p-4 rounded-lg">
+          <p class="text-sm text-muted-foreground mb-2">
+            Total messages: {{ allMessages.length }}
+          </p>
+          <div
+            v-if="allMessages.length > 0"
+            class="space-y-2 max-h-40 overflow-y-auto"
+          >
+            <div
+              v-for="message in allMessages.slice(-5)"
+              :key="message.id"
+              class="text-xs p-2 bg-background rounded border"
+            >
+              <span class="font-medium">{{ message.sender }}:</span>
+              {{ message.content }}
+            </div>
+          </div>
+          <p v-else class="text-sm text-muted-foreground">
+            Send some messages to see them here!
+          </p>
+        </div>
+      </Card>
+    </div>
+  </div>
+</template>

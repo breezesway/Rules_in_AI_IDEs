@@ -1,0 +1,335 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- Python 3.12+ with notion-client, google-genai>=0.1.0, python-dotenv, pytest
++ Python 3.12+ with notion-client, google-genai>=0.1.0, python-dotenv, pytest, hypothesis
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files such as pyproject.toml, requirements.txt, Pipfile, setup.py, or environment definition files like .python-version.
+- Suggested Logic: Verify that 'hypothesis' is added to the project dependencies. Additionally, check that the Python version constraint is set to 3.12+ and that other specified packages (notion-client, google-genai>=0.1.0, python-dotenv, pytest) are present in the dependency manifest.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: Expand property-based tests for markdown conversion
+
+This commit expands the property-based testing for the markdown conversion logic to cover a wider range of inputs, including links, tables, and code blocks.
+
+The following changes were made:
+- Added `hypothesis` strategies for generating markdown links, tables, and code blocks.
+- Added property-based tests to verify that these markdown features are parsed correctly.
+- Refined existing strategies to avoid generating invalid inputs that were causing test failures.
+- Expanded the table test to validate the content of the parsed table, including the number of rows and columns, and the text within the cells.
+
+These tests will help to catch regressions and edge cases in the markdown parsing logic.
+- Changed Files List: 
+.gitignore	+3	-0	after_lines=50
+requirements.txt	+2	-1	after_lines=7
+tests/unit/test_property_based_markdown_converter.py	+166	-0	after_lines=166
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   └── markdown_converter.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_property_based_markdown_converter.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       └── test_video_processor.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index 1f3a382..71823f5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -42,6 +42,9 @@ Thumbs.db
+ # Chat logs
+ chat_logs/
+ 
++# Hypothesis
++.hypothesis/
++
+ # Batch files (example)
+ batch.txt
+ *.batch
+\ No newline at end of file
+
+--- FILE: requirements.txt ---
+diff --git a/requirements.txt b/requirements.txt
+index e438941..88ecc56 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -3,4 +3,5 @@ python-dotenv
+ pytest
+ google-genai>=0.1.0
+ google-api-python-client>=2.0.0
+-requests>=2.25.0
+\ No newline at end of file
++requests>=2.25.0
++hypothesis
+\ No newline at end of file
+
+--- FILE: tests/unit/test_property_based_markdown_converter.py ---
+diff --git a/tests/unit/test_property_based_markdown_converter.py b/tests/unit/test_property_based_markdown_converter.py
+new file mode 100644
+index 0000000..bcb376a
+--- /dev/null
++++ b/tests/unit/test_property_based_markdown_converter.py
+@@ -0,0 +1,166 @@
++"""
++Property-based tests for the markdown_converter module.
++"""
++import unittest
++from hypothesis import given, strategies as st, settings
++
++from src.youtube_notion.utils.markdown_converter import parse_rich_text, markdown_to_notion_blocks
++
++# Hypothesis profile for faster feedback
++settings.register_profile("ci", max_examples=1000)
++settings.load_profile("ci")
++
++# A strategy for generating text that does not contain markdown control characters
++plain_text = st.text(st.characters(exclude_characters='*~`[]()|\n\r\x0c\x0b\t'), min_size=1)
++
++# A strategy for generating markdown-like text with bold, italic, and strikethrough.
++# This is a recursive strategy that builds up more complex strings from simpler ones.
++markdown_text = st.recursive(
++    plain_text,
++    lambda children: st.one_of(
++        children,
++        st.builds(lambda s: f"**{s}**", children),
++        st.builds(lambda s: f"*{s}*", children),
++        st.builds(lambda s: f"~~{s}~~", children),
++    )
++)
++
++# Strategy for generating valid URLs
++url_strategy = st.builds(
++    lambda domain, path: f"https://{domain}/{path}",
++    st.text(st.characters(min_codepoint=97, max_codepoint=122), min_size=3),
++    st.text(st.characters(min_codepoint=97, max_codepoint=122), min_size=3)
++)
++
++# Strategy for generating markdown links
++link_strategy = st.builds(
++    lambda text, url: f"[{text}]({url})",
++    plain_text,
++    url_strategy
++)
++
++# Strategy for generating code blocks
++code_block_strategy = st.builds(
++    lambda code: f"```\n{code}\n```",
++    st.text(st.characters(exclude_characters='`'))
++)
++
++# Strategy for generating table rows
++@st.composite
++def table_strategy(draw):
++    num_cols = draw(st.integers(min_value=1, max_value=5))
++    header_cells = draw(st.lists(plain_text, min_size=num_cols, max_size=num_cols))
++    header = f"| {' | '.join(header_cells)} |"
++    separator = f"|{'---|' * num_cols}"
++    rows = draw(st.lists(
++        st.lists(plain_text, min_size=num_cols, max_size=num_cols).map(
++            lambda row: f"| {' | '.join(row)} |"
++        ),
++        min_size=1,
++        max_size=4
++    ))
++    return "\n".join([header, separator] + rows)
++
++
++class TestParseRichTextPropertyBased(unittest.TestCase):
++
++    @given(st.text())
++    def test_does_not_crash(self, text):
++        """
++        Test that parse_rich_text does not crash on any unicode text input.
++        """
++        try:
++            parse_rich_text(text)
++        except Exception as e:
++            self.fail(f"parse_rich_text crashed with exception {e} on input: {text!r}")
++
++    @given(st.text())
++    def test_output_is_list_of_dicts(self, text):
++        """
++        Test that the output is always a list of dictionaries.
++        """
++        result = parse_rich_text(text)
++        self.assertIsInstance(result, list)
++        for item in result:
++            self.assertIsInstance(item, dict)
++            self.assertIn('type', item)
++            self.assertEqual(item['type'], 'text')
++            self.assertIn('text', item)
++            self.assertIn('content', item['text'])
++
++    @given(plain_text)
++    def test_plain_text_is_preserved(self, text):
++        """
++        Test that plain text (without any markdown characters) is preserved.
++        """
++        result = parse_rich_text(text)
++        if not text:
++            self.assertEqual(result, [])
++        else:
++            self.assertEqual(len(result), 1)
++            self.assertEqual(result[0]['text']['content'], text)
++            self.assertNotIn('annotations', result[0])
++            self.assertNotIn('link', result[0]['text'])
++
++    @given(markdown_text)
++    def test_markdown_structure_is_plausible(self, text):
++        """
++        Test that the parsed markdown structure is plausible.
++        This test checks that the total length of the content in the parsed
++        structure is consistent with the original text, and that annotations
++        are applied correctly.
++        """
++        result = parse_rich_text(text)
++
++        reconstructed_length = 0
++        for item in result:
++            reconstructed_length += len(item['text']['content'])
++            # Check that annotations are boolean if they exist
++            if 'annotations' in item:
++                for key in ['bold', 'italic', 'strikethrough', 'code']:
++                    if key in item['annotations']:
++                        self.assertIsInstance(item['annotations'][key], bool)
++
++        # The length of the reconstructed text should be less than or equal to the original text,
++        # because the markdown characters are removed.
++        self.assertLessEqual(reconstructed_length, len(text))
++
++    @given(link_strategy)
++    def test_link_is_parsed_correctly(self, text):
++        """Test that a markdown link is parsed into a link component."""
++        result = parse_rich_text(text)
++        self.assertEqual(len(result), 1)
++        self.assertIn('link', result[0]['text'])
++        self.assertIn('url', result[0]['text']['link'])
++
++    @given(code_block_strategy)
++    def test_code_block_is_parsed_correctly(self, text):
++        """Test that a code block is parsed into a code block component."""
++        result = markdown_to_notion_blocks(text)
++        self.assertEqual(len(result), 1)
++        self.assertEqual(result[0]['type'], 'code')
++
++    @given(table_strategy().filter(lambda x: all(c.strip() for c in x.split('\n')[0].split('|')[1:-1])).filter(lambda x: all(c.strip() for row in x.split('\n')[2:] for c in row.split('|')[1:-1])))
++    def test_table_is_parsed_correctly(self, text):
++        """Test that a markdown table is parsed into a table component."""
++        result = markdown_to_notion_blocks(text)
++        self.assertEqual(len(result), 1)
++        self.assertEqual(result[0]['type'], 'table')
++
++        table_block = result[0]['table']
++
++        # Validate the table structure
++        rows = text.split('\n')
++        header_cells = [h.strip() for h in rows[0].split('|')[1:-1]]
++
++        self.assertEqual(table_block['table_width'], len(header_cells))
++        self.assertEqual(len(table_block['children']), len(rows) - 1)
++
++        for i, row in enumerate(table_block['children']):
++            self.assertEqual(len(row['table_row']['cells']), len(header_cells))
++            for j, cell in enumerate(row['table_row']['cells']):
++                original_text = rows[i if i == 0 else i + 1].split('|')[1:-1][j].strip()
++                self.assertEqual(cell[0]['text']['content'], original_text)
++
++if __name__ == '__main__':
++    unittest.main()
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

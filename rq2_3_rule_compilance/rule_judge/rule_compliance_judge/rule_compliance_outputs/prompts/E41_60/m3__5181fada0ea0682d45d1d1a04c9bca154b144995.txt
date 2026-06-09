@@ -1,0 +1,523 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Frontend: Jest + React Testing Library
++ - Frontend: Vitest + React Testing Library
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json, package-lock.json, yarn.lock), Vitest configuration files (vitest.config.ts, vitest.config.js), and frontend test source code files (*.test.js, *.test.tsx, etc.).
+- Suggested Logic: 1. Check 'package.json' to ensure 'vitest' is present in devDependencies and 'jest' is removed or deprecated.
+2. Verify the existence of a 'vitest.config.ts' or 'vitest.config.js' file in the root or frontend directory.
+3. Check the 'scripts' section of 'package.json' to ensure the test command triggers 'vitest' instead of 'jest'.
+4. Scan test files for Vitest-specific imports (e.g., import { expect, it } from 'vitest') or the absence of Jest-specific globals if globals are disabled.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Add integrated development setup with frontend and worker
+- Changed Files List: 
+DEVELOPMENT.md	+184	-0	after_lines=184
+README.md	+39	-6	after_lines=179
+package.json	+29	-0	after_lines=29
+setup.sh	+24	-0	after_lines=24
+worker/.dev.vars.example	+4	-0	after_lines=4
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── file-upload-functionality
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── DEVELOPMENT.md
+├── LICENSE
+├── README.md
+├── commit-message.txt
+├── frontend
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── AuthForm.test.tsx
+│   │   │   ├── AuthForm.tsx
+│   │   │   ├── Breadcrumb.test.tsx
+│   │   │   ├── Breadcrumb.tsx
+│   │   │   ├── ErrorBoundary.test.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── FileExplorer.test.tsx
+│   │   │   ├── FileExplorer.tsx
+│   │   │   ├── FileList.test.tsx
+│   │   │   ├── FileList.tsx
+│   │   │   ├── Layout.tsx
+│   │   │   ├── ProtectedRoute.test.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── Toolbar.test.tsx
+│   │   │   ├── Toolbar.tsx
+│   │   │   ├── UploadDialog.test.tsx
+│   │   │   ├── UploadDialog.tsx
+│   │   │   ├── UploadProgressItem.test.tsx
+│   │   │   ├── UploadProgressItem.tsx
+│   │   │   ├── UploadZone.test.tsx
+│   │   │   └── UploadZone.tsx
+│   │   ├── contexts
+│   │   │   ├── AuthContext.test.tsx
+│   │   │   ├── AuthContext.tsx
+│   │   │   └── auth.ts
+│   │   ├── hooks
+│   │   │   └── useAuth.ts
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── providers
+│   │   │   └── QueryProvider.tsx
+│   │   ├── services
+│   │   │   ├── analytics.test.ts
+│   │   │   ├── analytics.ts
+│   │   │   └── api.ts
+│   │   ├── test
+│   │   │   └── setup.ts
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   ├── utils
+│   │   │   ├── __mocks__
+│   │   │   │   └── performance-monitor.ts
+│   │   │   ├── error-handler.ts
+│   │   │   ├── performance-monitor.test.ts
+│   │   │   └── performance-monitor.ts
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts
+│   └── vitest.config.ts
+├── package-lock.json
+├── package.json
+├── setup.sh
+└── worker
+    ├── .dev.vars.example
+    ├── .env.example
+    ├── SETUP.md
+    ├── TESTING.md
+    ├── hello.txt
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── handlers
+    │   │   ├── analytics.ts
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── index.ts
+    │   ├── integration.test.ts
+    │   ├── middleware
+    │   │   ├── auth.test.ts
+    │   │   ├── auth.ts
+    │   │   └── error-handler.ts
+    │   ├── services
+    │   │   ├── auth.test.ts
+    │   │   ├── auth.ts
+    │   │   ├── r2.test.ts
+    │   │   └── r2.ts
+    │   ├── types
+    │   │   └── index.ts
+    │   └── utils
+    │       ├── error-handler.ts
+    │       ├── index.ts
+    │       └── logger.ts
+    ├── tsconfig.json
+    ├── vitest.config.ts
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: DEVELOPMENT.md ---
+diff --git a/DEVELOPMENT.md b/DEVELOPMENT.md
+new file mode 100644
+index 0000000..828d37e
+--- /dev/null
++++ b/DEVELOPMENT.md
+@@ -0,0 +1,184 @@
++# Development Guide
++
++This document provides detailed instructions for setting up and working with the R2 File Explorer development environment.
++
++## Integrated Development Environment
++
++The R2 File Explorer uses an integrated development approach where the frontend is built and then served through the Cloudflare Worker. This matches the production environment and ensures that what you see during development is what users will see in production.
++
++### Initial Setup
++
++1. **Clone the repository**:
++   ```bash
++   git clone https://github.com/yourusername/r2-file-explorer.git
++   cd r2-file-explorer
++   ```
++
++2. **Run the setup script**:
++   ```bash
++   ./setup.sh
++   ```
++   This will install all dependencies for the root project, frontend, and worker.
++
++   Alternatively, you can install dependencies manually:
++   ```bash
++   # Install root dependencies
++   npm install
++   
++   # Install frontend dependencies
++   cd frontend && npm install && cd ..
++   
++   # Install worker dependencies
++   cd worker && npm install && cd ..
++   ```
++
++3. **Configure environment variables**:
++   ```bash
++   # Create a .dev.vars file in the worker directory
++   cp worker/.dev.vars.example worker/.dev.vars
++   # Edit the file to add your JWT secret
++   ```
++
++### Development Workflow
++
++1. **Start the integrated development environment**:
++   ```bash
++   npm run dev
++   ```
++   This will:
++   - Build the frontend
++   - Start the worker with the frontend assets
++   - Serve the application at `http://localhost:8787`
++
++2. **Make changes to the frontend**:
++   When you make changes to the frontend code, you'll need to rebuild it:
++   ```bash
++   npm run build:frontend
++   ```
++   Then refresh your browser to see the changes.
++
++3. **Make changes to the worker**:
++   When you make changes to the worker code, the development server will automatically reload.
++
++### Testing
++
++1. **Run all tests**:
++   ```bash
++   npm test
++   ```
++
++2. **Run frontend tests only**:
++   ```bash
++   npm run test:frontend
++   ```
++
++3. **Run worker tests only**:
++   ```bash
++   npm run test:worker
++   ```
++
++## Advanced Development Options
++
++### Watching Frontend Changes
++
++For a more streamlined development experience, you can use a file watcher to automatically rebuild the frontend when files change:
++
++1. **Install nodemon globally**:
++   ```bash
++   npm install -g nodemon
++   ```
++
++2. **Create a watch script**:
++   ```bash
++   # In a separate terminal
++   nodemon --watch frontend/src --ext js,jsx,ts,tsx,css --exec "npm run build:frontend"
++   ```
++
++3. **Start the worker in another terminal**:
++   ```bash
++   npm run dev:worker
++   ```
++
++### Using Separate Development Servers
++
++If you prefer to run the frontend and worker separately:
++
++1. **Start the frontend development server**:
++   ```bash
++   cd frontend
++   npm run dev
++   ```
++   The frontend will be available at `http://localhost:5173`
++
++2. **Start the worker development server**:
++   ```bash
++   cd worker
++   npm run dev
++   ```
++   The worker will be available at `http://localhost:8787`
++
++3. **Configure CORS in the worker** to allow requests from the frontend development server:
++   
++   In your worker's `index.ts`, add CORS headers:
++   ```typescript
++   app.use('*', async (c, next) => {
++     // Allow requests from the frontend development server
++     c.header('Access-Control-Allow-Origin', 'http://localhost:5173');
++     c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
++     c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
++     
++     // Handle preflight requests
++     if (c.req.method === 'OPTIONS') {
++       return c.text('', 204);
++     }
++     
++     await next();
++   });
++   ```
++
++4. **Configure the frontend** to use the worker API:
++   
++   In your frontend code, set the API URL to the worker's development server:
++   ```typescript
++   // In frontend/src/services/api.ts or similar
++   const API_BASE_URL = 'http://localhost:8787';
++   ```
++
++## Troubleshooting
++
++### Common Issues
++
++1. **"Cannot find module" errors**:
++   ```bash
++   # Reinstall dependencies
++   npm run clean
++   ./setup.sh
++   ```
++
++2. **Worker fails to start**:
++   ```bash
++   # Check if another process is using port 8787
++   lsof -i :8787
++   # Kill the process if needed
++   kill -9 <PID>
++   ```
++
++3. **Frontend build fails**:
++   ```bash
++   # Check for TypeScript errors
++   cd frontend
++   npm run type-check
++   ```
++
++4. **Authentication issues**:
++   ```bash
++   # Make sure JWT_SECRET is set in worker/.dev.vars
++   echo "JWT_SECRET=your_secret_here" > worker/.dev.vars
++   ```
++
++### Getting Help
++
++If you encounter issues not covered here, please:
++1. Check the existing issues on GitHub
++2. Create a new issue with detailed information about the problem
++3. Include steps to reproduce, error messages, and your environment details
+\ No newline at end of file
+
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 6b7d755..ddc0d29 100644
+--- a/README.md
++++ b/README.md
+@@ -63,7 +63,28 @@ r2-file-explorer/
+ - Wrangler CLI (`npm install -g wrangler`)
+ - Cloudflare account with R2 and Workers enabled
+ 
+-### Frontend Setup
++### Integrated Development Setup (Recommended)
++
++This setup builds the frontend and serves it through the worker, which matches the production environment:
++
++```bash
++# Install dependencies for both frontend and worker
++cd frontend && npm install && cd ../worker && npm install && cd ..
++
++# Start the integrated development environment
++npm run dev
++```
++
++This will:
++1. Build the frontend
++2. Start the worker with the frontend assets
++3. Serve the application at `http://localhost:8787`
++
++### Separate Development Setup (Alternative)
++
++If you prefer to run the frontend and worker separately:
++
++#### Frontend Setup
+ 
+ ```bash
+ cd frontend
+@@ -73,10 +94,11 @@ npm run dev
+ 
+ The frontend will be available at `http://localhost:5173`
+ 
+-### Worker Setup
++#### Worker Setup
+ 
+ ```bash
+ cd worker
++npm install
+ wrangler dev
+ ```
+ 
+@@ -90,21 +112,32 @@ The Worker will be available at `http://localhost:8787`
+ 
+ ## Development Commands
+ 
++### Root Project
++```bash
++npm run dev                    # Build frontend and start worker with frontend assets
++npm run build:frontend         # Build frontend only
++npm run dev:worker             # Start worker with frontend assets
++npm run test                   # Run all tests (frontend and worker)
++```
++
+ ### Frontend
+ ```bash
+-npm run dev                    # Start development server
++cd frontend
++npm run dev                    # Start standalone frontend development server
+ npm run build                  # Build for production
+ npm run preview                # Preview production build
+ npm run lint                   # Run ESLint
++npm test                       # Run frontend tests
+ ```
+ 
+ ### Worker
+ ```bash
++cd worker
+ npm install                    # Install dependencies
+-npm run dev                    # Start local development
++npm run dev                    # Start standalone worker development server
+ npm run type-check             # Check TypeScript types
+-npm test                       # Run tests
+-wrangler publish               # Deploy to production
++npm test                       # Run worker tests
++wrangler deploy                # Deploy to production
+ ```
+ 
+ ## Deployment
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..da78acc
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,29 @@
++{
++  "name": "r2-file-explorer",
++  "version": "1.0.0",
++  "description": "R2 File Explorer with Cloudflare Workers",
++  "scripts": {
++    "build:frontend": "cd frontend && npm run build",
++    "dev:worker": "cd worker && wrangler dev --assets ../frontend/dist",
++    "dev": "npm run build:frontend && npm run dev:worker",
++    "test": "npm run test:frontend && npm run test:worker",
++    "test:frontend": "cd frontend && npm test",
++    "test:worker": "cd worker && npm test"
++  },
++  "repository": {
++    "type": "git",
++    "url": "git+https://github.com/yourusername/r2-file-explorer.git"
++  },
++  "keywords": [
++    "cloudflare",
++    "workers",
++    "r2",
++    "file-explorer"
++  ],
++  "author": "",
++  "license": "MIT",
++  "bugs": {
++    "url": "https://github.com/yourusername/r2-file-explorer/issues"
++  },
++  "homepage": "https://github.com/yourusername/r2-file-explorer#readme"
++}
+\ No newline at end of file
+
+--- FILE: setup.sh ---
+diff --git a/setup.sh b/setup.sh
+new file mode 100755
+index 0000000..ded0a50
+--- /dev/null
++++ b/setup.sh
+@@ -0,0 +1,24 @@
++#!/bin/bash
++
++# Exit on error
++set -e
++
++echo "Setting up R2 File Explorer development environment..."
++
++# Install root dependencies
++echo "Installing root dependencies..."
++npm install
++
++# Install frontend dependencies
++echo "Installing frontend dependencies..."
++cd frontend
++npm install
++cd ..
++
++# Install worker dependencies
++echo "Installing worker dependencies..."
++cd worker
++npm install
++cd ..
++
++echo "Setup complete! You can now run 'npm run dev' to start the development environment."
+\ No newline at end of file
+
+--- FILE: worker/.dev.vars.example ---
+diff --git a/worker/.dev.vars.example b/worker/.dev.vars.example
+new file mode 100644
+index 0000000..c5db67c
+--- /dev/null
++++ b/worker/.dev.vars.example
+@@ -0,0 +1,4 @@
++JWT_SECRET=your_development_jwt_secret_replace_this_with_a_secure_random_string
++# Account ID: your_account_id
++# R2 Access Key: your_access_key
++# R2 Secret: your_secret_key
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

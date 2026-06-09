@@ -1,0 +1,44 @@
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+index 346017a..cca36f0 100644
+--- a/game/tictactoe.go
++++ b/game/tictactoe.go
+@@ -5,25 +5,32 @@ import (
+ )
+ 
+ type Game struct {
+-	board [9]string
+-	text  string
++	board   [9]string
++	text    string
++	xIsNext bool
+ }
+ 
+ func (g *Game) MakeMove(position int) error {
+-	if position < 0 || position > 8 {
++	if position < 0 || position >= len(g.board) {
+ 		return fmt.Errorf("invalid position")
+ 	}
+-	if g.Board()[position] != "" {
++	if g.board[position] != "" {
+ 		return fmt.Errorf("cell already occupied")
+ 	}
+-	g.board[position] = "X"
++	if g.xIsNext {
++		g.board[position] = "X"
++	} else {
++		g.board[position] = "O"
++	}
++	g.xIsNext = !g.xIsNext // Switch turns
+ 	return nil
+ }
+ 
+ func NewGame() *Game {
+ 	return &Game{
+-		board: [9]string{"", "", "", "", "", "", "", "", ""},
+-		text:  "hello",
++		board:   [9]string{"", "", "", "", "", "", "", "", ""},
++		text:    "hello",
++		xIsNext: true, // X plays first
+ 	}
+ }
+ 

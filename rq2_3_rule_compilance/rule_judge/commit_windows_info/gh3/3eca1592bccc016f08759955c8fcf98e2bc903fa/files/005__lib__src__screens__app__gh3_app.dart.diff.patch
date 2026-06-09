@@ -1,0 +1,42 @@
+diff --git a/lib/src/screens/app/gh3_app.dart b/lib/src/screens/app/gh3_app.dart
+index bf4e220..a2d1539 100644
+--- a/lib/src/screens/app/gh3_app.dart
++++ b/lib/src/screens/app/gh3_app.dart
+@@ -9,6 +9,7 @@ import 'package:gh3/src/screens/login_screen/login_screen.dart';
+ import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
+ import 'package:gh3/src/screens/login_screen/login_route.dart';
+ import 'package:gh3/src/screens/user_details/user_details_screen.dart';
++import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
+ import 'package:gh3/src/services/auth_service.dart';
+ import 'package:gh3/src/services/github_auth_client.dart';
+ import 'package:go_router/go_router.dart';
+@@ -18,6 +19,7 @@ class Gh3App extends StatelessWidget {
+   final AuthService authService;
+   final GithubAuthClient githubAuthClient;
+   final HomeViewModel homeViewModel;
++  final UserDetailsViewModelFactory userDetailsViewModelFactory;
+ 
+   const Gh3App({
+     super.key,
+@@ -25,6 +27,7 @@ class Gh3App extends StatelessWidget {
+     required this.authService,
+     required this.githubAuthClient,
+     required this.homeViewModel,
++    required this.userDetailsViewModelFactory,
+   });
+ 
+   @override
+@@ -63,8 +66,11 @@ class Gh3App extends StatelessWidget {
+         ),
+         GoRoute(
+           path: '/:login',
+-          builder: (context, state) =>
+-              UserDetailsScreen(login: state.pathParameters['login']!),
++          builder: (context, state) => UserDetailsScreen(
++            viewModel: userDetailsViewModelFactory.create(
++              state.pathParameters['login']!,
++            ),
++          ),
+         ),
+       ],
+       redirect: (context, state) {

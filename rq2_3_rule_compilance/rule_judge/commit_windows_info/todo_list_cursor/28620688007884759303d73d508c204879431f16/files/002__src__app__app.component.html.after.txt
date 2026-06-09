@@ -1,0 +1,94 @@
+<div class="app-container">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-icon">
+        <div class="icon-circle">
+          <span class="icon">📋</span>
+        </div>
+      </div>
+      <div class="brand-content">
+        <h1 class="brand-title">{{ title }}</h1>
+        <p class="brand-subtitle">Stay organized, stay productive</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (!showForm()) {
+        <button 
+          class="btn btn-primary add-task-btn" 
+          (click)="showTaskForm()"
+          type="button">
+          <span class="btn-icon">+</span>
+          <span class="btn-text">Add Task</span>
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Task Creation Form -->
+  @if (showForm()) {
+    <div class="task-form-container">
+      <form 
+        class="task-form" 
+        [formGroup]="taskForm" 
+        (ngSubmit)="createTask()"
+        novalidate>
+        
+        <h2>Create New Task</h2>
+        
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input 
+            id="title"
+            type="text" 
+            formControlName="title" 
+            placeholder="Enter task title..."
+            [class.error]="getErrorMessage('title')"
+            maxlength="128">
+          @if (getErrorMessage('title')) {
+            <div class="error-message">{{ getErrorMessage('title') }}</div>
+          }
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description"
+            formControlName="description" 
+            placeholder="Enter task description..."
+            rows="3"
+            [class.error]="getErrorMessage('description')"
+            maxlength="256"></textarea>
+          @if (getErrorMessage('description')) {
+            <div class="error-message">{{ getErrorMessage('description') }}</div>
+          }
+        </div>
+        
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="hideTaskForm()">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="!taskForm.valid">
+            Create Task
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Kanban Board -->
+  <main class="kanban-container">
+    <app-kanban-board />
+  </main>
+</div>
+
+<!-- Toast Notifications -->
+<app-toast />
+
+<router-outlet />

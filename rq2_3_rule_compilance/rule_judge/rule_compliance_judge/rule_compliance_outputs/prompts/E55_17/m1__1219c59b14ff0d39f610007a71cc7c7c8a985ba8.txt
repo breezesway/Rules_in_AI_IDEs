@@ -1,0 +1,1760 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: feat: animation sequencer
+- Changed Files List: 
+public/changelog.md	+17	-0	after_lines=147
+src/components/ActionPanel.vue	+2	-0	after_lines=110
+src/components/AnimationOverlay.vue	+2	-2	after_lines=64
+src/components/BattleScreen.vue	+4	-4	after_lines=108
+src/components/SkillsHand.vue	+20	-4	after_lines=388
+src/data/animationDispatcher.js	+0	-463	after_lines=0
+src/data/animationInstructionHelpers.js	+30	-12	after_lines=467
+src/data/battle.js	+22	-13	after_lines=427
+src/data/battleUtils.js	+16	-7	after_lines=218
+src/data/player.js	+2	-1	after_lines=175
+src/data/skills/fireAssist.js	+0	-4	after_lines=572
+src/game.js	+4	-4	after_lines=110
+src/utils/animationOrchestrator.js	+0	-420	after_lines=0
+src/utils/cardAnimationOrchestrator.js	+65	-2	after_lines=482
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationInstructionHelpers.js
+│   │   ├── animationSequencer.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: public/changelog.md ---
+diff --git a/public/changelog.md b/public/changelog.md
+index 19527be..9ed909d 100644
+--- a/public/changelog.md
++++ b/public/changelog.md
+@@ -1,3 +1,20 @@
++## 2025.10.1 [Alpha 0.5.0]
++- 签名：Hineven
++
++### 新增
++- 动画引擎重构
++- 部分卡牌和技能
++- 部分后端重构，修改器机制引入
++
++### 改进
++- 修复一些问题
++
++### 已知问题
++- 重新开始游戏时状态异常
++- 闪避动画消失
++- 结束回合按钮点击后锁定操作界面动画逻辑存在问题
++- 目前动画模型存在问题，需要继续改进
++
+ ## 2025.9.29 [Alpha 0.4.5 hotfix]
+ - 签名：Hineven
+
+--- FILE: src/components/ActionPanel.vue ---
+diff --git a/src/components/ActionPanel.vue b/src/components/ActionPanel.vue
+index 8cb9f3c..e0b8fb8 100644
+--- a/src/components/ActionPanel.vue
++++ b/src/components/ActionPanel.vue
+@@ -2,8 +2,10 @@
+   <div class="action-panel" :class="{ 'disabled': !isPlayerTurn || isControlDisabled }">
+     <SkillsHand
+       :player="player"
++      :skills="player?.frontierSkills || []"
+       :is-control-disabled="isControlDisabled"
+       :is-player-turn="isPlayerTurn"
++      :instant-appear="false"
+     />
+ 
+     <!-- 使用独立的 DeckIcon 组件作为牌库图标与锚点 -->
+
+--- FILE: src/components/AnimationOverlay.vue ---
+diff --git a/src/components/AnimationOverlay.vue b/src/components/AnimationOverlay.vue
+index 87d4c33..1ca8346 100644
+--- a/src/components/AnimationOverlay.vue
++++ b/src/components/AnimationOverlay.vue
+@@ -37,11 +37,11 @@ export default {
+   width: 0;
+   height: 0;
+ }
+-/* 中心舞台：屏幕正中 */
++/* 中心舞台：屏幕正中（略上移以对齐 center-cards 展示区） */
+ .center-anchor {
+   left: 50%;
+   top: 50%;
+-  transform: translate(-50%, -50%);
++  transform: translate(-50%, -40%);
+ }
+ /* 牌库锚点：屏幕右下，适当留边距 */
+ .deck-anchor {
+
+--- FILE: src/components/BattleScreen.vue ---
+diff --git a/src/components/BattleScreen.vue b/src/components/BattleScreen.vue
+index aaaad5b..0ec3b57 100644
+--- a/src/components/BattleScreen.vue
++++ b/src/components/BattleScreen.vue
+@@ -23,7 +23,7 @@
+       :logs="logs"
+       :enemy="enemy"
+     />
+-    
++
+     <!-- 操作面板 -->
+     <ActionPanel
+       :player="player"
+@@ -46,7 +46,7 @@ export default {
+     BattleLogPanel,
+     EnemyStatusPanel,
+     PlayerStatusPanel,
+-    ActionPanel
++    ActionPanel,
+   },
+   props: {
+     player: { type: Object, required: true },
+@@ -57,7 +57,7 @@ export default {
+   },
+   data() {
+     return {
+-      logs: []
++      logs: [],
+     };
+   },
+   mounted() {
+@@ -75,7 +75,7 @@ export default {
+     },
+     onClearBattleLog() {
+       this.logs = [];
+-    }
++    },
+   }
+ };
+ </script>
+
+--- FILE: src/components/SkillsHand.vue ---
+diff --git a/src/components/SkillsHand.vue b/src/components/SkillsHand.vue
+index 681d524..c2475ec 100644
+--- a/src/components/SkillsHand.vue
++++ b/src/components/SkillsHand.vue
+@@ -41,7 +41,11 @@ export default {
+     isControlDisabled: { type: Boolean, default: false },
+     isPlayerTurn: { type: Boolean, default: true },
+     // 休整时（PreparationPanel）开启拖拽；战斗时（ActionPanel）关闭
+-    draggable: { type: Boolean, default: false }
++    draggable: { type: Boolean, default: false },
++    // 进入手中的卡牌是否立刻出现
++    instantAppear: { type: Boolean, default: false },
++    // 是否监听全局的 card-appear-finished 事件（关闭则不等待该事件，直接显示）
++    listenCardAppearFinished: { type: Boolean, default: true }
+   },
+   data() {
+     return {
+@@ -71,7 +75,7 @@ export default {
+       return (this.player?.frontierSkills || []).filter(Boolean);
+     },
+     visibleIds() {
+-      return this.visibleSkills.map(s => s.uniqueID);
++      return this.visibleSkills.map(s => s.uniqueID).filter(Boolean);
+     },
+     // 基于容器/悬浮/拖拽插槽来计算每张卡的位置
+     layout() {
+@@ -155,7 +159,9 @@ export default {
+     }
+   },
+   mounted() {
+-    frontendEventBus.on('card-appear-finished', this.onCardAppearFinished);
++    if (this.listenCardAppearFinished) {
++      frontendEventBus.on('card-appear-finished', this.onCardAppearFinished);
++    }
+ 
+     this._ro = new ResizeObserver(entries => {
+       for (const entry of entries) {
+@@ -190,7 +196,6 @@ export default {
+     visibleIds: {
+       immediate: true,
+       handler(newIds, oldIds) {
+-        // 仅在初次（immediate）触发时跳过动画；后续即使 oldIds 为空数组也应触发“从空到有”的入场动画
+         if (oldIds == null) {
+           this.prevIds = [...newIds];
+           return;
+@@ -199,6 +204,16 @@ export default {
+         const added = newIds.filter(id => !prevSet.has(id));
+         this.prevIds = [...newIds];
+         if (added.length === 0) return;
++        // 若未监听 card-appear-finished，则不等待该事件，直接显示
++        if (!this.listenCardAppearFinished) {
++          added.forEach(id => { if (this.appearing[id]) delete this.appearing[id]; });
++          return;
++        }
++        // 若禁用入场动画，直接显示
++        if (this.instantAppear) {
++          added.forEach(id => { if (this.appearing[id]) delete this.appearing[id]; });
++          return;
++        }
+         // 标记为“入场中”，等待 orchestrator 的 card-appear-finished 清理；添加兜底定时器
+         added.forEach(id => { this.appearing[id] = true; });
+         this.$nextTick(() => {
+@@ -209,6 +224,7 @@ export default {
+   },
+   methods: {
+     onCardAppearFinished(payload = {}) {
++      console.log('收到 card-appear-finished 事件', payload);
+       const id = payload?.id;
+       if (id != null && this.appearing[id]) {
+         delete this.appearing[id];
+
+--- FILE: src/data/animationDispatcher.js ---
+diff --git a/src/data/animationDispatcher.js b/src/data/animationDispatcher.js
+deleted file mode 100644
+index f466649..0000000
+--- a/src/data/animationDispatcher.js
++++ /dev/null
+@@ -1,463 +0,0 @@
+-// 动画系统（animationDispatcher）— 设计说明与用法
+-//
+-// 核心目标
+-// - 以“队列 + 节拍”的方式，把后端状态（backendGameState）的变化按动画节奏排序并映射到显示层（displayGameState），完成前端动画播放和后端逻辑计算节奏的分离。
+-// - 保证每一次关键状态变化（S 子集）都有独立的可控展示顺序；纯 UI 动作（如日志、声音）也在同一队列中顺序播放。
+-// - 可以按需插入延时，拉开动画节奏。
+-// - 支持“动画屏障”（blockBeforePreviousAnimations），确保某些 UI 动作在所有前置动画完成后再执行。否然，默认情况下队列仅会等待前序“非零延时”项完成后直接执行。
+-//
+-// 核心机制
+-// 1) 三类队列项
+-//    - { kind: 'state', snapshot, duration? }：将“后端状态的投影快照”应用到显示层（见 S 规范）。
+-//    - { kind: 'ui', name, payload, duration? }：纯 UI 行为（日志、音效、飘字等），通过前端事件总线驱动。
+-//    - { kind: 'delay', duration }：纯延时，用于拉开动画节奏。
+-//
+-// 2) 入队策略（性能优化版）
+-//    - 初始仅在 init 时入队一次 S 投影快照，以完成首次同步。
+-//    - 使用 watch(() => backendGameState, { deep:true, flush:'sync' }) 仅标记 dirty=true，不立即入队；
+-//      当有“非零延时”的 UI 或 delay 入队时，若 dirty==true，则在它之前入队一条 state 快照（duration=0），随后将 dirty 置为 false。
+-//    - 在每个 macro tick 结束（setTimeout 0）也会检查 dirty；若仍为 true，则强制入队一条 state 快照（duration=0），避免遗漏同步。
+-//    - 这样 0ms 的 UI 事件天然被合并展示；只有出现节拍（非零 delay）或 tick 结束时，才把当下的状态切片进队列，显著降低快照频率与开销。
+-//
+-// 3) 投影（S）与应用
+-//    - projectToS(obj)：把后端状态按 S 规则抽取为“纯数据”快照。
+-//    - applyProjectionToDisplay(src, dst, backendNode)：把 S 快照就地合并到显示层：
+-//      - 对象：按键合并，删除快照中不存在的 S 键；保留实例与方法；必要时依据 backendNode 的原型创建承载对象，避免丢失原型链。
+-//      - 数组：优先按 id（uniqueID/id）对齐逐元素合并；若无 id 再回退索引合并；会对齐数组长度，且在创建新元素时按 backend 原型构造实例壳，避免方法丢失。
+-//      - 不会直接整体替换对象/实例，避免丢失方法（如 Skill.canUse）。
+-//
+-// S（共享投影子集）的规范
+-// - 目的：只把“前端需要渲染/动画的字段”纳入监听，剔除后端私有中间态，降低无关触发与拷贝成本。
+-// - 规则：
+-//   1) 仅包含“可枚举的自有属性”。
+-//   2) 排除所有函数（typeof v === 'function'）。
+-//   3) 排除所有“仅有 getter、无 setter”的只读属性（避免副作用求值）。
+-//   4) 排除所有以“_”结尾的属性名（视为后端私有中间态，不参与动画）。
+-//   5) 其余字段（标量、对象、数组）按结构递归纳入。
+-// - 建议：
+-//   - 后端用于 AI、计数器、缓存等与 UI 无关的字段，统一命名为 xxx_，避免进入 S，减少队列压力。
+-//   - 前端组件中如需调用实例方法（如 Skill.canUse），方法内部仅访问 S 字段，确保在显示层可用。
+-//
+-// 使用指南
+-// - 启动：initAnimationDispatcher({ stepMs })；可按需设置节拍间隔（默认 0ms）。
+-// - 入队 UI 动作：
+-//   - enqueueUI(name, payload, { duration })：当 duration>0 时，会在该 UI 前自动入队一条 state 快照（若 dirty==true）。
+-//   - enqueueDelay(duration)：当 duration>0 时，会在该 delay 前自动入队一条 state 快照（若 dirty==true）。
+-//   - enqueueState({ snapshot })：如需手动推进状态，也可直接入队投影快照（会清理 dirty）。
+-// - 不要直接修改 displayGameState；只修改 backendGameState（或发起 UI 事件）。
+-// - 在类（Skill/Enemy/Item/Ability 等）中：
+-//   - 非 UI 关键数据（hp、shield、effects、money、AP 等）作为普通字段进入 S。
+-//   - 仅后端使用的中间态字段请加“_”后缀（如 actionIndex_），避免触发动画。
+-//   - 方法如 canUse 只读取 S 字段（可从显示层读取），确保在显示层实例上正常运行。
+-
+-// animationDispatcher.js - 将后端状态的变化以动画节奏应用到显示层状态，并支持UI动作
+-
+-import { watch, toRaw } from 'vue';
+-import { backendGameState, displayGameState } from './gameState.js';
+-import frontendEventBus from '../frontendEventBus.js';
+-import { enqueueUI as _enqueueUI_Helper, enqueueDelay as _enqueueDelay_Helper } from './animationInstructionHelpers.js';
+-import { enqueueState as _enqueueState_Helper } from './animationInstructionHelpers.js';
+-
+-// 队列项类型：
+-// - { kind: 'state', snapshot, duration? }
+-// - { kind: 'ui', name: 'lockControl'|'unlockControl', payload?, duration?, blockBeforePreviousAnimations? }
+-// - { kind: 'delay', duration }
+-const queue = [];
+-let processing = false;
+-let stalling = false;
+-let defaultStepMs = 0;
+-// 新增：脏位与 tick 末兜底检查
+-let dirty = false;
+-let endOfTickScheduled = false;
+-// 跟踪由 orchestrator 执行的动画完成度（用于 blockBeforePreviousAnimations）
+-const inflightTokens = new Set();
+-
+-const defaultStateChangeDuration = 400;
+-
+-// 监听 orchestrator 完成事件（动画自然结束）
+-frontendEventBus.on('animation-card-by-id-finished', (msg = {}) => {
+-  const token = msg?.token;
+-  if (token && inflightTokens.has(token)) {
+-    inflightTokens.delete(token);
+-    // 若因 blockBeforePreviousAnimations 阻塞，尝试继续推进队列
+-    if (inflightTokens.size === 0) {
+-      stalling = false;
+-      tryStartProcessQueue();
+-    }
+-  }
+-});
+-
+-function scheduleEndOfTickCheck() {
+-  if (endOfTickScheduled) return;
+-  endOfTickScheduled = true;
+-  setTimeout(() => {
+-    endOfTickScheduled = false;
+-    if (dirty) {
+-      // tick 结束仍有未同步的变更，强制入队一次当前快照（默认带屏障）
+-      enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
+-    }
+-  }, 0);
+-}
+-
+-function isWritableProperty(target, key) {
+-  const desc = Object.getOwnPropertyDescriptor(target, key);
+-  if (!desc) return true;
+-  if (typeof desc.get === 'function' && typeof desc.set !== 'function') return false;
+-  if (desc.writable === false) return false;
+-  return true;
+-}
+-
+-function isSKey(key) {
+-  return typeof key !== 'string' || !key.endsWith('_');
+-}
+-
+-// 将 backendGameState 投影为子集 S（仅包含非函数、非 _ 结尾字段），保持为纯数据树
+-function projectToS(value, seen = new WeakMap()) {
+-  // 使用代理对象进行依赖收集；仅在需要取属性描述符时取 raw
+-  if (value === null || typeof value !== 'object') return value;
+-  if (seen.has(value)) return seen.get(value);
+-
+-  if (Array.isArray(value)) {
+-    const arr = new Array(value.length);
+-    seen.set(value, arr);
+-    for (let i = 0; i < value.length; i++) {
+-      arr[i] = projectToS(value[i], seen);
+-    }
+-    return arr;
+-  }
+-
+-  const out = {};
+-  seen.set(value, out);
+-
+-  // 遍历可枚举自有属性（通过代理拿 keys，可建立依赖）
+-  for (const key of Object.keys(value)) {
+-    if (!isSKey(key)) continue;
+-    const raw = toRaw(value);
+-    const desc = Object.getOwnPropertyDescriptor(raw, key);
+-    if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function') continue;
+-    const v = value[key]; // 通过代理读取，建立依赖
+-    if (typeof v === 'function') continue;
+-    out[key] = projectToS(v, seen);
+-  }
+-  return out;
+-}
+-
+-function getIdKeyFromArray(arr) {
+-  if (!Array.isArray(arr)) return null;
+-  for (const el of arr) {
+-    if (el && typeof el === 'object') {
+-      if ('uniqueID' in el) return 'uniqueID';
+-      if ('id' in el) return 'id';
+-    }
+-  }
+-  return null;
+-}
+-
+-function createInstanceFromBackendNode(bEl) {
+-  if (bEl && typeof bEl === 'object') {
+-    const proto = Object.getPrototypeOf(toRaw(bEl));
+-    return Object.create(proto || Object.prototype);
+-  }
+-  return {};
+-}
+-
+-function reconcileArrayById(sArr, dArr, bArr) {
+-  const idKey = getIdKeyFromArray(sArr) || getIdKeyFromArray(bArr);
+-  if (!idKey) return false; // no id available
+-  // Build id -> dest element map
+-  const dstMap = new Map();
+-  for (let i = 0; i < dArr.length; i++) {
+-    const el = dArr[i];
+-    if (el && typeof el === 'object' && idKey in el) {
+-      dstMap.set(el[idKey], el);
+-    }
+-  }
+-  const newArr = new Array(sArr.length);
+-  for (let i = 0; i < sArr.length; i++) {
+-    const sEl = sArr[i];
+-    const bEl = Array.isArray(bArr) ? bArr[i] : undefined;
+-    if (sEl && typeof sEl === 'object' && idKey in sEl) {
+-      const id = sEl[idKey];
+-      let target = dstMap.get(id);
+-      if (!target) {
+-        target = createInstanceFromBackendNode(bEl);
+-      }
+-      applyProjectionToDisplay(sEl, target, bEl);
+-      newArr[i] = target;
+-    } else if (sEl && typeof sEl === 'object') {
+-      // object but no id on this element: create/reuse by backend prototype
+-      let target = (Array.isArray(bArr) && bArr[i]) ? createInstanceFromBackendNode(bArr[i]) : {};
+-      applyProjectionToDisplay(sEl, target, Array.isArray(bArr) ? bArr[i] : undefined);
+-      newArr[i] = target;
+-    } else {
+-      // primitive
+-      newArr[i] = sEl;
+-    }
+-  }
+-  // In-place replace dArr contents to preserve reactive array reference
+-  dArr.splice(0, dArr.length, ...newArr);
+-  return true;
+-}
+-
+-// 将 S 投影快照合并到显示层，仅写入/删除 S 字段，保留实例/方法
+-function applyProjectionToDisplay(src, dst, backendNode = undefined) {
+-  // 若为数组，执行就地元素级合并（优先按 id 对齐），尽量保持实例原型
+-  if (Array.isArray(src) && Array.isArray(dst)) {
+-    const bArr = Array.isArray(backendNode) ? backendNode : undefined;
+-    // Try keyed reconciliation first
+-    const done = reconcileArrayById(src, dst, bArr);
+-    if (done) return;
+-
+-    // Fallback: index-based merge (best effort)
+-    const len = src.length;
+-    for (let i = 0; i < len; i++) {
+-      const sEl = src[i];
+-      const dEl = dst[i];
+-      const bEl = bArr ? bArr[i] : undefined;
+-      if (sEl && typeof sEl === 'object') {
+-        if (dEl && typeof dEl === 'object') {
+-          applyProjectionToDisplay(sEl, dEl, bEl);
+-        } else {
+-          const inst = createInstanceFromBackendNode(bEl);
+-          applyProjectionToDisplay(sEl, inst, bEl);
+-          dst[i] = inst;
+-        }
+-      } else {
+-        dst[i] = sEl;
+-      }
+-    }
+-    if (dst.length > len) dst.splice(len);
+-    return;
+-  }
+-
+-  // 删除在 dst 中存在但在 src 中不存在的 S 字段（跳过函数与只读属性）
+-  for (const key of Object.keys(dst)) {
+-    if (!isSKey(key)) continue;
+-    const desc = Object.getOwnPropertyDescriptor(dst, key);
+-    if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function') continue;
+-    if (typeof dst[key] === 'function') continue;
+-    if (!Object.prototype.hasOwnProperty.call(src, key)) {
+-      try { delete dst[key]; } catch (_) { /* ignore */ }
+-    }
+-  }
+-
+-  // 写入/合并 src 中的字段
+-  for (const key of Object.keys(src)) {
+-    if (!isWritableProperty(dst, key)) continue;
+-    const sVal = src[key];
+-    const dVal = dst[key];
+-    const bVal = backendNode && typeof backendNode === 'object' ? backendNode[key] : undefined;
+-
+-    if (Array.isArray(sVal)) {
+-      if (Array.isArray(dVal)) {
+-        applyProjectionToDisplay(sVal, dVal, bVal);
+-      } else {
+-        // 创建目标数组并逐元素合并，尽量保持实例原型
+-        const arr = new Array(0);
+-        dst[key] = arr;
+-        applyProjectionToDisplay(sVal, arr, bVal);
+-      }
+-      continue;
+-    }
+-
+-    if (sVal && typeof sVal === 'object') {
+-      if (dVal && typeof dVal === 'object' && !Array.isArray(dVal)) {
+-        // 如果后端节点有原型且当前显示层对象原型不同，则同步原型（避免丢失 getter 如 attack/defense）
+-        if (bVal && typeof bVal === 'object') {
+-          try {
+-            const backendProto = Object.getPrototypeOf(toRaw(bVal));
+-            const dstProto = Object.getPrototypeOf(dVal);
+-            if (backendProto && dstProto !== backendProto) {
+-              Object.setPrototypeOf(dVal, backendProto);
+-            }
+-          } catch (_) { /* ignore prototype set errors */ }
+-        }
+-        applyProjectionToDisplay(sVal, dVal, bVal);
+-      } else {
+-        // 以后端节点原型创建目标对象，保留方法；否则退回普通对象
+-        let obj;
+-        if (bVal && typeof bVal === 'object' && !Array.isArray(bVal)) {
+-          obj = Object.create(Object.getPrototypeOf(toRaw(bVal)));
+-        } else {
+-          obj = {};
+-        }
+-        applyProjectionToDisplay(sVal, obj, bVal);
+-        dst[key] = obj;
+-      }
+-      continue;
+-    }
+-
+-    // 原始值：直接赋值
+-    if (dst[key] !== sVal) dst[key] = sVal;
+-  }
+-}
+-
+-function captureSnapshot() {
+-  // 基于投影生成轻量快照，仅包含 S 字段
+-  return projectToS(backendGameState);
+-}
+-
+-function scheduleNext(delay) {
+-  if(delay > 0) {
+-    setTimeout(()=>{stalling = false; processQueue();}, delay);
+-  } else processQueue();
+-}
+-
+-function processQueue() {
+-  if (processing) return;
+-  if (queue.length === 0) return;
+-
+-  // 峰值前检查：若队首项要求等待此前动画完成，则在有未完成动画时阻塞
+-  const head = queue[0];
+-  if (head && head.blockBeforePreviousAnimations === true && inflightTokens.size > 0) {
+-    // 等待 orchestrator 通知所有过去动画结束后再继续
+-    stalling = true;
+-    return; // 不消费队首项
+-  }
+-
+-  processing = true;
+-  const item = queue.shift();
+-  try {
+-    switch (item.kind) {
+-      case 'state':
+-        applyProjectionToDisplay(item.snapshot || captureSnapshot(), displayGameState, backendGameState);
+-        break;
+-      case 'ui':
+-        handleUIAction(item);
+-        break;
+-      case 'delay':
+-        // 纯延时，不做任何应用
+-        break;
+-      default:
+-        break;
+-    }
+-  } finally {
+-    // 在等待下一次调度期间阻止立即触发的 tryStartProcessQueue
+-    const delay = item.duration ?? defaultStepMs;
+-    stalling = delay > 0;
+-    processing = false;
+-    scheduleNext(delay);
+-  }
+-}
+-
+-function tryStartProcessQueue() {
+-  if(!stalling) {
+-    processQueue();
+-  }
+-}
+-
+-function handleUIAction(item) {
+-  const { name, payload } = item;
+-  switch (name) {
+-    case 'lockControl':
+-      displayGameState.controlDisableCount = (displayGameState.controlDisableCount || 0) + 1;
+-      break;
+-    case 'unlockControl':
+-      displayGameState.controlDisableCount = Math.max(0, (displayGameState.controlDisableCount || 0) - 1);
+-      break;
+-    case 'spawnParticles':
+-      frontendEventBus.emit('spawn-particles', payload?.particles || payload || []);
+-      break;
+-    case 'playSound':
+-      frontendEventBus.emit('play-sound', payload || {});
+-      break;
+-    case 'popMessage':
+-      frontendEventBus.emit('pop-message', payload || {});
+-      break;
+-    case 'displayDialog':
+-      frontendEventBus.emit('display-dialog', payload || []);
+-      break;
+-    case 'addBattleLog':
+-    case 'addBattleLogUI':
+-      frontendEventBus.emit('add-battle-log', payload || {});
+-      break;
+-    case 'clearBattleLog':
+-    case 'clearBattleLogUI':
+-      frontendEventBus.emit('clear-battle-log');
+-      break;
+-    case 'animateCardById': {
+-      // 为每次 orchestrator 动画分配完成令牌，全部纳入 inflight 以便 barrier 生效
+-      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+-      inflightTokens.add(token);
+-      const enriched = Object.assign({}, payload || {}, { completionToken: token });
+-      frontendEventBus.emit('animate-card-by-id', enriched);
+-      break;
+-    }
+-    case 'clearCardAnimations':
+-      frontendEventBus.emit('clear-card-animations');
+-      // 同步清理所有未完成令牌，避免后续 blockBeforePreviousAnimations 项目永久阻塞
+-      if (inflightTokens.size > 0) {
+-        inflightTokens.clear();
+-        stalling = false;
+-        tryStartProcessQueue();
+-      }
+-      break;
+-    case 'idle':
+-      // 什么都不做，仅占位
+-      break;
+-    default:
+-      console.warn(`animationDispatcher遇到了未知动画指令名称: ${name}`);
+-      break;
+-  }
+-}
+-
+-// 外部API：入队
+-// 入队一个sisplayState修改
+-export function enqueueState(options = {}) {
+-  const { duration, snapshot, blockBeforePreviousAnimations = true } = options;
+-  queue.push({
+-    kind: 'state',
+-    snapshot: snapshot || captureSnapshot(),
+-    duration: (duration ?? defaultStateChangeDuration),
+-    blockBeforePreviousAnimations
+-  });
+-  // 快照已捕获，清除脏位
+-  dirty = false;
+-  tryStartProcessQueue();
+-}
+-// 入队一个UI动作
+-export function enqueueUI(name, payload = {}, options = {}) {
+-  // 在迁移前保留旧语义：如有未同步状态，先切片一次（默认带屏障）
+-  if (defaultStateChangeDuration !== 0 && dirty) {
+-    _enqueueState_Helper({});
+-    dirty = false;
+-  }
+-  return _enqueueUI_Helper(name, payload, options);
+-}
+-
+-// 入队一个延时
+-export function enqueueDelay(duration = defaultStepMs) {
+-  // 在迁移前保留旧语义：如有未同步状态，先切片一次（默认带屏障）
+-  if (defaultStateChangeDuration !== 0 && dirty) {
+-    _enqueueState_Helper({});
+-    dirty = false;
+-  }
+-  return _enqueueDelay_Helper(typeof duration === 'number' ? duration : 0);
+-}
+-
+-export function clearQueue() {
+-  queue.length = 0;
+-}
+-
+-export function initAnimationDispatcher({ stepMs = 0 } = {}) {
+-  defaultStepMs = stepMs;
+-  // 初始同步一次（避免空白）
+-  enqueueState({ snapshot: projectToS(backendGameState) });
+-  // 新增：监听后端状态变化，仅置脏，不立刻入队
+-  watch(
+-    () => backendGameState,
+-    () => {
+-      dirty = true;
+-      scheduleEndOfTickCheck();
+-    },
+-    { deep: true, flush: 'sync' }
+-  );
+-}
+-
+-// 提供一个便捷桥接：当界面请求“新卡进入手牌”时，由调度器统一入队动画，确保与状态切片/节拍一致
+-// 已废弃：入手动画改为后端在 drawSkillCard 内统一触发
+-// frontendEventBus.on('request-card-appear', ({ id } = {}) => {
+-//   if (id == null) return;
+-//   enqueueUI(
+-//     'animateCardById',
+-
+
+--- FILE: src/data/animationInstructionHelpers.js ---
+diff --git a/src/data/animationInstructionHelpers.js b/src/data/animationInstructionHelpers.js
+index 7db3b0d..9b5a5b9 100644
+--- a/src/data/animationInstructionHelpers.js
++++ b/src/data/animationInstructionHelpers.js
+@@ -71,15 +71,31 @@ function createInstanceFromBackendNode(bEl) {
+ function reconcileArrayById(sArr, dArr, bArr) {
+   const idKey = getIdKeyFromArray(sArr) || getIdKeyFromArray(bArr);
+   if (!idKey) return false;
++  // Build id -> dest element map
+   const dstMap = new Map();
+   for (let i = 0; i < dArr.length; i++) {
+     const el = dArr[i];
+     if (el && typeof el === 'object' && idKey in el) dstMap.set(el[idKey], el);
+   }
++  // Build id -> backend element map (to preserve prototypes correctly)
++  const bMap = new Map();
++  if (Array.isArray(bArr)) {
++    for (let i = 0; i < bArr.length; i++) {
++      const bel = bArr[i];
++      if (bel && typeof bel === 'object' && idKey in bel) bMap.set(bel[idKey], bel);
++    }
++  }
++
+   const newArr = new Array(sArr.length);
+   for (let i = 0; i < sArr.length; i++) {
+     const sEl = sArr[i];
+-    const bEl = Array.isArray(bArr) ? bArr[i] : undefined;
++    // Prefer backend node by id match; fallback to index
++    let bEl = undefined;
++    if (sEl && typeof sEl === 'object' && idKey in sEl) {
++      bEl = bMap.get(sEl[idKey]);
++    }
++    if (bEl === undefined && Array.isArray(bArr)) bEl = bArr[i];
++
+     if (sEl && typeof sEl === 'object' && idKey in sEl) {
+       const id = sEl[idKey];
+       let target = dstMap.get(id);
+@@ -87,8 +103,8 @@ function reconcileArrayById(sArr, dArr, bArr) {
+       applyProjectionToDisplay(sEl, target, bEl);
+       newArr[i] = target;
+     } else if (sEl && typeof sEl === 'object') {
+-      let target = (Array.isArray(bArr) && bArr[i]) ? createInstanceFromBackendNode(bArr[i]) : {};
+-      applyProjectionToDisplay(sEl, target, Array.isArray(bArr) ? bArr[i] : undefined);
++      let target = bEl ? createInstanceFromBackendNode(bEl) : {};
++      applyProjectionToDisplay(sEl, target, bEl);
+       newArr[i] = target;
+     } else {
+       newArr[i] = sEl;
+@@ -188,7 +204,7 @@ export function captureSnapshot() {
+ }
+ 
+ // 默认的状态同步“虚拟动画”时长
+-export const DEFAULT_STATE_CHANGE_DURATION = 400;
++export const DEFAULT_STATE_CHANGE_DURATION = 200;
+ 
+ function computeWaitTags(options = {}) {
+   const explicit = options.waitTags;
+@@ -200,12 +216,12 @@ function computeWaitTags(options = {}) {
+ }
+ 
+ // 对外暴露：将一次状态同步作为指令推入 sequencer
+-export function enqueueState({ snapshot, durationMs } = {}) {
++export function enqueueState({ snapshot, durationMs, waitTags } = {}) {
+   const snap = snapshot || captureSnapshot();
+   const dur = typeof durationMs === 'number' ? durationMs : DEFAULT_STATE_CHANGE_DURATION;
+   return animationSequencer.enqueueInstruction({
+     tags: ['state'],
+-    waitTags: ['all'],
++    waitTags: waitTags || ['all'],
+     durationMs: dur,
+     start: () => {
+       try {
+@@ -413,19 +429,21 @@ export function enqueueClearCardAnimations({ tags = ['ui'], waitTags, durationMs
+ 
+ // 控制锁定/解锁（直接修改 display 层计数，立即完成）
+ export function enqueueLockControl(options = {}) {
++  console.log('lock!');
+   return enqueueInstruction({
+-    tags: ['ui'],
+-    waitTags: computeWaitTags(options),
++    tags: ['ui', 'locking'],
++    waitTags: ['locking'], // 锁定时不等待任何前序（除了解锁/锁定），尽快生效
+     durationMs: options.duration ?? 0,
+-    start: () => { displayGameState.controlDisableCount = (displayGameState.controlDisableCount || 0) + 1; },
++    start: () => { displayGameState.controlDisableCount = 1; },
+   });
+ }
+ export function enqueueUnlockControl(options = {}) {
++  console.log('unlock!');
+   return enqueueInstruction({
+-    tags: ['ui'],
+-    waitTags: computeWaitTags(options),
++    tags: ['ui', 'locking'],
++    waitTags: ['all'], // 解锁时总是等待所有前序完成，避免过早解锁
+     durationMs: options.duration ?? 0,
+-    start: () => { displayGameState.controlDisableCount = Math.max(0, (displayGameState.controlDisableCount || 0) - 1); },
++    start: () => { displayGameState.controlDisableCount = 0; },
+   });
+ }
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 62e4869..0e1838f 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -30,6 +30,8 @@ export function enterBattleStage() {
+ 
+   // 切换游戏状态到战斗状态
+   gameState.gameStage = 'battle';
++  // 等待一下，方便战斗界面组件挂载
++  enqueueDelay(500);
+ 
+   // 进入游戏控制流
+   backendEventBus.emit(EventNames.Battle.BATTLE_START);
+@@ -42,6 +44,9 @@ function startBattle() {
+     .filter(skill => skill !== null)
+     .map(skill => cloneSkill(skill));
+ 
++  // 添加战斗日志
++  addSystemLog(`战斗 #${gameState.battleCount} 开始！`);
++  addSystemLog(`遭遇了 ${gameState.enemy.name}！`);
+ 
+   // 初始化前台和后备技能列表
+   gameState.player.backupSkills = [...gameState.player.skills];
+@@ -55,10 +60,6 @@ function startBattle() {
+     skill.onBattleStart();
+   });
+ 
+-  // 添加战斗日志
+-  addSystemLog(`战斗 #${gameState.battleCount} 开始！`);
+-  addSystemLog(`遭遇了 ${gameState.enemy.name}！`);
+-
+   // 开始玩家回合
+   backendEventBus.emit(EventNames.Battle.PLAYER_TURN, {});
+ }
+@@ -91,7 +92,6 @@ function startPlayerTurn() {
+     backendEventBus.emit(EventNames.Battle.PLAYER_END_TURN, {});
+     return;
+   }
+-
+   enqueueUnlockControl();
+ 
+   // 等待玩家操作
+@@ -157,9 +157,12 @@ function useSkill(skill) {
+   addPlayerActionLog(`你使用了 /blue{${skill.name}}！`);
+ 
+   // 技能脱手发动动画（卡牌移动到中央）
+-  enqueueAnimateCardById({id: skill.uniqueID, kind: 'flyToCenter'});
++  // 为了增强“动画响应感”，此动画不等待前置动画结束即可立刻执行
++  enqueueAnimateCardById({id: skill.uniqueID, kind: 'flyToCenter'}, {
++    tags: ['ui'], waitTags: []
++  });
+ 
+-  // 增设一条idle动画指令，确保animateCardByID动画完成后才开始播放卡牌发动带来的各种效果的动画
++  // 增设一条idle动画指令作为barrier，确保animateCardByID动画完成后才开始播放卡牌发动带来的各种效果的动画
+   enqueueDelay(0);
+ 
+   // 资源结算（后端状态）
+@@ -191,6 +194,12 @@ export function dropLeftmostSkill() {
+ 
+ // 结束玩家回合
+ function endPlayerTurn() {
++  if(gameState.isEnemyTurn) {
++    console.warn('当前不是玩家回合，无法结束玩家回合。');
++    return ;
++  }
++  // 马上锁定，防止玩家反复点击结束回合
++  enqueueLockControl();
+   // 回合结束时结算效果（使用修正后的玩家）
+   const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
+   processEndOfTurnEffects(modPlayer);
+@@ -283,12 +292,12 @@ function battleVictory(isVictory) {
+ }
+ 
+ function fillFrontierSkills(player) {
+-  // 从后备技能列表头部取技能，直到前台技能数量达到最大值
+-  while (player.frontierSkills.length < player.maxFrontierSkills && player.backupSkills.length > 0) {
+-    drawSkillCard(player);
+-    // const skill = player.backupSkills.shift();
+-    // player.frontierSkills.push(skill);
+-  }
++  // 从后备技能列表头部取技能，直到前台技能数量达到最大值或抽取数达标
++  const numCardsToDraw = Math.min(
++    player.maxFrontierSkills - player.frontierSkills.length,
++    player.drawFrontierSkills
++  );
++  drawSkillCard(player, numCardsToDraw);
+   
+   // 触发技能列表更新事件
+   backendEventBus.emit(EventNames.Player.FRONTIER_UPDATED, {
+
+--- FILE: src/data/battleUtils.js ---
+diff --git a/src/data/battleUtils.js b/src/data/battleUtils.js
+index deaf7e4..ddf59e9 100644
+--- a/src/data/battleUtils.js
++++ b/src/data/battleUtils.js
+@@ -4,7 +4,7 @@ import {
+   processPostAttackEffects, processAttackTakenEffects, processDamageTakenEffects, processAttackFinishEffects
+ } from './effectProcessor.js';
+ import { addBattleLog, addDamageLog, addDeathLog, addHealLog } from './battleLogUtils.js';
+-import {enqueueAnimateCardById} from "./animationInstructionHelpers";
++import {captureSnapshot, enqueueAnimateCardById, enqueueState} from "./animationInstructionHelpers";
+ import backendEventBus, {EventNames} from "../backendEventBus";
+ 
+ // 将护盾/生命结算 + 日志输出 + 死亡判定抽象为通用助手
+@@ -135,6 +135,8 @@ export function applyHeal(target, heal) {
+ }
+ 
+ export function drawSkillCard(player, number = 1) {
++  let returnSkill = null;
++  let ids = [];
+   for (let i = 0; i < number; i++) {
+     if (player.frontierSkills.length >= player.maxHandSize) {
+       // addBattleLog('你的手牌已满，无法抽取更多卡牌！');
+@@ -146,17 +148,24 @@ export function drawSkillCard(player, number = 1) {
+     }
+     // 对于入手而言，动画由后端统一触发
+     const firstSkill = player.backupSkills.shift();
+-    player.frontierSkills.push(firstSkill);
+ 
+     // 手动触发入手动画，与其他卡牌动画保持一致（等待前序动画完成）
+     if (firstSkill && firstSkill.uniqueID) {
+-      enqueueAnimateCardById(
+-        { id: firstSkill.uniqueID, kind: 'appearFromDeck', options: { durationMs: 450, startScale: 0.6, fade: true } }
+-      );
++      player.frontierSkills.push(firstSkill);
++      ids.push(firstSkill.uniqueID);
++    }
++    if(i === 0) {
++      returnSkill = firstSkill;
+     }
+-
+-    if(number === 1) return firstSkill;
+   }
++  enqueueState({snapshot: captureSnapshot(), durationMs: 0});
++  ids.forEach((id) => {
++    enqueueAnimateCardById(
++      {id: id, kind: 'appearFromDeck', options: {durationMs: 500, startScale: 0.6, fade: true}},
++      {waitTags: ['state', 'ui'], durationMs: 200}
++    );
++  });
++  return returnSkill;
+ }
+ 
+ export function dropSkillCard(player, skillID) {
+
+--- FILE: src/data/player.js ---
+diff --git a/src/data/player.js b/src/data/player.js
+index fa0d3ae..1d65ac5 100644
+--- a/src/data/player.js
++++ b/src/data/player.js
+@@ -95,7 +95,8 @@ export class Player extends Unit {
+     this.skills = []; // 场上技能。在战斗开始前由 cultivatedSkills 深拷贝生成，在战斗结束后清空。
+     this.frontierSkills = []; // 前台技能列表，玩家在当前回合可以使用的技能
+     this.backupSkills = []; // 后备技能列表，用于存储暂时不可用的技能
+-    this.maxFrontierSkills = 8; // 最大前台技能数量
++    this.maxFrontierSkills = 10; // 最大前台技能数量
++    this.drawFrontierSkills = 4; // 每回合抽取前台技能数量
+     // effects 由 Unit 初始化
+     this.leino = ['normal']; // 灵脉列表，可以包含normal, fire, wind, wood, earth, water, thunder, light, dark
+     this.abilities = []; // 玩家能力列表
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index de330b2..1e2c3fc 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -170,10 +170,8 @@ export class Firework extends Skill {
+       }
+       const skill = player.frontierSkills[0];
+       dropSkillCard(player, skill.uniqueID);
+-      enqueueDelay(200);
+       player.addEffect('燃烧', this.stacks);
+       enemy.addEffect('燃烧', this.stacks);
+-      enqueueDelay(500);
+     }
+     return true;
+   }
+@@ -211,7 +209,6 @@ export class WarmHug extends Skill {
+       const stacks = this.getStacks(player);
+       player.removeEffect('燃烧', Math.min(stacks, player.effects['燃烧'] || 0));
+       enemy.addEffect('燃烧', stacks);
+-      enqueueDelay(500);
+       return true;
+     }
+   }
+@@ -252,7 +249,6 @@ export class DisperseFire extends Skill {
+           break;
+         }
+         dropSkillCard(player, skill.uniqueID);
+-        enqueueDelay(300);
+       }
+       return false;
+     } else {
+
+--- FILE: src/game.js ---
+diff --git a/src/game.js b/src/game.js
+index bcc2a9e..21b39b0 100644
+--- a/src/game.js
++++ b/src/game.js
+@@ -19,14 +19,14 @@ function startGame() {
+   const initialSkill1 = SkillManager.getInstance().createSkill('拳打脚踢');
+   const initialSkill2 = SkillManager.getInstance().createSkill('活动筋骨');
+   const initialSkill3 = SkillManager.getInstance().createSkill('打滚');
+-  const initialSkill4 = SkillManager.getInstance().createSkill('玩火');
++  const initialSkill4 = SkillManager.getInstance().createSkill('抱头防御');
+ 
+   backendGameState.player.cultivatedSkills = [initialSkill1, initialSkill2, initialSkill3, initialSkill4];
+ 
+   // 升满级调试
+-  while(backendGameState.player.tier < 9) {
+-    upgradePlayerTier(backendGameState.player);
+-  }
++  // while(backendGameState.player.tier < 9) {
++  //   upgradePlayerTier(backendGameState.player);
++  // }
+ 
+   // 以事件驱动开始第一场战斗
+   backendEventBus.emit(EventNames.Game.ENTER_BATTLE_STAGE);
+
+--- FILE: src/utils/animationOrchestrator.js ---
+diff --git a/src/utils/animationOrchestrator.js b/src/utils/animationOrchestrator.js
+deleted file mode 100644
+index ede7cf7..0000000
+--- a/src/utils/animationOrchestrator.js
++++ /dev/null
+@@ -1,420 +0,0 @@
+-// 全局动画编排器（DOM + GSAP）
+-// 职责：
+-// - 初始化 overlay/anchors/ghost 容器引用
+-// - 生成“幽灵”克隆元素并用 transform 动画
+-// - 仅通过 animateById 进行动画调度与 ghost 创建，其他路径不再创建 ghost
+-
+-import frontendEventBus from '../frontendEventBus.js';
+-import gsap from 'gsap';
+-import { getCardEl } from './cardDomRegistry.js';
+-
+-const defaultEase = 'power2.out';
+-
+-const orchestrator = {
+-  overlayEl: null,
+-  centerAnchorEl: null,
+-  deckAnchorEl: null,
+-  ghostContainerEl: null,
+-  // 记录：按ID缓存ghost，确保连续指令可复用状态
+-  // id -> { ghost, baseRect, startEl }
+-  _ghostRegistry: new Map(),
+-  // 全局“时代戳”（reset代次）。当 resetAllGhosts 发生时用于屏蔽旧任务
+-  _epoch: 0,
+-  _bumpEpoch() { this._epoch++; return this._epoch; },
+-  // 排空模式：用于 resetAllGhosts 等待“之前提交”的动画自然结束
+-  _draining: false,
+-  _drainEpoch: null,
+-
+-  // 公共步骤构建器：在不同入口（animateById/后端）共享
+-  buildSteps: {
+-    flyToCenter({ scale = 1.2, durationMs = 350, holdMs = 0 } = {}) {
+-      return [
+-        { toAnchor: 'center', scale, duration: durationMs, ease: defaultEase, holdMs }
+-      ];
+-    },
+-    centerThenDeck({ centerHoldMs = 350, totalMs = 900 } = {}) {
+-      const first = 350;
+-      const rest = Math.max(300, totalMs - first - centerHoldMs);
+-      return [
+-        { toAnchor: 'center', scale: 1.2, duration: first, ease: defaultEase, holdMs: centerHoldMs },
+-        { toAnchor: 'deck', scale: 0.5, rotate: 20, duration: rest, ease: 'power2.in' }
+-      ];
+-    },
+-    flyToDeckFade({ durationMs = 400 } = {}) {
+-      return [
+-        { toAnchor: 'deck', scale: 0.5, rotate: 20, duration: durationMs, ease: 'power2.in' },
+-        { opacity: 0, duration: 120 }
+-      ];
+-    },
+-    exhaustBurn({ durationMs = 500, scaleUp = 1.15 } = {}) {
+-      const t1 = Math.max(80, Math.floor(durationMs * 0.35));
+-      const t2 = Math.max(120, durationMs - t1);
+-      const emitCfg = { kind: 'burn', intervalMs: 70, burst: 10 };
+-      return [
+-        // 放大阶段，同时持续冒火星
+-        { scale: scaleUp, duration: t1, ease: defaultEase, emitParticles: emitCfg },
+-        // 淡出消亡阶段，同时继续冒火星
+-        { rotate: 0, opacity: 0, duration: t2, ease: 'power1.in', emitParticles: emitCfg }
+-      ];
+-    },
+-    appearFromDeck({ durationMs = 450 } = {}) {
+-      // 需配合 initialFromDeck=true 使用
+-      return [
+-        { toBase: true, scale: 1, opacity: 1, duration: durationMs, ease: defaultEase }
+-      ];
+-    }
+-  },
+-
+-  init({ overlayEl, centerAnchorEl, deckAnchorEl, ghostContainerEl }) {
+-    this.overlayEl = overlayEl;
+-    this.centerAnchorEl = centerAnchorEl;
+-    this.deckAnchorEl = deckAnchorEl;
+-    this.ghostContainerEl = ghostContainerEl;
+-  },
+-
+-  // 工具：测量/锚点/换算
+-  getRect(el) { return el?.getBoundingClientRect?.() || null; },
+-  getAnchor(nameOrEl) {
+-    if (!nameOrEl) return null;
+-    if (typeof nameOrEl === 'string') {
+-      if (nameOrEl === 'center') return this.centerAnchorEl;
+-      if (nameOrEl === 'deck') return this.deckAnchorEl;
+-      return null;
+-    }
+-    return nameOrEl;
+-  },
+-  getAnchorPoint(nameOrEl) {
+-    const el = this.getAnchor(nameOrEl);
+-    const r = this.getRect(el);
+-    if (!r) return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+-    return { x: r.left, y: r.top };
+-  },
+-  createGhostFromEl(startEl, startRect) {
+-    if (!this.ghostContainerEl || !startEl || !startRect) return null;
+-    const ghost = startEl.cloneNode(true);
+-    Object.assign(ghost.style, {
+-      position: 'absolute',
+-      left: `${startRect.left}px`,
+-      top: `${startRect.top}px`,
+-      // 以下设置似乎会引起未知故障，先注释掉
+-      // width: `${startRect.width}px`,
+-      // height: `${startRect.height}px`,
+-      margin: '0',
+-      transformOrigin: 'center center',
+-      pointerEvents: 'none',
+-    });
+-    ghost.classList.add('animation-ghost');
+-    this.ghostContainerEl.appendChild(ghost);
+-    gsap.set(ghost, { x: 0, y: 0, force3D: true });
+-    // 保险：禁用克隆来的 CSS 动画，避免与 GSAP transform 冲突
+-    ghost.classList.remove('activating');
+-    ghost.style.animation = 'none';
+-    ghost.style.animationName = 'none';
+-    return ghost;
+-  },
+-  offsetsToPoint(startRect, point) {
+-    return {
+-      x: point.x - startRect.left - startRect.width / 2,
+-      y: point.y - startRect.top - startRect.height / 2
+-    };
+-  },
+-
+-  // 粒子效果：在幽灵卡片中心附近发射燃烧火星
+-  _emitBurnParticles(ghost, { burst = 10 } = {}) {
+-    if (!ghost) return;
+-    try {
+-      const r = ghost.getBoundingClientRect();
+-      const cx = r.left + r.width / 2;
+-      const cy = r.top + r.height / 2;
+-      const particles = [];
+-      for (let i = 0; i < burst; i++) {
+-        const angle = (Math.random() * Math.PI * 2);
+-        const speed = 40 + Math.random() * 120;
+-        const vx = Math.cos(angle) * speed;
+-        const vy = Math.sin(angle) * speed;
+-        const size = 5 + Math.random() * 5;
+-        const life = 800 + Math.random() * 600;
+-        const colorPick = Math.random();
+-        const color = colorPick < 0.5 ? '#cf1818' : (colorPick < 0.8 ? '#ffd166' : '#ff6f00');
+-        particles.push({
+-          x: cx + (Math.random() - 0.5) * (r.width),
+-          y: cy + (Math.random() - 0.5) * (r.height),
+-          vx,
+-          vy,
+-          color,
+-          life,
+-          gravity: 0,
+-          size,
+-          opacity: 1,
+-          zIndex: 6,
+-          drag: 0.05,
+-        });
+-      }
+-      frontendEventBus.emit('spawn-particles', particles);
+-    } catch (_) {}
+-  },
+-
+-  // 内部：按ID确保存在ghost（仅 animateById 调用）
+-  _ensureGhostById(id, startEl, options = {}) {
+-    const { initialFromDeck = false, startScale = 0.6, fade = true, hideStart = true, killOnReuse = true, preGhostInvisible = false } = options;
+-    if (id !== null && id !== undefined && this._ghostRegistry.has(id)) {
+-      const entry = this._ghostRegistry.get(id);
+-      if (killOnReuse) { try { gsap.killTweensOf(entry.ghost); } catch (_) {} }
+-      return entry;
+-    }
+-    if (!startEl) return null;
+-    const baseRect = this.getRect(startEl);
+-    if (!baseRect) return null;
+-    const ghost = this.createGhostFromEl(startEl, baseRect);
+-    if (!ghost) return null;
+-    if (hideStart) { try { startEl.style.visibility = 'hidden'; } catch (_) {} }
+-    if (initialFromDeck) {
+-      const deck = this.getAnchorPoint('deck');
+-      const fromOffset = this.offsetsToPoint(baseRect, deck);
+-      gsap.set(ghost, { x: fromOffset.x, y: fromOffset.y, scale: startScale, autoAlpha: fade ? 0 : 1, force3D: true });
+-    } else {
+-      gsap.set(ghost, { x: 0, y: 0, scale: 1, autoAlpha: preGhostInvisible ? 0 : 1, force3D: true });
+-    }
+-    const entry = { ghost, baseRect, startEl };
+-    if (id !== null && id !== undefined) this._ghostRegistry.set(id, entry);
+-    return entry;
+-  },
+-  _cleanupGhostById(id, { restoreStart = false } = {}) {
+-    if (id === null || id === undefined) return;
+-    const entry = this._ghostRegistry.get(id);
+-    if (!entry) return;
+-    const { ghost, startEl } = entry;
+-    try { gsap.killTweensOf(ghost); } catch (_) {}
+-    try { ghost.remove(); } catch (_) {}
+-    if (restoreStart) { try { startEl.style.visibility = ''; } catch (_) {} }
+-    this._ghostRegistry.delete(id);
+-  },
+-
+-  // ID版本：使用“已存在”的ghost执行 steps；本函数不创建 ghost
+-  async playCardSequenceById(startEl, id, steps = [], options = {}) {
+-    if (!this.overlayEl) return;
+-    const { hideStart = true, endMode = 'keep', scheduledEpoch, revealGhostOnStart = true } = options;
+-    // 排空期间：仅允许在 reset 调用前提交的动画继续执行
+-    if (this._draining) {
+-      if (scheduledEpoch !== this._drainEpoch) return;
+-    } else if (scheduledEpoch !== undefined && scheduledEpoch !== this._epoch) {
+-      return;
+-    }
+-    const entry = this._ghostRegistry.get(id);
+-    if (!entry) return; // 无可用ghost：无法执行该动画
+-    const { ghost, baseRect, startEl: registeredStartEl } = entry;
+-
+-    // 开场处理：隐藏原DOM、显示ghost
+-    try {
+-      const originEl = startEl || registeredStartEl;
+-      if (hideStart && originEl) originEl.style.visibility = 'hidden';
+-    } catch (_) {}
+-    if (revealGhostOnStart) { try { gsap.set(ghost, { autoAlpha: 1 }); } catch (_) {} }
+-
+-    try { gsap.killTweensOf(ghost); } catch (_) {}
+-    const tl = gsap.timeline();
+-
+-    for (const step of steps) {
+-      // 自定义 lambda：在该处即时执行（插入到时间轴）
+-      if (typeof step.call === 'function') {
+-        tl.add(() => {
+-          try { step.call({ ghost, baseRect, orchestrator: this }); } catch (_) {}
+-        });
+-        // 支持 call 后的等待
+-        if (step.holdMs && step.holdMs > 0) tl.to(ghost, { x: '+=0', duration: step.holdMs / 1000, ease: 'none' });
+-        continue;
+-      }
+-
+-      const { duration = 350, ease = defaultEase, holdMs = 0, emitParticles } = step;
+-      const props = {};
+-      if (step.toPoint) {
+-        const o = this.offsetsToPoint(baseRect, step.toPoint);
+-        props.x = o.x; props.y = o.y;
+-      } else if (step.toAnchor) {
+-        const p = this.getAnchorPoint(step.toAnchor);
+-        const o = this.offsetsToPoint(baseRect, p);
+-        props.x = o.x; props.y = o.y;
+-      } else if (step.delta) {
+-        props.x = `+=${step.delta.dx || 0}`;
+-        props.y = `+=${step.delta.dy || 0}`;
+-      } else if (step.toBase) {
+-        props.x = 0; props.y = 0;
+-      }
+-      if (typeof step.scale === 'number') props.scale = step.scale;
+-      if (typeof step.rotate === 'number') props.rotate = step.rotate;
+-      if (typeof step.opacity === 'number') props.autoAlpha = step.opacity;
+-
+-      // 构建 tween，并在需要时添加 onUpdate 节流触发粒子
+-      if (emitParticles && emitParticles.kind === 'burn') {
+-        const interval = Math.max(30, emitParticles.intervalMs || 70);
+-        const burst = Math.max(3, emitParticles.burst || 8);
+-        let lastEmit = -1;
+-        tl.to(ghost, {
+-          ...props,
+-          duration: Math.max(0.001, duration / 1000),
+-          ease,
+-          onUpdate: function () {
+-            // this.time() 单位：秒 -> 毫秒
+-            const elapsed = this.time() * 1000;
+-            if (lastEmit < 0 || elapsed - lastEmit >= interval) {
+-              lastEmit = elapsed;
+-              try { orchestrator._emitBurnParticles(ghost, { burst }); } catch (_) {}
+-            }
+-          }
+-        });
+-      } else {
+-        tl.to(ghost, { ...props, duration: Math.max(0.001, duration / 1000), ease });
+-      }
+-
+-      if (holdMs > 0) tl.to(ghost, { x: '+=0', duration: holdMs / 1000, ease: 'none' });
+-    }
+-
+-    await new Promise(resolve => {
+-      tl.eventCallback('onComplete', () => { resolve(); });
+-      tl.play(0);
+-    });
+-
+-    // 结束策略
+-    if (endMode === 'restore') this._cleanupGhostById(id, { restoreStart: true });
+-    else if (endMode === 'destroy') this._cleanupGhostById(id, { restoreStart: false });
+-    // keep: 保留ghost
+-  },
+-
+-  // 重置所有ghost（例如切屏/退出战斗时）：排空队列 -> 清理 -> 关闭排空
+-  async resetAllGhosts({ restoreStart = true } = {}) {
+-    // 建立“排空屏障”：记录此刻的epoch，并立即推进到下一代，阻断之后提交的新动画
+-    const drainEpoch = this._epoch;
+-    this._draining = true;
+-    this._drainEpoch = drainEpoch;
+-    this._bumpEpoch();
+-
+-    // 截取当前各ID队列的末尾promise，等待它们结算（表示“此刻之前提交”的动画都已完成”）
+-    const tails = Array.from(_idChains.values()).map(p => p.catch(() => {}));
+-    try { await Promise.all(tails); } catch (_) {}
+-
+-    // 执行清理：注册表 + DOM 兜底
+-    for (const id of Array.from(this._ghostRegistry.keys())) {
+-      this._cleanupGhostById(id, { restoreStart });
+-    }
+-    try {
+-      if (this.ghostContainerEl) {
+-        const nodes = Array.from(this.ghostContainerEl.querySelectorAll('.animation-ghost'));
+-        for (const n of nodes) {
+-          try { gsap.killTweensOf(n); } catch (_) {}
+-          try { n.remove(); } catch (_) {}
+-        }
+-      }
+-    } catch (_) {}
+-
+-    // 清空队列并关闭“排空模式”
+-    try { if (typeof _idChains?.clear === 'function') _idChains.clear(); } catch (_) {}
+-    this._draining = false;
+-    this._drainEpoch = null;
+-  },
+-};
+-
+-// Helper to animate by id (backend-driven)
+-const _idChains = new Map();
+-async function animateById({ id, kind, options = {}, steps, hideStart, completionToken }) {
+-  // 在入队前“抢先”克隆ghost，避免后续状态同步删除DOM后无法创建幽灵
+-  try {
+-    const preEl = getCardEl(id);
+-    if (preEl && orchestrator.overlayEl) {
+-      const preOpts = { hideStart: false, killOnReuse: false };
+-      if (kind === 'appearFromDeck') {
+-        preOpts.initialFromDeck = true;
+-        preOpts.startScale = (options && options.startScale) != null ? options.startScale : 0.6;
+-        preOpts.fade = (options && options.fade) != null ? options.fade : true;
+-      } else {
+-        preOpts.preGhostInvisible = true; // 预创建ghost保持不可见，避免双影
+-      }
+-      orchestrator._ensureGhostById(id, preEl, preOpts);
+-    }
+-  } catch (_) {}
+-
+-  const scheduledEpoch = orchestrator._epoch;
+-  const run = async () => {
+-    // 排空期间：仅允许在 reset 调用前提交的动画继续执行；否则仅允许当前时代
+-    if (orchestrator._draining) {
+-      if (scheduledEpoch !== orchestrator._drainEpoch) {
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        return;
+-      }
+-    } else if (scheduledEpoch !== orchestrator._epoch) {
+-      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-      return;
+-    }
+-    const el = getCardEl(id) || null;
+-
+-    // 自定义steps：直接执行到ghost（不创建）
+-    if (Array.isArray(steps) && steps.length) {
+-      await orchestrator.playCardSequenceById(el, id, steps, { scheduledEpoch, hideStart: hideStart !== false, ...(options || {}) });
+-      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-      return;
+-    }
+-
+-    // 预置序列：使用步骤构建器
+-    switch (kind) {
+-      case 'appearFromDeck': {
+-        const { durationMs = 450, startScale = 0.6, fade = true } = options || {};
+-        const built = orchestrator.buildSteps.appearFromDeck({ durationMs });
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: true, endMode: 'restore', initialFromDeck: true, startScale, fade });
+-        try { frontendEventBus.emit('card-appear-finished', { id }); } catch (_) {}
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        break;
+-      }
+-      case 'centerThenDeck': {
+-        const built = orchestrator.buildSteps.centerThenDeck(options || {});
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        break;
+-      }
+-      case 'flyToCenter': {
+-        const built = orchestrator.buildSteps.flyToCenter(options || {});
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        break;
+-      }
+-      case 'flyToDeckFade':
+-      case 'drop': {
+-        const built = orchestrator.buildSteps.flyToDeckFade(options || {});
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        break;
+-      }
+-      case 'exhaust':
+-      case 'burn': {
+-        const built = orchestrator.buildSteps.exhaustBurn(options || {});
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-        break;
+-      }
+-      default: {
+-        const built = orchestrator.buildSteps.flyToCenter(options || {});
+-        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
+-        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+-      }
+-    }
+-  };
+-
+-  // 同一id动画排队（前序promise若拒绝也不阻塞后续）
+-  const prev = _idChains.get(id) || Promise.resolve();
+-  const safePrev = prev.catch(() => {});
+-  const next = safePrev.then(() => run());
+-  _idChains.set(id, next);
+-  next.finally(() => {
+-    if (_idChains.get(id) === next) _idChains.delete(id);
+-  });
+-  return next;
+-}
+-
+-frontendEventBus.on('animate-card-by-id', async (payload = {}) => {
+-  try { await animateById(payload || {}); } catch (_) {}
+-});
+-
+-frontendEventBus.on('clear-card-animations', () => {
+-  orchestrator.resetAllGhosts({ restoreStart: true });
+-});
+-
+-export { animateById };
+-export default orchestrator;
+
+--- FILE: src/utils/cardAnimationOrchestrator.js ---
+diff --git a/src/utils/cardAnimationOrchestrator.js b/src/utils/cardAnimationOrchestrator.js
+index a32cf35..aae3b1f 100644
+--- a/src/utils/cardAnimationOrchestrator.js
++++ b/src/utils/cardAnimationOrchestrator.js
+@@ -19,6 +19,9 @@ const orchestrator = {
+   // 记录：按ID缓存ghost，确保连续指令可复用状态
+   // id -> { ghost, baseRect, startEl }
+   _ghostRegistry: new Map(),
++  // 管理在中心展示的卡片ID列表（按加入顺序）
++  _centerIds: [],
++  _layoutCenterDurationMs: 220,
+   // 全局“时代戳”（reset代次）。当 resetAllGhosts 发生时用于屏蔽旧任务
+   _epoch: 0,
+   _bumpEpoch() { this._epoch++; return this._epoch; },
+@@ -58,7 +61,7 @@ const orchestrator = {
+         { rotate: 0, opacity: 0, duration: t2, ease: 'power1.in', emitParticles: emitCfg }
+       ];
+     },
+-    appearFromDeck({ durationMs = 450 } = {}) {
++    appearFromDeck({ durationMs = 300 } = {}) {
+       // 需配合 initialFromDeck=true 使用
+       return [
+         { toBase: true, scale: 1, opacity: 1, duration: durationMs, ease: defaultEase }
+@@ -71,6 +74,51 @@ const orchestrator = {
+     this.centerAnchorEl = centerAnchorEl;
+     this.deckAnchorEl = deckAnchorEl;
+     this.ghostContainerEl = ghostContainerEl;
++    try {
++      window.addEventListener('resize', () => { try { this._layoutCenter(); } catch (_) {} }, { passive: true });
++    } catch (_) {}
++  },
++  // 中心管理：注册/移除/清空
++  _addToCenter(id) {
++    if (id == null) return;
++    if (!this._centerIds.includes(id)) this._centerIds.push(id);
++    this._layoutCenter();
++  },
++  _removeFromCenter(id) {
++    if (id == null) return;
++    const idx = this._centerIds.indexOf(id);
++    if (idx >= 0) {
++      this._centerIds.splice(idx, 1);
++      this._layoutCenter();
++    }
++  },
++  _clearCenter() {
++    if (this._centerIds.length > 0) {
++      this._centerIds.splice(0, this._centerIds.length);
++    }
++  },
++  // 根据 centerAnchor 对 _centerIds 的幽灵进行横向排布
++  _layoutCenter() {
++    try {
++      if (!this._centerIds.length) return;
++      const count = this._centerIds.length;
++      const anchor = this.getAnchorPoint('center');
++      const gap = 220; // 卡片横向间隔（可按需要调整/计算）
++      // 计算对称位置偏移：-((n-1)/2)*gap ... +((n-1)/2)*gap
++      const half = (count - 1) / 2;
++      for (let i = 0; i < count; i++) {
++        const id = this._centerIds[i];
++        const entry = this._ghostRegistry.get(id);
++        if (!entry) continue;
++        const { ghost, baseRect } = entry;
++        const targetPoint = { x: anchor.x + (i - half) * gap, y: anchor.y };
++        const o = this.offsetsToPoint(baseRect, targetPoint);
++        try {
++          gsap.to(ghost, { x: o.x, y: o.y, scale: 1.2, duration: Math.max(0.001, this._layoutCenterDurationMs / 1000), ease: defaultEase });
++          ghost.style.zIndex = String(100 + i);
++        } catch (_) {}
++      }
++    } catch (_) {}
+   },
+ 
+   // 工具：测量/锚点/换算
+@@ -305,6 +353,9 @@ const orchestrator = {
+       }
+     } catch (_) {}
+ 
++    // 清空中心展示列表
++    try { this._clearCenter(); } catch (_) {}
++
+     // 清空队列并关闭“排空模式”
+     try { if (typeof _idChains?.clear === 'function') _idChains.clear(); } catch (_) {}
+     this._draining = false;
+@@ -355,7 +406,7 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+     // 预置序列：使用步骤构建器
+     switch (kind) {
+       case 'appearFromDeck': {
+-        const { durationMs = 450, startScale = 0.6, fade = true } = options || {};
++        const { durationMs = 300, startScale = 0.6, fade = true } = options || {};
+         const built = orchestrator.buildSteps.appearFromDeck({ durationMs });
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: true, endMode: 'restore', initialFromDeck: true, startScale, fade });
+         try { frontendEventBus.emit('card-appear-finished', { id }); } catch (_) {}
+@@ -364,6 +415,8 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+       }
+       case 'centerThenDeck': {
+         const built = orchestrator.buildSteps.centerThenDeck(options || {});
++        // 先从中心布局中移除，避免布局占位
++        try { orchestrator._removeFromCenter(id); } catch (_) {}
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+         if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+@@ -371,12 +424,16 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+       case 'flyToCenter': {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        // 纳入中心并重排
++        try { orchestrator._addToCenter(id); } catch (_) {}
+         if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'flyToDeckFade':
+       case 'drop': {
+         const built = orchestrator.buildSteps.flyToDeckFade(options || {});
++        // 若在中心，先从中心移除
++        try { orchestrator._removeFromCenter(id); } catch (_) {}
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+         if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+@@ -384,6 +441,8 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+       case 'exhaust':
+       case 'burn': {
+         const built = orchestrator.buildSteps.exhaustBurn(options || {});
++        // 若在中心，先从中心移除
++        try { orchestrator._removeFromCenter(id); } catch (_) {}
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
+         if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+@@ -391,6 +450,8 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+       default: {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        // 纳入中心并重排
++        try { orchestrator._addToCenter(id); } catch (_) {}
+         if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       }
+     }
+@@ -408,11 +469,13 @@ async function animateById({ id, kind, options = {}, steps, hideStart, completio
+ }
+ 
+ frontendEventBus.on('animate-card-by-id', async (payload = {}) => {
++  // console.log('animate-card-by-id', payload);
+   try { await animateById(payload || {}); } catch (_) {}
+ });
+ 
+ frontendEventBus.on('clear-card-animations', () => {
+   orchestrator.resetAllGhosts({ restoreStart: true });
++  try { orchestrator._clearCenter(); } catch (_) {}
+ });
+ 
+ export { animateById };
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

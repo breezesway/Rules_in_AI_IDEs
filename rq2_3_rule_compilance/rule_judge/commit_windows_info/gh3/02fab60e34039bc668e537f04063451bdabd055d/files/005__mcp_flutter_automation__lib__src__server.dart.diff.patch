@@ -1,0 +1,68 @@
+diff --git a/mcp_flutter_automation/lib/src/server.dart b/mcp_flutter_automation/lib/src/server.dart
+index 05f8f06..eac96ed 100644
+--- a/mcp_flutter_automation/lib/src/server.dart
++++ b/mcp_flutter_automation/lib/src/server.dart
+@@ -262,30 +262,40 @@ class FlutterAutomationMCPServer extends MCPBase {
+     _logger.info('Starting Flutter Automation MCP Server');
+ 
+     // Listen for MCP protocol messages on stdin
+-    await for (final line
+-        in stdin.transform(utf8.decoder).transform(LineSplitter())) {
+-      if (line.trim().isEmpty) continue;
+-
+-      try {
+-        final request = json.decode(line);
+-        final response = await _handleMCPRequest(request);
+-        if (response != null) {
+-          stdout.writeln(json.encode(response));
++    stdin.transform(utf8.decoder).transform(LineSplitter()).listen(
++      (line) async {
++        if (line.trim().isEmpty) return;
++
++        try {
++          final request = json.decode(line);
++          final response = await _handleMCPRequest(request);
++          if (response != null) {
++            stdout.writeln(json.encode(response));
++          }
++        } catch (e) {
++          _logger.severe('Error processing MCP request: $e');
++          // Send error response
++          final errorResponse = {
++            'jsonrpc': '2.0',
++            'id': null,
++            'error': {
++              'code': -32603,
++              'message': 'Internal error: $e',
++            },
++          };
++          stdout.writeln(json.encode(errorResponse));
+         }
+-      } catch (e) {
+-        _logger.severe('Error processing MCP request: $e');
+-        // Send error response
+-        final errorResponse = {
+-          'jsonrpc': '2.0',
+-          'id': null,
+-          'error': {
+-            'code': -32603,
+-            'message': 'Internal error: $e',
+-          },
+-        };
+-        stdout.writeln(json.encode(errorResponse));
+-      }
+-    }
++      },
++      onDone: () {
++        _logger.info('MCP server stdin closed, but keeping server alive');
++      },
++      onError: (error) {
++        _logger.severe('MCP server stdin error: $error');
++      },
++    );
++
++    // Keep the server running indefinitely
++    await Completer<void>().future;
+   }
+ 
+   Future<Map<String, dynamic>?> _handleMCPRequest(

@@ -1,0 +1,434 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/technology-stack.md
+- Change Type: modified
+- Target Rule Content:
+- **Create React App**: For project bootstrapping
++ **Vite**: For fast development server and build tooling
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, project root directory structure (configuration files).
+- Suggested Logic: 1. Check 'package.json' to ensure 'vite' is present in 'dependencies' or 'devDependencies' and 'react-scripts' (the core of Create React App) is absent. 
+2. Verify that the 'scripts' section in 'package.json' uses vite-based commands (e.g., 'vite', 'vite build') rather than 'react-scripts'. 
+3. Check for the existence of a Vite configuration file (e.g., 'vite.config.ts' or 'vite.config.js') in the project root.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: change computer
+- Changed Files List: 
+.kiro/specs/bug-tracker/tasks.md	+1	-0	after_lines=210
+backend/src/app.ts	+5	-5	after_lines=91
+backend/src/controllers/bug-controller.ts	+13	-13	after_lines=89
+backend/src/controllers/project-controller.ts	+4	-4	after_lines=62
+backend/src/database/migrate.ts	+2	-2	after_lines=159
+backend/src/middleware/error-handler.ts	+1	-1	after_lines=83
+backend/src/middleware/request-logger.ts	+1	-1	after_lines=63
+backend/src/services/bug-service.ts	+2	-2	after_lines=284
+backend/src/test/setup.ts	+2	-2	after_lines=119
+backend/src/utils/errors.ts	+1	-1	after_lines=47
+backend/src/utils/response.ts	+2	-2	after_lines=74
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── bug-tracker
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── coding-standards.md
+│       ├── implementation-guidelines.md
+│       ├── project-decisions.md
+│       ├── project-guidelines.md
+│       └── technology-stack.md
+├── Interview assignment - interviewer .docx
+├── backend
+│   ├── .env.example
+│   ├── .eslintrc.js
+│   ├── .prettierrc
+│   ├── jest.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   ├── app.ts
+│   │   ├── controllers
+│   │   │   ├── bug-controller.ts
+│   │   │   └── project-controller.ts
+│   │   ├── database
+│   │   │   ├── connection.ts
+│   │   │   ├── migrate.ts
+│   │   │   ├── migrations
+│   │   │   │   ├── 001_create_projects_table.sql
+│   │   │   │   └── 002_create_bugs_table.sql
+│   │   │   ├── seed.ts
+│   │   │   └── utils.ts
+│   │   ├── index.ts
+│   │   ├── middleware
+│   │   │   ├── error-handler.ts
+│   │   │   ├── request-logger.ts
+│   │   │   └── validation.ts
+│   │   ├── models
+│   │   │   ├── api-response.ts
+│   │   │   ├── bug.ts
+│   │   │   └── project.ts
+│   │   ├── routes
+│   │   │   ├── bug-routes.ts
+│   │   │   └── project-routes.ts
+│   │   ├── services
+│   │   │   ├── bug-service.ts
+│   │   │   └── project-service.ts
+│   │   ├── test
+│   │   │   ├── jest.setup.ts
+│   │   │   └── setup.ts
+│   │   ├── utils
+│   │   │   ├── errors.ts
+│   │   │   └── response.ts
+│   │   └── validators
+│   │       ├── bug-validators.ts
+│   │       └── project-validators.ts
+│   ├── tests
+│   │   ├── app.test.ts
+│   │   ├── bugs.test.ts
+│   │   └── projects.test.ts
+│   └── tsconfig.json
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── test
+│   │   │   └── setup.ts
+│   │   └── vite-env.d.ts
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── instructions.md
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/bug-tracker/tasks.md ---
+diff --git a/.kiro/specs/bug-tracker/tasks.md b/.kiro/specs/bug-tracker/tasks.md
+index 0e25a24..8185eb0 100644
+--- a/.kiro/specs/bug-tracker/tasks.md
++++ b/.kiro/specs/bug-tracker/tasks.md
+@@ -85,6 +85,7 @@
+ 
+ 
+ 
++
+     - _Requirements: 5.5_
+ 
+   - [ ] 4.2 Write API endpoint tests
+
+--- FILE: backend/src/app.ts ---
+diff --git a/backend/src/app.ts b/backend/src/app.ts
+index 3f962c9..f11c94c 100644
+--- a/backend/src/app.ts
++++ b/backend/src/app.ts
+@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
+ 
+ import { createRequestLogger, addResponseTime } from './middleware/request-logger';
+ import { errorHandler, notFoundHandler } from './middleware/error-handler';
+-import { testConnection } from './database/connection';
++// Database connection is initialized in index.ts
+ import { checkDatabaseHealth } from './database/utils';
+ 
+ // Import routes
+@@ -32,7 +32,7 @@ app.use(helmet({
+ 
+ // CORS configuration
+ app.use(cors({
+-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
++  origin: process.env['CORS_ORIGIN'] || 'http://localhost:3001',
+   credentials: true,
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+   allowedHeaders: ['Content-Type', 'Authorization'],
+@@ -47,7 +47,7 @@ app.use(addResponseTime);
+ app.use(createRequestLogger());
+ 
+ // Health check endpoint
+-app.get('/health', async (req, res) => {
++app.get('/health', async (_req, res) => {
+   try {
+     const dbHealth = await checkDatabaseHealth();
+     
+@@ -56,7 +56,7 @@ app.get('/health', async (req, res) => {
+       timestamp: new Date().toISOString(),
+       uptime: process.uptime(),
+       database: dbHealth,
+-      environment: process.env.NODE_ENV || 'development',
++      environment: process.env['NODE_ENV'] || 'development',
+     });
+   } catch (error) {
+     res.status(503).json({
+@@ -68,7 +68,7 @@ app.get('/health', async (req, res) => {
+ });
+ 
+ // API routes
+-app.get('/api', (req, res) => {
++app.get('/api', (_req, res) => {
+   res.json({
+     message: 'Bug Tracker API',
+     version: '1.0.0',
+
+--- FILE: backend/src/controllers/bug-controller.ts ---
+diff --git a/backend/src/controllers/bug-controller.ts b/backend/src/controllers/bug-controller.ts
+index 1f17224..e039d36 100644
+--- a/backend/src/controllers/bug-controller.ts
++++ b/backend/src/controllers/bug-controller.ts
+@@ -9,13 +9,13 @@ import { CreateBugRequest, UpdateBugRequest, BugFilters } from '../models/bug';
+  * GET /api/projects/:projectId/bugs
+  */
+ export const getBugsByProject = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
++  const projectId = parseInt(req.params['projectId']!);
+   
+   const filters: BugFilters = {
+-    severity: req.query.severity as any,
+-    status: req.query.status as any,
+-    sortBy: req.query.sortBy as any,
+-    sortOrder: req.query.sortOrder as any,
++    severity: req.query['severity'] as any,
++    status: req.query['status'] as any,
++    sortBy: req.query['sortBy'] as any,
++    sortOrder: req.query['sortOrder'] as any,
+   };
+ 
+   const bugs = await bugService.getBugsByProject(projectId, filters);
+@@ -28,8 +28,8 @@ export const getBugsByProject = asyncHandler(async (req: Request, res: Response)
+  * GET /api/projects/:projectId/bugs/:bugId
+  */
+ export const getBugById = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
+-  const bugId = parseInt(req.params.bugId!);
++  const projectId = parseInt(req.params['projectId']!);
++  const bugId = parseInt(req.params['bugId']!);
+   
+   const bug = await bugService.getBugById(projectId, bugId);
+   
+@@ -41,7 +41,7 @@ export const getBugById = asyncHandler(async (req: Request, res: Response) => {
+  * POST /api/projects/:projectId/bugs
+  */
+ export const createBug = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
++  const projectId = parseInt(req.params['projectId']!);
+   const bugData: CreateBugRequest = req.body;
+   
+   const bug = await bugService.createBug(projectId, bugData);
+@@ -54,8 +54,8 @@ export const createBug = asyncHandler(async (req: Request, res: Response) => {
+  * PUT /api/projects/:projectId/bugs/:bugId
+  */
+ export const updateBug = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
+-  const bugId = parseInt(req.params.bugId!);
++  const projectId = parseInt(req.params['projectId']!);
++  const bugId = parseInt(req.params['bugId']!);
+   const updates: UpdateBugRequest = req.body;
+   
+   const bug = await bugService.updateBug(projectId, bugId, updates);
+@@ -68,8 +68,8 @@ export const updateBug = asyncHandler(async (req: Request, res: Response) => {
+  * DELETE /api/projects/:projectId/bugs/:bugId
+  */
+ export const deleteBug = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
+-  const bugId = parseInt(req.params.bugId!);
++  const projectId = parseInt(req.params['projectId']!);
++  const bugId = parseInt(req.params['bugId']!);
+   
+   await bugService.deleteBug(projectId, bugId);
+   
+@@ -81,7 +81,7 @@ export const deleteBug = asyncHandler(async (req: Request, res: Response) => {
+  * GET /api/projects/:projectId/bugs/statistics
+  */
+ export const getBugStatistics = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.projectId!);
++  const projectId = parseInt(req.params['projectId']!);
+   
+   const statistics = await bugService.getBugStatistics(projectId);
+
+--- FILE: backend/src/controllers/project-controller.ts ---
+diff --git a/backend/src/controllers/project-controller.ts b/backend/src/controllers/project-controller.ts
+index eec352b..1f2a7cf 100644
+--- a/backend/src/controllers/project-controller.ts
++++ b/backend/src/controllers/project-controller.ts
+@@ -8,7 +8,7 @@ import { CreateProjectRequest } from '../models/project';
+  * Get all projects
+  * GET /api/projects
+  */
+-export const getAllProjects = asyncHandler(async (req: Request, res: Response) => {
++export const getAllProjects = asyncHandler(async (_req: Request, res: Response) => {
+   const projects = await projectService.getAllProjects();
+   
+   sendSuccess(res, projects, `Retrieved ${projects.length} projects`);
+@@ -19,7 +19,7 @@ export const getAllProjects = asyncHandler(async (req: Request, res: Response) =
+  * GET /api/projects/:id
+  */
+ export const getProjectById = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   const project = await projectService.getProjectById(projectId);
+   
+   sendSuccess(res, project);
+@@ -41,7 +41,7 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
+  * PUT /api/projects/:id
+  */
+ export const updateProject = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   const updates: Partial<CreateProjectRequest> = req.body;
+   
+   const project = await projectService.updateProject(projectId, updates);
+@@ -54,7 +54,7 @@ export const updateProject = asyncHandler(async (req: Request, res: Response) =>
+  * DELETE /api/projects/:id
+  */
+ export const deleteProject = asyncHandler(async (req: Request, res: Response) => {
+-  const projectId = parseInt(req.params.id!);
++  const projectId = parseInt(req.params['id']!);
+   
+   await projectService.deleteProject(projectId);
+
+--- FILE: backend/src/database/migrate.ts ---
+diff --git a/backend/src/database/migrate.ts b/backend/src/database/migrate.ts
+index aa10ce7..58b4b32 100644
+--- a/backend/src/database/migrate.ts
++++ b/backend/src/database/migrate.ts
+@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
+ dotenv.config();
+ 
+ const pool = new Pool({
+-  connectionString: process.env.DATABASE_URL,
++  connectionString: process.env['DATABASE_URL'],
+ });
+ 
+ interface Migration {
+@@ -48,7 +48,7 @@ function getMigrationFiles(): Migration[] {
+     .sort();
+ 
+   return files.map(filename => {
+-    const id = parseInt(filename.split('_')[0]);
++    const id = parseInt(filename.split('_')[0] || '0');
+     const sql = fs.readFileSync(path.join(migrationsDir, filename), 'utf8');
+     return { id, filename, sql };
+   });
+
+--- FILE: backend/src/middleware/error-handler.ts ---
+diff --git a/backend/src/middleware/error-handler.ts b/backend/src/middleware/error-handler.ts
+index 95f7513..e466620 100644
+--- a/backend/src/middleware/error-handler.ts
++++ b/backend/src/middleware/error-handler.ts
+@@ -1,5 +1,5 @@
+ import { Request, Response, NextFunction } from 'express';
+-import { ValidationResult } from 'express-validator';
++import { validationResult } from 'express-validator';
+ import { AppError, ValidationError } from '../utils/errors';
+ import { sendError } from '../utils/response';
+
+--- FILE: backend/src/middleware/request-logger.ts ---
+diff --git a/backend/src/middleware/request-logger.ts b/backend/src/middleware/request-logger.ts
+index d82ad05..40294cf 100644
+--- a/backend/src/middleware/request-logger.ts
++++ b/backend/src/middleware/request-logger.ts
+@@ -30,7 +30,7 @@ const productionFormat = ':remote-addr - :remote-user [:date[clf]] ":method :url
+  * Create request logger middleware
+  */
+ export function createRequestLogger() {
+-  const format = process.env.NODE_ENV === 'production' 
++  const format = process.env['NODE_ENV'] === 'production' 
+     ? productionFormat 
+     : developmentFormat;
+
+--- FILE: backend/src/services/bug-service.ts ---
+diff --git a/backend/src/services/bug-service.ts b/backend/src/services/bug-service.ts
+index b4a49a2..016e578 100644
+--- a/backend/src/services/bug-service.ts
++++ b/backend/src/services/bug-service.ts
+@@ -20,8 +20,8 @@ export async function getBugsByProject(
+ 
+     // Build WHERE clause for filters
+     const conditions: Record<string, any> = { project_id: projectId };
+-    if (filters.severity) conditions.severity = filters.severity;
+-    if (filters.status) conditions.status = filters.status;
++    if (filters['severity']) conditions.severity = filters['severity'];
++    if (filters['status']) conditions.status = filters['status'];
+ 
+     const { whereClause, params } = buildWhereClause(conditions);
+     const orderByClause = buildOrderByClause(
+
+--- FILE: backend/src/test/setup.ts ---
+diff --git a/backend/src/test/setup.ts b/backend/src/test/setup.ts
+index 4ca4184..45abef3 100644
+--- a/backend/src/test/setup.ts
++++ b/backend/src/test/setup.ts
+@@ -4,7 +4,7 @@ import { seedDatabase } from '../database/seed';
+ 
+ // Test database configuration
+ const testDbConfig = {
+-  connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:password@localhost:5432/bugtracker_test',
++  connectionString: process.env['TEST_DATABASE_URL'] || 'postgresql://postgres:password@localhost:5432/bugtracker_test',
+   max: 5,
+   idleTimeoutMillis: 30000,
+   connectionTimeoutMillis: 2000,
+@@ -23,7 +23,7 @@ export async function setupTestDatabase(): Promise<void> {
+     testPool = new Pool(testDbConfig);
+     
+     // Override the main database connection for tests
+-    process.env.DATABASE_URL = testDbConfig.connectionString;
++    process.env['DATABASE_URL'] = testDbConfig.connectionString;
+     
+     // Reset and migrate database
+     await resetDatabase();
+
+--- FILE: backend/src/utils/errors.ts ---
+diff --git a/backend/src/utils/errors.ts b/backend/src/utils/errors.ts
+index c4c7f47..08a0c9a 100644
+--- a/backend/src/utils/errors.ts
++++ b/backend/src/utils/errors.ts
+@@ -41,7 +41,7 @@ export class DatabaseError extends AppError {
+   constructor(message: string, originalError?: Error) {
+     super(message, 500, 'DATABASE_ERROR', false);
+     if (originalError) {
+-      this.stack = originalError.stack;
++      this.stack = originalError.stack || this.stack;
+     }
+   }
+ }
+\ No newline at end of file
+
+--- FILE: backend/src/utils/response.ts ---
+diff --git a/backend/src/utils/response.ts b/backend/src/utils/response.ts
+index 526bf2d..779f995 100644
+--- a/backend/src/utils/response.ts
++++ b/backend/src/utils/response.ts
+@@ -14,7 +14,7 @@ export function sendSuccess<T>(
+   const response: ApiResponse<T> = {
+     success: true,
+     data,
+-    message,
++    ...(message && { message }),
+   };
+ 
+   res.status(statusCode).json(response);
+@@ -43,7 +43,7 @@ export function sendError(
+     error: {
+       message: error.message,
+       code,
+-      details,
++      ...(details && { details }),
+     },
+   };
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

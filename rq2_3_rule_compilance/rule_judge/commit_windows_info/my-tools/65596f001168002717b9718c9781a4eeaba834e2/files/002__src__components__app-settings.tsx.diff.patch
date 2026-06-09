@@ -1,0 +1,232 @@
+diff --git a/src/components/app-settings.tsx b/src/components/app-settings.tsx
+index a8bacf9..08deb77 100644
+--- a/src/components/app-settings.tsx
++++ b/src/components/app-settings.tsx
+@@ -1,5 +1,5 @@
+ import React, { useState, useEffect } from 'react';
+-import { RotateCcw, Save, FileText, FolderOpen, Palette } from 'lucide-react';
++import { RotateCcw, FileText, FolderOpen, Palette } from 'lucide-react';
+ import { Modal } from '../ui/modal';
+ import { SaveLocationSelector } from '../ui/save-location-selector';
+ import { ThemeSelector } from '../ui/theme-selector';
+@@ -19,7 +19,6 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+     theme: 'system'
+   });
+   const [loading, setLoading] = useState(false);
+-  const [saving, setSaving] = useState(false);
+   const [changingTheme, setChangingTheme] = useState(false);
+   const { theme, changeTheme } = useTheme();
+ 
+@@ -38,27 +37,25 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+     }
+   };
+ 
+-  // 保存配置
+-  const saveConfig = async () => {
+-    setSaving(true);
++  // 立即保存配置项
++  const updateConfigAndSave = async (key: keyof AppConfig, value: boolean | string) => {
+     try {
+-      // 创建要保存的配置，排除主题（主题已通过changeTheme立即保存）
+-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+-      const { theme: _, ...configToSave } = config;
+-      const result = await window.electronAPI.updateAppConfig({
+-        ...configToSave,
+-        theme // 包含当前主题状态
+-      });
+-      if (result.success) {
+-        toast.success('配置已保存');
+-      } else {
++      // 更新本地状态
++      const newConfig = { ...config, [key]: value };
++      setConfig(newConfig);
++
++      // 立即保存到后端
++      const result = await window.electronAPI.updateAppConfig(newConfig);
++      if (!result.success) {
++        // 如果保存失败，回滚本地状态
++        setConfig(config);
+         toast.error('保存失败: ' + result.error);
+       }
+     } catch (error) {
++      // 如果保存失败，回滚本地状态
++      setConfig(config);
+       console.error('保存配置失败:', error);
+       toast.error('保存配置失败');
+-    } finally {
+-      setSaving(false);
+     }
+   };
+ 
+@@ -82,14 +79,6 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+     }
+   };
+ 
+-  // 更新配置项
+-  const updateConfig = (key: keyof AppConfig, value: boolean | string) => {
+-    setConfig(prev => ({
+-      ...prev,
+-      [key]: value
+-    }));
+-  };
+-
+   // 处理主题切换（立即生效）
+   const handleThemeChange = async (newTheme: ThemeMode) => {
+     if (changingTheme) return; // 防止重复点击
+@@ -99,8 +88,8 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+       // 立即应用主题
+       await changeTheme(newTheme);
+       
+-      // 更新本地配置状态
+-      updateConfig('theme', newTheme);
++      // 更新本地配置状态并保存
++      await updateConfigAndSave('theme', newTheme);
+       
+       // 显示成功提示
+       const themeNames = {
+@@ -122,7 +111,8 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+     try {
+       const result = await window.electronAPI.selectSaveLocation();
+       if (result.success && result.path) {
+-        updateConfig('defaultSaveLocation', result.path);
++        await updateConfigAndSave('defaultSaveLocation', result.path);
++        toast.success('默认保存位置已更新');
+       }
+     } catch (error) {
+       console.error('选择保存位置失败:', error);
+@@ -130,6 +120,12 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+     }
+   };
+ 
++  // 处理自动编号设置变更
++  const handleAutoNumberChange = async (checked: boolean) => {
++    await updateConfigAndSave('autoNumberDuplicateFiles', checked);
++    toast.success(checked ? '已启用自动编号' : '已禁用自动编号');
++  };
++
+   useEffect(() => {
+     if (isOpen) {
+       loadConfig();
+@@ -137,42 +133,15 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+   }, [isOpen]);
+ 
+   const footerContent = (
+-    <div className="flex justify-between">
++    <div className="flex justify-end">
+       <button
+         onClick={resetConfig}
+-        disabled={loading || saving}
++        disabled={loading}
+         className="flex items-center space-x-2 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+       >
+         <RotateCcw className="h-4 w-4" />
+         <span>重置为默认</span>
+       </button>
+-      
+-      <div className="flex space-x-3">
+-        <button
+-          onClick={onClose}
+-          disabled={saving}
+-          className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 disabled:opacity-50 text-gray-900 dark:text-gray-100"
+-        >
+-          取消
+-        </button>
+-        <button
+-          onClick={saveConfig}
+-          disabled={loading || saving}
+-          className="flex items-center space-x-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+-        >
+-          {saving ? (
+-            <>
+-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+-              <span>保存中...</span>
+-            </>
+-          ) : (
+-            <>
+-              <Save className="h-4 w-4" />
+-              <span>保存配置</span>
+-            </>
+-          )}
+-        </button>
+-      </div>
+     </div>
+   );
+ 
+@@ -197,12 +166,12 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+               <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                 <div className="space-y-4">
+                   <div>
+-                                          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+-                        默认保存位置
+-                      </h4>
+-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+-                        设置所有工具的默认文件保存位置。如果不设置，将使用系统默认下载目录。
+-                      </p>
++                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
++                      默认保存位置
++                    </h4>
++                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
++                      设置所有工具的默认文件保存位置。如果不设置，将使用系统默认下载目录。
++                    </p>
+                   </div>
+                   
+                   <div>
+@@ -211,7 +180,7 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+                       value={config.defaultSaveLocation}
+                       placeholder="使用系统默认下载目录"
+                       onSelect={handleSelectDefaultSaveLocation}
+-                      disabled={loading || saving}
++                      disabled={loading}
+                     />
+                     {config.defaultSaveLocation && (
+                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">当前设置: {config.defaultSaveLocation}</p>
+@@ -232,14 +201,14 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+               <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                 <div className="flex items-start justify-between">
+                   <div className="flex-1">
+-                                          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+-                        文件名重复时自动添加序号
+-                      </h4>
+-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+-                        当输出文件名已存在时，自动在文件名后添加数字序号（如 document(1).pdf），
+-                        而不是询问是否覆盖原文件。
+-                      </p>
+-                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
++                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
++                      文件名重复时自动添加序号
++                    </h4>
++                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
++                      当输出文件名已存在时，自动在文件名后添加数字序号（如 document(1).pdf），
++                      而不是询问是否覆盖原文件。
++                    </p>
++                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                       <p>• 启用：自动生成 document(1).pdf, document(2).pdf...</p>
+                       <p>• 禁用：弹出对话框询问是否覆盖现有文件</p>
+                     </div>
+@@ -250,7 +219,7 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+                       <input
+                         type="checkbox"
+                         checked={config.autoNumberDuplicateFiles}
+-                        onChange={(e) => updateConfig('autoNumberDuplicateFiles', e.target.checked)}
++                        onChange={(e) => handleAutoNumberChange(e.target.checked)}
+                         className="sr-only peer"
+                       />
+                       <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 dark:peer-focus:ring-gray-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 dark:peer-checked:bg-white peer-checked:after:bg-white dark:peer-checked:after:bg-gray-900"></div>
+@@ -301,7 +270,7 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+                   <ThemeSelector
+                     currentTheme={theme}
+                     onThemeChange={handleThemeChange}
+-                    disabled={loading || saving}
++                    disabled={loading}
+                     isChanging={changingTheme}
+                   />
+                 </div>
+@@ -311,7 +280,7 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+             {/* 配置信息 */}
+             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+               <p className="text-xs text-gray-500 dark:text-gray-400">
+-                配置文件保存在应用数据目录中，重装应用后配置会保留。
++                配置文件保存在应用数据目录中，重装应用后配置会保留。所有设置修改后立即生效。
+               </p>
+             </div>
+           </div>

@@ -1,0 +1,372 @@
+diff --git a/mcp_flutter_automation/lib/src/server.dart b/mcp_flutter_automation/lib/src/server.dart
+index ec440a5..1b30383 100644
+--- a/mcp_flutter_automation/lib/src/server.dart
++++ b/mcp_flutter_automation/lib/src/server.dart
+@@ -15,21 +15,23 @@ class FlutterAutomationMCPServer extends MCPBase {
+   final _logger = Logger('FlutterAutomationMCPServer');
+   late final FlutterController _controller;
+   late final ScreenshotServer _screenshotServer;
+-  
+-  FlutterAutomationMCPServer() : super(
+-    serverInfo: {
+-      'name': 'flutter-automation',
+-      'version': '1.0.0',
+-    },
+-  ) {
++
++  FlutterAutomationMCPServer()
++      : super(
++          serverInfo: {
++            'name': 'flutter-automation',
++            'version': '1.0.0',
++          },
++        ) {
+     _controller = FlutterController();
+     _screenshotServer = ScreenshotServer();
+   }
+-  
++
+   FlutterController get controller => _controller;
+-  
++
+   // Simplified tool execution for testing
+-  Future<Map<String, dynamic>> executeTool(String toolName, Map<String, dynamic> params) async {
++  Future<Map<String, dynamic>> executeTool(
++      String toolName, Map<String, dynamic> params) async {
+     try {
+       switch (toolName) {
+         case 'launch_app':
+@@ -39,8 +41,8 @@ class FlutterAutomationMCPServer extends MCPBase {
+           final deviceId = params['deviceId'] as String?;
+           final vmServicePort = params['vmServicePort'] as int? ?? 8182;
+           final ddsPort = params['ddsPort'] as int? ?? 8181;
+-          
+-          final app = await _controller.launchApp(
++
++          await _controller.launchApp(
+             appId: appId,
+             projectPath: projectPath,
+             targetFile: targetFile,
+@@ -48,13 +50,13 @@ class FlutterAutomationMCPServer extends MCPBase {
+             vmServicePort: vmServicePort,
+             ddsPort: ddsPort,
+           );
+-          
++
+           return {
+             'success': true,
+             'message': 'App launched successfully',
+             'appInfo': _controller.getAppInfo(appId),
+           };
+-          
++
+         case 'hot_reload':
+           final appId = params['appId'] as String;
+           await _controller.hotReload(appId);
+@@ -62,7 +64,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'success': true,
+             'message': 'Hot reload completed',
+           };
+-          
++
+         case 'hot_restart':
+           final appId = params['appId'] as String;
+           await _controller.hotRestart(appId);
+@@ -70,7 +72,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'success': true,
+             'message': 'Hot restart completed',
+           };
+-          
++
+         case 'stop_app':
+           final appId = params['appId'] as String;
+           await _controller.stopApp(appId);
+@@ -78,48 +80,74 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'success': true,
+             'message': 'App stopped',
+           };
+-          
++
+         case 'capture_screenshot':
+           final appId = params['appId'] as String;
+-          _logger.info('Received screenshot request for app: $appId');
+-          
++          final filename =
++              params['filename'] as String? ?? 'latest_screenshot.png';
++          _logger.info(
++              'Received screenshot request for app: $appId, filename: $filename');
++
+           // Try VM service screenshot first
+           try {
+             _logger.info('Attempting VM service screenshot...');
+             final screenshot = await _controller.captureScreenshot(appId);
+             if (screenshot != null) {
+-              _logger.info('VM service screenshot successful, size: ${screenshot.length}');
++              _logger.info(
++                  'VM service screenshot successful, size: ${screenshot.length}');
++
++              // Save to specified file
++              final appInfo = _controller.getAppInfo(appId);
++              final filePath = '${appInfo['projectPath']}/$filename';
++              final bytes = base64Decode(screenshot);
++              final file = File(filePath);
++              await file.writeAsBytes(bytes);
++
+               return {
+                 'success': true,
+-                'screenshot': screenshot,
+-                'format': 'base64',
++                'filename': filename,
++                'filepath': filePath,
++                'size_bytes': bytes.length,
++                'format': 'png',
+                 'method': 'vm_service',
+               };
+             }
+           } catch (e) {
+             _logger.warning('VM Service screenshot failed: $e');
+           }
+-          
++
+           // Fallback to screenshot server (RenderRepaintBoundary)
+           _logger.info('Trying screenshot server fallback...');
+           final latestScreenshot = _screenshotServer.getLatestScreenshot();
+           if (latestScreenshot != null) {
+-            _logger.info('Screenshot server has screenshot, size: ${latestScreenshot.length}');
++            _logger.info(
++                'Screenshot server has screenshot, size: ${latestScreenshot.length}');
++
++            // Save to specified file
++            final appInfo = _controller.getAppInfo(appId);
++            final filePath = '${appInfo['projectPath']}/$filename';
++            final bytes = base64Decode(latestScreenshot);
++            final file = File(filePath);
++            await file.writeAsBytes(bytes);
++
+             return {
+               'success': true,
+-              'screenshot': latestScreenshot,
+-              'format': 'base64',
++              'filename': filename,
++              'filepath': filePath,
++              'size_bytes': bytes.length,
++              'format': 'png',
+               'method': 'render_repaint_boundary',
+-              'timestamp': _screenshotServer.getScreenshotTimestamp()?.toIso8601String(),
++              'timestamp':
++                  _screenshotServer.getScreenshotTimestamp()?.toIso8601String(),
+             };
+           }
+-          
++
+           _logger.warning('No screenshot available from any method');
+           return {
+             'success': false,
+             'error': 'No screenshot available from any method',
+           };
+-          
++
+         case 'get_logs':
+           final appId = params['appId'] as String;
+           final count = params['count'] as int?;
+@@ -129,7 +157,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'logs': logs,
+             'count': logs.length,
+           };
+-          
++
+         case 'get_widget_tree':
+           final appId = params['appId'] as String;
+           final tree = await _controller.getWidgetTree(appId);
+@@ -137,14 +165,14 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'success': true,
+             'widgetTree': tree,
+           };
+-          
++
+         case 'list_apps':
+           final apps = _controller.listApps();
+           return {
+             'success': true,
+             'apps': apps,
+           };
+-          
++
+         case 'get_app_info':
+           final appId = params['appId'] as String;
+           final info = _controller.getAppInfo(appId);
+@@ -152,7 +180,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'success': true,
+             'appInfo': info,
+           };
+-          
++
+         default:
+           throw Exception('Unknown tool: $toolName');
+       }
+@@ -163,7 +191,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+       };
+     }
+   }
+-  
++
+   // Simplified resource access for testing
+   Future<String> getResource(String uri) async {
+     try {
+@@ -181,11 +209,11 @@ class FlutterAutomationMCPServer extends MCPBase {
+               'error': 'Failed to get devices: ${result.stderr}',
+             });
+           }
+-          
++
+         case 'flutter://doctor':
+           final result = await Process.run('flutter', ['doctor', '-v']);
+           return result.stdout;
+-          
++
+         default:
+           throw Exception('Unknown resource: $uri');
+       }
+@@ -195,21 +223,22 @@ class FlutterAutomationMCPServer extends MCPBase {
+       });
+     }
+   }
+-  
++
+   Future<void> start() async {
+     _logger.info('Starting Flutter Automation MCP Server');
+-    
++
+     // Start the screenshot server
+     try {
+       await _screenshotServer.start(port: 3000);
+     } catch (e) {
+       _logger.warning('Failed to start screenshot server: $e');
+     }
+-    
++
+     // Listen for MCP protocol messages on stdin
+-    await for (final line in stdin.transform(utf8.decoder).transform(LineSplitter())) {
++    await for (final line
++        in stdin.transform(utf8.decoder).transform(LineSplitter())) {
+       if (line.trim().isEmpty) continue;
+-      
++
+       try {
+         final request = json.decode(line);
+         final response = await _handleMCPRequest(request);
+@@ -231,12 +260,13 @@ class FlutterAutomationMCPServer extends MCPBase {
+       }
+     }
+   }
+-  
+-  Future<Map<String, dynamic>?> _handleMCPRequest(Map<String, dynamic> request) async {
++
++  Future<Map<String, dynamic>?> _handleMCPRequest(
++      Map<String, dynamic> request) async {
+     final method = request['method'] as String?;
+     final params = request['params'] as Map<String, dynamic>? ?? {};
+     final id = request['id'];
+-    
++
+     switch (method) {
+       case 'initialize':
+         return {
+@@ -251,7 +281,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             'serverInfo': serverInfo,
+           },
+         };
+-        
++
+       case 'tools/list':
+         return {
+           'jsonrpc': '2.0',
+@@ -309,11 +339,20 @@ class FlutterAutomationMCPServer extends MCPBase {
+               },
+               {
+                 'name': 'capture_screenshot',
+-                'description': 'Capture screenshot of a running Flutter app',
++                'description':
++                    'Capture screenshot of a running Flutter app and save to file',
+                 'inputSchema': {
+                   'type': 'object',
+                   'properties': {
+-                    'appId': {'type': 'string'},
++                    'appId': {
++                      'type': 'string',
++                      'description': 'ID of the Flutter app'
++                    },
++                    'filename': {
++                      'type': 'string',
++                      'description':
++                          'Optional filename to save screenshot (defaults to latest_screenshot.png)'
++                    },
+                   },
+                   'required': ['appId'],
+                 },
+@@ -363,7 +402,7 @@ class FlutterAutomationMCPServer extends MCPBase {
+             ],
+           },
+         };
+-        
++
+       case 'resources/list':
+         return {
+           'jsonrpc': '2.0',
+@@ -385,12 +424,12 @@ class FlutterAutomationMCPServer extends MCPBase {
+             ],
+           },
+         };
+-        
++
+       case 'tools/call':
+         final toolName = params['name'] as String;
+         final toolArgs = params['arguments'] as Map<String, dynamic>? ?? {};
+         final result = await executeTool(toolName, toolArgs);
+-        
++
+         return {
+           'jsonrpc': '2.0',
+           'id': id,
+@@ -403,11 +442,11 @@ class FlutterAutomationMCPServer extends MCPBase {
+             ],
+           },
+         };
+-        
++
+       case 'resources/read':
+         final uri = params['uri'] as String;
+         final content = await getResource(uri);
+-        
++
+         return {
+           'jsonrpc': '2.0',
+           'id': id,
+@@ -421,11 +460,11 @@ class FlutterAutomationMCPServer extends MCPBase {
+             ],
+           },
+         };
+-        
++
+       case 'notifications/initialized':
+         // No response needed for notifications
+         return null;
+-        
++
+       default:
+         return {
+           'jsonrpc': '2.0',
+@@ -437,10 +476,10 @@ class FlutterAutomationMCPServer extends MCPBase {
+         };
+     }
+   }
+-  
++
+   Future<void> stop() async {
+     _logger.info('Stopping Flutter Automation MCP Server');
+     await _controller.dispose();
+     await _screenshotServer.stop();
+   }
+-}
+\ No newline at end of file
++}

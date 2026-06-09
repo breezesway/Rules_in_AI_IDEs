@@ -1,0 +1,752 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+### RouteProvider Dependency Injection Pattern
+
+RouteProviders follow a specific registration pattern to enable modular route collection:
+
+**Key Requirements:**
+- Use `@Named("ClassName")` for unique identification
+- Use `@Injectable(as: RouteProvider)` to register as interface type
+- **Do NOT** register concrete RouteProvider types with `@injectable`
+- Only register as the `RouteProvider` interface to enable `getAll<RouteProvider>()` collection
+
+This pattern enables `RouteCollectionService` to collect all routes via `GetIt.instance.getAll<RouteProvider>()` while maintaining modular architecture.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (likely Dart files using the injectable package).
+- Suggested Logic: 1. Identify classes that are intended to be RouteProviders (typically those ending in 'RouteProvider' or implementing a RouteProvider interface).
+2. For these classes, verify the presence of the `@Named` annotation with a string matching the class name.
+3. Verify the presence of `@Injectable(as: RouteProvider)`.
+4. Ensure that no class implementing RouteProvider is decorated with a bare `@injectable` or `@Injectable()` annotation that lacks the 'as: RouteProvider' parameter.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: refactor: encapsulate AuthLink as private implementation in FerryClientService
+
+Move AuthLink from standalone service to private class within FerryClientService to improve encapsulation and reduce API surface. Update dependency injection to inject AuthService directly and remove unused imports.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+- Changed Files List: 
+lib/src/init.config.dart	+14	-14	after_lines=129
+lib/src/services/ferry_client_service.dart	+39	-30	after_lines=68
+pubspec.lock	+3	-3	after_lines=978
+pubspec.yaml	+3	-0	after_lines=44
+test/services/ferry_client_service_test.dart	+17	-63	after_lines=52
+test/services/ferry_client_service_test.mocks.dart	+35	-14	after_lines=79
+
+- Project Directory Tree (Snapshot after commit):
+├── .claude
+│   └── settings.local.json
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── home-screen
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── agent-lessons.md
+│       ├── product.md
+│       ├── rules.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── CLAUDE.md
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── base_viewmodel.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_route_provider.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   ├── home_viewmodel_factory.dart
+│       │   │   └── widgets
+│       │   │       ├── current_user_card.dart
+│       │   │       ├── section_header.dart
+│       │   │       └── work_item_list_tile.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   ├── loading_route_provider.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_route_provider.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   └── user_details
+│       │       ├── __generated__
+│       │       │   ├── user_details_viewmodel.ast.gql.dart
+│       │       │   ├── user_details_viewmodel.data.gql.dart
+│       │       │   ├── user_details_viewmodel.data.gql.g.dart
+│       │       │   ├── user_details_viewmodel.req.gql.dart
+│       │       │   ├── user_details_viewmodel.req.gql.g.dart
+│       │       │   ├── user_details_viewmodel.var.gql.dart
+│       │       │   └── user_details_viewmodel.var.gql.g.dart
+│       │       ├── user_details_route.dart
+│       │       ├── user_details_route_provider.dart
+│       │       ├── user_details_screen.dart
+│       │       ├── user_details_viewmodel.dart
+│       │       ├── user_details_viewmodel.graphql
+│       │       └── user_details_viewmodel_factory.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── graphql_error_handler.dart
+│       │   ├── graphql_errors.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   ├── repository_card.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               ├── user_profile.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── integration
+    │   ├── auth_integration_test.dart
+    │   ├── auth_integration_test.mocks.dart
+    │   ├── di_factory_integration_test.dart
+    │   ├── di_factory_integration_test.mocks.dart
+    │   ├── modular_architecture_test.dart
+    │   └── modular_architecture_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── app
+    │   │   ├── auth_viewmodel_test.dart
+    │   │   └── auth_viewmodel_test.mocks.dart
+    │   ├── base_viewmodel_test.dart
+    │   ├── home_screen
+    │   │   ├── home_route_provider_test.dart
+    │   │   ├── home_route_provider_test.mocks.dart
+    │   │   ├── home_route_test.dart
+    │   │   ├── home_screen_integration_test.dart
+    │   │   ├── home_screen_integration_test.mocks.dart
+    │   │   ├── home_viewmodel_factory_test.dart
+    │   │   ├── home_viewmodel_factory_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   ├── home_viewmodel_test.mocks.dart
+    │   │   └── widgets
+    │   │       ├── current_user_card_test.dart
+    │   │       ├── section_header_test.dart
+    │   │       └── work_item_list_tile_test.dart
+    │   ├── loading_screen
+    │   │   ├── loading_route_provider_test.dart
+    │   │   ├── loading_route_provider_test.mocks.dart
+    │   │   ├── loading_route_test.dart
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   ├── login_screen
+    │   │   ├── login_route_provider_test.dart
+    │   │   ├── login_route_provider_test.mocks.dart
+    │   │   ├── login_route_test.dart
+    │   │   ├── login_screen_test.dart
+    │   │   ├── login_screen_test.mocks.dart
+    │   │   ├── login_viewmodel_factory_test.dart
+    │   │   ├── login_viewmodel_factory_test.mocks.dart
+    │   │   ├── login_viewmodel_test.dart
+    │   │   └── login_viewmodel_test.mocks.dart
+    │   └── user_details
+    │       ├── user_details_route_provider_test.dart
+    │       ├── user_details_route_provider_test.mocks.dart
+    │       ├── user_details_route_test.dart
+    │       ├── user_details_screen_test.dart
+    │       ├── user_details_screen_test.mocks.dart
+    │       ├── user_details_viewmodel_factory_test.dart
+    │       ├── user_details_viewmodel_test.dart
+    │       └── user_details_viewmodel_test.mocks.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: lib/src/init.config.dart ---
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 8ca552c..429f2e8 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -64,18 +64,12 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.lazySingleton<_i792.IScopeService>(
+       () => _i792.ScopeService(gh<_i519.Client>()),
+     );
+-    gh.factory<_i564.FerryClientService>(
+-      () => _i564.FerryClientService(gh<_i895.ITokenStorage>()),
+-    );
+     gh.factory<_i1035.GithubAuthClient>(
+       () => _i1035.GithubAuthClient(
+         gh<_i519.Client>(),
+         gh<String>(instanceName: 'GithubClientID'),
+       ),
+     );
+-    gh.lazySingletonAsync<_i25.Client>(
+-      () => ferryModule.ferryClient(gh<_i564.FerryClientService>()),
+-    );
+     gh.lazySingleton<_i336.AuthService>(
+       () => _i336.AuthService(
+         gh<_i1035.GithubAuthClient>(),
+@@ -84,20 +78,21 @@ extension GetItInjectableX on _i174.GetIt {
+         gh<_i1066.TimerService>(),
+       ),
+     );
+-    gh.factoryAsync<_i627.UserDetailsViewModelFactory>(
+-      () async =>
+-          _i627.UserDetailsViewModelFactory(await getAsync<_i25.Client>()),
+-    );
+     gh.factory<_i850.AuthViewModel>(
+       () => _i850.AuthViewModel(gh<_i336.AuthService>()),
+     );
+     gh.factory<_i1013.HomeViewModelFactory>(
+       () => _i1013.HomeViewModelFactory(gh<_i336.AuthService>()),
+     );
+-    gh.factoryAsync<_i57.UserDetailsRouteProvider>(
+-      () async => _i57.UserDetailsRouteProvider(
+-        await getAsync<_i627.UserDetailsViewModelFactory>(),
+-      ),
++    gh.factory<_i564.FerryClientService>(
++      () => _i564.FerryClientService(gh<_i336.AuthService>()),
++    );
++    gh.lazySingletonAsync<_i25.Client>(
++      () => ferryModule.ferryClient(gh<_i564.FerryClientService>()),
++    );
++    gh.factoryAsync<_i627.UserDetailsViewModelFactory>(
++      () async =>
++          _i627.UserDetailsViewModelFactory(await getAsync<_i25.Client>()),
+     );
+     gh.factory<_i76.LoginViewModelFactory>(
+       () => _i76.LoginViewModelFactory(
+@@ -118,6 +113,11 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.factory<_i468.LoginRouteProvider>(
+       () => _i468.LoginRouteProvider(gh<_i76.LoginViewModelFactory>()),
+     );
++    gh.factoryAsync<_i57.UserDetailsRouteProvider>(
++      () async => _i57.UserDetailsRouteProvider(
++        await getAsync<_i627.UserDetailsViewModelFactory>(),
++      ),
++    );
+     return this;
+   }
+ }
+
+--- FILE: lib/src/services/ferry_client_service.dart ---
+diff --git a/lib/src/services/ferry_client_service.dart b/lib/src/services/ferry_client_service.dart
+index b921458..bafb747 100644
+--- a/lib/src/services/ferry_client_service.dart
++++ b/lib/src/services/ferry_client_service.dart
+@@ -1,50 +1,33 @@
+ import 'package:ferry/ferry.dart';
+ import 'package:gql_http_link/gql_http_link.dart';
++import 'package:gql_exec/gql_exec.dart';
+ import 'package:injectable/injectable.dart';
+-import 'token_storage.dart';
++import 'auth_service.dart';
+ 
+ /// Service for configuring and providing Ferry GraphQL client with GitHub's GraphQL endpoint
+-/// Handles automatic authentication token injection and error handling for GraphQL operations
++/// Handles automatic authentication token injection via private AuthLink implementation
+ @injectable
+ class FerryClientService {
+-  final ITokenStorage _tokenStorage;
++  final AuthService _authService;
+   Client? _client;
+ 
+-  FerryClientService(this._tokenStorage);
++  FerryClientService(this._authService);
+ 
+   /// Get or create Ferry client instance with authentication integration
+   Future<Client> getClient() async {
+-    if (_client != null) return _client!;
+-
+-    _client = await _createClient();
++    _client ??= _createClient();
+     return _client!;
+   }
+ 
+-  /// Create a new Ferry client with GitHub GraphQL endpoint and authentication link
+-  Future<Client> _createClient() async {
+-    final token = await _tokenStorage.getToken();
+-
+-    // Configure HTTP link with GitHub GraphQL endpoint and authentication headers
+-    final httpLink = HttpLink(
+-      'https://api.github.com/graphql',
+-      defaultHeaders: {
+-        'User-Agent': 'gh3-flutter-app',
+-        'Accept': 'application/vnd.github.v4+json',
+-        if (token != null) 'Authorization': 'Bearer $token',
+-      },
+-    );
+-
+-    final cache = Cache();
+-
+-    return Client(link: httpLink, cache: cache);
++  /// Create a new Ferry client with GitHub GraphQL endpoint and dynamic authentication
++  Client _createClient() {
++    final authLink = _AuthLink(_authService);
++    final httpLink = HttpLink("https://api.github.com/graphql");
++    
++    final link = Link.from([authLink, httpLink]);
++    return Client(link: link);
+   }
+ 
+-  /// Update authentication token and recreate client for automatic header updates
+-  /// Handles token refresh scenarios by forcing client recreation
+-  Future<void> updateAuthToken(String? token) async {
+-    _client = null; // Force recreation with new token
+-    _client = await _createClient();
+-  }
+ 
+   /// Clear cache (useful for logout scenarios)
+   void clearCache() {
+@@ -57,3 +40,29 @@ class FerryClientService {
+     _client = null;
+   }
+ }
++
++/// Private authentication link implementation for FerryClientService
++/// Dynamically injects GitHub access tokens into GraphQL requests
++class _AuthLink extends Link {
++  final AuthService _authService;
++
++  _AuthLink(this._authService);
++
++  @override
++  Stream<Response> request(Request request, [NextLink? forward]) async* {
++    final token = _authService.accessToken;
++    
++    final updatedRequest = request.updateContextEntry<HttpLinkHeaders>(
++      (headers) => HttpLinkHeaders(
++        headers: {
++          ...?headers?.headers,
++          'User-Agent': 'gh3-flutter-app',
++          'Accept': 'application/vnd.github.v4+json',
++          if (token != null) 'Authorization': 'Bearer $token',
++        },
++      ),
++    );
++
++    yield* forward!(updatedRequest);
++  }
++}
+
+--- FILE: pubspec.lock ---
+diff --git a/pubspec.lock b/pubspec.lock
+index 230c5bf..2b3f556 100644
+--- a/pubspec.lock
++++ b/pubspec.lock
+@@ -385,7 +385,7 @@ packages:
+     source: hosted
+     version: "16.0.0"
+   gql:
+-    dependency: transitive
++    dependency: "direct main"
+     description:
+       name: gql
+       sha256: "994e0c530b5ca9fce716945031b90c7925eb00bd37624c43ad4cb51883f383b3"
+@@ -409,7 +409,7 @@ packages:
+     source: hosted
+     version: "0.1.0"
+   gql_exec:
+-    dependency: transitive
++    dependency: "direct main"
+     description:
+       name: gql_exec
+       sha256: "957db95ba37028001f76c1904e18b848f57cfef878e572ce77c6d898fafecf8f"
+@@ -425,7 +425,7 @@ packages:
+     source: hosted
+     version: "1.1.0"
+   gql_link:
+-    dependency: transitive
++    dependency: "direct main"
+     description:
+       name: gql_link
+       sha256: "4aa288a1e67c899b0d746a2209e949fd0dc87e56d9b759a5cdc46a7069722cf3"
+
+--- FILE: pubspec.yaml ---
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 3d173fc..f6d1a6c 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -22,6 +22,9 @@ dependencies:
+   # Ferry GraphQL dependencies
+   ferry: ^0.16.2-dev.4
+   gql_http_link: ^1.1.0
++  gql_link: ^1.0.0
++  gql_exec: ^1.0.0
++  gql: ^1.0.0
+   gql_code_builder_serializers: ^0.1.0
+   
+ dev_dependencies:
+
+--- FILE: test/services/ferry_client_service_test.dart ---
+diff --git a/test/services/ferry_client_service_test.dart b/test/services/ferry_client_service_test.dart
+index e2282c6..fa0879e 100644
+--- a/test/services/ferry_client_service_test.dart
++++ b/test/services/ferry_client_service_test.dart
+@@ -2,96 +2,50 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:mockito/mockito.dart';
+ import 'package:mockito/annotations.dart';
+ import 'package:gh3/src/services/ferry_client_service.dart';
+-import 'package:gh3/src/services/token_storage.dart';
++import 'package:gh3/src/services/auth_service.dart';
+ 
+ import 'ferry_client_service_test.mocks.dart';
+ 
+-@GenerateMocks([ITokenStorage])
++@GenerateMocks([AuthService])
+ void main() {
+   group('FerryClientService', () {
+-    late MockITokenStorage mockTokenStorage;
++    late MockAuthService mockAuthService;
+     late FerryClientService ferryClientService;
+ 
+     setUp(() {
+-      mockTokenStorage = MockITokenStorage();
+-      ferryClientService = FerryClientService(mockTokenStorage);
++      mockAuthService = MockAuthService();
++      ferryClientService = FerryClientService(mockAuthService);
+     });
+ 
+     tearDown(() {
+       ferryClientService.dispose();
+     });
+ 
+-    test('should create Ferry client with authentication token', () async {
+-      // Arrange
+-      const testToken = 'test-token-123';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => testToken);
+-
+-      // Act
++    test('should create Ferry client with authentication', () async {
++      when(mockAuthService.accessToken).thenReturn('test-token');
++      
+       final client = await ferryClientService.getClient();
+-
+-      // Assert
+       expect(client, isNotNull);
+-      verify(mockTokenStorage.getToken()).called(1);
+     });
+ 
+-    test(
+-      'should create Ferry client without token when none available',
+-      () async {
+-        // Arrange
+-        when(mockTokenStorage.getToken()).thenAnswer((_) async => null);
+-
+-        // Act
+-        final client = await ferryClientService.getClient();
+-
+-        // Assert
+-        expect(client, isNotNull);
+-        verify(mockTokenStorage.getToken()).called(1);
+-      },
+-    );
+-
+-    test('should reuse existing client on subsequent calls', () async {
+-      // Arrange
+-      const testToken = 'test-token-123';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => testToken);
+-
+-      // Act
+-      final client1 = await ferryClientService.getClient();
+-      final client2 = await ferryClientService.getClient();
+-
+-      // Assert
+-      expect(client1, same(client2));
+-      verify(mockTokenStorage.getToken()).called(1); // Only called once
++    test('should create Ferry client without token', () async {
++      when(mockAuthService.accessToken).thenReturn(null);
++      
++      final client = await ferryClientService.getClient();
++      expect(client, isNotNull);
+     });
+ 
+-    test('should recreate client when token is updated', () async {
+-      // Arrange
+-      const initialToken = 'initial-token';
+-      const newToken = 'new-token';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => initialToken);
+-
+-      // Act
++    test('should reuse existing client', () async {
+       final client1 = await ferryClientService.getClient();
+-
+-      // Update token storage to return new token
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => newToken);
+-      await ferryClientService.updateAuthToken(newToken);
+       final client2 = await ferryClientService.getClient();
+-
+-      // Assert
+-      expect(client1, isNot(same(client2)));
+-      verify(mockTokenStorage.getToken()).called(2);
++      expect(client1, same(client2));
+     });
+ 
+-    test('should clear cache successfully', () async {
+-      // Arrange
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => 'token');
+-
+-      // Act & Assert - should not throw
++    test('should clear cache', () {
+       expect(() => ferryClientService.clearCache(), returnsNormally);
+     });
+ 
+-    test('should dispose resources properly', () {
+-      // Act & Assert - should not throw
++    test('should dispose resources', () {
+       expect(() => ferryClientService.dispose(), returnsNormally);
+     });
+   });
+
+--- FILE: test/services/ferry_client_service_test.mocks.dart ---
+diff --git a/test/services/ferry_client_service_test.mocks.dart b/test/services/ferry_client_service_test.mocks.dart
+index 194b53a..b4d7312 100644
+--- a/test/services/ferry_client_service_test.mocks.dart
++++ b/test/services/ferry_client_service_test.mocks.dart
+@@ -5,8 +5,9 @@
+ // ignore_for_file: no_leading_underscores_for_library_prefixes
+ import 'dart:async' as _i3;
+ 
+-import 'package:gh3/src/services/token_storage.dart' as _i2;
++import 'package:gh3/src/services/auth_service.dart' as _i2;
+ import 'package:mockito/mockito.dart' as _i1;
++import 'package:mockito/src/dummies.dart' as _i4;
+ 
+ // ignore_for_file: type=lint
+ // ignore_for_file: avoid_redundant_argument_values
+@@ -22,35 +23,55 @@ import 'package:mockito/mockito.dart' as _i1;
+ // ignore_for_file: camel_case_types
+ // ignore_for_file: subtype_of_sealed_class
+ 
+-/// A class which mocks [ITokenStorage].
++/// A class which mocks [AuthService].
+ ///
+ /// See the documentation for Mockito's code generation for more information.
+-class MockITokenStorage extends _i1.Mock implements _i2.ITokenStorage {
+-  MockITokenStorage() {
++class MockAuthService extends _i1.Mock implements _i2.AuthService {
++  MockAuthService() {
+     _i1.throwOnMissingStub(this);
+   }
+ 
+   @override
+-  _i3.Future<String?> getToken() =>
+-      (super.noSuchMethod(
+-            Invocation.method(#getToken, []),
+-            returnValue: _i3.Future<String?>.value(),
+-          )
+-          as _i3.Future<String?>);
++  bool get isLoggedIn =>
++      (super.noSuchMethod(Invocation.getter(#isLoggedIn), returnValue: false)
++          as bool);
+ 
+   @override
+-  _i3.Future<void> saveToken(String? token) =>
++  _i3.Future<void> init() =>
+       (super.noSuchMethod(
+-            Invocation.method(#saveToken, [token]),
++            Invocation.method(#init, []),
+             returnValue: _i3.Future<void>.value(),
+             returnValueForMissingStub: _i3.Future<void>.value(),
+           )
+           as _i3.Future<void>);
+ 
+   @override
+-  _i3.Future<void> deleteToken() =>
++  _i3.Future<String> login() =>
++      (super.noSuchMethod(
++            Invocation.method(#login, []),
++            returnValue: _i3.Future<String>.value(
++              _i4.dummyValue<String>(this, Invocation.method(#login, [])),
++            ),
++          )
++          as _i3.Future<String>);
++
++  @override
++  _i3.Future<String> loginWithDeviceCode(String? deviceCode) =>
++      (super.noSuchMethod(
++            Invocation.method(#loginWithDeviceCode, [deviceCode]),
++            returnValue: _i3.Future<String>.value(
++              _i4.dummyValue<String>(
++                this,
++                Invocation.method(#loginWithDeviceCode, [deviceCode]),
++              ),
++            ),
++          )
++          as _i3.Future<String>);
++
++  @override
++  _i3.Future<void> logout() =>
+       (super.noSuchMethod(
+-            Invocation.method(#deleteToken, []),
++            Invocation.method(#logout, []),
+             returnValue: _i3.Future<void>.value(),
+             returnValueForMissingStub: _i3.Future<void>.value(),
+           )
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

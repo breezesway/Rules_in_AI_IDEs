@@ -1,0 +1,308 @@
+diff --git a/src/main.ts b/src/main.ts
+index 92f86ec..8a8c3a8 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -527,3 +527,303 @@ ipcMain.handle('reset-app-config', async () => {
+     return { success: false, error: error instanceof Error ? error.message : '重置失败' };
+   }
+ });
++
++// 图片压缩相关IPC处理
++
++// 选择图片文件
++ipcMain.handle('select-images', async () => {
++  try {
++    const result = await dialog.showOpenDialog({
++      title: '选择图片文件',
++      filters: [
++        { name: '图片文件', extensions: ['jpg', 'jpeg', 'png', 'webp'] }
++      ],
++      properties: ['openFile', 'multiSelections']
++    });
++    
++    if (result.canceled || !result.filePaths.length) {
++      return { success: false, error: '未选择文件' };
++    }
++    
++    // 返回文件信息
++    const fileInfos = await Promise.all(
++      result.filePaths.map(async (filePath) => {
++        try {
++          const stats = await fs.stat(filePath);
++          return {
++            path: filePath,
++            name: path.basename(filePath),
++            size: stats.size,
++          };
++        } catch (error) {
++          console.error(`获取文件信息失败: ${filePath}`, error);
++          return null;
++        }
++      })
++    );
++    
++    const validFiles = fileInfos.filter(info => info !== null);
++    
++    return {
++      success: true,
++      files: validFiles
++    };
++  } catch (error) {
++    console.error('选择图片文件失败:', error);
++    return { success: false, error: error instanceof Error ? error.message : '选择文件失败' };
++  }
++});
++
++// 选择保存位置
++ipcMain.handle('select-save-location', async () => {
++  try {
++    const result = await dialog.showOpenDialog({
++      title: '选择保存位置',
++      properties: ['openDirectory']
++    });
++    
++    if (result.canceled || !result.filePaths.length) {
++      return { success: false, error: '未选择保存位置' };
++    }
++    
++    return {
++      success: true,
++      path: result.filePaths[0]
++    };
++  } catch (error) {
++    console.error('选择保存位置失败:', error);
++    return { success: false, error: error instanceof Error ? error.message : '选择保存位置失败' };
++  }
++});
++
++// 压缩图片
++ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
++  method: string;
++  quality?: number;
++  targetSize?: number;
++  maxDimension?: number;
++  outputFormat?: string;
++  namingSuffix?: string;
++  saveLocation?: string;
++}) => {
++  const startTime = Date.now();
++  let processedCount = 0;
++  
++  try {
++    const saveLocation = settings.saveLocation || app.getPath('downloads');
++    
++    // 确保保存目录存在
++    await fs.mkdir(saveLocation, { recursive: true });
++    
++    const totalFiles = filePaths.length;
++    
++    for (let i = 0; i < filePaths.length; i++) {
++      const filePath = filePaths[i];
++      const fileName = path.basename(filePath);
++      const fileNameWithoutExt = path.parse(fileName).name;
++      const originalExt = path.parse(fileName).ext;
++      
++      // 发送进度更新
++      event.sender.send('compression-progress', {
++        currentFile: fileName,
++        currentIndex: i,
++        totalFiles,
++        percentage: Math.round((i / totalFiles) * 100)
++      });
++      
++      try {
++        let outputFormat = settings.outputFormat || 'original';
++        if (outputFormat === 'original') {
++          // 根据原始文件扩展名确定格式
++          const ext = originalExt.toLowerCase();
++          if (ext === '.jpg' || ext === '.jpeg') {
++            outputFormat = 'jpeg';
++          } else if (ext === '.png') {
++            outputFormat = 'png';
++          } else if (ext === '.webp') {
++            outputFormat = 'webp';
++          } else {
++            outputFormat = 'jpeg'; // 默认为jpeg
++          }
++        }
++        
++        // 确定输出文件扩展名
++        let outputExt: string;
++        switch (outputFormat) {
++          case 'jpg':
++          case 'jpeg':
++            outputExt = '.jpg';
++            break;
++          case 'png':
++            outputExt = '.png';
++            break;
++          case 'webp':
++            outputExt = '.webp';
++            break;
++          default:
++            outputExt = originalExt;
++        }
++        
++        // 构建输出文件名
++        const suffix = settings.namingSuffix || '_compressed';
++        const outputFileName = `${fileNameWithoutExt}${suffix}${outputExt}`;
++        const outputPath = path.join(saveLocation, outputFileName);
++        
++        // 处理重名文件
++        const config = await configManager.getConfig();
++        let finalOutputPath = outputPath;
++        
++        if (config.autoNumberDuplicateFiles) {
++          let counter = 1;
++          // eslint-disable-next-line no-constant-condition
++          while (true) {
++            try {
++              await fs.access(finalOutputPath);
++              // 文件存在，生成新的文件名
++              const numberedFileName = `${fileNameWithoutExt}${suffix}(${counter})${outputExt}`;
++              finalOutputPath = path.join(saveLocation, numberedFileName);
++              counter++;
++            } catch {
++              // 文件不存在，使用当前路径
++              break;
++            }
++          }
++        }
++        
++                 // 动态导入sharp
++         const sharp = await import('sharp');
++         
++         // 创建sharp实例
++         let sharpInstance = sharp.default(filePath);
++         
++         // 根据压缩方法处理图片
++         if (settings.method === 'quality') {
++           // 按质量压缩
++           const quality = settings.quality || 70;
++           
++           if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++             sharpInstance = sharpInstance.jpeg({ quality });
++           } else if (outputFormat === 'png') {
++             sharpInstance = sharpInstance.png({ 
++               quality,
++               compressionLevel: Math.round((100 - quality) / 10)
++             });
++           } else if (outputFormat === 'webp') {
++             sharpInstance = sharpInstance.webp({ quality });
++           }
++         } else if (settings.method === 'dimension') {
++           // 按尺寸压缩
++           const maxDimension = settings.maxDimension || 1920;
++           sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
++             fit: 'inside',
++             withoutEnlargement: true
++           });
++         }
++         
++         // 保存处理后的图片
++         await sharpInstance.toFile(finalOutputPath);
++        
++        processedCount++;
++        
++      } catch (fileError) {
++        console.error(`处理文件 ${filePath} 时出错:`, fileError);
++        // 继续处理下一个文件，不中断整个流程
++      }
++    }
++    
++    // 发送完成进度
++    event.sender.send('compression-progress', {
++      currentFile: '',
++      currentIndex: filePaths.length,
++      totalFiles: filePaths.length,
++      percentage: 100
++    });
++    
++    const duration = Date.now() - startTime;
++    
++    // 添加成功的历史记录
++    await historyManager.addRecord({
++      type: 'image-compress',
++      files: await Promise.all(filePaths.map(async (filePath) => {
++        try {
++          const stats = await fs.stat(filePath);
++          return {
++            name: path.basename(filePath),
++            size: stats.size,
++            path: filePath
++          };
++        } catch {
++          return {
++            name: path.basename(filePath),
++            size: 0,
++            path: filePath
++          };
++        }
++      })),
++      output: {
++        name: `压缩完成 (${processedCount}/${filePaths.length})`,
++        path: saveLocation
++      },
++      settings: {
++        method: settings.method,
++        quality: settings.quality,
++        targetSize: settings.targetSize,
++        maxDimension: settings.maxDimension,
++        outputFormat: settings.outputFormat,
++        namingSuffix: settings.namingSuffix,
++        saveLocation
++      },
++      duration,
++      success: true
++    });
++    
++    return {
++      success: true,
++      processedCount
++    };
++    
++  } catch (error) {
++    console.error('图片压缩错误:', error);
++    
++    const duration = Date.now() - startTime;
++    const errorMessage = error instanceof Error ? error.message : '压缩图片时发生未知错误';
++    
++    // 添加失败的历史记录
++    try {
++      await historyManager.addRecord({
++        type: 'image-compress',
++        files: await Promise.all(filePaths.map(async (filePath) => {
++          try {
++            const stats = await fs.stat(filePath);
++            return {
++              name: path.basename(filePath),
++              size: stats.size,
++              path: filePath
++            };
++          } catch {
++            return {
++              name: path.basename(filePath),
++              size: 0,
++              path: filePath
++            };
++          }
++        })),
++        output: {
++          name: '压缩失败',
++          path: settings.saveLocation || app.getPath('downloads')
++        },
++        settings,
++        duration,
++        success: false,
++        error: errorMessage
++      });
++    } catch (historyError) {
++      console.error('保存失败历史记录时出错:', historyError);
++    }
++    
++    return {
++      success: false,
++      error: errorMessage
++    };
++  }
++});

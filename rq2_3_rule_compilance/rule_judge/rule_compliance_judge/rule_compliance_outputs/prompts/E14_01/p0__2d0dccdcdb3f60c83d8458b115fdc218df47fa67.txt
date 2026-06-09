@@ -1,0 +1,212 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/technology-stack.md
+- Change Type: modified
+- Target Rule Content:
+- **Create React App**: For project bootstrapping
++ **Vite**: For fast development server and build tooling
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, project root directory structure (configuration files).
+- Suggested Logic: 1. Check 'package.json' to ensure 'vite' is present in 'dependencies' or 'devDependencies' and 'react-scripts' (the core of Create React App) is absent. 
+2. Verify that the 'scripts' section in 'package.json' uses vite-based commands (e.g., 'vite', 'vite build') rather than 'react-scripts'. 
+3. Check for the existence of a Vite configuration file (e.g., 'vite.config.ts' or 'vite.config.js') in the project root.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: init frontend
+- Changed Files List: 
+.kiro/specs/bug-tracker/design.md	+1	-0	after_lines=207
+.kiro/specs/bug-tracker/tasks.md	+20	-3	after_lines=194
+.kiro/steering/technology-stack.md	+2	-2	after_lines=139
+backend/src/validators/project-validators.ts	+38	-0	after_lines=38
+frontend/src/test/setup.ts	+1	-0	after_lines=1
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── bug-tracker
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── coding-standards.md
+│       ├── implementation-guidelines.md
+│       ├── project-decisions.md
+│       ├── project-guidelines.md
+│       └── technology-stack.md
+├── Interview assignment - interviewer .docx
+├── backend
+│   └── src
+│       └── validators
+│           └── project-validators.ts
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── test
+│   │   │   └── setup.ts
+│   │   └── vite-env.d.ts
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── instructions.md
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/bug-tracker/design.md ---
+diff --git a/.kiro/specs/bug-tracker/design.md b/.kiro/specs/bug-tracker/design.md
+index 45bcd50..b2ce6a5 100644
+--- a/.kiro/specs/bug-tracker/design.md
++++ b/.kiro/specs/bug-tracker/design.md
+@@ -171,6 +171,7 @@ The testing strategy includes multiple levels of testing to ensure application q
+ ### Frontend
+ 
+ - **React**: Selected for its component-based architecture, virtual DOM for efficient rendering, and extensive ecosystem. React is preferred over Angular for this project due to its more lightweight nature, faster learning curve, and better fit for smaller applications with focused functionality.
++- **Vite**: Chosen as the build tool for its fast development server, hot module replacement, and optimized production builds. Vite provides better performance than Create React App with faster startup times and more efficient bundling.
+ - **React Router**: For client-side routing between pages.
+ - **Material-UI**: For pre-built UI components that follow Material Design principles.
+
+--- FILE: .kiro/specs/bug-tracker/tasks.md ---
+diff --git a/.kiro/specs/bug-tracker/tasks.md b/.kiro/specs/bug-tracker/tasks.md
+index 89ff43a..971ef89 100644
+--- a/.kiro/specs/bug-tracker/tasks.md
++++ b/.kiro/specs/bug-tracker/tasks.md
+@@ -1,6 +1,11 @@
+ # Implementation Plan
+ 
+-- [ ] 1. Set up project structure and development environment
++- [x] 1. Set up project structure and development environment
++
++
++
++
++
+   - Create backend directory with Node.js/Express setup
+   - Create frontend directory with React setup
+   - Configure TypeScript for both projects
+@@ -8,20 +13,32 @@
+   - Configure ESLint and Prettier for code quality
+   - _Requirements: 5.1, 5.5_
+ 
++
++
++
++
+ - [ ] 2. Database setup and schema implementation
+   - [ ] 2.1 Create PostgreSQL database schema
+     - Write SQL migration scripts for projects and bugs tables
+     - Implement proper constraints and foreign key relationships
++
++
+     - Add indexes for performance optimization
+     - _Requirements: 1.5, 2.4, 2.6_
+ 
+-  - [ ] 2.2 Set up database connection and pooling
++  - [x] 2.2 Set up database connection and pooling
++
++
+     - Configure PostgreSQL connection with environment variables
+     - Implement connection pooling for performance
++
++
++
+     - Create database utility functions for queries
+     - _Requirements: 5.1_
+ 
+-  - [ ] 2.3 Create seed data for development
++  - [-] 2.3 Create seed data for development
++
+     - Write seed scripts with sample projects and bugs
+     - Implement database reset functionality for testing
+     - _Requirements: 1.1, 3.1_
+
+--- FILE: .kiro/steering/technology-stack.md ---
+diff --git a/.kiro/steering/technology-stack.md b/.kiro/steering/technology-stack.md
+index 29aabcd..68e81e7 100644
+--- a/.kiro/steering/technology-stack.md
++++ b/.kiro/steering/technology-stack.md
+@@ -38,9 +38,9 @@
+ - **React Query/TanStack Query**: For server state management and caching
+ 
+ ### Development Tools
+-- **Create React App**: For project bootstrapping
++- **Vite**: For fast development server and build tooling
+ - **React Testing Library**: For component testing
+-- **jest**: For unit testing
++- **Vitest**: For unit testing (Vite's native test runner)
+ 
+ ## Database Design
+
+--- FILE: backend/src/validators/project-validators.ts ---
+diff --git a/backend/src/validators/project-validators.ts b/backend/src/validators/project-validators.ts
+new file mode 100644
+index 0000000..7f182eb
+--- /dev/null
++++ b/backend/src/validators/project-validators.ts
+@@ -0,0 +1,38 @@
++import { body, param } from 'express-validator';
++
++/**
++ * Validation rules for creating a project
++ */
++export const validateCreateProject = [
++  body('name')
++    .trim()
++    .isLength({ min: 1, max: 255 })
++    .withMessage('Project name must be between 1 and 255 characters')
++    .matches(/^[a-zA-Z0-9\s\-_.,!?()]+$/)
++    .withMessage('Project name contains invalid characters'),
++];
++
++/**
++ * Validation rules for updating a project
++ */
++export const validateUpdateProject = [
++  param('id')
++    .isInt({ min: 1 })
++    .withMessage('Project ID must be a positive integer'),
++  body('name')
++    .optional()
++    .trim()
++    .isLength({ min: 1, max: 255 })
++    .withMessage('Project name must be between 1 and 255 characters')
++    .matches(/^[a-zA-Z0-9\s\-_.,!?()]+$/)
++    .withMessage('Project name contains invalid characters'),
++];
++
++/**
++ * Validation rules for project ID parameter
++ */
++export const validateProjectId = [
++  param('id')
++    .isInt({ min: 1 })
++    .withMessage('Project ID must be a positive integer'),
++];
+\ No newline at end of file
+
+--- FILE: frontend/src/test/setup.ts ---
+diff --git a/frontend/src/test/setup.ts b/frontend/src/test/setup.ts
+new file mode 100644
+index 0000000..010b0b5
+--- /dev/null
++++ b/frontend/src/test/setup.ts
+@@ -0,0 +1 @@
++import '@testing-library/jest-dom'
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

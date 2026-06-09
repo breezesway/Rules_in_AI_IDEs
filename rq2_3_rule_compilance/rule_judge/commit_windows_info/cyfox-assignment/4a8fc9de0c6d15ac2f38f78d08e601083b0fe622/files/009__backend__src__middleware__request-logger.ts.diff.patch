@@ -1,0 +1,52 @@
+diff --git a/backend/src/middleware/request-logger.ts b/backend/src/middleware/request-logger.ts
+index 40294cf..f951e3d 100644
+--- a/backend/src/middleware/request-logger.ts
++++ b/backend/src/middleware/request-logger.ts
+@@ -4,7 +4,7 @@ import morgan from 'morgan';
+ /**
+  * Custom token for response time in milliseconds
+  */
+-morgan.token('response-time-ms', (req: Request, res: Response) => {
++morgan.token('response-time-ms', (_req: Request, res: Response) => {
+   const responseTime = res.getHeader('X-Response-Time');
+   return responseTime ? `${responseTime}ms` : '-';
+ });
+@@ -35,7 +35,7 @@ export function createRequestLogger() {
+     : developmentFormat;
+ 
+   return morgan(format, {
+-    skip: (req: Request, res: Response) => {
++    skip: (req: Request, _res: Response) => {
+       // Skip logging for health check endpoints
+       return req.url === '/health' || req.url === '/api/health';
+     },
+@@ -51,13 +51,24 @@ export function createRequestLogger() {
+ /**
+  * Add response time header
+  */
+-export function addResponseTime(req: Request, res: Response, next: NextFunction): void {
++export function addResponseTime(_req: Request, res: Response, next: NextFunction): void {
+   const start = Date.now();
+   
+-  res.on('finish', () => {
++  // Store the original end method
++  const originalEnd = res.end;
++  
++  // Override the end method
++  res.end = function(this: Response, chunk?: any, encoding?: BufferEncoding, callback?: () => void): Response {
+     const duration = Date.now() - start;
+-    res.setHeader('X-Response-Time', duration);
+-  });
++    
++    // Only set the header if headers haven't been sent yet
++    if (!res.headersSent) {
++      res.setHeader('X-Response-Time', duration.toString());
++    }
++    
++    // Call the original end method with proper type handling
++    return originalEnd.call(this, chunk, encoding as BufferEncoding, callback);
++  } as any;
+   
+   next();
+ }
+\ No newline at end of file

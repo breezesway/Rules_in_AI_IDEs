@@ -1,0 +1,66 @@
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 429f2e8..e60d2de 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -13,6 +13,7 @@ import 'package:ferry/ferry.dart' as _i25;
+ import 'package:get_it/get_it.dart' as _i174;
+ import 'package:gh3/src/env/env.dart' as _i589;
+ import 'package:gh3/src/routing/route_collection_service.dart' as _i482;
++import 'package:gh3/src/routing/route_provider.dart' as _i518;
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart' as _i850;
+ import 'package:gh3/src/screens/home_screen/home_route_provider.dart' as _i176;
+ import 'package:gh3/src/screens/home_screen/home_viewmodel_factory.dart'
+@@ -87,6 +88,10 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.factory<_i564.FerryClientService>(
+       () => _i564.FerryClientService(gh<_i336.AuthService>()),
+     );
++    gh.factory<_i492.LoadingRouteProvider>(
++      () => _i492.LoadingRouteProvider(gh<_i850.AuthViewModel>()),
++      instanceName: 'LoadingRouteProvider',
++    );
+     gh.lazySingletonAsync<_i25.Client>(
+       () => ferryModule.ferryClient(gh<_i564.FerryClientService>()),
+     );
+@@ -94,6 +99,13 @@ extension GetItInjectableX on _i174.GetIt {
+       () async =>
+           _i627.UserDetailsViewModelFactory(await getAsync<_i25.Client>()),
+     );
++    gh.factory<_i518.RouteProvider>(
++      () => _i176.HomeRouteProvider(
++        gh<_i1013.HomeViewModelFactory>(),
++        gh<_i850.AuthViewModel>(),
++      ),
++      instanceName: 'HomeRouteProvider',
++    );
+     gh.factory<_i76.LoginViewModelFactory>(
+       () => _i76.LoginViewModelFactory(
+         gh<_i1035.GithubAuthClient>(),
+@@ -101,22 +113,15 @@ extension GetItInjectableX on _i174.GetIt {
+         gh<_i850.AuthViewModel>(),
+       ),
+     );
+-    gh.factory<_i176.HomeRouteProvider>(
+-      () => _i176.HomeRouteProvider(
+-        gh<_i1013.HomeViewModelFactory>(),
+-        gh<_i850.AuthViewModel>(),
+-      ),
+-    );
+-    gh.factory<_i492.LoadingRouteProvider>(
+-      () => _i492.LoadingRouteProvider(gh<_i850.AuthViewModel>()),
+-    );
+-    gh.factory<_i468.LoginRouteProvider>(
+-      () => _i468.LoginRouteProvider(gh<_i76.LoginViewModelFactory>()),
+-    );
+-    gh.factoryAsync<_i57.UserDetailsRouteProvider>(
++    gh.factoryAsync<_i518.RouteProvider>(
+       () async => _i57.UserDetailsRouteProvider(
+         await getAsync<_i627.UserDetailsViewModelFactory>(),
+       ),
++      instanceName: 'UserDetailsRouteProvider',
++    );
++    gh.factory<_i518.RouteProvider>(
++      () => _i468.LoginRouteProvider(gh<_i76.LoginViewModelFactory>()),
++      instanceName: 'LoginRouteProvider',
+     );
+     return this;
+   }

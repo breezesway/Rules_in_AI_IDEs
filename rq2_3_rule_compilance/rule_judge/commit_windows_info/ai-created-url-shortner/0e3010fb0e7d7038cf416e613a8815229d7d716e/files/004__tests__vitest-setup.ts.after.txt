@@ -1,0 +1,65 @@
+// @vitest-environment nuxt
+import { beforeAll } from "vitest";
+import { z } from "zod";
+import dotenv from "dotenv";
+
+// Load test environment variables
+dotenv.config({
+  path: ".env.test",
+});
+
+// Validate test environment variables
+const envSchema = z.object({
+  NUXT_APP_URL: z.string().url(),
+});
+
+// Validate environment before tests run
+let env: z.infer<typeof envSchema>;
+try {
+  env = envSchema.parse(process.env);
+  console.log("✅ Test environment validated successfully");
+} catch (error) {
+  console.error("❌ Test environment validation failed:");
+  if (error instanceof z.ZodError) {
+    error.errors.forEach((err) => {
+      console.error(`  - ${err.path.join(".")}: ${err.message}`);
+    });
+  } else {
+    console.error("  - Unknown validation error:", error);
+  }
+  console.error(
+    "\nPlease check your .env.test file and ensure all required variables are set correctly."
+  );
+  throw new Error("Aborting test run due to invalid environment variables");
+}
+
+// Check that development server is running before running tests
+try {
+  const response = await fetch(env.NUXT_APP_URL + "/api/health");
+  if (!response.ok || (await response.json()).data.status !== "healthy") {
+    throw new Error(
+      "Development server is not running. It is required to run the tests. Please start the development server with `nr dev` and try again."
+    );
+  }
+} catch {
+  throw new Error(
+    "Development server is not running. It is required to run the tests. Please start the development server with `nr dev` and try again."
+  );
+}
+
+// Global test configuration
+declare global {
+  // eslint-disable-next-line no-var
+  var __TEST_BASE_URL__: string;
+  // eslint-disable-next-line no-var
+  var $vitestFetch: ReturnType<typeof $fetch.create>;
+}
+
+// Set up global variables before all tests
+beforeAll(() => {
+  // Set the base URL for all tests
+  globalThis.__TEST_BASE_URL__ = env.NUXT_APP_URL;
+  globalThis.$vitestFetch = $fetch.create({
+    baseURL: __TEST_BASE_URL__,
+  });
+});

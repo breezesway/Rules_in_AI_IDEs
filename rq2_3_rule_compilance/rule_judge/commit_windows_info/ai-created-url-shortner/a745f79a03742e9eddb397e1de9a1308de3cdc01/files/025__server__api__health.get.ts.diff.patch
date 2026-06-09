@@ -1,0 +1,26 @@
+diff --git a/server/api/health.get.ts b/server/api/health.get.ts
+index 5fb2f16..3f4594b 100644
+--- a/server/api/health.get.ts
++++ b/server/api/health.get.ts
+@@ -1,7 +1,15 @@
+-export default defineEventHandler(async (event) => {
+-  return {
+-    status: "healthy",
+-    timestamp: new Date().toISOString(),
+-    version: "1.0.0",
+-  };
++import { z } from "zod";
++
++export default defineApiEventHandler({
++  validation: z.object({
++    data: z.string().optional(),
++  }),
++  handler: async (event, payload) => {
++    return {
++      data: payload.data,
++      status: "healthy",
++      timestamp: new Date().toISOString(),
++      version: "1.0.0",
++    };
++  },
+ });

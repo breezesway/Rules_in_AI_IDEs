@@ -1,0 +1,154 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Deepgram
+ - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
+ - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code content within specific files (src/app/api/deepgram/transcribe-audio/route.ts and src/lib/contexts/DeepgramContext.tsx).
+- Suggested Logic: 1. Verify the existence of the file path 'src/app/api/deepgram/transcribe-audio/route.ts'.
+2. Verify the existence of the file path 'src/lib/contexts/DeepgramContext.tsx'.
+3. Perform a static analysis (regex or AST) on 'DeepgramContext.tsx' to ensure it defines or exports a hook named 'useDeepgram'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: add rules
+- Changed Files List: 
+.cursorrules	+5	-2	after_lines=22
+paths/voice-notes.md	+1	-1	after_lines=24
+src/components/VoiceRecorder.tsx	+13	-1	after_lines=58
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .eslintrc.json
+├── .gitignore
+├── .replit
+├── README.md
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── paths
+│   ├── chat.md
+│   ├── image-generation.md
+│   ├── social-media.md
+│   └── voice-notes.md
+├── postcss.config.mjs
+├── public
+│   ├── next.svg
+│   └── vercel.svg
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── anthropic
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   ├── deepgram
+│   │   │   │   └── route.ts
+│   │   │   ├── openai
+│   │   │   │   ├── chat
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── transcribe
+│   │   │   │       └── route.ts
+│   │   │   └── replicate
+│   │   │       └── generate-image
+│   │   │           └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── ImageUpload.tsx
+│   │   ├── SignInWithGoogle.tsx
+│   │   └── VoiceRecorder.tsx
+│   └── lib
+│       ├── contexts
+│       │   ├── AuthContext.tsx
+│       │   └── DeepgramContext.tsx
+│       ├── firebase
+│       │   ├── firebase.ts
+│       │   └── firebaseUtils.ts
+│       └── hooks
+│           └── useAuth.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursorrules ---
+diff --git a/.cursorrules b/.cursorrules
+index ad4be48..7ba08dc 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -6,7 +6,7 @@ You are an expert in TypeScript, Next.js App Router, React, and Tailwind. Follow
+   - src/app/components has all the React components
+   - src/app/lib has all the other code like helpers, hooks, and contexts
+ 
+-There are some pre-configured APIs in this template that can be used but only if required by the current project:
++There are some pre-configured APIs in this template that can be used but only if required by the current project. These have already been created:
+ - Firebase
+   - In src/lib/firebase there is a firebase.ts configuration file as well as firebaseUtils.ts for various utility functions when interacting with Firebase Database, Storage, and Authencation
+   - In src/lib/contexts there is an AuthContext.tsx file that has user authentication with Firebase set up with the onAuthStateChanged listener.
+@@ -16,4 +16,7 @@ There are some pre-configured APIs in this template that can be used but only if
+ - Anthropic
+   - src/app/api/anthropic has chat/route.ts which is a simple API calling streamText from Anthropic using the Vercel AI library
+ - Replicate
+-  - src/app/api/replicate has generate-image/route.ts which is a simple API calling the Stable Diffusion model hosted on Replicate to generate images
+\ No newline at end of file
++  - src/app/api/replicate has generate-image/route.ts which is a simple API calling the Stable Diffusion model hosted on Replicate to generate images
++- Deepgram
++  - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
++  - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+\ No newline at end of file
+
+--- FILE: paths/voice-notes.md ---
+diff --git a/paths/voice-notes.md b/paths/voice-notes.md
+index cc83dfd..94b68e7 100644
+--- a/paths/voice-notes.md
++++ b/paths/voice-notes.md
+@@ -21,4 +21,4 @@ The flow of the app is as follows:
+ - Now, the app displays the note in a list of all notes on the home screen.
+ 
+ 
+-This application is set-up with existing configuration for APIs and Firebase. Implement all the functionality in the flow above while using the existing codebase as a starting point, but fully modify the codebase to fit the flow and functionality described above.
++This application is set-up with existing configuration for Deepgram APIs and Firebase. Implement all the functionality in the flow above while using the existing codebase as a starting point, but fully modify the codebase to fit the flow and functionality described above.
+
+--- FILE: src/components/VoiceRecorder.tsx ---
+diff --git a/src/components/VoiceRecorder.tsx b/src/components/VoiceRecorder.tsx
+index d03af69..4dc3809 100644
+--- a/src/components/VoiceRecorder.tsx
++++ b/src/components/VoiceRecorder.tsx
+@@ -1,8 +1,9 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useEffect } from 'react';
+ import { useDeepgram } from '../lib/contexts/DeepgramContext';
+ import { addDocument } from '../lib/firebase/firebaseUtils';
++import { motion } from 'framer-motion';
+ 
+ export default function VoiceRecorder() {
+   const [isRecording, setIsRecording] = useState(false);
+@@ -38,6 +39,17 @@ export default function VoiceRecorder() {
+       </button>
+       {isRecording && (
+         <div className="mt-4 p-4 bg-gray-100 rounded-lg">
++          <motion.div
++            animate={{
++              scale: [1, 1.2, 1],
++            }}
++            transition={{
++              duration: 1.5,
++              repeat: Infinity,
++              ease: "easeInOut",
++            }}
++            className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-4"
++          />
+           <p className="text-sm text-gray-600">{realtimeTranscript}</p>
+         </div>
+       )}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

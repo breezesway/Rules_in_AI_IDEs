@@ -1,0 +1,116 @@
+diff --git a/backend/tests/app.test.ts b/backend/tests/app.test.ts
+new file mode 100644
+index 0000000..a4dd9fc
+--- /dev/null
++++ b/backend/tests/app.test.ts
+@@ -0,0 +1,109 @@
++import request from 'supertest';
++import app from '../src/app';
++
++describe('App', () => {
++  describe('GET /health', () => {
++    it('should return health status', async () => {
++      const response = await request(app)
++        .get('/health')
++        .expect(200);
++
++      expect(response.body).toMatchObject({
++        status: 'ok',
++        timestamp: expect.any(String),
++        uptime: expect.any(Number),
++        database: {
++          connected: true,
++          tablesExist: true,
++          projectCount: expect.any(Number),
++          bugCount: expect.any(Number),
++        },
++        environment: 'test',
++      });
++    });
++  });
++
++  describe('GET /api', () => {
++    it('should return API information', async () => {
++      const response = await request(app)
++        .get('/api')
++        .expect(200);
++
++      expect(response.body).toMatchObject({
++        message: 'Bug Tracker API',
++        version: '1.0.0',
++        endpoints: {
++          projects: '/api/projects',
++          bugs: '/api/projects/:projectId/bugs',
++          health: '/health',
++        },
++      });
++    });
++  });
++
++  describe('404 Handler', () => {
++    it('should return 404 for non-existent routes', async () => {
++      const response = await request(app)
++        .get('/non-existent-route')
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('ROUTE_NOT_FOUND');
++      expect(response.body.error.message).toContain('Route /non-existent-route not found');
++    });
++  });
++
++  describe('CORS', () => {
++    it('should include CORS headers', async () => {
++      const response = await request(app)
++        .get('/api')
++        .expect(200);
++
++      expect(response.headers['access-control-allow-origin']).toBeDefined();
++    });
++
++    it('should handle OPTIONS requests', async () => {
++      const response = await request(app)
++        .options('/api/projects')
++        .expect(204);
++
++      expect(response.headers['access-control-allow-methods']).toContain('GET');
++      expect(response.headers['access-control-allow-methods']).toContain('POST');
++    });
++  });
++
++  describe('Security Headers', () => {
++    it('should include security headers', async () => {
++      const response = await request(app)
++        .get('/api')
++        .expect(200);
++
++      expect(response.headers['x-content-type-options']).toBe('nosniff');
++      expect(response.headers['x-frame-options']).toBe('DENY');
++      expect(response.headers['x-xss-protection']).toBe('0');
++    });
++  });
++
++  describe('Request Parsing', () => {
++    it('should parse JSON requests', async () => {
++      const projectData = { name: 'JSON Test Project' };
++
++      const response = await request(app)
++        .post('/api/projects')
++        .send(projectData)
++        .expect(201);
++
++      expect(response.body.data.name).toBe('JSON Test Project');
++    });
++
++    it('should handle malformed JSON', async () => {
++      const response = await request(app)
++        .post('/api/projects')
++        .set('Content-Type', 'application/json')
++        .send('{ invalid json }')
++        .expect(400);
++
++      expect(response.body.success).toBe(false);
++    });
++  });
++});
+\ No newline at end of file

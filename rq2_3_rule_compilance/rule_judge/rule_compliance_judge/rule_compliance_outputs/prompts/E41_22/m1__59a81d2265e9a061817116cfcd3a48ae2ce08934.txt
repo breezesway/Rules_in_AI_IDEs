@@ -1,0 +1,1979 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+Define interfaces in types/ directories
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing interface definitions and the file system directory structure.
+- Suggested Logic: Scan the repository for interface definitions (using language-specific keywords like 'interface'). For every file where an interface is defined, verify that its file path includes a directory named 'types/'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: test: improve auth service test setup with valid credentials and longer JWT secret
+
+- Add SessionData import for proper typing
+- Use longer JWT secret that meets minimum requirements
+- Define validCredentials constant with proper format validation
+- Ensure test credentials match expected formats (32-char hex accountId, 20-char accessKeyId, 40-char secretAccessKey)
+- Changed Files List: 
+worker/src/handlers/auth.test.ts	+483	-0	after_lines=483
+worker/src/handlers/auth.ts	+274	-0	after_lines=274
+worker/src/index.ts	+12	-31	after_lines=280
+worker/src/middleware/auth.test.ts	+295	-0	after_lines=295
+worker/src/middleware/auth.ts	+78	-0	after_lines=78
+worker/src/services/auth.test.ts	+452	-0	after_lines=452
+worker/src/services/auth.ts	+164	-0	after_lines=164
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── handlers
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── index.ts
+    │   ├── middleware
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── services
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/src/handlers/auth.test.ts ---
+diff --git a/worker/src/handlers/auth.test.ts b/worker/src/handlers/auth.test.ts
+new file mode 100644
+index 0000000..1ffc188
+--- /dev/null
++++ b/worker/src/handlers/auth.test.ts
+@@ -0,0 +1,483 @@
++import { describe, it, expect, beforeEach, vi } from 'vitest'
++import { Hono } from 'hono'
++import { loginHandler, logoutHandler, verifyHandler, refreshHandler } from './auth'
++import type { Bindings, AuthCredentials } from '../types'
++
++// Mock AuthService
++vi.mock('../services/auth', () => ({
++  AuthService: vi.fn().mockImplementation(() => ({
++    validateCredentials: vi.fn(),
++    createSession: vi.fn(),
++    validateToken: vi.fn(),
++    revokeSession: vi.fn(),
++    refreshToken: vi.fn()
++  }))
++}))
++
++// Mock analytics
++const mockAnalytics = {
++  writeDataPoint: vi.fn()
++}
++
++// Mock bindings
++const mockBindings: Bindings = {
++  R2_BUCKET: {} as R2Bucket,
++  KV_SESSIONS: {} as KVNamespace,
++  ANALYTICS: mockAnalytics as any,
++  ASSETS: {} as Fetcher,
++  JWT_SECRET: 'test-secret-key',
++  JWT_EXPIRY_HOURS: '24',
++  MAX_FILE_SIZE_MB: '50',
++  ENVIRONMENT: 'test'
++}
++
++// Valid test credentials
++const validCredentials: AuthCredentials = {
++  accountId: 'a1b2c3d4e5f678901234567890123456',
++  accessKeyId: '12345678901234567890',
++  secretAccessKey: '1234567890123456789012345678901234567890',
++  bucketName: 'test-bucket'
++}
++
++describe('Auth Handlers', () => {
++  let app: Hono<{ Bindings: Bindings }>
++  let mockAuthService: any
++
++  beforeEach(() => {
++    app = new Hono<{ Bindings: Bindings }>()
++    vi.clearAllMocks()
++    
++    // Get the mocked AuthService constructor
++    const { AuthService } = require('../services/auth')
++    mockAuthService = new AuthService()
++  })
++
++  describe('loginHandler', () => {
++    beforeEach(() => {
++      app.post('/login', loginHandler)
++    })
++
++    it('should return 400 for missing credentials', async () => {
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({})
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Bad Request')
++      expect(data.message).toContain('Missing required credentials')
++    })
++
++    it('should return 400 for missing accountId', async () => {
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          accessKeyId: '12345678901234567890',
++          secretAccessKey: '1234567890123456789012345678901234567890',
++          bucketName: 'test-bucket'
++        })
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++    })
++
++    it('should return 401 for invalid credentials', async () => {
++      mockAuthService.validateCredentials.mockResolvedValue(false)
++
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(validCredentials)
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Invalid credentials provided')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_login_failed'],
++        doubles: [1],
++        indexes: ['test', 'invalid_credentials']
++      })
++    })
++
++    it('should return 200 and token for valid credentials', async () => {
++      const mockToken = 'mock-jwt-token'
++      const mockExpiresAt = Date.now() + 86400000
++
++      mockAuthService.validateCredentials.mockResolvedValue(true)
++      mockAuthService.createSession.mockResolvedValue({
++        token: mockToken,
++        expiresAt: mockExpiresAt
++      })
++
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(validCredentials)
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.data.token).toBe(mockToken)
++      expect(data.data.expiresAt).toBe(mockExpiresAt)
++      expect(data.data.bucketName).toBe(validCredentials.bucketName)
++      expect(data.message).toBe('Authentication successful')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_login_success'],
++        doubles: [1],
++        indexes: ['test', 'test-bucket']
++      })
++    })
++
++    it('should return 500 for internal server errors', async () => {
++      mockAuthService.validateCredentials.mockRejectedValue(new Error('Database error'))
++
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(validCredentials)
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Internal Server Error')
++      expect(data.message).toBe('Authentication failed')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_login_error'],
++        doubles: [1],
++        indexes: ['test', 'Database error']
++      })
++    })
++
++    it('should handle invalid JSON gracefully', async () => {
++      const req = new Request('http://localhost/login', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: 'invalid-json'
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++    })
++  })
++
++  describe('logoutHandler', () => {
++    beforeEach(() => {
++      app.post('/logout', logoutHandler)
++    })
++
++    it('should return 400 for missing authorization header', async () => {
++      const req = new Request('http://localhost/logout', {
++        method: 'POST'
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Bad Request')
++      expect(data.message).toBe('No token provided')
++    })
++
++    it('should return 400 for invalid authorization header format', async () => {
++      const req = new Request('http://localhost/logout', {
++        method: 'POST',
++        headers: { 'Authorization': 'InvalidFormat token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++    })
++
++    it('should return 200 for successful logout', async () => {
++      mockAuthService.revokeSession.mockResolvedValue(true)
++
++      const req = new Request('http://localhost/logout', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.message).toBe('Logout successful')
++      expect(mockAuthService.revokeSession).toHaveBeenCalledWith('valid-token')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_logout'],
++        doubles: [1],
++        indexes: ['test', 'success']
++      })
++    })
++
++    it('should return 200 even when revocation fails', async () => {
++      mockAuthService.revokeSession.mockResolvedValue(false)
++
++      const req = new Request('http://localhost/logout', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer invalid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_logout'],
++        doubles: [1],
++        indexes: ['test', 'failed']
++      })
++    })
++
++    it('should return 500 for internal server errors', async () => {
++      mockAuthService.revokeSession.mockRejectedValue(new Error('KV error'))
++
++      const req = new Request('http://localhost/logout', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Internal Server Error')
++      expect(data.message).toBe('Logout failed')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_logout_error'],
++        doubles: [1],
++        indexes: ['test', 'KV error']
++      })
++    })
++  })
++
++  describe('verifyHandler', () => {
++    beforeEach(() => {
++      app.get('/verify', verifyHandler)
++    })
++
++    it('should return 400 for missing authorization header', async () => {
++      const req = new Request('http://localhost/verify')
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Bad Request')
++      expect(data.message).toBe('No token provided')
++    })
++
++    it('should return 401 for invalid token', async () => {
++      mockAuthService.validateToken.mockResolvedValue(null)
++
++      const req = new Request('http://localhost/verify', {
++        headers: { 'Authorization': 'Bearer invalid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Invalid or expired token')
++    })
++
++    it('should return 200 for valid token', async () => {
++      const mockSessionData = {
++        userId: 'test-user-id',
++        credentials: validCredentials,
++        expiresAt: Date.now() + 86400000,
++        createdAt: Date.now()
++      }
++
++      mockAuthService.validateToken.mockResolvedValue(mockSessionData)
++
++      const req = new Request('http://localhost/verify', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.data.valid).toBe(true)
++      expect(data.data.bucketName).toBe(validCredentials.bucketName)
++      expect(data.data.expiresAt).toBe(mockSessionData.expiresAt)
++      expect(data.data.userId).toBe(mockSessionData.userId)
++      expect(data.message).toBe('Token is valid')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_verify_success'],
++        doubles: [1],
++        indexes: ['test', 'test-bucket']
++      })
++    })
++
++    it('should return 500 for internal server errors', async () => {
++      mockAuthService.validateToken.mockRejectedValue(new Error('Validation error'))
++
++      const req = new Request('http://localhost/verify', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Internal Server Error')
++      expect(data.message).toBe('Token verification failed')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_verify_error'],
++        doubles: [1],
++        indexes: ['test', 'Validation error']
++      })
++    })
++  })
++
++  describe('refreshHandler', () => {
++    beforeEach(() => {
++      app.post('/refresh', refreshHandler)
++    })
++
++    it('should return 400 for missing authorization header', async () => {
++      const req = new Request('http://localhost/refresh', {
++        method: 'POST'
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(400)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Bad Request')
++      expect(data.message).toBe('No token provided')
++    })
++
++    it('should return 401 for invalid token', async () => {
++      mockAuthService.refreshToken.mockResolvedValue(null)
++
++      const req = new Request('http://localhost/refresh', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer invalid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Unable to refresh token')
++    })
++
++    it('should return 200 with new token for valid refresh', async () => {
++      const mockRefreshResult = {
++        token: 'new-jwt-token',
++        expiresAt: Date.now() + 86400000
++      }
++
++      mockAuthService.refreshToken.mockResolvedValue(mockRefreshResult)
++
++      const req = new Request('http://localhost/refresh', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.data.token).toBe(mockRefreshResult.token)
++      expect(data.data.expiresAt).toBe(mockRefreshResult.expiresAt)
++      expect(data.message).toBe('Token refreshed successfully')
++      expect(mockAuthService.refreshToken).toHaveBeenCalledWith('valid-token')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_refresh_success'],
++        doubles: [1],
++        indexes: ['test']
++      })
++    })
++
++    it('should return 500 for internal server errors', async () => {
++      mockAuthService.refreshToken.mockRejectedValue(new Error('Refresh error'))
++
++      const req = new Request('http://localhost/refresh', {
++        method: 'POST',
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Internal Server Error')
++      expect(data.message).toBe('Token refresh failed')
++      expect(mockAnalytics.writeDataPoint).toHaveBeenCalledWith({
++        blobs: ['auth_refresh_error'],
++        doubles: [1],
++        indexes: ['test', 'Refresh error']
++      })
++    })
++  })
++
++  describe('handlers without analytics', () => {
++    const bindingsWithoutAnalytics = { ...mockBindings, ANALYTICS: undefined }
++
++    it('should work without analytics in loginHandler', async () => {
++      app.post('/login-no-analytics', loginHandler)
++      mockAuthService.validateCredentials.mockResolvedValue(true)
++      mockAuthService.createSession.mockResolvedValue({
++        token: 'mock-token',
++        expiresAt: Date.now() + 86400000
++      })
++
++      const req = new Request('http://localhost/login-no-analytics', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify(validCredentials)
++      })
++
++      const res = await app.request(req, bindingsWithoutAnalytics)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      // Should not throw error when analytics is undefined
++    })
++  })
++})
+\ No newline at end of file
+
+--- FILE: worker/src/handlers/auth.ts ---
+diff --git a/worker/src/handlers/auth.ts b/worker/src/handlers/auth.ts
+new file mode 100644
+index 0000000..13c2825
+--- /dev/null
++++ b/worker/src/handlers/auth.ts
+@@ -0,0 +1,274 @@
++import type { Context } from 'hono'
++import { AuthService } from '../services/auth'
++import type { AuthCredentials, Bindings } from '../types'
++
++/**
++ * Handle user login with R2 credentials
++ */
++export const loginHandler = async (c: Context<{ Bindings: Bindings }>) => {
++  try {
++    const body = await c.req.json()
++    
++    // Validate request body
++    const { accountId, accessKeyId, secretAccessKey, bucketName } = body
++    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
++      return c.json({
++        success: false,
++        error: 'Bad Request',
++        message: 'Missing required credentials: accountId, accessKeyId, secretAccessKey, bucketName'
++      }, 400)
++    }
++
++    const credentials: AuthCredentials = {
++      accountId,
++      accessKeyId,
++      secretAccessKey,
++      bucketName
++    }
++
++    const authService = new AuthService(c.env)
++
++    // Validate credentials
++    const isValid = await authService.validateCredentials(credentials)
++    if (!isValid) {
++      // Track failed login attempt
++      if (c.env.ANALYTICS) {
++        c.env.ANALYTICS.writeDataPoint({
++          blobs: ['auth_login_failed'],
++          doubles: [1],
++          indexes: [c.env.ENVIRONMENT, 'invalid_credentials']
++        })
++      }
++
++      return c.json({
++        success: false,
++        error: 'Unauthorized',
++        message: 'Invalid credentials provided'
++      }, 401)
++    }
++
++    // Create session
++    const { token, expiresAt } = await authService.createSession(credentials)
++
++    // Track successful login
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_login_success'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, bucketName]
++      })
++    }
++
++    return c.json({
++      success: true,
++      data: {
++        token,
++        expiresAt,
++        bucketName
++      },
++      message: 'Authentication successful'
++    })
++  } catch (error) {
++    console.error('Login handler error:', error)
++
++    // Track login error
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_login_error'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++      })
++    }
++
++    return c.json({
++      success: false,
++      error: 'Internal Server Error',
++      message: 'Authentication failed'
++    }, 500)
++  }
++}
++
++/**
++ * Handle user logout
++ */
++export const logoutHandler = async (c: Context<{ Bindings: Bindings }>) => {
++  try {
++    const authHeader = c.req.header('Authorization')
++    if (!authHeader || !authHeader.startsWith('Bearer ')) {
++      return c.json({
++        success: false,
++        error: 'Bad Request',
++        message: 'No token provided'
++      }, 400)
++    }
++
++    const token = authHeader.substring(7)
++    const authService = new AuthService(c.env)
++
++    // Revoke session
++    const revoked = await authService.revokeSession(token)
++
++    // Track logout
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_logout'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, revoked ? 'success' : 'failed']
++      })
++    }
++
++    return c.json({
++      success: true,
++      message: 'Logout successful'
++    })
++  } catch (error) {
++    console.error('Logout handler error:', error)
++
++    // Track logout error
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_logout_error'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++      })
++    }
++
++    return c.json({
++      success: false,
++      error: 'Internal Server Error',
++      message: 'Logout failed'
++    }, 500)
++  }
++}
++
++/**
++ * Verify token validity
++ */
++export const verifyHandler = async (c: Context<{ Bindings: Bindings }>) => {
++  try {
++    const authHeader = c.req.header('Authorization')
++    if (!authHeader || !authHeader.startsWith('Bearer ')) {
++      return c.json({
++        success: false,
++        error: 'Bad Request',
++        message: 'No token provided'
++      }, 400)
++    }
++
++    const token = authHeader.substring(7)
++    const authService = new AuthService(c.env)
++
++    // Validate token
++    const sessionData = await authService.validateToken(token)
++
++    if (!sessionData) {
++      return c.json({
++        success: false,
++        error: 'Unauthorized',
++        message: 'Invalid or expired token'
++      }, 401)
++    }
++
++    // Track token verification
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_verify_success'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, sessionData.credentials.bucketName]
++      })
++    }
++
++    return c.json({
++      success: true,
++      data: {
++        valid: true,
++        bucketName: sessionData.credentials.bucketName,
++        expiresAt: sessionData.expiresAt,
++        userId: sessionData.userId
++      },
++      message: 'Token is valid'
++    })
++  } catch (error) {
++    console.error('Verify handler error:', error)
++
++    // Track verification error
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_verify_error'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++      })
++    }
++
++    return c.json({
++      success: false,
++      error: 'Internal Server Error',
++      message: 'Token verification failed'
++    }, 500)
++  }
++}
++
++/**
++ * Refresh an existing token
++ */
++export const refreshHandler = async (c: Context<{ Bindings: Bindings }>) => {
++  try {
++    const authHeader = c.req.header('Authorization')
++    if (!authHeader || !authHeader.startsWith('Bearer ')) {
++      return c.json({
++        success: false,
++        error: 'Bad Request',
++        message: 'No token provided'
++      }, 400)
++    }
++
++    const token = authHeader.substring(7)
++    const authService = new AuthService(c.env)
++
++    // Refresh token
++    const refreshResult = await authService.refreshToken(token)
++
++    if (!refreshResult) {
++      return c.json({
++        success: false,
++        error: 'Unauthorized',
++        message: 'Unable to refresh token'
++      }, 401)
++    }
++
++    // Track token refresh
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_refresh_success'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT]
++      })
++    }
++
++    return c.json({
++      success: true,
++      data: {
++        token: refreshResult.token,
++        expiresAt: refreshResult.expiresAt
++      },
++      message: 'Token refreshed successfully'
++    })
++  } catch (error) {
++    console.error('Refresh handler error:', error)
++
++    // Track refresh error
++    if (c.env.ANALYTICS) {
++      c.env.ANALYTICS.writeDataPoint({
++        blobs: ['auth_refresh_error'],
++        doubles: [1],
++        indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++      })
++    }
++
++    return c.json({
++      success: false,
++      error: 'Internal Server Error',
++      message: 'Token refresh failed'
++    }, 500)
++  }
++}
+\ No newline at end of file
+
+--- FILE: worker/src/index.ts ---
+diff --git a/worker/src/index.ts b/worker/src/index.ts
+index 3837cff..5d6501b 100644
+--- a/worker/src/index.ts
++++ b/worker/src/index.ts
+@@ -1,18 +1,9 @@
+ import { Hono } from 'hono'
+ import { logger } from 'hono/logger'
+ import { prettyJSON } from 'hono/pretty-json'
+-
+-// Type definitions for Cloudflare Workers environment
+-type Bindings = {
+-    R2_BUCKET: R2Bucket
+-    KV_SESSIONS: KVNamespace
+-    ANALYTICS?: AnalyticsEngineDataset
+-    ASSETS: Fetcher
+-    JWT_SECRET: string
+-    JWT_EXPIRY_HOURS: string
+-    MAX_FILE_SIZE_MB: string
+-    ENVIRONMENT: string
+-}
++import type { Bindings } from './types'
++import { authMiddleware, optionalAuthMiddleware } from './middleware/auth'
++import { loginHandler, logoutHandler, verifyHandler, refreshHandler } from './handlers/auth'
+ 
+ // Create Hono app with type bindings
+ const app = new Hono<{ Bindings: Bindings }>()
+@@ -57,23 +48,13 @@ app.get('/api', (c) => {
+ })
+ 
+ // Authentication routes
+-app.post('/api/auth/login', async (c) => {
+-    // TODO: Implement authentication logic
+-    return c.json({ message: 'Authentication endpoint - to be implemented' })
+-})
+-
+-app.post('/api/auth/logout', async (c) => {
+-    // TODO: Implement logout logic
+-    return c.json({ message: 'Logout endpoint - to be implemented' })
+-})
+-
+-app.get('/api/auth/verify', async (c) => {
+-    // TODO: Implement token verification
+-    return c.json({ message: 'Token verification endpoint - to be implemented' })
+-})
++app.post('/api/auth/login', loginHandler)
++app.post('/api/auth/logout', logoutHandler)
++app.get('/api/auth/verify', verifyHandler)
++app.post('/api/auth/refresh', refreshHandler)
+ 
+-// File operation routes
+-app.get('/api/files', async (c) => {
++// File operation routes (protected)
++app.get('/api/files', authMiddleware, async (c) => {
+     try {
+         const bucket = c.env.R2_BUCKET
+         const prefix = c.req.query('prefix') || ''
+@@ -119,7 +100,7 @@ app.get('/api/files', async (c) => {
+     }
+ })
+ 
+-app.post('/api/files/upload', async (c) => {
++app.post('/api/files/upload', authMiddleware, async (c) => {
+     try {
+         const bucket = c.env.R2_BUCKET
+         const maxSizeMB = parseInt(c.env.MAX_FILE_SIZE_MB)
+@@ -184,7 +165,7 @@ app.post('/api/files/upload', async (c) => {
+     }
+ })
+ 
+-app.get('/api/files/:filename', async (c) => {
++app.get('/api/files/:filename', authMiddleware, async (c) => {
+     try {
+         const bucket = c.env.R2_BUCKET
+         const filename = c.req.param('filename')
+@@ -215,7 +196,7 @@ app.get('/api/files/:filename', async (c) => {
+     }
+ })
+ 
+-app.delete('/api/files/:filename', async (c) => {
++app.delete('/api/files/:filename', authMiddleware, async (c) => {
+     try {
+         const bucket = c.env.R2_BUCKET
+         const filename = c.req.param('filename')
+
+--- FILE: worker/src/middleware/auth.test.ts ---
+diff --git a/worker/src/middleware/auth.test.ts b/worker/src/middleware/auth.test.ts
+new file mode 100644
+index 0000000..4f060d6
+--- /dev/null
++++ b/worker/src/middleware/auth.test.ts
+@@ -0,0 +1,295 @@
++import { describe, it, expect, beforeEach, vi } from 'vitest'
++import { Hono } from 'hono'
++import { authMiddleware, optionalAuthMiddleware } from './auth'
++import type { Bindings, SessionData } from '../types'
++
++// Mock AuthService
++vi.mock('../services/auth', () => ({
++  AuthService: vi.fn().mockImplementation(() => ({
++    validateToken: vi.fn()
++  }))
++}))
++
++// Mock bindings
++const mockBindings: Bindings = {
++  R2_BUCKET: {} as R2Bucket,
++  KV_SESSIONS: {} as KVNamespace,
++  ANALYTICS: undefined,
++  ASSETS: {} as Fetcher,
++  JWT_SECRET: 'test-secret-key',
++  JWT_EXPIRY_HOURS: '24',
++  MAX_FILE_SIZE_MB: '50',
++  ENVIRONMENT: 'test'
++}
++
++// Mock session data
++const mockSessionData: SessionData = {
++  userId: 'test-user-id',
++  credentials: {
++    accountId: 'a1b2c3d4e5f678901234567890123456',
++    accessKeyId: '12345678901234567890',
++    secretAccessKey: '1234567890123456789012345678901234567890',
++    bucketName: 'test-bucket'
++  },
++  expiresAt: Date.now() + 86400000,
++  createdAt: Date.now()
++}
++
++describe('Auth Middleware', () => {
++  let app: Hono<{ Bindings: Bindings }>
++  let mockAuthService: any
++
++  beforeEach(() => {
++    app = new Hono<{ Bindings: Bindings }>()
++    vi.clearAllMocks()
++    
++    // Get the mocked AuthService constructor
++    const { AuthService } = require('../services/auth')
++    mockAuthService = new AuthService()
++  })
++
++  describe('authMiddleware', () => {
++    beforeEach(() => {
++      app.get('/protected', authMiddleware, (c) => {
++        const sessionData = c.get('sessionData')
++        return c.json({ 
++          success: true, 
++          userId: sessionData.userId,
++          bucketName: sessionData.credentials.bucketName
++        })
++      })
++    })
++
++    it('should return 401 for missing authorization header', async () => {
++      const req = new Request('http://localhost/protected')
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Missing or invalid authorization header')
++    })
++
++    it('should return 401 for invalid authorization header format', async () => {
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'InvalidFormat token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Missing or invalid authorization header')
++    })
++
++    it('should return 401 for empty Bearer token', async () => {
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'Bearer ' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Invalid or expired token')
++    })
++
++    it('should return 401 for invalid token', async () => {
++      mockAuthService.validateToken.mockResolvedValue(null)
++
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'Bearer invalid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(401)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Unauthorized')
++      expect(data.message).toBe('Invalid or expired token')
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('invalid-token')
++    })
++
++    it('should allow access and set session data for valid token', async () => {
++      mockAuthService.validateToken.mockResolvedValue(mockSessionData)
++
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.userId).toBe(mockSessionData.userId)
++      expect(data.bucketName).toBe(mockSessionData.credentials.bucketName)
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('valid-token')
++    })
++
++    it('should return 500 for internal server errors', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      mockAuthService.validateToken.mockRejectedValue(new Error('Database error'))
++
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(500)
++      expect(data.success).toBe(false)
++      expect(data.error).toBe('Internal Server Error')
++      expect(data.message).toBe('Authentication failed')
++      expect(consoleSpy).toHaveBeenCalledWith('Auth middleware error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++
++    it('should extract token correctly from Bearer header', async () => {
++      mockAuthService.validateToken.mockResolvedValue(mockSessionData)
++
++      const req = new Request('http://localhost/protected', {
++        headers: { 'Authorization': 'Bearer my-jwt-token-here' }
++      })
++
++      await app.request(req, mockBindings)
++
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('my-jwt-token-here')
++    })
++  })
++
++  describe('optionalAuthMiddleware', () => {
++    beforeEach(() => {
++      app.get('/optional', optionalAuthMiddleware, (c) => {
++        const sessionData = c.get('sessionData')
++        return c.json({ 
++          success: true, 
++          authenticated: !!sessionData,
++          userId: sessionData?.userId || null,
++          bucketName: sessionData?.credentials?.bucketName || null
++        })
++      })
++    })
++
++    it('should allow access without authorization header', async () => {
++      const req = new Request('http://localhost/optional')
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(false)
++      expect(data.userId).toBeNull()
++      expect(data.bucketName).toBeNull()
++    })
++
++    it('should allow access with invalid authorization header format', async () => {
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'InvalidFormat token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(false)
++    })
++
++    it('should allow access with invalid token', async () => {
++      mockAuthService.validateToken.mockResolvedValue(null)
++
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'Bearer invalid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(false)
++      expect(data.userId).toBeNull()
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('invalid-token')
++    })
++
++    it('should set session data for valid token', async () => {
++      mockAuthService.validateToken.mockResolvedValue(mockSessionData)
++
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(true)
++      expect(data.userId).toBe(mockSessionData.userId)
++      expect(data.bucketName).toBe(mockSessionData.credentials.bucketName)
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('valid-token')
++    })
++
++    it('should continue without authentication on validation errors', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      mockAuthService.validateToken.mockRejectedValue(new Error('Database error'))
++
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'Bearer valid-token' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(false)
++      expect(consoleSpy).toHaveBeenCalledWith('Optional auth middleware error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++
++    it('should handle empty Bearer token gracefully', async () => {
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'Bearer ' }
++      })
++
++      const res = await app.request(req, mockBindings)
++      const data = await res.json()
++
++      expect(res.status).toBe(200)
++      expect(data.success).toBe(true)
++      expect(data.authenticated).toBe(false)
++      expect(mockAuthService.validateToken).toHaveBeenCalledWith('')
++    })
++
++    it('should not call validateToken when no auth header is present', async () => {
++      const req = new Request('http://localhost/optional')
++
++      await app.request(req, mockBindings)
++
++      expect(mockAuthService.validateToken).not.toHaveBeenCalled()
++    })
++
++    it('should not call validateToken for non-Bearer auth headers', async () => {
++      const req = new Request('http://localhost/optional', {
++        headers: { 'Authorization': 'Basic dXNlcjpwYXNz' }
++      })
++
++      await app.request(req, mockBindings)
++
++      expect(mockAuthService.validateToken).not.toHaveBeenCalled()
++    })
++  })
++})
+\ No newline at end of file
+
+--- FILE: worker/src/middleware/auth.ts ---
+diff --git a/worker/src/middleware/auth.ts b/worker/src/middleware/auth.ts
+new file mode 100644
+index 0000000..11dd4ad
+--- /dev/null
++++ b/worker/src/middleware/auth.ts
+@@ -0,0 +1,78 @@
++import type { Context, Next } from 'hono'
++import { AuthService } from '../services/auth'
++import type { Bindings, SessionData } from '../types'
++
++// Extend Hono's context to include session data
++declare module 'hono' {
++  interface ContextVariableMap {
++    sessionData: SessionData
++  }
++}
++
++/**
++ * Authentication middleware that validates JWT tokens and loads session data
++ */
++export const authMiddleware = async (c: Context<{ Bindings: Bindings }>, next: Next) => {
++  try {
++    // Get token from Authorization header
++    const authHeader = c.req.header('Authorization')
++    if (!authHeader || !authHeader.startsWith('Bearer ')) {
++      return c.json({
++        success: false,
++        error: 'Unauthorized',
++        message: 'Missing or invalid authorization header'
++      }, 401)
++    }
++
++    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
++
++    // Validate token using AuthService
++    const authService = new AuthService(c.env)
++    const sessionData = await authService.validateToken(token)
++
++    if (!sessionData) {
++      return c.json({
++        success: false,
++        error: 'Unauthorized',
++        message: 'Invalid or expired token'
++      }, 401)
++    }
++
++    // Store session data in context for use in route handlers
++    c.set('sessionData', sessionData)
++
++    await next()
++  } catch (error) {
++    console.error('Auth middleware error:', error)
++    return c.json({
++      success: false,
++      error: 'Internal Server Error',
++      message: 'Authentication failed'
++    }, 500)
++  }
++}
++
++/**
++ * Optional authentication middleware that doesn't fail if no token is provided
++ * Useful for endpoints that can work with or without authentication
++ */
++export const optionalAuthMiddleware = async (c: Context<{ Bindings: Bindings }>, next: Next) => {
++  try {
++    const authHeader = c.req.header('Authorization')
++    if (authHeader && authHeader.startsWith('Bearer ')) {
++      const token = authHeader.substring(7)
++      const authService = new AuthService(c.env)
++      const sessionData = await authService.validateToken(token)
++      
++      if (sessionData) {
++        c.set('sessionData', sessionData)
++      }
++    }
++
++    await next()
++  } catch (error) {
++    console.error('Optional auth middleware error:', error)
++    // Continue without authentication on error
++    await next()
++  }
++}
+\ No newline at end of file
+
+--- FILE: worker/src/services/auth.test.ts ---
+diff --git a/worker/src/services/auth.test.ts b/worker/src/services/auth.test.ts
+new file mode 100644
+index 0000000..b991739
+--- /dev/null
++++ b/worker/src/services/auth.test.ts
+@@ -0,0 +1,452 @@
++import { describe, it, expect, beforeEach, vi } from 'vitest'
++import { AuthService } from './auth'
++import type { Bindings, AuthCredentials, SessionData } from '../types'
++
++// Mock KV namespace
++const mockKV = {
++  get: vi.fn(),
++  put: vi.fn(),
++  delete: vi.fn()
++}
++
++// Mock bindings
++const mockBindings: Bindings = {
++  R2_BUCKET: {} as R2Bucket,
++  KV_SESSIONS: mockKV as any,
++  ANALYTICS: undefined,
++  ASSETS: {} as Fetcher,
++  JWT_SECRET: 'test-secret-key-that-is-long-enough-for-jwt',
++  JWT_EXPIRY_HOURS: '24',
++  MAX_FILE_SIZE_MB: '50',
++  ENVIRONMENT: 'test'
++}
++
++// Valid test credentials
++const validCredentials: AuthCredentials = {
++  accountId: 'a1b2c3d4e5f678901234567890123456', // exactly 32 hex characters
++  accessKeyId: '12345678901234567890', // exactly 20 characters
++  secretAccessKey: '1234567890123456789012345678901234567890', // exactly 40 characters
++  bucketName: 'test-bucket'
++}
++
++describe('AuthService', () => {
++  let authService: AuthService
++
++  beforeEach(() => {
++    authService = new AuthService(mockBindings)
++    vi.clearAllMocks()
++  })
++
++  describe('validateCredentials', () => {
++    it('should return false for missing accountId', async () => {
++      const invalidCredentials = {
++        accountId: '',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for missing accessKeyId', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for missing secretAccessKey', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for missing bucketName', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: ''
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for invalid account ID format (non-hex)', async () => {
++      const invalidCredentials = {
++        accountId: 'invalid-format-not-hex-string-here',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for account ID with wrong length', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f6789', // too short
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for access key ID too short', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: 'short',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for access key ID too long', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '123456789012345678901', // 21 characters
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for secret access key too short', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: 'short',
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for secret access key too long', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '12345678901234567890123456789012345678901', // 41 characters
++        bucketName: 'test-bucket'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for bucket name with invalid characters', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'Invalid_Bucket_Name'
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for bucket name too short', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'ab' // only 2 characters
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return false for bucket name too long', async () => {
++      const invalidCredentials = {
++        accountId: 'a1b2c3d4e5f678901234567890123456',
++        accessKeyId: '12345678901234567890',
++        secretAccessKey: '1234567890123456789012345678901234567890',
++        bucketName: 'a'.repeat(64) // 64 characters, exceeds 63 limit
++      } as AuthCredentials
++
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++    })
++
++    it('should return true for valid credentials', async () => {
++      const result = await authService.validateCredentials(validCredentials)
++      expect(result).toBe(true)
++    })
++
++    it('should return false when validation throws an error', async () => {
++      // Mock console.error to avoid noise in test output
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      
++      // Create credentials that will cause an error during validation
++      const invalidCredentials = null as any
++      
++      const result = await authService.validateCredentials(invalidCredentials)
++      expect(result).toBe(false)
++      expect(consoleSpy).toHaveBeenCalledWith('Credential validation error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++  })
++
++  describe('createSession', () => {
++    it('should create a session and return a token', async () => {
++      mockKV.put.mockResolvedValue(undefined)
++
++      const result = await authService.createSession(validCredentials)
++
++      expect(result).toHaveProperty('token')
++      expect(result).toHaveProperty('expiresAt')
++      expect(typeof result.token).toBe('string')
++      expect(typeof result.expiresAt).toBe('number')
++      expect(result.expiresAt).toBeGreaterThan(Date.now())
++      expect(mockKV.put).toHaveBeenCalledWith(
++        expect.stringMatching(/^session:/),
++        expect.stringContaining('"credentials"'),
++        { expirationTtl: 24 * 60 * 60 }
++      )
++    })
++
++    it('should store session data with correct structure', async () => {
++      mockKV.put.mockResolvedValue(undefined)
++
++      await authService.createSession(validCredentials)
++
++      const putCall = mockKV.put.mock.calls[0]
++      const sessionData = JSON.parse(putCall[1])
++
++      expect(sessionData).toHaveProperty('userId')
++      expect(sessionData).toHaveProperty('credentials')
++      expect(sessionData).toHaveProperty('expiresAt')
++      expect(sessionData).toHaveProperty('createdAt')
++      expect(sessionData.credentials).toEqual(validCredentials)
++      expect(typeof sessionData.userId).toBe('string')
++      expect(sessionData.expiresAt).toBeGreaterThan(sessionData.createdAt)
++    })
++
++    it('should use custom JWT expiry hours from bindings', async () => {
++      const customBindings = { ...mockBindings, JWT_EXPIRY_HOURS: '48' }
++      const customAuthService = new AuthService(customBindings)
++      mockKV.put.mockResolvedValue(undefined)
++
++      await customAuthService.createSession(validCredentials)
++
++      expect(mockKV.put).toHaveBeenCalledWith(
++        expect.stringMatching(/^session:/),
++        expect.any(String),
++        { expirationTtl: 48 * 60 * 60 }
++      )
++    })
++  })
++
++  describe('validateToken', () => {
++    it('should return null for invalid token', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      const invalidToken = 'invalid-token'
++
++      const result = await authService.validateToken(invalidToken)
++      expect(result).toBeNull()
++      expect(consoleSpy).toHaveBeenCalledWith('Token validation error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++
++    it('should return null when session not found in KV', async () => {
++      mockKV.put.mockResolvedValue(undefined)
++      const { token } = await authService.createSession(validCredentials)
++
++      // Mock KV to return null (session not found)
++      mockKV.get.mockResolvedValue(null)
++
++      const result = await authService.validateToken(token)
++      expect(result).toBeNull()
++    })
++
++    it('should return session data for valid token with valid session', async () => {
++      const now = Date.now()
++      const expiresAt = now + (24 * 60 * 60 * 1000)
++      
++      const sessionData: SessionData = {
++        userId: 'test-user-id',
++        credentials: validCredentials,
++        expiresAt,
++        createdAt: now
++      }
++
++      mockKV.put.mockResolvedValue(undefined)
++      const { token } = await authService.createSession(validCredentials)
++      
++      mockKV.get.mockResolvedValue(JSON.stringify(sessionData))
++
++      const result = await authService.validateToken(token)
++      expect(result).toEqual(sessionData)
++    })
++
++    it('should return null and clean up expired session', async () => {
++      const now = Date.now()
++      const expiredTime = now - 1000 // 1 second ago
++      
++      const expiredSessionData: SessionData = {
++        userId: 'test-user-id',
++        credentials: validCredentials,
++        expiresAt: expiredTime,
++        createdAt: now - (25 * 60 * 60 * 1000)
++      }
++
++      mockKV.put.mockResolvedValue(undefined)
++      mockKV.delete.mockResolvedValue(undefined)
++      const { token } = await authService.createSession(validCredentials)
++      
++      mockKV.get.mockResolvedValue(JSON.stringify(expiredSessionData))
++
++      const result = await authService.validateToken(token)
++      expect(result).toBeNull()
++      expect(mockKV.delete).toHaveBeenCalledWith(expect.stringMatching(/^session:/))
++    })
++
++    it('should handle JSON parse errors gracefully', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      
++      mockKV.put.mockResolvedValue(undefined)
++      const { token } = await authService.createSession(validCredentials)
++      
++      mockKV.get.mockResolvedValue('invalid-json')
++
++      const result = await authService.validateToken(token)
++      expect(result).toBeNull()
++      expect(consoleSpy).toHaveBeenCalledWith('Token validation error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++  })
++
++  describe('revokeSession', () => {
++    it('should return false for invalid token', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      const invalidToken = 'invalid-token'
++
++      const result = await authService.revokeSession(invalidToken)
++      expect(result).toBe(false)
++      expect(consoleSpy).toHaveBeenCalledWith('Session revocation error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++
++    it('should return true and delete session for valid token', async () => {
++      mockKV.put.mockResolvedValue(undefined)
++      mockKV.delete.mockResolvedValue(undefined)
++
++      const { token } = await authService.createSession(validCredentials)
++      const result = await authService.revokeSession(token)
++
++      expect(result).toBe(true)
++      expect(mockKV.delete).toHaveBeenCalledWith(expect.stringMatching(/^session:/))
++    })
++
++    it('should handle KV delete errors gracefully', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      mockKV.put.mockResolvedValue(undefined)
++      mockKV.delete.mockRejectedValue(new Error('KV delete failed'))
++
++      const { token } = await authService.createSession(validCredentials)
++      const result = await authService.revokeSession(token)
++
++      expect(result).toBe(false)
++      expect(consoleSpy).toHaveBeenCalledWith('Session revocation error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++  })
++
++  describe('refreshToken', () => {
++    it('should return null for invalid token', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      const invalidToken = 'invalid-token'
++
++      const result = await authService.refreshToken(invalidToken)
++      expect(result).toBeNull()
++      expect(consoleSpy).toHaveBeenCalledWith('Token refresh error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++
++    it('should return null when session validation fails', async () => {
++      mockKV.put.mockResolvedValue(undefined)
++      const { token } = await authService.createSession(validCredentials)
++      
++      // Mock validateToken to return null
++      mockKV.get.mockResolvedValue(null)
++
++      const result = await authService.refreshToken(token)
++      expect(result).toBeNull()
++    })
++
++    it('should create new session and revoke old one for valid token', async () => {
++      const now = Date.now()
++      const expiresAt = now + (24 * 60 * 60 * 1000)
++      
++      const sessionData: SessionData = {
++        userId: 'test-user-id',
++        credentials: validCredentials,
++        expiresAt,
++        createdAt: now
++      }
++
++      mockKV.put.mockResolvedValue(undefined)
++      mockKV.delete.mockResolvedValue(undefined)
++      
++      const { token } = await authService.createSession(validCredentials)
++      
++      // Mock successful session validation
++      mockKV.get.mockResolvedValue(JSON.stringify(sessionData))
++
++      const result = await authService.refreshToken(token)
++
++      expect(result).not.toBeNull()
++      expect(result).toHaveProperty('token')
++      expect(result).toHaveProperty('expiresAt')
++      expect(typeof result!.token).toBe('string')
++      expect(typeof result!.expiresAt).toBe('number')
++      expect(result!.token).not.toBe(token) // Should be a new token
++      expect(mockKV.delete).toHaveBeenCalled() // Old session should be revoked
++    })
++
++    it('should handle refresh errors gracefully', async () => {
++      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
++      
++      // Mock KV operations to throw errors
++      mockKV.put.mockRejectedValue(new Error('KV put failed'))
++      
++      const result = await authService.refreshToken('some-token')
++      expect(result).toBeNull()
++      expect(consoleSpy).toHaveBeenCalledWith('Token refresh error:', expect.any(Error))
++      
++      consoleSpy.mockRestore()
++    })
++  })
++})
+\ No newline at end of file
+
+--- FILE: worker/src/services/auth.ts ---
+diff --git a/worker/src/services/auth.ts b/worker/src/services/auth.ts
+new file mode 100644
+index 0000000..954c755
+--- /dev/null
++++ b/worker/src/services/auth.ts
+@@ -0,0 +1,164 @@
++import jwt from 'jsonwebtoken'
++import { v4 as uuidv4 } from 'uuid'
++import type { AuthCredentials, SessionData, JWTPayload, Bindings } from '../types'
++
++export class AuthService {
++  private kv: KVNamespace
++  private jwtSecret: string
++  private jwtExpiryHours: number
++
++  constructor(bindings: Bindings) {
++    this.kv = bindings.KV_SESSIONS
++    this.jwtSecret = bindings.JWT_SECRET
++    this.jwtExpiryHours = parseInt(bindings.JWT_EXPIRY_HOURS) || 24
++  }
++
++  /**
++   * Validate R2 credentials by checking if they contain required fields
++   * Note: Full validation would require testing against R2 API, but for now we do basic validation
++   */
++  async validateCredentials(credentials: AuthCredentials): Promise<boolean> {
++    try {
++      // Basic validation - check if all required fields are present
++      if (!credentials.accountId || !credentials.accessKeyId || !credentials.secretAccessKey || !credentials.bucketName) {
++        return false
++      }
++
++      // Check format of account ID (should be 32 character hex string)
++      if (!/^[a-f0-9]{32}$/.test(credentials.accountId)) {
++        return false
++      }
++
++      // Check format of access key ID (should be 20 characters)
++      if (credentials.accessKeyId.length !== 20) {
++        return false
++      }
++
++      // Check format of secret access key (should be 40 characters)
++      if (credentials.secretAccessKey.length !== 40) {
++        return false
++      }
++
++      // Check bucket name format (basic DNS-compliant name check)
++      if (!/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/.test(credentials.bucketName) || credentials.bucketName.length < 3 || credentials.bucketName.length > 63) {
++        return false
++      }
++
++      return true
++    } catch (error) {
++      console.error('Credential validation error:', error)
++      return false
++    }
++  }
++
++  /**
++   * Create a new session with the provided credentials
++   */
++  async createSession(credentials: AuthCredentials): Promise<{ token: string; expiresAt: number }> {
++    const sessionId = uuidv4()
++    const userId = uuidv4() // Generate a unique user ID for this session
++    const now = Date.now()
++    const expiresAt = now + (this.jwtExpiryHours * 60 * 60 * 1000)
++
++    // Create session data
++    const sessionData: SessionData = {
++      userId,
++      credentials,
++      expiresAt,
++      createdAt: now
++    }
++
++    // Store session in KV
++    await this.kv.put(`session:${sessionId}`, JSON.stringify(sessionData), {
++      expirationTtl: this.jwtExpiryHours * 60 * 60 // TTL in seconds
++    })
++
++    // Generate JWT token
++    const token = this.generateJWT(userId, sessionId)
++
++    return { token, expiresAt }
++  }
++
++  /**
++   * Validate a JWT token and return session data
++   */
++  async validateToken(token: string): Promise<SessionData | null> {
++    try {
++      // Verify JWT
++      const payload = jwt.verify(token, this.jwtSecret) as JWTPayload
++      
++      // Get session from KV
++      const sessionKey = `session:${payload.sessionId}`
++      const sessionDataStr = await this.kv.get(sessionKey)
++      
++      if (!sessionDataStr) {
++        return null
++      }
++
++      const sessionData: SessionData = JSON.parse(sessionDataStr)
++      
++      // Check if session is expired
++      if (sessionData.expiresAt < Date.now()) {
++        // Clean up expired session
++        await this.kv.delete(sessionKey)
++        return null
++      }
++
++      return sessionData
++    } catch (error) {
++      console.error('Token validation error:', error)
++      return null
++    }
++  }
++
++  /**
++   * Revoke a session by deleting it from KV
++   */
++  async revokeSession(token: string): Promise<boolean> {
++    try {
++      const payload = jwt.verify(token, this.jwtSecret) as JWTPayload
++      await this.kv.delete(`session:${payload.sessionId}`)
++      return true
++    } catch (error) {
++      console.error('Session revocation error:', error)
++      return false
++    }
++  }
++
++  /**
++   * Refresh a token by creating a new session with the same credentials
++   */
++  async refreshToken(token: string): Promise<{ token: string; expiresAt: number } | null> {
++    try {
++      const sessionData = await this.validateToken(token)
++      if (!sessionData) {
++        return null
++      }
++
++      // Revoke old session
++      await this.revokeSession(token)
++
++      // Create new session with same credentials
++      return await this.createSession(sessionData.credentials)
++    } catch (error) {
++      console.error('Token refresh error:', error)
++      return null
++    }
++  }
++
++  /**
++   * Generate a JWT token
++   */
++  private generateJWT(userId: string, sessionId: string): string {
++    const payload: JWTPayload = {
++      userId,
++      sessionId,
++      exp: Math.floor(Date.now() / 1000) + (this.jwtExpiryHours * 60 * 60),
++      iat: Math.floor(Date.now() / 1000)
++    }
++
++    return jwt.sign(payload, this.jwtSecret)
++  }
++
++
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

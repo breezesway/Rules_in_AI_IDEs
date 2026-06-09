@@ -1,0 +1,54 @@
+diff --git a/src/types/electron.d.ts b/src/types/electron.d.ts
+index 6799b19..40d06d4 100644
+--- a/src/types/electron.d.ts
++++ b/src/types/electron.d.ts
+@@ -48,6 +48,49 @@ export interface ElectronAPI {
+   getAppConfig: () => Promise<AppConfig>;
+   updateAppConfig: (config: Partial<AppConfig>) => Promise<{ success: boolean; error?: string }>;
+   resetAppConfig: () => Promise<{ success: boolean; error?: string }>;
++  
++  // 图片压缩相关
++  selectImages: () => Promise<{
++    success: boolean;
++    files?: {
++      name: string;
++      path: string;
++      size: number;
++    }[];
++    error?: string;
++  }>;
++  
++  selectSaveLocation: () => Promise<{
++    success: boolean;
++    path?: string;
++    error?: string;
++  }>;
++  
++  compressImages: (
++    filePaths: string[],
++    settings: {
++      method: string;
++      quality?: number;
++      targetSize?: number;
++      maxDimension?: number;
++      outputFormat?: string;
++      namingSuffix?: string;
++      saveLocation?: string;
++    }
++  ) => Promise<{
++    success: boolean;
++    processedCount?: number;
++    error?: string;
++  }>;
++  
++  onCompressionProgress: (callback: (progress: {
++    currentFile: string;
++    currentIndex: number;
++    totalFiles: number;
++    percentage: number;
++  }) => void) => () => void;
++  
++  removeCompressionProgressListener: () => void;
+ }
+ 
+ // 历史记录类型定义

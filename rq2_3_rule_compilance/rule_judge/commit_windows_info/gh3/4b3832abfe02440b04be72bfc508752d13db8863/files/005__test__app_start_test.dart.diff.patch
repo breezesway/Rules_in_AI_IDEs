@@ -1,0 +1,130 @@
+diff --git a/test/app_start_test.dart b/test/app_start_test.dart
+index 701a1af..83d6fcb 100644
+--- a/test/app_start_test.dart
++++ b/test/app_start_test.dart
+@@ -1,3 +1,4 @@
++import 'package:flutter/material.dart';
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:get_it/get_it.dart';
+ import 'package:ferry/ferry.dart';
+@@ -7,6 +8,7 @@ import 'package:mockito/annotations.dart';
+ import 'package:mockito/mockito.dart';
+ import 'package:gh3/src/screens/home_screen/__generated__/home_viewmodel.data.gql.dart';
+ import 'package:gh3/src/screens/home_screen/__generated__/home_viewmodel.var.gql.dart';
++import 'package:go_router/go_router.dart';
+ 
+ import 'package:gh3/src/services/auth_service.dart';
+ import 'package:gh3/src/screens/home_screen/home_screen.dart';
+@@ -17,7 +19,7 @@ import 'package:gh3/src/services/scope_service.dart';
+ import 'package:gh3/src/services/timer_service.dart';
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart';
+ import 'package:gh3/src/screens/login_screen/login_viewmodel.dart';
+-import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart';
++import 'package:gh3/src/routing/route_collection_service.dart';
+ 
+ @GenerateNiceMocks([
+   MockSpec<Client>(),
+@@ -26,6 +28,7 @@ import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart
+   MockSpec<IScopeService>(),
+   MockSpec<TimerService>(),
+   MockSpec<AuthService>(),
++  MockSpec<RouteCollectionService>(),
+ ])
+ import 'app_start_test.mocks.dart';
+ 
+@@ -44,6 +47,7 @@ void main() {
+     final mockAuthService = MockAuthService();
+     final mockAuthClient = MockGithubAuthClient();
+     final mockFerryClient = MockClient();
++    final mockRouteCollectionService = MockRouteCollectionService();
+ 
+     when(mockAuthService.isLoggedIn).thenReturn(true);
+     when(mockAuthService.init()).thenAnswer((_) async {});
+@@ -51,6 +55,27 @@ void main() {
+       mockFerryClient.request<GGetFollowingData, GGetFollowingVars>(any),
+     ).thenAnswer((_) => const Stream.empty());
+ 
++    // Mock route collection service to return test routes
++    when(mockRouteCollectionService.collectRoutes()).thenReturn([
++      GoRoute(
++        path: '/',
++        builder: (context, state) => HomeScreen(
++          authViewModel: AuthViewModel(mockAuthService),
++          homeViewModel: HomeViewModel(mockFerryClient),
++        ),
++      ),
++      GoRoute(
++        path: '/login',
++        builder: (context, state) => LoginScreen(
++          viewModel: LoginViewModel(mockAuthClient, mockAuthService, AuthViewModel(mockAuthService)),
++        ),
++      ),
++      GoRoute(
++        path: '/loading',
++        builder: (context, state) => const Scaffold(body: Text('Loading')),
++      ),
++    ]);
++
+     GetIt.I.registerSingleton<AuthService>(mockAuthService);
+     GetIt.I.registerSingleton<GithubAuthClient>(mockAuthClient);
+     GetIt.I.registerSingleton<Client>(mockFerryClient);
+@@ -67,10 +92,7 @@ void main() {
+     await tester.pumpWidget(
+       Gh3App(
+         authViewModel: authViewModel,
+-        authService: mockAuthService,
+-        githubAuthClient: mockAuthClient,
+-        homeViewModel: HomeViewModel(mockFerryClient),
+-        userDetailsViewModelFactory: UserDetailsViewModelFactory(),
++        routeCollectionService: mockRouteCollectionService,
+       ),
+     );
+ 
+@@ -89,6 +111,7 @@ void main() {
+     final mockAuthService = MockAuthService();
+     final mockAuthClient = MockGithubAuthClient();
+     final mockFerryClient = MockClient();
++    final mockRouteCollectionService = MockRouteCollectionService();
+ 
+     when(mockAuthService.isLoggedIn).thenReturn(false);
+     when(mockAuthService.init()).thenAnswer((_) async {});
+@@ -97,6 +120,27 @@ void main() {
+       mockFerryClient.request<GGetFollowingData, GGetFollowingVars>(captureAny),
+     ).thenAnswer((_) => const Stream.empty());
+ 
++    // Mock route collection service to return test routes
++    when(mockRouteCollectionService.collectRoutes()).thenReturn([
++      GoRoute(
++        path: '/',
++        builder: (context, state) => HomeScreen(
++          authViewModel: AuthViewModel(mockAuthService),
++          homeViewModel: HomeViewModel(mockFerryClient),
++        ),
++      ),
++      GoRoute(
++        path: '/login',
++        builder: (context, state) => LoginScreen(
++          viewModel: LoginViewModel(mockAuthClient, mockAuthService, AuthViewModel(mockAuthService)),
++        ),
++      ),
++      GoRoute(
++        path: '/loading',
++        builder: (context, state) => const Scaffold(body: Text('Loading')),
++      ),
++    ]);
++
+     GetIt.I.registerSingleton<AuthService>(mockAuthService);
+     GetIt.I.registerSingleton<GithubAuthClient>(mockAuthClient);
+     GetIt.I.registerSingleton<Client>(mockFerryClient);
+@@ -113,10 +157,7 @@ void main() {
+     await tester.pumpWidget(
+       Gh3App(
+         authViewModel: authViewModel,
+-        authService: mockAuthService,
+-        githubAuthClient: mockAuthClient,
+-        homeViewModel: HomeViewModel(mockFerryClient),
+-        userDetailsViewModelFactory: UserDetailsViewModelFactory(),
++        routeCollectionService: mockRouteCollectionService,
+       ),
+     );
+ 

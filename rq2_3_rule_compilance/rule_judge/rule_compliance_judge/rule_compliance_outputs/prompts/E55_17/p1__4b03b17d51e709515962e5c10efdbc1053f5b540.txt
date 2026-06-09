@@ -1,0 +1,2635 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: refactor: sequential animation
+- Changed Files List: 
+src/GameApp.vue	+1	-1	after_lines=136
+src/components/ActionPanel.vue	+1	-1	after_lines=108
+src/components/ActionPointsBar.vue	+2	-1	after_lines=95
+src/components/HurtAnimationWrapper.vue	+138	-194	after_lines=411
+src/components/ManaBar.vue	+2	-1	after_lines=95
+src/components/SkillCard.vue	+70	-386	after_lines=212
+src/components/SkillsHand.vue	+9	-16	after_lines=372
+src/components/skillCard/SkillCosts.vue	+52	-0	after_lines=52
+src/components/skillCard/SkillMeta.vue	+57	-0	after_lines=57
+src/components/skillCard/SkillUses.vue	+38	-0	after_lines=38
+src/data/animationDispatcher.js	+69	-34	after_lines=462
+src/data/battle.js	+37	-18	after_lines=418
+src/data/battleUtils.js	+11	-1	after_lines=211
+src/data/effect.js	+0	-11	after_lines=0
+src/data/effectDescription.js	+7	-0	after_lines=294
+src/data/player.js	+67	-0	after_lines=174
+src/data/skill.js	+1	-1	after_lines=138
+src/data/skills/fireAssist.js	+1	-2	after_lines=576
+src/game.js	+5	-4	after_lines=110
+src/utils/animationOrchestrator.js	+13	-2	after_lines=420
+src/utils/cardAnimationOrchestrator.js	+419	-0	after_lines=419
+src/utils/colorUtils.js	+16	-0	after_lines=16
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationDispatcher.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── animationOrchestrator.js
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/GameApp.vue ---
+diff --git a/src/GameApp.vue b/src/GameApp.vue
+index 284a245..8e81363 100644
+--- a/src/GameApp.vue
++++ b/src/GameApp.vue
+@@ -69,7 +69,7 @@ import AnimationOverlay from './components/AnimationOverlay.vue'
+ import FloatingTooltip from './components/FloatingTooltip.vue'
+ 
+ import { displayGameState as gameState, resetAllGameStates } from './data/gameState.js';
+-import orchestrator from './utils/animationOrchestrator.js';
++import orchestrator from './utils/cardAnimationOrchestrator.js';
+ 
+ export default {
+   name: 'App',
+
+--- FILE: src/components/ActionPanel.vue ---
+diff --git a/src/components/ActionPanel.vue b/src/components/ActionPanel.vue
+index 78acc70..8cb9f3c 100644
+--- a/src/components/ActionPanel.vue
++++ b/src/components/ActionPanel.vue
+@@ -35,7 +35,7 @@ import DeckIcon from './DeckIcon.vue';
+ import DeckOverlayPanel from './DeckOverlayPanel.vue';
+ import frontendEventBus from '../frontendEventBus.js';
+ import backendEventBus, { EventNames } from '../backendEventBus';
+-import orchestrator from '../utils/animationOrchestrator.js';
++import orchestrator from '../utils/cardAnimationOrchestrator.js';
+ 
+ export default {
+   name: 'ActionPanel',
+
+--- FILE: src/components/ActionPointsBar.vue ---
+diff --git a/src/components/ActionPointsBar.vue b/src/components/ActionPointsBar.vue
+index acccb6f..4de0247 100644
+--- a/src/components/ActionPointsBar.vue
++++ b/src/components/ActionPointsBar.vue
+@@ -62,7 +62,8 @@ export default {
+   },
+   methods: {
+     onSkillCardHoverStart(skill) {
+-      if(skill.canUse(this.player)) {
++      const p = (this.player && typeof this.player.getModifiedPlayer === 'function') ? this.player.getModifiedPlayer() : this.player;
++      if(skill.canUse(p)) {
+         this.highlightedActionPointCost = skill.actionPointCost;
+       }
+     },
+
+--- FILE: src/components/HurtAnimationWrapper.vue ---
+diff --git a/src/components/HurtAnimationWrapper.vue b/src/components/HurtAnimationWrapper.vue
+index f906ce0..95891fa 100644
+--- a/src/components/HurtAnimationWrapper.vue
++++ b/src/components/HurtAnimationWrapper.vue
+@@ -8,7 +8,7 @@
+       'dead-wrapper': isDead,
+       'shielded-wrapper': isShielded
+       }"
+-    :style="[shakeStyle, hurtStyle, zIndexStyle]"
++    :style="[hurtStyle, zIndexStyle]"
+   >
+     <slot></slot>
+     <!-- 治疗效果覆盖层 -->
+@@ -48,38 +48,20 @@ export default {
+       isShieldBroke: false,
+       shakeIntensity: 0,
+       hurtIntensity: 0,
+-      particles: []
++      particles: [],
++      _prevSnapshot: { hp: 0, shield: 0 },
++      _timers: []
+     };
+   },
+   computed: {
+     isShielded() {
+-      return this.unit.shield > 0;
++      return (this.unit?.shield || 0) > 0;
+     },
+-    shakeStyle() {
+-      if (!this.isShaking) return {};
+-      
+-      // 根据伤害强度计算震颤参数
+-      const intensity = Math.min(this.shakeIntensity / 10, 1); // 归一化强度
+-      const maxShake = 10 * intensity;
+-      const maxRotate = 2 * intensity;
+-      
+-      // 添加一个震动偏移量，使每次震动都不同
+-      const offsetX = (Math.random() - 0.5) * maxShake;
+-      const offsetY = (Math.random() - 0.5) * maxShake;
+-      const rotation = (Math.random() - 0.5) * maxRotate;
+-      
+-      return {
+-        transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg)`
+-      };
+-    },
+-    
++    // 注意：移除了 shakeStyle，避免与 CSS 动画在 transform 上冲突
+     hurtStyle() {
+       if (!this.isHurt) return {};
+-      
+-      // 根据伤害强度计算特效参数
+-      const intensity = Math.min(this.hurtIntensity / 50, 1); // 归一化强度
+-      const borderWidth = Math.min(Math.max(2, Math.floor(5 * intensity)), 10); // 边框厚度在1px到10px之间
+-      
++      const intensity = Math.min(this.hurtIntensity / 50, 1);
++      const borderWidth = Math.min(Math.max(2, Math.floor(5 * intensity)), 10);
+       return {
+         '--hurt-border-width': `${borderWidth}px`,
+         '--hurt-opacity': Math.max(Math.min(intensity, 1), 0.2)
+@@ -87,175 +69,163 @@ export default {
+     },
+ 
+     zIndexStyle() {
+-      return {
+-        zIndex: this.zIndex
+-      }
++      return { zIndex: this.zIndex };
++    },
++
++    // 用于合并监听 hp/shield 变化的签名
++    statKey() {
++      const hp = this.unit?.hp ?? 0;
++      const shield = this.unit?.shield ?? 0;
++      const id = this.unit?.uniqueID || this.unit?.name || '';
++      return `${id}:${hp}/${shield}`;
+     }
+   },
+   mounted() {
+-    // 改为由状态变化驱动动画，不再监听事件
++    // 初始化快照
+     this._prevSnapshot = {
+       hp: this.unit?.hp ?? 0,
+       shield: this.unit?.shield ?? 0
+     };
+   },
+   watch: {
+-    unit: {
+-      deep: true,
+-      handler() {
+-        if (!this.unit) return;
+-        const prevHp = this._prevSnapshot?.hp ?? this.unit.hp;
+-        const prevShield = this._prevSnapshot?.shield ?? this.unit.shield;
+-        const currHp = this.unit.hp;
+-        const currShield = this.unit.shield;
+-
+-        const dhp = currHp - prevHp; // 负值表示受伤，正值表示治疗
+-        const dshield = currShield - prevShield; // 负值表示护盾损失
+-
+-        // 触发死亡动画（hp从>0到<=0）
+-        if (prevHp > 0 && currHp <= 0 && this.unit.type !== 'player') {
+-          this.handleBattleVictory();
+-        }
++    // 当 unit 实例切换时，重置快照，避免跨实例误判
++    unit(newUnit, oldUnit) {
++      this._prevSnapshot = {
++        hp: newUnit?.hp ?? 0,
++        shield: newUnit?.shield ?? 0
++      };
++      // 可选择重置动画状态，避免继承残留态
++      this.isShaking = false;
++      this.isHurt = false;
++      this.isEvading = false;
++      this.isHealing = false;
++      this.isDead = false;
++      this.hurtIntensity = 0;
++      this.shakeIntensity = 0;
++      this._clearTimers();
++    },
+ 
+-        if (dhp < 0 || dshield < 0) {
+-          // 计算伤害量
+-          const hpDamage = Math.max(0, -dhp);
+-          const passThrough = hpDamage + Math.max(0, -dshield);
+-          this.triggerHurtAnimation(hpDamage, passThrough);
+-        } else if (dhp > 0) {
+-          // 治疗
+-          this.triggerHurtAnimation(-dhp, 0);
+-        }
++    // 合并监听 hp/shield 变化，计算 delta 并驱动动画
++    statKey() {
++      if (!this.unit) return;
++      const prevHp = this._prevSnapshot.hp;
++      const prevShield = this._prevSnapshot.shield;
++      const currHp = this.unit.hp;
++      const currShield = this.unit.shield;
++
++      const dhp = currHp - prevHp; // 负值=受伤，正值=治疗
++      const dshield = currShield - prevShield; // 负值=护盾损失
++
++      // 死亡触发（hp从>0到<=0），排除玩家
++      if (prevHp > 0 && currHp <= 0 && this.unit.type !== 'player') {
++        this.handleBattleVictory();
++      }
+ 
+-        // 更新快照
+-        this._prevSnapshot = { hp: currHp, shield: currShield };
++      if (dhp < 0 || dshield < 0) {
++        const hpDamage = Math.max(0, -dhp);
++        const passThroughDamage = hpDamage + Math.max(0, -dshield);
++        this.triggerHurtAnimation(hpDamage, passThroughDamage);
++      } else if (dhp > 0) {
++        // 治疗
++        this.triggerHurtAnimation(-dhp, 0);
+       }
++
++      // 更新快照
++      this._prevSnapshot = { hp: currHp, shield: currShield };
+     }
+   },
+   beforeUnmount() {
+-    // 无事件需要清理
++    this._clearTimers();
+   },
+   methods: {
+-    triggerHurtAnimation(hpDamage, passThoughDamage) {
++    _setTimer(fn, delay) {
++      const id = setTimeout(fn, delay);
++      this._timers.push(id);
++      return id;
++    },
++    _clearTimers() {
++      if (this._timers && this._timers.length) {
++        for (const id of this._timers) clearTimeout(id);
++        this._timers = [];
++      }
++    },
++
++    triggerHurtAnimation(hpDamage, passThroughDamage) {
+       const damage = hpDamage;
+-      // 如果无伤害，且无穿透伤害，则认定为闪避，播放闪避动画并结束
+-      if(damage === 0 && passThoughDamage === 0) {
++      // 无伤害且无穿透 => 闪避
++      if (damage === 0 && passThroughDamage === 0) {
+         this.isEvading = true;
+-        // 在0.7秒后停止闪避特效
+-        setTimeout(() => {
+-          this.isEvading = false;
+-        }, 700);
+-        // 不执行其他动画效果
++        this._setTimer(() => { this.isEvading = false; }, 700);
+         return;
+       }
+-      
+-      // 如果是负数伤害（治疗）
++
++      // 负数伤害 => 治疗
+       if (damage < 0) {
+-        // 触发治疗动画
+         this.isHealing = true;
+-        // 创建治疗文本
+         this.createDamageText(damage);
+-        // 在0.6秒后停止治疗特效
+-        setTimeout(() => {
+-          this.isHealing = false;
+-        }, 600);
+-        
+-        // 不执行其他动画效果
++        this._setTimer(() => { this.isHealing = false; }, 600);
+         return;
+       }
+ 
+-      // 设置震颤强度
++      // 正常受伤
+       this.shakeIntensity = damage;
+       this.isShaking = true;
+-      
+-      // 设置受伤特效强度
+       this.hurtIntensity = damage;
+       this.isHurt = true;
+-      
+-      // 如果hp受到伤害，则创建粒子效果（流血）
+-      if(damage > 0) {
++
++      // 粒子：hp 伤害红色/橙色，纯护盾伤害蓝色
++      if (damage > 0) {
+         this.createParticles(damage, 0);
+       } else {
+-        // 否然，如果是盾伤害，创建蓝色粒子效果
+-        this.createParticles(damage, 140);
++        this.createParticles(Math.abs(damage), 140);
+       }
+-      // 创建伤害文本
+-      this.createDamageText(passThoughDamage);
+-      
+-      // 根据伤害强度计算震颤持续时间
+-      const duration = Math.min(200 + passThoughDamage * 2, 600); // 持续时间在200ms到600ms之间
+-      
+-      // 在一定时间后停止震颤
+-      setTimeout(() => {
+-        this.isShaking = false;
+-        this.shakeIntensity = 0;
+-      }, duration);
+-      
+-      // 在0.2秒后停止受伤特效
+-      setTimeout(() => {
+-        this.isHurt = false;
+-        this.hurtIntensity = 0;
+-      }, 200);
++      // 伤害文本（使用穿透总伤害）
++      this.createDamageText(passThroughDamage);
++
++      // 抖动持续时间
++      const duration = Math.min(200 + passThroughDamage * 2, 600);
++      this._setTimer(() => { this.isShaking = false; this.shakeIntensity = 0; }, duration);
++      // 受伤特效快速结束
++      this._setTimer(() => { this.isHurt = false; this.hurtIntensity = 0; }, 200);
+     },
++
+     handleBattleVictory() {
+-      // 当胜利时，如果unit不是玩家，播放敌人死亡动画
+-      if(this.unit.type !== 'player') {
+-        // 持续生成大量粒子
+-        for(let i = 0; i < 7; i++) {
+-          setTimeout(() => {
+-            this.createParticles(20);
+-          }, i * 200);
++      if (this.unit.type !== 'player') {
++        // 持续生成粒子
++        for (let i = 0; i < 7; i++) {
++          this._setTimer(() => { this.createParticles(20); }, i * 200);
+         }
+-        // 最后播放爆炸动画：面板短暂剧烈震动
+-        setTimeout(() => {
+-          this.isShaking = true;
+-          this.shakeIntensity = 20;
+-        }, 900);
+-        // 面板发生闪烁，变成红色后变成纯白
+-        setTimeout(() => {
+-          this.isDead = true;
+-        }, 1400);
+-        // 爆炸时一次性生成大量粒子
+-        setTimeout(() => {
+-          this.createParticles(100);
+-        }, 1400);
++        // 爆炸前抖动
++        this._setTimer(() => { this.isShaking = true; this.shakeIntensity = 20; }, 900);
++        // 闪烁并置 dead
++        this._setTimer(() => { this.isDead = true; }, 1400);
++        // 爆炸粒子
++        this._setTimer(() => { this.createParticles(100); }, 1400);
+       }
+     },
+-    
++
+     createDamageText(damage) {
+-      // 获取父元素尺寸
+       const wrapper = this.$el;
+       const wrapperRect = wrapper.getBoundingClientRect();
+       const wrapperWidth = wrapperRect.width;
+       const wrapperHeight = wrapperRect.height;
+-      
+-      // 设置文本内容和样式
++
+       const isHealing = damage < 0;
+       const text = isHealing ? `+${Math.abs(damage)}` : `-${damage}`;
+-      
+-      // 根据伤害/治疗设置颜色
+       const color = isHealing ? '#00ff00' : '#ff0000';
+-      
+-      // 根据伤害/治疗量设置字体大小
+       const damageValue = Math.abs(damage);
+       const fontSize = Math.min(96, Math.max(24, 12 + damageValue / 4));
+-      
+-      // 设置初始位置（中心区域随机位置）
++
+       const centerX = wrapperRect.left + wrapperWidth / 2;
+       const centerY = wrapperRect.top + wrapperHeight / 2;
+       const startX = centerX + (Math.random() - 0.5) * wrapperWidth * 0.3;
+       const startY = centerY + (Math.random() - 0.5) * wrapperHeight * 0.3;
+-      
+-      // 动画参数
+-      const duration = Math.min(
+-        3000,
+-        isHealing ? (1000 -damageValue * 50) : (800 + damageValue * 30)
+-      );
+-      const gravity = isHealing ? 0 : 1000; // 治疗文本不受重力影响
+-      let velocityX = (Math.random() - 0.5) * 200;
+-      let velocityY = -200 - Math.random() * 200;
+-      
+-      // 创建文本粒子配置
++
++      const duration = Math.min(3000, isHealing ? (1000 - damageValue * 50) : (800 + damageValue * 30));
++      const gravity = isHealing ? 0 : 1000;
++      const velocityX = (Math.random() - 0.5) * 200;
++      const velocityY = -200 - Math.random() * 200;
++
+       const particle = {
+         x: startX,
+         y: startY,
+@@ -267,8 +237,6 @@ export default {
+         text: text,
+         extraStyles: {
+           color: color,
+-          // textShadow: '0 0 3px rgba(0, 0, 0, 0.5)',
+-          // fontFamily: 'Arial, sans-serif',
+           userSelect: 'none',
+           pointerEvents: 'none',
+           fontSize: `${fontSize}px`,
+@@ -276,79 +244,55 @@ export default {
+           zIndex: '20'
+         }
+       };
+-      
+-      // 通过事件总线发送粒子生成请求
+       frontendEventBus.emit('spawn-particles', [particle]);
+     },
+-    
+-    createParticles(damage, hueShift = 0) {
+-      // 获取父元素尺寸（相对坐标）
+-      const wrapperWidth = this.$el.offsetWidth;
+-      const wrapperHeight = this.$el.offsetHeight;
+-      
+-      // 根据伤害大小确定粒子数量
+-      const particleCount = Math.min(Math.max(Math.floor(damage / 5), 20), 80);
+-      
++
++    createParticles(damageMagnitude, hueShift = 0) {
++      const wrapperRect = this.$el.getBoundingClientRect();
++      const wrapperWidth = wrapperRect.width;
++      const wrapperHeight = wrapperRect.height;
++
++      const magnitude = Math.max(1, Math.abs(damageMagnitude));
++      const particleCount = Math.min(Math.max(Math.floor(magnitude / 5), 20), 80);
++
+       const particles = [];
+-      
+       for (let i = 0; i < particleCount; i++) {
+-        // 随机选择从哪个边界出发（0:上, 1:右, 2:下, 3:左）
+         const edge = Math.floor(Math.random() * 4);
+-        let startX, startY;
+-        
+-        // 根据选择的边界设置初始位置（相对坐标）
++        let startX = 0, startY = 0;
+         switch (edge) {
+-          case 0: // 上边界
+-            startX = Math.random() * wrapperWidth;
+-            startY = 0;
+-            break;
+-          case 1: // 右边界
+-            startX = wrapperWidth;
+-            startY = Math.random() * wrapperHeight;
+-            break;
+-          case 2: // 下边界
+-            startX = Math.random() * wrapperWidth;
+-            startY = wrapperHeight;
+-            break;
+-          case 3: // 左边界
+-            startX = 0;
+-            startY = Math.random() * wrapperHeight;
+-            break;
++          case 0: startX = Math.random() * wrapperWidth; startY = 0; break;
++          case 1: startX = wrapperWidth; startY = Math.random() * wrapperHeight; break;
++          case 2: startX = Math.random() * wrapperWidth; startY = wrapperHeight; break;
++          case 3: startX = 0; startY = Math.random() * wrapperHeight; break;
+         }
+-        
+-        // 计算从边界向外的飞散方向
+         const centerX = wrapperWidth / 2;
+         const centerY = wrapperHeight / 2;
+         const angle = Math.atan2(startY - centerY, startX - centerX);
+-        
+-        const speed = (8 + Math.random() * 12) * Math.max(1, Math.min(damage / 10, 8)); // 增加速度
+-        const size = (1 + Math.random() * 4) * Math.min(20, Math.max(2, damage / 4));
+-        
+-        // 随机颜色，主要是红色和橙色，少量黄色
+-        const hue = hueShift + Math.random() * 45; // 0-45范围，红色到黄色
+-        const saturation = 80 + Math.random() * 20; // 80-100%饱和度
+-        const lightness = 40 + Math.random() * 20; // 40-60%亮度
+-        
+-        // 获取组件在屏幕上的绝对位置
+-        const wrapperRect = this.$el.getBoundingClientRect();
++
++        const speed = (8 + Math.random() * 12) * Math.max(1, Math.min(magnitude / 10, 8));
++        const size = (1 + Math.random() * 4) * Math.min(20, Math.max(2, magnitude / 4));
++
++        const hue = hueShift + Math.random() * 45;
++        const saturation = 80 + Math.random() * 20;
++        const lightness = 40 + Math.random() * 20;
++
+         const absoluteX = wrapperRect.left + startX;
+         const absoluteY = wrapperRect.top + startY;
+-        
++
+         particles.push({
+           x: absoluteX,
+           y: absoluteY,
+-          vx: Math.cos(angle) * speed ,
+-          vy: Math.sin(angle) * speed ,
++          vx: Math.cos(angle) * speed,
++          vy: Math.sin(angle) * speed,
+           size: size,
+           color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+-          life: (500 + Math.random() * 500) * Math.min(3, Math.max(1, damage / 100)),
++          life: (500 + Math.random() * 500) * Math.min(3, Math.max(1, magnitude / 100)),
+           shape: 'circle',
+           opacityFade: true,
+           drag: 0.1,
+           zIndex: 0
+         });
+       }
+-      
+       // 通过事件总线发送粒子生成请求
+       frontendEventBus.emit('spawn-particles', particles);
+     }
+
+--- FILE: src/components/ManaBar.vue ---
+diff --git a/src/components/ManaBar.vue b/src/components/ManaBar.vue
+index 1b55b2c..25c46bb 100644
+--- a/src/components/ManaBar.vue
++++ b/src/components/ManaBar.vue
+@@ -62,7 +62,8 @@ export default {
+   },
+   methods: {
+     onSkillCardHoverStart(skill) {
+-      if(skill.canUse(this.player)) {
++      const p = (this.player && typeof this.player.getModifiedPlayer === 'function') ? this.player.getModifiedPlayer() : this.player;
++      if(skill.canUse(p)) {
+         this.highlightedManaCost = skill.manaCost;
+       }
+     },
+
+--- FILE: src/components/SkillCard.vue ---
+diff --git a/src/components/SkillCard.vue b/src/components/SkillCard.vue
+index 3421676..2b1ad62 100644
+--- a/src/components/SkillCard.vue
++++ b/src/components/SkillCard.vue
+@@ -7,117 +7,69 @@
+     :style="skillCardStyle"
+   >
+     <div class="skill-card-background-paper"></div>
+-    <div class="skill-card-background-image" :style="{backgroundImage:`url(${skillCardImageUrl})`}"></div>
++    <div class="skill-card-background-image" :style="skillCardImageStyle"></div>
++
+     <div class="upgrade-badge" v-if="skill.isUpgradeCandidate">升级</div>
+-    <div
+-      v-if="hovered && skill.isUpgradeCandidate && skill.upgradedFrom"
+-      class="upgrade-replace-tooltip"
+-    >将替换：{{ skill.upgradedFrom }}</div>
+-    <div class="mana-cost" v-if="skill.manaCost > 0">
+-      <span class="mana-icon">💧</span>
+-      <span class="mana-value" :class="{ 'insufficient-mana': playerMana < skill.manaCost }">{{ skill.manaCost }}</span>
+-    </div>
+-    <div class="action-cost" v-if="skill.actionPointCost > 0">
+-      <span class="action-icon">⚡</span>
+-      <span class="action-value">{{ skill.actionPointCost }}</span>
++    <div v-if="hovered && skill.isUpgradeCandidate && skill.upgradedFrom" class="upgrade-replace-tooltip">
++      将替换：{{ skill.upgradedFrom }}
+     </div>
++
++    <!-- 费用显示子组件 -->
++    <SkillCosts :skill="skill" :player-mana="playerMana" />
++
+     <div class="skill-tier">{{ getSkillTierLabel(skill.tier) }}</div>
+-    <div :class="['skill-subtitle', {'hovered': hovered}]" v-if="skill.subtitle"> {{skill.subtitle}} </div>
+-    <div :class="['skill-card-panel']">
+-      <div class="skill-name" :style="{color: skillNameColor, borderColor: skillBackgroundColor}">
+-        {{ skill.name + (skill.power < 0 ? '（' + skill.power + '）' : '') + (skill.power > 0 ? '（+' + skill.power + '）' : '') }}</div>
++
++
++    <div class="skill-card-panel">
++      <!-- 名称/副标题子组件 -->
++      <SkillMeta :skill="skill" :hovered="hovered" :background-color="skillBackgroundColor" />
+       <div class="skill-description">
+         <ColoredText :text="skillDescription" />
+       </div>
+-      <div class="skill-uses">
+-        <ColoredText v-if="skill.coldDownTurns != 0 && skill.remainingUses != skill.maxUses && !previewMode" :text="`/named{重整} ${skill.remainingColdDownTurns}/${skill.coldDownTurns}`"></ColoredText>
+-        <ColoredText v-else-if="skill.coldDownTurns != 0" :text="`/named{重整} ${skill.coldDownTurns} 回合`"></ColoredText>
+-        <ColoredText v-else-if="skill.remainingUses != Infinity" :text="`/named{消耗}`"></ColoredText>
+-        <ColoredText v-if="skill.slowStart" text="/named{慢热}"></ColoredText>
+-        <br />
+-        <strong v-if="skill.maxUses === Infinity && skill.coldDownTurns == 0">无限</strong>
+-        <span v-else-if="previewMode">(装填 {{ skill.maxUses }}/{{ skill.maxUses }})</span>
+-        <span v-else>(装填 {{ skill.remainingUses }}/{{ skill.maxUses }})</span>
+-      </div>
++      <!-- 装填/冷却子组件 -->
++      <SkillUses :skill="skill" :preview-mode="previewMode" />
+     </div>
+   </div>
+ </template>
+ 
+ <script>
+ import ColoredText from './ColoredText.vue';
+-import {getSkillTierColor, getSkillTierLabel} from '../utils/tierUtils.js';
++import { getSkillTierColor, getSkillTierLabel } from '../utils/tierUtils.js';
+ import frontendEventBus from '../frontendEventBus.js';
+-
++import SkillCosts from './skillCard/SkillCosts.vue';
++import SkillUses from './skillCard/SkillUses.vue';
++import SkillMeta from './skillCard/SkillMeta.vue';
++import {adjustColorBrightness} from "../utils/colorUtils";
+ 
+ export default {
+   name: 'SkillCard',
+-  components: {
+-    ColoredText
+-  },
++  components: { ColoredText, SkillCosts, SkillUses, SkillMeta },
+   props: {
+-    skill: {
+-      type: Object,
+-      required: true
+-    },
+-    player: {
+-      type: Object,
+-      required: false,
+-      default: null
+-    },
+-    disabled: {
+-      type: Boolean,
+-      default: false
+-    },
+-    playerMana: {
+-      type: Number,
+-      default: Infinity
+-    },
+-    previewMode: {
+-      type: Boolean,
+-      default: false
+-    },
+-    canClick: {
+-      type: Boolean,
+-      default: true
+-    },
+-    // 新增：当为 true 时，点击卡牌不触发本地 CSS 激活动画（交由全局 overlay/GSAP 处理）
+-    suppressActivationAnimationOnClick: {
+-      type: Boolean,
+-      default: false
+-    }
++    skill: { type: Object, required: true },
++    player: { type: Object, default: null },
++    disabled: { type: Boolean, default: false },
++    playerMana: { type: Number, default: Infinity },
++    previewMode: { type: Boolean, default: false },
++    canClick: { type: Boolean, default: true },
++    suppressActivationAnimationOnClick: { type: Boolean, default: false }
+   },
+   data() {
+-    return {
+-      hovered: false,
+-    };
++    return { hovered: false };
+   },
+   computed: {
+     skillDescription() {
+-      // 动态根据玩家/技能当前状态生成描述
+       if (this.player && typeof this.skill?.regenerateDescription === 'function') {
+-        return this.skill.regenerateDescription(this.player);
+-      }
+-      if (typeof this.skill?.getDescription === 'function') {
+-        return this.skill.getDescription();
++        const p = (typeof this.player.getModifiedPlayer === 'function') ? this.player.getModifiedPlayer() : this.player;
++        return this.skill.regenerateDescription(p);
+       }
++      if (typeof this.skill?.getDescription === 'function') return this.skill.getDescription();
+       return this.skill?.description || '';
+     },
+-    skillNameColor() {
+-      if(this.skill.power < 0) {
+-        return 'red';
+-      } else if(this.skill.power > 0) {
+-        return 'green';
+-      } else {
+-        return 'black';
+-      }
+-    },
+-    skillCardStyle () {
++    skillCardStyle() {
+       const color = getSkillTierColor(this.skill.tier);
+-      const backgroundColor = this.adjustColorBrightness(color, 40);
+-      const borderColor = this.adjustColorBrightness(color, -40);
+       return {
+-        backgroundColor: backgroundColor,
+-        borderColor: borderColor,
++        backgroundColor: this.adjustColorBrightness(color, 40),
++        borderColor: this.adjustColorBrightness(color, -40),
+         cursor: (!this.disabled && this.canClick) ? 'pointer' : 'not-allowed'
+       };
+     },
+@@ -125,10 +77,10 @@ export default {
+       const color = getSkillTierColor(this.skill.tier);
+       return this.adjustColorBrightness(color, 50);
+     },
+-    skillCardImageUrl () {
++    skillCardImageUrl() {
+       let imageName = this.skill.image;
+-      if(imageName) {} else {
+-        imageName = `0`;
++      if (!imageName) {
++        imageName = '0';
+         if (this.skill.tier >= 2) imageName = '1';
+         if (this.skill.tier >= 4) imageName = '2';
+         if (this.skill.tier >= 6) imageName = '3';
+@@ -136,293 +88,32 @@ export default {
+         imageName = `${this.skill.type}-${imageName}.png`;
+       }
+       return new URL(`../assets/cards/${imageName}`, import.meta.url).href;
++    },
++    skillCardImageStyle() {
++      return { backgroundImage: `url(${this.skillCardImageUrl})` };
+     }
+   },
+-  mounted() {
+-    // 不再监听update-skill-descriptions事件，改由computed自动更新
+-  },
+-  beforeUnmount() {
+-    // 无事件需要移除
+-  },
+   methods: {
+     getSkillTierLabel,
+-    adjustColorBrightness(color, percent) {
+-      // 移除可能存在的#号
+-      let hex = color.replace(/#/g, '');
+-
+-      // 验证颜色格式是否正确
+-      if (hex.length !== 6) {
+-        throw new Error('无效的颜色格式，请使用6位十六进制颜色，如"#AACC12"');
+-      }
+-
+-      // 将十六进制转换为RGB分量
+-      let r = parseInt(hex.substring(0, 2), 16);
+-      let g = parseInt(hex.substring(2, 4), 16);
+-      let b = parseInt(hex.substring(4, 6), 16);
+-
+-      // 计算调整值（基于百分比）
+-      const factor = percent / 100;
+-
+-      // 调整每个颜色分量的亮度
+-      r = Math.round(r + (255 - r) * factor);
+-      g = Math.round(g + (255 - g) * factor);
+-      b = Math.round(b + (255 - b) * factor);
+-
+-      // 确保值在0-255范围内
+-      r = Math.min(255, Math.max(0, r));
+-      g = Math.min(255, Math.max(0, g));
+-      b = Math.min(255, Math.max(0, b));
+-
+-      // 将RGB转回十六进制，并确保两位表示
+-      const toHex = (c) => {
+-        const hex = c.toString(16);
+-        return hex.length === 1 ? '0' + hex : hex;
+-      };
+-
+-      return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+-    },
++    adjustColorBrightness,
+     onClick(event) {
+       if (!this.disabled && this.canClick) {
+-        // 仅当未开启抑制时才播放本地 CSS 激活动画
+-        if (!this.suppressActivationAnimationOnClick) {
+-          this.playActivationAnimation();
+-        }
+         this.$emit('skill-card-clicked', this.skill, event);
+       }
+     },
+-    
+     onMouseEnter() {
+       this.hovered = true;
+-      if (this.previewMode) return;
+-      frontendEventBus.emit('skill-card-hover-start', this.skill);
++      if (!this.previewMode) frontendEventBus.emit('skill-card-hover-start', this.skill);
+     },
+-    
+     onMouseLeave() {
+       this.hovered = false;
+-      if (this.previewMode) return;
+-      frontendEventBus.emit('skill-card-hover-end', this.skill);
+-    },
+-    // 播放技能激活动画
+-    playActivationAnimation() {
+-      const card = this.$el;
+-      if (!card) return;
+-      
+-      // 根据技能tier确定动画强度
+-      const tier = this.skill.tier || 0;
+-      const intensity = 2;
+-      
+-      // 添加动画类
+-      card.classList.add('activating');
+-      
+-      // 设置动画样式
+-      card.style.animationDuration = `${0.25 / intensity}s`;
+-      
+-      // 播放粒子特效
+-      this.playParticleEffect(tier, card);
+-      
+-      // 动画结束后清理
+-      setTimeout(() => {
+-        card.classList.remove('activating');
+-        card.style.animationDuration = '';
+-      }, 500 / intensity);
+-    },
+-    // 播放粒子特效
+-    playParticleEffect(tier, card) {
+-      // 根据tier确定粒子参数
+-      const tierSettings = {
+-        '-1': { count: 5, size: 3, color: '#333333' },   // curses
+-        '0': { count: 15, size: 3, color: '#000000' },     // D
+-        '1': { count: 20, size: 4, color: '#41db39' },     // C-
+-        '2': { count: 30, size: 5, color: '#41db39' },    // C+
+-        '3': { count: 40, size: 6, color: '#759eff' },    // B-
+-        '4': { count: 50, size: 7, color: '#759eff' },    // B
+-        '5': { count: 60, size: 8, color: '#d072ff' },    // B+
+-        '6': { count: 60, size: 9, color: '#d072ff' },    // A-
+-        '7': { count: 60, size: 10, color: '#ff9059' },   // A
+-        '8': { count: 60, size: 11, color: '#ff9059' },   // A+
+-        '9': { count: 60, size: 12, color: '#ff0000' }    // S
+-      };
+-      
+-      const settings = tierSettings[tier] || tierSettings['0'];
+-      
+-      // 创建粒子数组
+-      const particles = [];
+-      
+-      // 获取卡片的绝对位置
+-      const cardRect = card.getBoundingClientRect();
+-      
+-      // 生成粒子
+-      for (let i = 0; i < settings.count; i++) {
+-        // 随机运动方向和距离，确保粒子向四周逸散
+-        const distance = 30 + Math.random() * 70; // 随机距离(30-100px)
+-        const velocity = 10 + Math.random() * 20; // 随机速度
+-        
+-        // 计算卡牌边缘的随机起始位置（相对坐标）
+-        const edge = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
+-        let startX, startY;
+-        
+-        switch (edge) {
+-          case 0: // 上边缘
+-            startX = Math.random() * cardRect.width; // 使用实际卡片宽度
+-            startY = 0;
+-            break;
+-          case 1: // 右边缘
+-            startX = cardRect.width;
+-            startY = Math.random() * cardRect.height; // 使用实际卡片高度
+-            break;
+-          case 2: // 下边缘
+-            startX = Math.random() * cardRect.width;
+-            startY = cardRect.height;
+-            break;
+-          case 3: // 左边缘
+-            startX = 0;
+-            startY = Math.random() * cardRect.height;
+-            break;
+-        }
+-
+-        // 计算飞离卡牌的方向
+-        const deltaCenterX = startX - cardRect.width / 2;
+-        const deltaCenterY = startY - cardRect.height / 2;
+-        const angle = Math.random() * 0.2 + Math.atan2(deltaCenterY, deltaCenterX); // 随机角度
+-        
+-        // 将相对坐标转换为绝对坐标
+-        const absoluteX = cardRect.left + startX;
+-        const absoluteY = cardRect.top + startY;
+-        
+-        const particle = {
+-          x: absoluteX, // 绝对位置
+-          y: absoluteY, // 绝对位置
+-          vx: Math.cos(angle) * velocity,
+-          vy: Math.sin(angle) * velocity,
+-          life: 1000, // 生命周期1秒
+-          color: settings.color,
+-          size: settings.size,
+-          opacity: 1,
+-          opacityFade: true,
+-          gravity: 0, // 可以根据需要添加重力
+-          zIndex: 0 // 刚好能被skill card panel遮住
+-        };
+-        
+-        particles.push(particle);
+-      }
+-      
+-      // 通过事件总线触发粒子特效
+-      frontendEventBus.emit('spawn-particles', particles);
++      if (!this.previewMode) frontendEventBus.emit('skill-card-hover-end', this.skill);
+     }
+   }
+-}
++};
+ </script>
+ 
+ <style scoped>
+-.skill-card-panel {
+-  position: absolute;
+-  width: 150px;
+-  padding: 15px;
+-  border-radius: 8px;
+-  display: flex;
+-  flex-direction: column;
+-  justify-content: center;
+-  align-items: center;
+-  background-color: rgba(255, 255, 255, 0.8);
+-}
+-
+-.skill-name {
+-  font-weight: bold;
+-  font-size: 16px;
+-  padding:2px;
+-  border-radius: 8px;
+-  border-width: 3px;
+-  border-style: solid;
+-  margin: 0 auto 8px auto;
+-}
+-
+-.skill-description {
+-  font-size: 14px;
+-  margin-bottom: 8px;
+-  text-align: center;
+-}
+-
+-.skill-uses {
+-  font-size: 12px;
+-  color: #666;
+-}
+-
+-.skill-tier {
+-  position: absolute;
+-  top: 5px;
+-  right: 5px;
+-  font-weight: bold;
+-  font-size: 18px;
+-  padding: 2px 6px;
+-  border-radius: 4px;
+-  background-color: rgba(255, 255, 255, 0.8);
+-}
+-
+-.mana-cost {
+-  position: absolute;
+-  top: 5px;
+-  left: 5px;
+-  display: flex;
+-  align-items: center;
+-  background-color: rgba(255, 255, 255, 0.8);
+-  padding: 2px 6px;
+-  border-radius: 4px;
+-}
+-
+-.mana-icon {
+-  font-size: 16px;
+-  margin-right: 4px;
+-}
+-
+-.mana-value {
+-  font-weight: bold;
+-  color: #2196f3;
+-  font-size: 16px;
+-}
+-
+-.mana-value.insufficient-mana {
+-  color: #f44336;
+-}
+-
+-.action-cost {
+-  position: absolute;
+-  bottom: 5px;
+-  left: 5px;
+-  display: flex;
+-  align-items: center;
+-  background-color: rgba(255, 255, 255, 0.8);
+-  padding: 2px 6px;
+-  border-radius: 4px;
+-}
+-
+-.action-icon {
+-  font-size: 16px;
+-  margin-right: 4px;
+-}
+-
+-.action-value {
+-  font-weight: bold;
+-  color: #ff9800;
+-  font-size: 16px;
+-}
+-
+-.skill-subtitle {
+-  position: absolute;
+-  bottom: 5px;
+-  right: 5px;
+-  display: flex;
+-  align-items: center;
+-  padding: 2px 6px;
+-  color: rgba(200, 200, 200, 0.7);
+-  font-size: 12px;
+-  font-style: italic;
+-  transition: 0.5s ease;
+-}
+-.skill-subtitle.hovered {
+-  color: black;
+-  background-color: rgba(255, 255, 255, 0.7);
+-}
+-
+ .skill-card {
+   width: 198px;
+   height: 266px;
+@@ -430,17 +121,14 @@ export default {
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+-  /* transition: all 0.3s ease; */
+   position: relative;
+   border: 3px solid #eee;
+   border-radius: 5px;
+ }
+-
+ .skill-card:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+ }
+-
+ .skill-card.disabled {
+   filter: brightness(50%);
+   cursor: not-allowed;
+@@ -448,14 +136,12 @@ export default {
+   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+ }
+ 
+-/* 垫在skill-card上，用来铺上一个白色背景*/
+ .skill-card-background-paper {
+   position: absolute;
+   width: 180px;
+   height: 240px;
+   background-color: white;
+ }
+-
+ .skill-card-background-image {
+   position: absolute;
+   width: 212px;
+@@ -466,30 +152,33 @@ export default {
+   background-size: cover;
+ }
+ 
+-/* 技能激活动画关键帧 */
+-@keyframes skillActivation {
+-  0% {
+-    transform: scale(1);
+-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+-  }
+-  50% {
+-    transform: scale(1.1);
+-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+-    filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+-  }
+-  100% {
+-    transform: scale(1);
+-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+-  }
++.skill-card-panel {
++  position: absolute;
++  width: 150px;
++  padding: 15px;
++  border-radius: 8px;
++  display: flex;
++  flex-direction: column;
++  justify-content: center;
++  align-items: center;
++  background-color: rgba(255, 255, 255, 0.8);
+ }
+-
+-.skill-card.activating {
+-  z-index: 100;
+-  animation-name: skillActivation;
+-  animation-timing-function: ease-in-out;
+-  animation-fill-mode: forwards;
++.skill-description {
++  font-size: 14px;
++  margin-bottom: 8px;
++  text-align: center;
+ }
+ 
++.skill-tier {
++  position: absolute;
++  top: 5px;
++  right: 5px;
++  font-weight: bold;
++  font-size: 18px;
++  padding: 2px 6px;
++  border-radius: 4px;
++  background-color: rgba(255, 255, 255, 0.8);
++}
+ .upgrade-badge {
+   position: absolute;
+   top: 4px;
+@@ -519,10 +208,5 @@ export default {
+   border: 1px solid #e0e0e0;
+   z-index: 10;
+   pointer-events: none;
+-  animation: fadeIn 0.18s ease-out;
+-}
+-@keyframes fadeIn {
+-  from { opacity: 0; transform: translate(-50%, 120%); }
+-  to { opacity: 1; transform: translate(-50%, 100%); }
+ }
+-</style>
+\ No newline at end of file
++</style>
+
+--- FILE: src/components/SkillsHand.vue ---
+diff --git a/src/components/SkillsHand.vue b/src/components/SkillsHand.vue
+index 607d000..681d524 100644
+--- a/src/components/SkillsHand.vue
++++ b/src/components/SkillsHand.vue
+@@ -199,9 +199,10 @@ export default {
+         const added = newIds.filter(id => !prevSet.has(id));
+         this.prevIds = [...newIds];
+         if (added.length === 0) return;
++        // 标记为“入场中”，等待 orchestrator 的 card-appear-finished 清理；添加兜底定时器
+         added.forEach(id => { this.appearing[id] = true; });
+         this.$nextTick(() => {
+-          added.forEach(id => this.animateAppearFromDeck(id));
++          added.forEach(id => this.scheduleAppearFallback(id));
+         });
+       }
+     }
+@@ -223,13 +224,13 @@ export default {
+         delete this.cardRefs[id];
+       }
+     },
+-    animateAppearFromDeck(id) {
+-      frontendEventBus.emit('request-card-appear', { id });
+-      // Fallback: 动画开始后 1.5 秒强制移除 appearing 状态，以防动画出现问题导致卡牌不显示
++    // 现在由后端统一触发入手动画；这里仅保留兜底清理逻辑，避免异常时卡片长时间不可见
++    scheduleAppearFallback(id) {
+       setTimeout(() => { if (this.appearing[id]) delete this.appearing[id]; }, 1500);
+     },
+     canUseSkill(skill) {
+-      return skill && typeof skill.canUse === 'function' && skill.canUse(this.player) && skill.usesLeft !== 0;
++      const p = (this.player && typeof this.player.getModifiedPlayer === 'function') ? this.player.getModifiedPlayer() : this.player;
++      return skill && typeof skill.canUse === 'function' && skill.canUse(p) && skill.usesLeft !== 0;
+     },
+     onSkillCardClicked(skill, event) {
+       if (this.draggable || this.isControlDisabled || !this.isPlayerTurn) return; // 休整/不可控制/非玩家会和时禁用技能使用
+@@ -357,23 +358,15 @@ export default {
+ .skills-hand-root {
+   position: relative;
+   width: 100%;
+-  /* 高度匹配卡片高度（考虑浮起放大，预留余量） */
+-  min-height: 300px;
++  height: auto;
++  min-height: 280px;
+ }
+-.skills-hand-root.dragging {
+-  user-select: none;
+-}
+-
+ .skill-wrapper {
+   position: absolute;
+   top: 0;
+-  /* 平滑移动/缩放过渡 */
+-  transition: transform 120ms ease, z-index 120ms ease, visibility 0ms linear;
+-  will-change: transform;
++  transition: transform 0.22s ease, visibility 0s linear;
+ }
+-
+ .skill-wrapper.instant {
+-  /* 拖拽时取消过渡，避免卡顿 */
+   transition: none;
+ }
+ </style>
+
+--- FILE: src/components/skillCard/SkillCosts.vue ---
+diff --git a/src/components/skillCard/SkillCosts.vue b/src/components/skillCard/SkillCosts.vue
+new file mode 100644
+index 0000000..52e096e
+--- /dev/null
++++ b/src/components/skillCard/SkillCosts.vue
+@@ -0,0 +1,52 @@
++<template>
++  <div>
++    <div class="mana-cost" v-if="skill?.manaCost > 0">
++      <span class="mana-icon">💧</span>
++      <span class="mana-value" :class="{ 'insufficient-mana': playerMana < skill.manaCost }">{{ skill.manaCost }}</span>
++    </div>
++    <div class="action-cost" v-if="skill?.actionPointCost > 0">
++      <span class="action-icon">⚡</span>
++      <span class="action-value">{{ skill.actionPointCost }}</span>
++    </div>
++  </div>
++</template>
++
++<script>
++export default {
++  name: 'SkillCosts',
++  props: {
++    skill: { type: Object, required: true },
++    playerMana: { type: Number, default: Infinity }
++  }
++};
++</script>
++
++<style scoped>
++.mana-cost {
++  position: absolute;
++  top: 5px;
++  left: 5px;
++  display: flex;
++  align-items: center;
++  background-color: rgba(255, 255, 255, 0.85);
++  padding: 2px 6px;
++  border-radius: 4px;
++}
++.mana-icon { font-size: 16px; margin-right: 4px; }
++.mana-value { font-weight: bold; color: #2196f3; font-size: 16px; }
++.mana-value.insufficient-mana { color: #f44336; }
++
++.action-cost {
++  position: absolute;
++  bottom: 5px;
++  left: 5px;
++  display: flex;
++  align-items: center;
++  background-color: rgba(255, 255, 255, 0.85);
++  padding: 2px 6px;
++  border-radius: 4px;
++}
++.action-icon { font-size: 16px; margin-right: 4px; }
++.action-value { font-weight: bold; color: #ff9800; font-size: 16px; }
++</style>
++
+
+--- FILE: src/components/skillCard/SkillMeta.vue ---
+diff --git a/src/components/skillCard/SkillMeta.vue b/src/components/skillCard/SkillMeta.vue
+new file mode 100644
+index 0000000..abb4956
+--- /dev/null
++++ b/src/components/skillCard/SkillMeta.vue
+@@ -0,0 +1,57 @@
++<template>
++  <div class="skill-meta">
++    <div class="skill-name" :style="{ color: nameColor, borderColor: backgroundColor }">
++      {{ nameText }}
++    </div>
++    <div class="skill-subtitle" :class="{ hovered: hovered }" v-if="skill.subtitle">
++      {{ skill.subtitle }}
++    </div>
++  </div>
++</template>
++
++<script>
++export default {
++  name: 'SkillMeta',
++  props: {
++    skill: { type: Object, required: true },
++    hovered: { type: Boolean, default: false },
++    backgroundColor: { type: String, default: '#EEE' }
++  },
++  computed: {
++    nameColor() {
++      const p = this.skill?.power || 0;
++      if (p < 0) return 'red';
++      if (p > 0) return 'green';
++      return 'black';
++    },
++    nameText() {
++      const s = this.skill;
++      const p = s?.power || 0;
++      const powerText = p < 0 ? `（${p}）` : (p > 0 ? `（+${p}）` : '');
++      return `${s?.name || ''}${powerText}`;
++    }
++  }
++};
++</script>
++
++<style scoped>
++.skill-meta { display: flex; flex-direction: column; align-items: center; }
++.skill-name {
++  font-weight: bold;
++  font-size: 16px;
++  padding: 2px;
++  border-radius: 8px;
++  border-width: 3px;
++  border-style: solid;
++  margin: 0 auto 8px auto;
++}
++.skill-subtitle {
++  padding: 2px 6px;
++  color: rgba(200, 200, 200, 0.7);
++  font-size: 12px;
++  font-style: italic;
++  transition: 0.3s ease;
++}
++.skill-subtitle.hovered { color: black; background-color: rgba(255,255,255,0.7); }
++</style>
++
+
+--- FILE: src/components/skillCard/SkillUses.vue ---
+diff --git a/src/components/skillCard/SkillUses.vue b/src/components/skillCard/SkillUses.vue
+new file mode 100644
+index 0000000..de86b69
+--- /dev/null
++++ b/src/components/skillCard/SkillUses.vue
+@@ -0,0 +1,38 @@
++<template>
++  <div class="skill-uses">
++    <ColoredText
++      v-if="skill.coldDownTurns !== 0 && skill.remainingUses !== skill.maxUses && !previewMode"
++      :text="`/named{重整} ${skill.remainingColdDownTurns}/${skill.coldDownTurns}`"
++    />
++    <ColoredText
++      v-else-if="skill.coldDownTurns !== 0"
++      :text="`/named{重整} ${skill.coldDownTurns} 回合`"
++    />
++    <ColoredText
++      v-else-if="skill.remainingUses !== Infinity"
++      text="/named{消耗}"
++    />
++    <ColoredText v-if="skill.slowStart" text="/named{慢热}" />
++    <br />
++    <strong v-if="skill.maxUses === Infinity && skill.coldDownTurns === 0">无限</strong>
++    <span v-else-if="previewMode">(装填 {{ skill.maxUses }}/{{ skill.maxUses }})</span>
++    <span v-else>(装填 {{ skill.remainingUses }}/{{ skill.maxUses }})</span>
++  </div>
++</template>
++
++<script>
++import ColoredText from '../ColoredText.vue';
++export default {
++  name: 'SkillUses',
++  components: { ColoredText },
++  props: {
++    skill: { type: Object, required: true },
++    previewMode: { type: Boolean, default: false }
++  }
++};
++</script>
++
++<style scoped>
++.skill-uses { font-size: 12px; color: #666; }
++</style>
++
+
+--- FILE: src/data/animationDispatcher.js ---
+diff --git a/src/data/animationDispatcher.js b/src/data/animationDispatcher.js
+index 13c891b..82cf2a9 100644
+--- a/src/data/animationDispatcher.js
++++ b/src/data/animationDispatcher.js
+@@ -3,6 +3,8 @@
+ // 核心目标
+ // - 以“队列 + 节拍”的方式，把后端状态（backendGameState）的变化按动画节奏排序并映射到显示层（displayGameState），完成前端动画播放和后端逻辑计算节奏的分离。
+ // - 保证每一次关键状态变化（S 子集）都有独立的可控展示顺序；纯 UI 动作（如日志、声音）也在同一队列中顺序播放。
++// - 可以按需插入延时，拉开动画节奏。
++// - 支持“动画屏障”（blockBeforePreviousAnimations），确保某些 UI 动作在所有前置动画完成后再执行。否然，默认情况下队列仅会等待前序“非零延时”项完成后直接执行。
+ //
+ // 核心机制
+ // 1) 三类队列项
+@@ -47,15 +49,6 @@
+ //   - 非 UI 关键数据（hp、shield、effects、money、AP 等）作为普通字段进入 S。
+ //   - 仅后端使用的中间态字段请加“_”后缀（如 actionIndex_），避免触发动画。
+ //   - 方法如 canUse 只读取 S 字段（可从显示层读取），确保在显示层实例上正常运行。
+-//
+-// 常见坑与规避
+-// - 若完全没有非零延时，状态不会自动切片入队，显示层会在下一次出现非零延时前保持合并展示；这是预期的“帧间合并”。
+-// - 数组重排/插入/删除：为元素提供稳定 id（uniqueID/id），以避免回退到索引合并时的潜在错配。
+-// - 无关触发多：把纯后端中间态统一命名为 *_ 并确保是可枚举自有属性；这类字段不会被 S 监听到。
+-//
+-// 扩展点
+-// - 可为特定 UI 事件手动传入 { duration: X } 以强制切片当前状态，控制动画节拍。
+-// - 如需进一步减少冗余快照，可在入队前做“最近一次入队项是否已是 state”检查以去重。
+ 
+ // animationDispatcher.js - 将后端状态的变化以动画节奏应用到显示层状态，并支持UI动作
+ 
+@@ -65,7 +58,7 @@ import frontendEventBus from '../frontendEventBus.js';
+ 
+ // 队列项类型：
+ // - { kind: 'state', snapshot, duration? }
+-// - { kind: 'ui', name: 'lockControl'|'unlockControl', payload?, duration? }
++// - { kind: 'ui', name: 'lockControl'|'unlockControl', payload?, duration?, blockBeforePreviousAnimations? }
+ // - { kind: 'delay', duration }
+ const queue = [];
+ let processing = false;
+@@ -74,16 +67,32 @@ let defaultStepMs = 0;
+ // 新增：脏位与 tick 末兜底检查
+ let dirty = false;
+ let endOfTickScheduled = false;
++// 跟踪由 orchestrator 执行的动画完成度（用于 blockBeforePreviousAnimations）
++const inflightTokens = new Set();
++
++const defaultStateChangeDuration = 400;
++
++// 监听 orchestrator 完成事件（动画自然结束）
++frontendEventBus.on('animation-card-by-id-finished', (msg = {}) => {
++  const token = msg?.token;
++  if (token && inflightTokens.has(token)) {
++    inflightTokens.delete(token);
++    // 若因 blockBeforePreviousAnimations 阻塞，尝试继续推进队列
++    if (inflightTokens.size === 0) {
++      stalling = false;
++      tryStartProcessQueue();
++    }
++  }
++});
++
+ function scheduleEndOfTickCheck() {
+   if (endOfTickScheduled) return;
+   endOfTickScheduled = true;
+   setTimeout(() => {
+     endOfTickScheduled = false;
+     if (dirty) {
+-      // tick 结束仍有未同步的变更，强制入队一次当前快照
+-      queue.push({ kind: 'state', snapshot: captureSnapshot(), duration: 0 });
+-      dirty = false;
+-      tryStartProcessQueue();
++      // tick 结束仍有未同步的变更，强制入队一次当前快照（默认带屏障）
++      enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
+     }
+   }, 0);
+ }
+@@ -295,6 +304,15 @@ function scheduleNext(delay) {
+ function processQueue() {
+   if (processing) return;
+   if (queue.length === 0) return;
++
++  // 峰值前检查：若队首项要求等待此前动画完成，则在有未完成动画时阻塞
++  const head = queue[0];
++  if (head && head.blockBeforePreviousAnimations === true && inflightTokens.size > 0) {
++    // 等待 orchestrator 通知所有过去动画结束后再继续
++    stalling = true;
++    return; // 不消费队首项
++  }
++
+   processing = true;
+   const item = queue.shift();
+   try {
+@@ -355,12 +373,25 @@ function handleUIAction(item) {
+     case 'clearBattleLogUI':
+       frontendEventBus.emit('clear-battle-log');
+       break;
+-    case 'animateCardById':
+-      // 由后端（调度层）提供 id/kind/options/steps/hideStart，统一在此桥接
+-      frontendEventBus.emit('animate-card-by-id', payload || {});
++    case 'animateCardById': {
++      // 为每次 orchestrator 动画分配完成令牌，全部纳入 inflight 以便 barrier 生效
++      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
++      inflightTokens.add(token);
++      const enriched = Object.assign({}, payload || {}, { completionToken: token });
++      frontendEventBus.emit('animate-card-by-id', enriched);
+       break;
++    }
+     case 'clearCardAnimations':
+       frontendEventBus.emit('clear-card-animations');
++      // 同步清理所有未完成令牌，避免后续 blockBeforePreviousAnimations 项目永久阻塞
++      if (inflightTokens.size > 0) {
++        inflightTokens.clear();
++        stalling = false;
++        tryStartProcessQueue();
++      }
++      break;
++    case 'idle':
++      // 什么都不做，仅占位
+       break;
+     default:
+       console.warn(`animationDispatcher遇到了未知动画指令名称: ${name}`);
+@@ -371,30 +402,33 @@ function handleUIAction(item) {
+ // 外部API：入队
+ // 入队一个sisplayState修改
+ export function enqueueState(options = {}) {
+-  const {duration, snapshot} = options;
+-  queue.push({kind: 'state', snapshot: snapshot || captureSnapshot(), duration});
++  const { duration, snapshot, blockBeforePreviousAnimations = true } = options;
++  queue.push({
++    kind: 'state',
++    snapshot: snapshot || captureSnapshot(),
++    duration: (duration ?? defaultStateChangeDuration),
++    blockBeforePreviousAnimations
++  });
+   // 快照已捕获，清除脏位
+   dirty = false;
+   tryStartProcessQueue();
+ }
+ // 入队一个UI动作
+ export function enqueueUI(name, payload = {}, options = {}) {
+-  const { duration = 0 } = options;
+-  // 若有非零延时，且存在未同步的后端变更，则在它之前切片一次状态
+-  if (duration > 0 && dirty) {
+-    queue.push({ kind: 'state', snapshot: captureSnapshot(), duration: 0 });
+-    dirty = false;
++  const { duration = 0, blockBeforePreviousAnimations = false } = options;
++  // 若有存在未同步的后端变更，则在它之前切片一次状态（默认带屏障）
++  if (defaultStateChangeDuration !== 0 && dirty) {
++    enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
+   }
+-  queue.push({ kind: 'ui', name, payload, duration });
++  queue.push({ kind: 'ui', name, payload, duration, blockBeforePreviousAnimations });
+   tryStartProcessQueue();
+ }
+ 
+ // 入队一个延时
+ export function enqueueDelay(duration = defaultStepMs) {
+-  // 若有非零延时，且存在未同步的后端变更，则在它之前切片一次状态
+-  if (duration > 0 && dirty) {
+-    queue.push({ kind: 'state', snapshot: captureSnapshot(), duration: 0 });
+-    dirty = false;
++  // 若有存在未同步的后端变更，则在它之前切片一次状态（默认带屏障）
++  if (defaultStateChangeDuration !== 0 && dirty) {
++    enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
+   }
+   queue.push({ kind: 'delay', duration });
+   tryStartProcessQueue();
+@@ -420,8 +454,9 @@ export function initAnimationDispatcher({ stepMs = 0 } = {}) {
+ }
+ 
+ // 提供一个便捷桥接：当界面请求“新卡进入手牌”时，由调度器统一入队动画，确保与状态切片/节拍一致
+-frontendEventBus.on('request-card-appear', ({ id } = {}) => {
+-  if (id == null) return;
+-  // 若有未同步变更，duration>0 时会自动切片一次状态
+-  enqueueUI('animateCardById', { id, kind: 'appearFromDeck', options: { id, durationMs: 450, startScale: 0.6, fade: true } }, { duration: 0 });
+-});
++// 已废弃：入手动画改为后端在 drawSkillCard 内统一触发
++// frontendEventBus.on('request-card-appear', ({ id } = {}) => {
++//   if (id == null) return;
++//   enqueueUI(
++//     'animateCardById',
++
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 5d83249..9c60d22 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -6,7 +6,7 @@ import { processStartOfTurnEffects, processEndOfTurnEffects, processSkillActivat
+ import { addSystemLog, addPlayerActionLog, addEnemyActionLog, addDeathLog } from './battleLogUtils.js'
+ import { backendGameState as gameState } from './gameState.js'
+ import { enqueueUI, enqueueDelay } from './animationDispatcher.js'
+-import {burnSkillCard, dropSkillCard} from "./battleUtils";
++import {burnSkillCard, drawSkillCard, dropSkillCard} from "./battleUtils";
+ 
+ // 开始战斗
+ export function enterBattleStage() {
+@@ -75,8 +75,9 @@ function startPlayerTurn() {
+   fillFrontierSkills(gameState.player);
+ 
+   enqueueDelay(300);
+-  // 回合开始时结算效果
+-  const isStunned = processStartOfTurnEffects(gameState.player);
++  // 回合开始时结算效果（使用修正后的玩家对象）
++  const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
++  const isStunned = processStartOfTurnEffects(modPlayer);
+   if(checkBattleVictory()) return ;
+ 
+   if (isStunned) {
+@@ -128,14 +129,15 @@ export function generateEnemy() {
+ 
+ // 此技能返回值必须被检查！
+ export function activateSkill (skill) {
+-  // 技能发动时结算效果（后端状态）
+-  processSkillActivationEffects(gameState.player);
++  // 技能发动时结算效果（后端状态，使用修正后的玩家）
++  const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
++  processSkillActivationEffects(modPlayer);
+   if(checkBattleVictory()) return true;
+ 
+   var stage = 0;
+-  // 发动技能效果
++  // 发动技能效果（对技能传入修正后的玩家）
+   while(true) {
+-    const result = skill.use(gameState.player, gameState.enemy, stage);
++    const result = skill.use(modPlayer, gameState.enemy, stage);
+     if(checkBattleVictory()) return true;
+ 
+     if(result === true) break;
+@@ -153,12 +155,15 @@ function useSkill(skill) {
+   enqueueUI('animateCardById', {id: skill.uniqueID, kind: 'flyToCenter'});
+ 
+   // 通知UI层锁定控制面板
+-  enqueueUI('lockControl');
++  // enqueueUI('lockControl');
++
++  // 增设一条idle动画指令，确保animateCardByID动画完成后才开始播放卡牌发动带来的各种效果的动画
++  enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
+ 
+   // 资源结算（后端状态）
+   skill.consumeResources(gameState.player);
+   
+-  // 触发技能发动前效果
++  // 触发技能发动前效果与技能主体
+   if(activateSkill(skill)) return ;
+ 
+   if(checkBattleVictory()) return ;
+@@ -169,7 +174,8 @@ function useSkill(skill) {
+   if(checkBattleVictory()) return ;
+ 
+   // UI解锁
+-  enqueueUI('unlockControl');
++  // enqueueUI('unlockControl', {}, { blockBeforePreviousAnimations: true });
++  enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
+ }
+ 
+ 
+@@ -185,8 +191,9 @@ export function dropLeftmostSkill() {
+ 
+ // 结束玩家回合
+ function endPlayerTurn() {
+-  // 回合结束时结算效果
+-  processEndOfTurnEffects(gameState.player);
++  // 回合结束时结算效果（使用修正后的玩家）
++  const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
++  processEndOfTurnEffects(modPlayer);
+ 
+   if(checkBattleVictory()) return ;
+ 
+@@ -210,11 +217,14 @@ function enemyTurn() {
+ 
+   // 回合开始时结算效果
+   const isStunned = processStartOfTurnEffects(gameState.enemy);
++  if(checkBattleVictory()) return ;
++
+   if (isStunned) {
+     addSystemLog('敌人被眩晕，跳过回合！');
+   } else {
+-    // 等待敌人行动完成（包括所有攻击动画）
+-    gameState.enemy.act(gameState.player);
++    // 等待敌人行动完成（包括所有攻击动画），对敌人传入修正后的玩家以包含防御修正
++    const modPlayer = gameState.player.getModifiedPlayer ? gameState.player.getModifiedPlayer() : gameState.player;
++    gameState.enemy.act(modPlayer);
+   }
+ 
+ 
+@@ -275,8 +285,9 @@ function battleVictory(isVictory) {
+ function fillFrontierSkills(player) {
+   // 从后备技能列表头部取技能，直到前台技能数量达到最大值
+   while (player.frontierSkills.length < player.maxFrontierSkills && player.backupSkills.length > 0) {
+-    const skill = player.backupSkills.shift();
+-    player.frontierSkills.push(skill);
++    drawSkillCard(player);
++    // const skill = player.backupSkills.shift();
++    // player.frontierSkills.push(skill);
+   }
+   
+   // 触发技能列表更新事件
+@@ -291,6 +302,8 @@ function handleSkillAfterUse(skill) {
+   // 查找技能在前台技能列表中的位置
+   const index = gameState.player.frontierSkills.findIndex(s => s === skill);
+   if (index !== -1) {
++    // 首先，入队一个idle指令，保证后续动画在技能使用动画结束之后播放
++    enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
+     if (skill.coldDownTurns !== 0 || skill.maxUses === Infinity || skill.remainingUses > 0) {
+       // 如果是可充能/无限使用技能，或者充能有剩余，移动到后备技能列表尾部
+       dropSkillCard(gameState.player, skill.uniqueID);
+@@ -323,8 +336,14 @@ export function initializeBattleFlowListeners() {
+   backendEventBus.on(EventNames.Battle.PLAYER_USE_SKILL, (uniqueID) => {
+     const skill = gameState.player.frontierSkills.find(s => s.uniqueID === uniqueID);
+     console.log('使用技能：', skill);
+-    if (skill) useSkill(skill);
+-    else {
++    if (skill) {
++      // 额外检查一次技能是否能使用，因为前端是异步动画，所以如果玩家操作过快则可能会尝试发动无法使用的技能
++      if(gameState.gameStage === 'battle' && gameState.isPlayerTurn && skill.canUse(gameState.player)) {
++        useSkill(skill);
++      } else {
++        console.warn(`技能使用失败：技能 ${skill.name} 当前无法使用。`);
++      }
++    } else {
+       console.warn(`技能使用失败：前台技能列表中未找到id为 ${uniqueID} 的技能`);
+       console.log(gameState.player.frontierSkills);
+     }
+
+--- FILE: src/data/battleUtils.js ---
+diff --git a/src/data/battleUtils.js b/src/data/battleUtils.js
+index f5c7273..e5914f2 100644
+--- a/src/data/battleUtils.js
++++ b/src/data/battleUtils.js
+@@ -144,9 +144,19 @@ export function drawSkillCard(player, number = 1) {
+       // addBattleLog('你的后备技能已空，无法抽取更多卡牌！');
+       break;
+     }
+-    // 对于入手而言，动画是自动编排的，所以这里无需手动触发
++    // 对于入手而言，动画由后端统一触发
+     const firstSkill = player.backupSkills.shift();
+     player.frontierSkills.push(firstSkill);
++
++    // 手动触发入手动画，与其他卡牌动画保持一致（等待前序动画完成）
++    if (firstSkill && firstSkill.uniqueID) {
++      enqueueUI(
++        'animateCardById',
++        { id: firstSkill.uniqueID, kind: 'appearFromDeck', options: { durationMs: 450, startScale: 0.6, fade: true } },
++        { duration: 0, blockBeforePreviousAnimations: true }
++      );
++    }
++
+     if(number === 1) return firstSkill;
+   }
+ }
+
+--- FILE: src/data/effect.js ---
+diff --git a/src/data/effect.js b/src/data/effect.js
+deleted file mode 100644
+index 35e264f..0000000
+--- a/src/data/effect.js
++++ /dev/null
+@@ -1,11 +0,0 @@
+-// 简化版效果类
+-// 仅用作标识，具体逻辑在Player和Enemy对象中处理
+-class Effect {
+-  constructor(name, type, stacks) {
+-    this.name = name; // 效果名称
+-    this.type = type; // 效果类型：'buff', 'debuff', 'neutral'
+-    this.stacks = stacks || 0; // 效果层数
+-  }
+-}
+-
+-export default Effect;
+\ No newline at end of file
+
+--- FILE: src/data/effectDescription.js ---
+diff --git a/src/data/effectDescription.js b/src/data/effectDescription.js
+index 423e595..d8161bf 100644
+--- a/src/data/effectDescription.js
++++ b/src/data/effectDescription.js
+@@ -42,6 +42,13 @@ const effectDescriptions = {
+     icon: '🔥',
+     color: '#FF8C00' // 深橙色
+   },
++  '火焰主宰': {
++    name: '火焰主宰',
++    description: '每3层燃烧提供1点灵能',
++    type: 'buff',
++    icon: '🔥',
++    color: '#FF4500' // 橙红色
++  },
+ 
+   // 回合开始时触发的效果
+   '泉涌': {
+
+--- FILE: src/data/player.js ---
+diff --git a/src/data/player.js b/src/data/player.js
+index 086f8b8..fa0d3ae 100644
+--- a/src/data/player.js
++++ b/src/data/player.js
+@@ -41,6 +41,35 @@ export function getPlayerTierFromTierIndex(tierIndex) {
+   return tiers[tierIndex];
+ }
+ 
++// 为属性修正系统提供一个便捷的工厂：创建一个“叠加型”的玩家属性修正器
++// - 接受一个包含 attack/defense/magic 修正函数的对象
++// - 每个函数形如 (baseValue, currentPlayer) => number
++// - 返回一个 (player) => wrappedPlayer 的修正器
++export function createPlayerStatModifier({ attack, defense, magic } = {}) {
++  return function(player) {
++    // 仅覆盖需要的 getter；不改变 hp/effects 等引用
++    return new Proxy(player, {
++      // 仅覆盖需要修改的只读属性，其他全部透传
++      get(target, prop, receiver) {
++        if (prop === 'attack') {
++          const base = Reflect.get(target, 'attack', receiver);
++          return typeof attack === 'function' ? attack(base, receiver) : base;
++        }
++        if (prop === 'defense') {
++          const base = Reflect.get(target, 'defense', receiver);
++          return typeof defense === 'function' ? defense(base, receiver) : base;
++        }
++        if (prop === 'magic') {
++          const base = Reflect.get(target, 'magic', receiver);
++          return typeof magic === 'function' ? magic(base, receiver) : base;
++        }
++        return Reflect.get(target, prop, receiver);
++      }
++      // 不提供 set 拦截，保持写入直达底层对象（hp/effects 数据链接不变）
++    });
++  }
++}
++
+ // 玩家数据类
+ export class Player extends Unit {
+   constructor() {
+@@ -70,6 +99,9 @@ export class Player extends Unit {
+     // effects 由 Unit 初始化
+     this.leino = ['normal']; // 灵脉列表，可以包含normal, fire, wind, wood, earth, water, thunder, light, dark
+     this.abilities = []; // 玩家能力列表
++
++    // 属性修正器管线（按顺序应用）
++    this.modifiers = [];
+   }
+ 
+   // 计算属性
+@@ -79,6 +111,37 @@ export class Player extends Unit {
+     return (this.effects['敏捷'] || 0);
+   }
+ 
++  // 属性修正系统 API
++  addModifier(modifierFn) {
++    if (typeof modifierFn === 'function') this.modifiers.push(modifierFn);
++    else console.warn('尝试添加非法的属性修正器：应为 function(player)=>player');
++  }
++  removeModifier(modifierFn) {
++    this.modifiers = this.modifiers.filter(m => m !== modifierFn);
++  }
++  clearModifiers() {
++    this.modifiers = [];
++  }
++
++  // 获取顺序应用所有修正器后的“修正玩家对象”。
++  // 注意：返回值通常是一个 Proxy，hp/effects 等数据链接保持为原对象引用；
++  // 仅 attack/defense/magic 等只读计算属性会被覆盖为修正后的值。
++  getModifiedPlayer() {
++    // 无修正器时，直接返回自身，避免不必要的包装
++    if (!this.modifiers || this.modifiers.length === 0) return this;
++    let current = this;
++    for (const mod of this.modifiers) {
++      try {
++        const next = mod(current);
++        // 允许修正器返回空以“跳过”
++        if (next) current = next;
++      } catch (e) {
++        console.warn('应用属性修正器时发生错误，已跳过：', e);
++      }
++    }
++    return current;
++  }
++
+   addBackupSkill (skill) {
+     this.backupSkills.push(skill);
+   }
+@@ -104,4 +167,8 @@ export class Player extends Unit {
+     this.remainingActionPoints += amount;
+     this.remainingActionPoints = Math.min(this.remainingActionPoints, this.maxActionPoints);
+   }
++
++  hasAbility (abilityName) {
++    return this.abilities.some(ability => ability.name === abilityName);
++  }
+ }
+\ No newline at end of file
+
+--- FILE: src/data/skill.js ---
+diff --git a/src/data/skill.js b/src/data/skill.js
+index 52ad6d9..1f2ca1a 100644
+--- a/src/data/skill.js
++++ b/src/data/skill.js
+@@ -81,7 +81,7 @@ class Skill {
+ 
+   // 战斗开始时调用，用于初始化技能
+   onBattleStart() {
+-    if(this.slowStart) {
++    if(!this.slowStart) {
+       this.remainingUses = this.maxUses;
+       this.remainingColdDownTurns = this.coldDownTurns;
+     } else {
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index 9b769c9..655df99 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -88,7 +88,7 @@ export class SearingHeat extends Skill {
+     this.baseColdDownTurns = 2;
+   }
+   get damage() {
+-    return Math.max(8 + 4 * this.power, 1);
++    return Math.max(10 + 4 * this.power, 1);
+   }
+   getDamage (player) {
+     return this.damage + player.magic * 2;
+@@ -273,7 +273,6 @@ export class DisperseFire extends Skill {
+ export class ScorchingCurse extends Skill {
+   constructor() {
+     super('炽热诅咒', 'fire', 2, 1, 1, 1);
+-    this.subtitle = '炽热诅咒';
+     this.baseColdDownTurns = 3;
+   }
+
+--- FILE: src/game.js ---
+diff --git a/src/game.js b/src/game.js
+index 9d80c9e..bcc2a9e 100644
+--- a/src/game.js
++++ b/src/game.js
+@@ -2,6 +2,7 @@ import backendEventBus, { EventNames } from "./backendEventBus";
+ import * as dialogues from './data/dialogues'
+ import SkillManager from './data/skillManager.js'
+ import {backendGameState as gameState, backendGameState} from './data/gameState.js'
++import { upgradePlayerTier } from './data/player.js'
+ import {
+   enterBattleStage,
+   initializeBattleFlowListeners
+@@ -18,14 +19,14 @@ function startGame() {
+   const initialSkill1 = SkillManager.getInstance().createSkill('拳打脚踢');
+   const initialSkill2 = SkillManager.getInstance().createSkill('活动筋骨');
+   const initialSkill3 = SkillManager.getInstance().createSkill('打滚');
+-  const initialSkill4 = SkillManager.getInstance().createSkill('抱头防御');
++  const initialSkill4 = SkillManager.getInstance().createSkill('玩火');
+ 
+   backendGameState.player.cultivatedSkills = [initialSkill1, initialSkill2, initialSkill3, initialSkill4];
+ 
+   // 升满级调试
+-  // while(backendGameState.player.tier < 9) {
+-  //   upgradePlayerTier(backendGameState.player);
+-  // }
++  while(backendGameState.player.tier < 9) {
++    upgradePlayerTier(backendGameState.player);
++  }
+ 
+   // 以事件驱动开始第一场战斗
+   backendEventBus.emit(EventNames.Game.ENTER_BATTLE_STAGE);
+
+--- FILE: src/utils/animationOrchestrator.js ---
+diff --git a/src/utils/animationOrchestrator.js b/src/utils/animationOrchestrator.js
+index 4d5bb29..ede7cf7 100644
+--- a/src/utils/animationOrchestrator.js
++++ b/src/utils/animationOrchestrator.js
+@@ -315,7 +315,7 @@ const orchestrator = {
+ 
+ // Helper to animate by id (backend-driven)
+ const _idChains = new Map();
+-async function animateById({ id, kind, options = {}, steps, hideStart }) {
++async function animateById({ id, kind, options = {}, steps, hideStart, completionToken }) {
+   // 在入队前“抢先”克隆ghost，避免后续状态同步删除DOM后无法创建幽灵
+   try {
+     const preEl = getCardEl(id);
+@@ -336,8 +336,12 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+   const run = async () => {
+     // 排空期间：仅允许在 reset 调用前提交的动画继续执行；否则仅允许当前时代
+     if (orchestrator._draining) {
+-      if (scheduledEpoch !== orchestrator._drainEpoch) return;
++      if (scheduledEpoch !== orchestrator._drainEpoch) {
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        return;
++      }
+     } else if (scheduledEpoch !== orchestrator._epoch) {
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       return;
+     }
+     const el = getCardEl(id) || null;
+@@ -345,6 +349,7 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+     // 自定义steps：直接执行到ghost（不创建）
+     if (Array.isArray(steps) && steps.length) {
+       await orchestrator.playCardSequenceById(el, id, steps, { scheduledEpoch, hideStart: hideStart !== false, ...(options || {}) });
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       return;
+     }
+ 
+@@ -355,33 +360,39 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+         const built = orchestrator.buildSteps.appearFromDeck({ durationMs });
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: true, endMode: 'restore', initialFromDeck: true, startScale, fade });
+         try { frontendEventBus.emit('card-appear-finished', { id }); } catch (_) {}
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'centerThenDeck': {
+         const built = orchestrator.buildSteps.centerThenDeck(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'flyToCenter': {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'flyToDeckFade':
+       case 'drop': {
+         const built = orchestrator.buildSteps.flyToDeckFade(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'exhaust':
+       case 'burn': {
+         const built = orchestrator.buildSteps.exhaustBurn(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       default: {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       }
+     }
+   };
+
+--- FILE: src/utils/cardAnimationOrchestrator.js ---
+diff --git a/src/utils/cardAnimationOrchestrator.js b/src/utils/cardAnimationOrchestrator.js
+new file mode 100644
+index 0000000..a32cf35
+--- /dev/null
++++ b/src/utils/cardAnimationOrchestrator.js
+@@ -0,0 +1,419 @@
++// 全局卡牌动画编排器（DOM + GSAP）
++// 仅管理“卡牌相关”的复杂动画，不负责其它类型动画。
++// 特性：
++// - 对每一张卡片（按 uniqueID）维护一个“异步动画播放队列”：
++//   同一张卡的动画指令会按顺序串行执行，不会相互打断；不同卡片的动画可并发播放。
++// - 通过 animateById 进行动画调度与 ghost 创建，其他路径不再创建 ghost。
++
++import frontendEventBus from '../frontendEventBus.js';
++import gsap from 'gsap';
++import { getCardEl } from './cardDomRegistry.js';
++
++const defaultEase = 'power2.out';
++
++const orchestrator = {
++  overlayEl: null,
++  centerAnchorEl: null,
++  deckAnchorEl: null,
++  ghostContainerEl: null,
++  // 记录：按ID缓存ghost，确保连续指令可复用状态
++  // id -> { ghost, baseRect, startEl }
++  _ghostRegistry: new Map(),
++  // 全局“时代戳”（reset代次）。当 resetAllGhosts 发生时用于屏蔽旧任务
++  _epoch: 0,
++  _bumpEpoch() { this._epoch++; return this._epoch; },
++  // 排空模式：用于 resetAllGhosts 等待“之前提交”的动画自然结束
++  _draining: false,
++  _drainEpoch: null,
++
++  // 公共步骤构建器：在不同入口（animateById/后端）共享
++  buildSteps: {
++    flyToCenter({ scale = 1.2, durationMs = 350, holdMs = 0 } = {}) {
++      return [
++        { toAnchor: 'center', scale, duration: durationMs, ease: defaultEase, holdMs }
++      ];
++    },
++    centerThenDeck({ centerHoldMs = 350, totalMs = 900 } = {}) {
++      const first = 350;
++      const rest = Math.max(300, totalMs - first - centerHoldMs);
++      return [
++        { toAnchor: 'center', scale: 1.2, duration: first, ease: defaultEase, holdMs: centerHoldMs },
++        { toAnchor: 'deck', scale: 0.5, rotate: 20, duration: rest, ease: 'power2.in' }
++      ];
++    },
++    flyToDeckFade({ durationMs = 400 } = {}) {
++      return [
++        { toAnchor: 'deck', scale: 0.5, rotate: 20, duration: durationMs, ease: 'power2.in' },
++        { opacity: 0, duration: 120 }
++      ];
++    },
++    exhaustBurn({ durationMs = 500, scaleUp = 1.15 } = {}) {
++      const t1 = Math.max(80, Math.floor(durationMs * 0.35));
++      const t2 = Math.max(120, durationMs - t1);
++      const emitCfg = { kind: 'burn', intervalMs: 70, burst: 10 };
++      return [
++        // 放大阶段，同时持续冒火星
++        { scale: scaleUp, duration: t1, ease: defaultEase, emitParticles: emitCfg },
++        // 淡出消亡阶段，同时继续冒火星
++        { rotate: 0, opacity: 0, duration: t2, ease: 'power1.in', emitParticles: emitCfg }
++      ];
++    },
++    appearFromDeck({ durationMs = 450 } = {}) {
++      // 需配合 initialFromDeck=true 使用
++      return [
++        { toBase: true, scale: 1, opacity: 1, duration: durationMs, ease: defaultEase }
++      ];
++    }
++  },
++
++  init({ overlayEl, centerAnchorEl, deckAnchorEl, ghostContainerEl }) {
++    this.overlayEl = overlayEl;
++    this.centerAnchorEl = centerAnchorEl;
++    this.deckAnchorEl = deckAnchorEl;
++    this.ghostContainerEl = ghostContainerEl;
++  },
++
++  // 工具：测量/锚点/换算
++  getRect(el) { return el?.getBoundingClientRect?.() || null; },
++  getAnchor(nameOrEl) {
++    if (!nameOrEl) return null;
++    if (typeof nameOrEl === 'string') {
++      if (nameOrEl === 'center') return this.centerAnchorEl;
++      if (nameOrEl === 'deck') return this.deckAnchorEl;
++      return null;
++    }
++    return nameOrEl;
++  },
++  getAnchorPoint(nameOrEl) {
++    const el = this.getAnchor(nameOrEl);
++    const r = this.getRect(el);
++    if (!r) return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
++    return { x: r.left, y: r.top };
++  },
++  createGhostFromEl(startEl, startRect) {
++    if (!this.ghostContainerEl || !startEl || !startRect) return null;
++    const ghost = startEl.cloneNode(true);
++    Object.assign(ghost.style, {
++      position: 'absolute',
++      left: `${startRect.left}px`,
++      top: `${startRect.top}px`,
++      // width/height 直接赋值可能引起未知故障，暂不设置
++      margin: '0',
++      transformOrigin: 'center center',
++      pointerEvents: 'none',
++    });
++    ghost.classList.add('animation-ghost');
++    this.ghostContainerEl.appendChild(ghost);
++    gsap.set(ghost, { x: 0, y: 0, force3D: true });
++    // 禁用克隆来的 CSS 动画，避免与 GSAP transform 冲突
++    ghost.classList.remove('activating');
++    ghost.style.animation = 'none';
++    ghost.style.animationName = 'none';
++    return ghost;
++  },
++  offsetsToPoint(startRect, point) {
++    return {
++      x: point.x - startRect.left - startRect.width / 2,
++      y: point.y - startRect.top - startRect.height / 2
++    };
++  },
++
++  // 粒子效果：在幽灵卡片中心附近发射燃烧火星
++  _emitBurnParticles(ghost, { burst = 10 } = {}) {
++    if (!ghost) return;
++    try {
++      const r = ghost.getBoundingClientRect();
++      const cx = r.left + r.width / 2;
++      const cy = r.top + r.height / 2;
++      const particles = [];
++      for (let i = 0; i < burst; i++) {
++        const angle = (Math.random() * Math.PI * 2);
++        const speed = 40 + Math.random() * 120;
++        const vx = Math.cos(angle) * speed;
++        const vy = Math.sin(angle) * speed;
++        const size = 5 + Math.random() * 5;
++        const life = 800 + Math.random() * 600;
++        const colorPick = Math.random();
++        const color = colorPick < 0.5 ? '#cf1818' : (colorPick < 0.8 ? '#ffd166' : '#ff6f00');
++        particles.push({
++          x: cx + (Math.random() - 0.5) * (r.width),
++          y: cy + (Math.random() - 0.5) * (r.height),
++          vx,
++          vy,
++          color,
++          life,
++          gravity: 0,
++          size,
++          opacity: 1,
++          zIndex: 6,
++          drag: 0.05,
++        });
++      }
++      frontendEventBus.emit('spawn-particles', particles);
++    } catch (_) {}
++  },
++
++  // 内部：按ID确保存在ghost（仅 animateById 调用）
++  _ensureGhostById(id, startEl, options = {}) {
++    const { initialFromDeck = false, startScale = 0.6, fade = true, hideStart = true, killOnReuse = true, preGhostInvisible = false } = options;
++    if (id !== null && id !== undefined && this._ghostRegistry.has(id)) {
++      const entry = this._ghostRegistry.get(id);
++      if (killOnReuse) { try { gsap.killTweensOf(entry.ghost); } catch (_) {} }
++      return entry;
++    }
++    if (!startEl) return null;
++    const baseRect = this.getRect(startEl);
++    if (!baseRect) return null;
++    const ghost = this.createGhostFromEl(startEl, baseRect);
++    if (!ghost) return null;
++    if (hideStart) { try { startEl.style.visibility = 'hidden'; } catch (_) {} }
++    if (initialFromDeck) {
++      const deck = this.getAnchorPoint('deck');
++      const fromOffset = this.offsetsToPoint(baseRect, deck);
++      gsap.set(ghost, { x: fromOffset.x, y: fromOffset.y, scale: startScale, autoAlpha: fade ? 0 : 1, force3D: true });
++    } else {
++      gsap.set(ghost, { x: 0, y: 0, scale: 1, autoAlpha: preGhostInvisible ? 0 : 1, force3D: true });
++    }
++    const entry = { ghost, baseRect, startEl };
++    if (id !== null && id !== undefined) this._ghostRegistry.set(id, entry);
++    return entry;
++  },
++  _cleanupGhostById(id, { restoreStart = false } = {}) {
++    if (id === null || id === undefined) return;
++    const entry = this._ghostRegistry.get(id);
++    if (!entry) return;
++    const { ghost, startEl } = entry;
++    try { gsap.killTweensOf(ghost); } catch (_) {}
++    try { ghost.remove(); } catch (_) {}
++    if (restoreStart) { try { startEl.style.visibility = ''; } catch (_) {} }
++    this._ghostRegistry.delete(id);
++  },
++
++  // ID版本：使用“已存在”的ghost执行 steps；本函数不创建 ghost
++  async playCardSequenceById(startEl, id, steps = [], options = {}) {
++    if (!this.overlayEl) return;
++    const { hideStart = true, endMode = 'keep', scheduledEpoch, revealGhostOnStart = true } = options;
++    // 排空期间：仅允许在 reset 调用前提交的动画继续执行
++    if (this._draining) {
++      if (scheduledEpoch !== this._drainEpoch) return;
++    } else if (scheduledEpoch !== undefined && scheduledEpoch !== this._epoch) {
++      return;
++    }
++    const entry = this._ghostRegistry.get(id);
++    if (!entry) return; // 无可用ghost：无法执行该动画
++    const { ghost, baseRect, startEl: registeredStartEl } = entry;
++
++    // 开场处理：隐藏原DOM、显示ghost
++    try {
++      const originEl = startEl || registeredStartEl;
++      if (hideStart && originEl) originEl.style.visibility = 'hidden';
++    } catch (_) {}
++    if (revealGhostOnStart) { try { gsap.set(ghost, { autoAlpha: 1 }); } catch (_) {} }
++
++    try { gsap.killTweensOf(ghost); } catch (_) {}
++    const tl = gsap.timeline();
++
++    for (const step of steps) {
++      // 自定义 lambda：在该处即时执行（插入到时间轴）
++      if (typeof step.call === 'function') {
++        tl.add(() => {
++          try { step.call({ ghost, baseRect, orchestrator: this }); } catch (_) {}
++        });
++        // 支持 call 后的等待
++        if (step.holdMs && step.holdMs > 0) tl.to(ghost, { x: '+=0', duration: step.holdMs / 1000, ease: 'none' });
++        continue;
++      }
++
++      const { duration = 350, ease = defaultEase, holdMs = 0, emitParticles } = step;
++      const props = {};
++      if (step.toPoint) {
++        const o = this.offsetsToPoint(baseRect, step.toPoint);
++        props.x = o.x; props.y = o.y;
++      } else if (step.toAnchor) {
++        const p = this.getAnchorPoint(step.toAnchor);
++        const o = this.offsetsToPoint(baseRect, p);
++        props.x = o.x; props.y = o.y;
++      } else if (step.delta) {
++        props.x = `+=${step.delta.dx || 0}`;
++        props.y = `+=${step.delta.dy || 0}`;
++      } else if (step.toBase) {
++        props.x = 0; props.y = 0;
++      }
++      if (typeof step.scale === 'number') props.scale = step.scale;
++      if (typeof step.rotate === 'number') props.rotate = step.rotate;
++      if (typeof step.opacity === 'number') props.autoAlpha = step.opacity;
++
++      // 构建 tween，并在需要时添加 onUpdate 节流触发粒子
++      if (emitParticles && emitParticles.kind === 'burn') {
++        const interval = Math.max(30, emitParticles.intervalMs || 70);
++        const burst = Math.max(3, emitParticles.burst || 8);
++        let lastEmit = -1;
++        tl.to(ghost, {
++          ...props,
++          duration: Math.max(0.001, duration / 1000),
++          ease,
++          onUpdate: function () {
++            // this.time() 单位：秒 -> 毫秒
++            const elapsed = this.time() * 1000;
++            if (lastEmit < 0 || elapsed - lastEmit >= interval) {
++              lastEmit = elapsed;
++              try { orchestrator._emitBurnParticles(ghost, { burst }); } catch (_) {}
++            }
++          }
++        });
++      } else {
++        tl.to(ghost, { ...props, duration: Math.max(0.001, duration / 1000), ease });
++      }
++
++      if (holdMs > 0) tl.to(ghost, { x: '+=0', duration: holdMs / 1000, ease: 'none' });
++    }
++
++    await new Promise(resolve => {
++      tl.eventCallback('onComplete', () => { resolve(); });
++      tl.play(0);
++    });
++
++    // 结束策略
++    if (endMode === 'restore') this._cleanupGhostById(id, { restoreStart: true });
++    else if (endMode === 'destroy') this._cleanupGhostById(id, { restoreStart: false });
++    // keep: 保留ghost
++  },
++
++  // 重置所有ghost（例如切屏/退出战斗时）：排空队列 -> 清理 -> 关闭排空
++  async resetAllGhosts({ restoreStart = true } = {}) {
++    // 建立“排空屏障”：记录此刻的epoch，并立即推进到下一代，阻断之后提交的新动画
++    const drainEpoch = this._epoch;
++    this._draining = true;
++    this._drainEpoch = drainEpoch;
++    this._bumpEpoch();
++
++    // 截取当前各ID队列的末尾promise，等待它们结算（表示“此刻之前提交”的动画都已完成”）
++    const tails = Array.from(_idChains.values()).map(p => p.catch(() => {}));
++    try { await Promise.all(tails); } catch (_) {}
++
++    // 执行清理：注册表 + DOM 兜底
++    for (const id of Array.from(this._ghostRegistry.keys())) {
++      this._cleanupGhostById(id, { restoreStart });
++    }
++    try {
++      if (this.ghostContainerEl) {
++        const nodes = Array.from(this.ghostContainerEl.querySelectorAll('.animation-ghost'));
++        for (const n of nodes) {
++          try { gsap.killTweensOf(n); } catch (_) {}
++          try { n.remove(); } catch (_) {}
++        }
++      }
++    } catch (_) {}
++
++    // 清空队列并关闭“排空模式”
++    try { if (typeof _idChains?.clear === 'function') _idChains.clear(); } catch (_) {}
++    this._draining = false;
++    this._drainEpoch = null;
++  },
++};
++
++// Helper to animate by id (backend-driven)
++const _idChains = new Map();
++async function animateById({ id, kind, options = {}, steps, hideStart, completionToken }) {
++  // 在入队前“抢先”克隆ghost，避免后续状态同步删除DOM后无法创建幽灵
++  try {
++    const preEl = getCardEl(id);
++    if (preEl && orchestrator.overlayEl) {
++      const preOpts = { hideStart: false, killOnReuse: false };
++      if (kind === 'appearFromDeck') {
++        preOpts.initialFromDeck = true;
++        preOpts.startScale = (options && options.startScale) != null ? options.startScale : 0.6;
++        preOpts.fade = (options && options.fade) != null ? options.fade : true;
++      } else {
++        preOpts.preGhostInvisible = true; // 预创建ghost保持不可见，避免双影
++      }
++      orchestrator._ensureGhostById(id, preEl, preOpts);
++    }
++  } catch (_) {}
++
++  const scheduledEpoch = orchestrator._epoch;
++  const run = async () => {
++    // 排空期间：仅允许在 reset 调用前提交的动画继续执行；否则仅允许当前时代
++    if (orchestrator._draining) {
++      if (scheduledEpoch !== orchestrator._drainEpoch) {
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        return;
++      }
++    } else if (scheduledEpoch !== orchestrator._epoch) {
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++      return;
++    }
++    const el = getCardEl(id) || null;
++
++    // 自定义steps：直接执行到ghost（不创建）
++    if (Array.isArray(steps) && steps.length) {
++      await orchestrator.playCardSequenceById(el, id, steps, { scheduledEpoch, hideStart: hideStart !== false, ...(options || {}) });
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++      return;
++    }
++
++    // 预置序列：使用步骤构建器
++    switch (kind) {
++      case 'appearFromDeck': {
++        const { durationMs = 450, startScale = 0.6, fade = true } = options || {};
++        const built = orchestrator.buildSteps.appearFromDeck({ durationMs });
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: true, endMode: 'restore', initialFromDeck: true, startScale, fade });
++        try { frontendEventBus.emit('card-appear-finished', { id }); } catch (_) {}
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        break;
++      }
++      case 'centerThenDeck': {
++        const built = orchestrator.buildSteps.centerThenDeck(options || {});
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        break;
++      }
++      case 'flyToCenter': {
++        const built = orchestrator.buildSteps.flyToCenter(options || {});
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        break;
++      }
++      case 'flyToDeckFade':
++      case 'drop': {
++        const built = orchestrator.buildSteps.flyToDeckFade(options || {});
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        break;
++      }
++      case 'exhaust':
++      case 'burn': {
++        const built = orchestrator.buildSteps.exhaustBurn(options || {});
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        break;
++      }
++      default: {
++        const built = orchestrator.buildSteps.flyToCenter(options || {});
++        await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++      }
++    }
++  };
++
++  // 同一id动画排队（前序promise若拒绝也不阻塞后续）
++  const prev = _idChains.get(id) || Promise.resolve();
++  const safePrev = prev.catch(() => {});
++  const next = safePrev.then(() => run());
++  _idChains.set(id, next);
++  next.finally(() => {
++    if (_idChains.get(id) === next) _idChains.delete(id);
++  });
++  return next;
++}
++
++frontendEventBus.on('animate-card-by-id', async (payload = {}) => {
++  try { await animateById(payload || {}); } catch (_) {}
++});
++
++frontendEventBus.on('clear-card-animations', () => {
++  orchestrator.resetAllGhosts({ restoreStart: true });
++});
++
++export { animateById };
++export default orchestrator;
+
+--- FILE: src/utils/colorUtils.js ---
+diff --git a/src/utils/colorUtils.js b/src/utils/colorUtils.js
+new file mode 100644
+index 0000000..9ecb36b
+--- /dev/null
++++ b/src/utils/colorUtils.js
+@@ -0,0 +1,16 @@
++export function adjustColorBrightness(color, percent) {
++  let hex = color.replace(/#/g, '');
++  if (hex.length !== 6) throw new Error('无效的颜色格式，请使用6位十六进制颜色，如"#AACC12"');
++  let r = parseInt(hex.substring(0, 2), 16);
++  let g = parseInt(hex.substring(2, 4), 16);
++  let b = parseInt(hex.substring(4, 6), 16);
++  const factor = percent / 100;
++  r = Math.round(r + (255 - r) * factor);
++  g = Math.round(g + (255 - g) * factor);
++  b = Math.round(b + (255 - b) * factor);
++  r = Math.min(255, Math.max(0, r));
++  g = Math.min(255, Math.max(0, g));
++  b = Math.min(255, Math.max(0, b));
++  const toHex = (c) => { const h = c.toString(16); return h.length === 1 ? '0' + h : h; };
++  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
++}
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

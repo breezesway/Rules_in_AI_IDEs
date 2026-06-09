@@ -1,0 +1,28 @@
+diff --git a/src/components/image-compressor.tsx b/src/components/image-compressor.tsx
+index 7ba3235..e9aa62f 100644
+--- a/src/components/image-compressor.tsx
++++ b/src/components/image-compressor.tsx
+@@ -29,18 +29,20 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   const [saveLocation, setSaveLocation] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
+ 
+-  // 初始化保存位置
++  // 初始化保存位置 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+-    if (isOpen && !saveLocation) {
++    if (isOpen) {
+       window.electronAPI.getAppConfig().then(config => {
+         if (config.defaultSaveLocation) {
+           setSaveLocation(config.defaultSaveLocation);
++        } else {
++          setSaveLocation(''); // 如果没有设置默认位置，清空当前设置
+         }
+       }).catch(err => {
+         console.error('获取应用配置失败:', err);
+       });
+     }
+-  }, [isOpen, saveLocation]);
++  }, [isOpen]); // 移除 saveLocation 依赖，确保每次打开都重新获取
+ 
+   const handleFileSelect = async () => {
+     try {

@@ -1,0 +1,101 @@
+import { body, param, query } from 'express-validator';
+import { BUG_SEVERITIES, BUG_STATUSES } from '../models/bug';
+
+/**
+ * Validation rules for creating a bug
+ */
+export const validateCreateBug = [
+  param('projectId')
+    .isInt({ min: 1 })
+    .withMessage('Project ID must be a positive integer'),
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Bug title must be between 1 and 255 characters'),
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 5000 })
+    .withMessage('Bug description must be between 1 and 5000 characters'),
+  body('severity')
+    .isIn(BUG_SEVERITIES)
+    .withMessage(`Severity must be one of: ${BUG_SEVERITIES.join(', ')}`),
+  body('status')
+    .isIn(BUG_STATUSES)
+    .withMessage(`Status must be one of: ${BUG_STATUSES.join(', ')}`),
+];
+
+/**
+ * Validation rules for updating a bug
+ */
+export const validateUpdateBug = [
+  param('projectId')
+    .isInt({ min: 1 })
+    .withMessage('Project ID must be a positive integer'),
+  param('bugId')
+    .isInt({ min: 1 })
+    .withMessage('Bug ID must be a positive integer'),
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Bug title must be between 1 and 255 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 5000 })
+    .withMessage('Bug description must be between 1 and 5000 characters'),
+  body('severity')
+    .optional()
+    .isIn(BUG_SEVERITIES)
+    .withMessage(`Severity must be one of: ${BUG_SEVERITIES.join(', ')}`),
+  body('status')
+    .optional()
+    .isIn(BUG_STATUSES)
+    .withMessage(`Status must be one of: ${BUG_STATUSES.join(', ')}`),
+];
+
+/**
+ * Validation rules for bug ID parameters
+ */
+export const validateBugParams = [
+  param('projectId')
+    .isInt({ min: 1 })
+    .withMessage('Project ID must be a positive integer'),
+  param('bugId')
+    .isInt({ min: 1 })
+    .withMessage('Bug ID must be a positive integer'),
+];
+
+/**
+ * Validation rules for project ID parameter
+ */
+export const validateProjectParam = [
+  param('projectId')
+    .isInt({ min: 1 })
+    .withMessage('Project ID must be a positive integer'),
+];
+
+/**
+ * Validation rules for bug filtering and sorting
+ */
+export const validateBugFilters = [
+  param('projectId')
+    .isInt({ min: 1 })
+    .withMessage('Project ID must be a positive integer'),
+  query('severity')
+    .optional()
+    .isIn(BUG_SEVERITIES)
+    .withMessage(`Severity must be one of: ${BUG_SEVERITIES.join(', ')}`),
+  query('status')
+    .optional()
+    .isIn(BUG_STATUSES)
+    .withMessage(`Status must be one of: ${BUG_STATUSES.join(', ')}`),
+  query('sortBy')
+    .optional()
+    .isIn(['title', 'severity', 'status', 'created_at'])
+    .withMessage('sortBy must be one of: title, severity, status, created_at'),
+  query('sortOrder')
+    .optional()
+    .isIn(['ASC', 'DESC'])
+    .withMessage('sortOrder must be either ASC or DESC'),
+];

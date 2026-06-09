@@ -1,0 +1,43 @@
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index ecd6a5f..a47a76b 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -93,6 +93,38 @@ Direct `getIt` calls are **only** acceptable in these specific locations:
+ 
+ All other code locations should use `@injectable`, `@lazySingleton`, or `@singleton` annotations for dependency management.
+ 
++### RouteProvider Dependency Injection Pattern
++
++RouteProviders follow a specific registration pattern to enable modular route collection:
++
++#### ✅ Correct Pattern
++```dart
++@Named("HomeRouteProvider")
++@Injectable(as: RouteProvider)
++class HomeRouteProvider implements RouteProvider {
++  final HomeViewModelFactory _factory;
++  HomeRouteProvider(this._factory);
++  
++  @override
++  RouteBase getRoute() => GoRoute(/* route config */);
++}
++```
++
++#### ❌ Incorrect Pattern
++```dart
++// Don't register concrete types
++@injectable
++class HomeRouteProvider implements RouteProvider { /* ... */ }
++```
++
++**Key Requirements:**
++- Use `@Named("ClassName")` for unique identification
++- Use `@Injectable(as: RouteProvider)` to register as interface type
++- **Do NOT** register concrete RouteProvider types with `@injectable`
++- Only register as the `RouteProvider` interface to enable `getAll<RouteProvider>()` collection
++
++This pattern enables `RouteCollectionService` to collect all routes via `GetIt.instance.getAll<RouteProvider>()` while maintaining modular architecture.
++
+ ## Build System & Code Generation
+ 
+ ### GraphQL Code Generation

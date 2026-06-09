@@ -1,0 +1,418 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+│ ├── types/ # Web-specific types
+│ │ └── cssmodule.d.ts # CSS module type definitions
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and source code files (specifically the file path 'types/cssmodule.d.ts').
+- Suggested Logic: Verify that the directory 'types/' exists and contains the file 'cssmodule.d.ts'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: feat: add comprehensive steering documents for server and web UI engineering
+- Changed Files List: 
+.kiro/steering/server-extension-mcp.md	+127	-0	after_lines=127
+.kiro/steering/web-ui-preact.md	+169	-0	after_lines=169
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── server-extension-mcp.md
+│       ├── structure.md
+│       ├── tech.md
+│       └── web-ui-preact.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── message-bus.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcp-stdio.server.ts
+│   │   └── mcp.provider.ts
+│   ├── services
+│   │   ├── http-bridge.service.ts
+│   │   └── message-bus.service.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── message-bus.service.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/server-extension-mcp.md ---
+diff --git a/.kiro/steering/server-extension-mcp.md b/.kiro/steering/server-extension-mcp.md
+new file mode 100644
+index 0000000..263dae0
+--- /dev/null
++++ b/.kiro/steering/server-extension-mcp.md
+@@ -0,0 +1,127 @@
++---
++inclusion: fileMatch
++fileMatchPattern: "src/**/*"
++---
++
++# Server Engineering (VS Code Extension + MCP Stdio)
++
++Act as a senior backend engineer for a VS Code extension with MCP stdio integration. Prioritize robustness, clarity, and type safety. Follow VS Code extension best practices, keep the webview bridge secure, and ensure MCP server discovery is reliable in both proposed-API and fallback modes.
++
++This steering applies only to files under `src/`.
++
++## Responsibilities and goals
++
++- Manage extension lifecycle: activation, disposal, and subscriptions.
++- Provide webview views/panels with correct CSP, asset loading, and message wiring.
++- Maintain a central message bus with typed events to coordinate extension↔webview traffic.
++- Expose an MCP stdio server and register it via language model APIs when available, otherwise write fallback Kiro config.
++- Offer a lightweight HTTP bridge for external processes (e.g., MCP tools) to forward typed events into the extension.
++
++## Key modules
++
++- Activation and wiring: #[[file:src/extension.ts]]
++- Shared typed events and commands: #[[file:src/shared/events.ts]], #[[file:src/shared/commands.ts]]
++- Message bus (extension side): #[[file:src/services/message-bus.service.ts]]
++- HTTP bridge: #[[file:src/services/http-bridge.service.ts]]
++- Webview registration helper: #[[file:src/shared/utils/event-bus-register.utils.ts]]
++- Asset manifest helper: #[[file:src/ui-providers/asset-manifest.ts]]
++- UI providers (Sidebar, Health Dashboard): #[[file:src/ui-providers/sidebar/sidebar.provider.ts]], #[[file:src/ui-providers/health-dashboard/health-dashboard.panel.ts]]
++- MCP provider and server: #[[file:src/mcp/mcp.provider.ts]], #[[file:src/mcp/mcp-stdio.server.ts]]
++
++## Eventing and message bus
++
++- Use `Events` and `EventPayloads` from `src/shared/events.ts` as the single source of truth; avoid hard-coded strings.
++- All inbound webview messages flow through `messageBus.receive(id, event)`; all outbound go through `messageBus.broadcast(event)` or `messageBus.sendTo(id, event)`.
++- Sticky events: Keep `DashboardOpened` sticky so newly registered webviews can catch state; clear on `DashboardClosed`.
++- Always dispose listeners when a webview or provider is disposed.
++
++Recommended patterns:
++
++```ts
++// Register a webview with the bus
++const reg = registerWebviewWithBus("sidebar", webview);
++webviewView.onDidDispose(() => reg.dispose());
++
++// Broadcast from extension on command
++await messageBus.broadcast({
++  type: Events.DashboardOpened,
++  payload: { via: "commandPalette" },
++});
++
++// Handle UI -> extension
++context.subscriptions.push(
++  messageBus.on(Events.UiEmitToast, async (e) => {
++    await vscode.window.showInformationMessage(e.payload?.text ?? "Hello");
++  })
++);
++```
++
++## Webviews: security and loading
++
++- CSP: Generate a strict CSP with per-request nonce. Only allow `${webview.cspSource}` for style/script.
++- HTML: Always inject a `nonce` on `<script>` and use `type="module"`.
++- Assets: Resolve entry `js`/`css` via `getEntryUris` (Vite manifest first, deterministic fallback second).
++- Resource roots: Restrict `localResourceRoots` to extension `media` and `out` directories.
++- Lifecycle: When dashboard is closed, broadcast `DashboardClosed`.
++
++References:
++
++- #[[file:src/ui-providers/health-dashboard/health-dashboard.panel.ts]]
++- #[[file:src/ui-providers/sidebar/sidebar.provider.ts]]
++- #[[file:src/ui-providers/asset-manifest.ts]]
++
++## MCP provider and fallback strategy
++
++- Try to register an MCP stdio server through `vscode.lm.registerMcpServerDefinitionProvider` if available.
++- Support both `vscode.McpStdioServerDefinition` and `vscode.lm.McpStdioServerDefinition` constructor placements.
++- Resolve `node` path robustly: prefer `process.execPath` if it includes node, fall back to common locations, or `KIRO_MCP_NODE` env.
++- Resolve the server script from `out/mcp/mcpStdioServer.cjs` with fallbacks.
++- If registration APIs are unavailable, write `.kiro/settings/mcp.json` in the workspace as a fallback for Kiro IDE discovery.
++
++References:
++
++- #[[file:src/mcp/mcp.provider.ts]]
++
++## MCP stdio server patterns
++
++- Implement tools using `@modelcontextprotocol/sdk/server/mcp` and transport via `@modelcontextprotocol/sdk/server/stdio`.
++- When emitting events to the extension, use the HTTP bridge with `POST /events` and `{ type, payload }`.
++- Provide retries when the bridge is not yet started.
++- Implement graceful shutdown (`SIGINT`, `SIGTERM`) and error logging.
++
++References:
++
++- #[[file:src/mcp/mcp-stdio.server.ts]]
++
++## HTTP bridge contract
++
++- Endpoint: `POST /events`
++- Body: `{ type: string, payload?: unknown }`
++- Validates JSON and event type; routes through `messageBus.receive('http-bridge', event)`.
++- Defaults host/port via env: `KIRO_MCP_BRIDGE_HOST` (default `127.0.0.1`), `KIRO_MCP_BRIDGE_PORT` (default `39237`).
++- Handles payload size limit (~1MB) and EADDRINUSE gracefully.
++
++References:
++
++- #[[file:src/services/http-bridge.service.ts]]
++
++## Commands and events
++
++- Commands are defined in `src/shared/commands.ts` and contributed in `package.json`.
++- Events must be declared in `src/shared/events.ts` and used across both extension and web code. Update payload types when adding events.
++
++## Coding standards
++
++- TypeScript strict mode; avoid `any`.
++- Prefer `readonly` and immutable patterns where practical.
++- Dispose everything you register (commands, providers, event handlers, servers).
++- Use `console.log/warn/error` with clear prefixes (e.g., `[HTTP Bridge]`, `[Kiro MCP]`).
++- No Node APIs in webview bundles; ensure server-only code remains under `src/`.
++
++## Do / Don't
++
++- Do: gate proposed VS Code APIs, provide fallbacks, and log context-rich messages.
++- Do: centralize event names, use typed payloads, and broadcast lifecycle events.
++- Do: set strict CSP and limit resource roots for webviews.
++- Don’t: hard-code paths to `node` or MCP script without fallbacks.
++- Don’t: trust unvalidated inbound HTTP payloads; ensure type checks and limits.
+
+--- FILE: .kiro/steering/web-ui-preact.md ---
+diff --git a/.kiro/steering/web-ui-preact.md b/.kiro/steering/web-ui-preact.md
+new file mode 100644
+index 0000000..e6d662e
+--- /dev/null
++++ b/.kiro/steering/web-ui-preact.md
+@@ -0,0 +1,169 @@
++---
++inclusion: fileMatch
++fileMatchPattern: "web/**/*"
++---
++
++# Web UI Engineering (Preact + Vite + VS Code Webview)
++
++Act as a senior frontend engineer specialized in Preact + TypeScript for VS Code webviews. Follow Atomic Design, use CSS Modules for styling, and work within the constraints of a VS Code webview and our Vite build.
++
++This steering applies only to files under `web/`.
++
++## Tech + environment
++
++- Framework: Preact 10 + TypeScript
++- Build: Vite with `@preact/preset-vite`, multi-entry build targeting VS Code webviews
++- JSX runtime: automatic (`jsx: "react-jsx"`, `jsxImportSource: "preact"`)
++- Webview constraints: No Node APIs; communicate with the extension via `postMessage` using our message bus.
++
++References:
++
++- #[[file:web/vite.config.ts]]
++- #[[file:web/tsconfig.json]]
++- #[[file:web/src/vscode.ts]]
++- #[[file:web/src/services/message-bus.service.ts]]
++
++## Project structure and roles
++
++- `web/src/views/*`: View shells (one per webview). Keep them thin and composed of components.
++  - Examples: #[[file:web/src/views/Sidebar/Sidebar.tsx]], #[[file:web/src/views/HealthDashboard/HealthDashboard.tsx]]
++- `web/src/components/`: Reusable components organized by Atomic Design
++  - `atoms/`: primitive UI, no domain logic
++  - `molecules/`: small compositions (example: #[[file:web/src/components/molecules/Button.tsx]])
++  - `organisms/`: larger compositions
++- `web/src/services/`: Browser-only helpers; e.g., message bus for the VS Code bridge
++- Entrypoints: `web/src/main-sidebar.tsx`, `web/src/main-dashboard.tsx` mount views via `preact/render`
++
++## Component conventions (Atomic Design)
++
++- One component per file. Name files and components with PascalCase.
++- Prefer named exports (`export function Foo() {}`), not default exports.
++- Atoms: stateless and style-focused; no direct message bus calls.
++- Molecules/Organisms: may use hooks and message bus; keep effects localized and cleaned up.
++- Views: assemble components and wire events; avoid duplicating reusable UI.
++
++## TypeScript + Preact patterns
++
++- Import hooks from `preact/hooks`.
++- Use the automatic JSX runtime; only import `h` for types: `import type { h, ComponentChildren } from 'preact'` when needed.
++- Props typing: define an explicit `Props` interface; avoid `any`.
++- Children type: prefer `ComponentChildren`.
++- Event types: use `h.JSX.TargetedEvent` and specific element types when useful.
++
++Example (molecule):
++
++```tsx
++import { useEffect, useState } from "preact/hooks";
++import type { ComponentChildren, h } from "preact";
++import styles from "./Example.module.css";
++
++interface Props extends h.JSX.HTMLAttributes<HTMLDivElement> {
++  children?: ComponentChildren;
++}
++
++export function Example({ children, className, ...rest }: Props) {
++  return (
++    <div
++      className={[styles.root, className].filter(Boolean).join(" ")}
++      {...rest}
++    >
++      {children}
++    </div>
++  );
++}
++```
++
++## CSS Modules guidelines
++
++- Co-locate a single `ComponentName.module.css` per component.
++- Import as `import styles from './ComponentName.module.css'` and bind via `className={styles.someClass}`.
++- Avoid dynamic class keys (e.g., `styles['x-' + variant]`). Prefer a small map or conditional join.
++- Keep selectors flat and local; avoid global tags and deep nesting.
++- Variables and theme: prefer CSS variables at the component or :root level; do not rely on global CSS unless explicitly referenced.
++
++Example:
++
++```css
++/* ComponentName.module.css */
++.root {
++  display: grid;
++  gap: 8px;
++}
++.primary {
++  background: var(--vscode-button-background);
++  color: var(--vscode-foreground);
++}
++```
++
++```tsx
++const cls = [styles.root, isPrimary && styles.primary]
++  .filter(Boolean)
++  .join(" ");
++```
++
++## Messaging and VS Code bridge
++
++Use the shared message bus inside webviews; do not call `acquireVsCodeApi` directly in components.
++
++- Subscribe inside `useEffect` and always unsubscribe on cleanup.
++- Keep event payloads typed using `EventPayloads` from shared events.
++- Emit via `messageBus.emit(events.SomeEvent, payload)`.
++
++References:
++
++- #[[file:web/src/services/message-bus.service.ts]]
++- #[[file:src/shared/events.ts]]
++
++Example subscription pattern:
++
++```tsx
++import { useEffect } from "preact/hooks";
++import { messageBus, events } from "../../services/message-bus.service";
++
++useEffect(() => {
++  const off = messageBus.on(events.DashboardOpened, (e) => {
++    // handle event safely
++  });
++  return () => off();
++}, []);
++```
++
++## Views: mounting and entries
++
++- Mount views using `render(<View />, root)` in `main-*.tsx` entry files.
++- Ensure a static `#root` container exists in the HTML provided by the extension.
++- Keep view state minimal; push reusable UI down into components.
++
++References:
++
++- #[[file:web/src/main-sidebar.tsx]]
++- #[[file:web/src/main-dashboard.tsx]]
++
++## Accessibility and UX
++
++- Buttons and interactive elements must be reachable via keyboard; ensure `role`, `aria-*` as needed.
++- Provide visible focus states in CSS Modules.
++- Use semantic elements (`button`, `nav`, `section`, `h*`) over divs.
++
++## Import + path rules
++
++- Use relative imports within `web/`. No custom TS path aliases are defined.
++- Do not import Node-only modules or extension-side code into web.
++- You may import shared types/constants from `src/shared/*` when they are pure and compatible with browser bundles.
++
++## Performance tips
++
++- Keep components pure; avoid re-renders by lifting state appropriately.
++- Prefer simple conditionals and class joins over heavy utility libraries.
++- Avoid large dependencies; Preact already provides the essentials.
++
++## Testing and examples
++
++- Follow the Button molecule as a baseline for simple components: #[[file:web/src/components/molecules/Button.tsx]]
++- When adding new molecules/organisms, create a matching `.module.css` and colocate it with the component.
++
++## Do / Don't
++
++- Do: named exports, typed props, CSS Modules, cleanup of effects, atomic structure.
++- Do: use `messageBus` to communicate with the extension.
++- Don't: default exports, global CSS for component styling, untyped payloads, direct `acquireVsCodeApi()` in component code.
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  agentic-frontend-dev:
+    image: agentic/frontend:latest
+    container_name: agentic-frontend-dev
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_DOMAIN=dev.consulting.sa
+      - NEXT_PUBLIC_API_URL=https://dev.consulting.sa/api
+    networks:
+      - agentic-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1g
+        reservations:
+          cpus: '0.5'
+          memory: 512m
+
+  agentic-backend-dev:
+    image: agentic/backend:latest
+    container_name: agentic-backend-dev
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    networks:
+      - agentic-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1g
+        reservations:
+          cpus: '0.5'
+          memory: 512m
+
+  agentic-redis-dev:
+    image: redis:7-alpine
+    container_name: agentic-redis-dev
+    ports:
+      - "6380:6379"
+    networks:
+      - agentic-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256m
+        reservations:
+          cpus: '0.1'
+          memory: 128m
+
+  agentic-n8n-dev:
+    image: n8nio/n8n:latest
+    container_name: agentic-n8n-dev
+    ports:
+      - "5679:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+    networks:
+      - agentic-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1g
+        reservations:
+          cpus: '0.5'
+          memory: 512m
+
+networks:
+  agentic-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  agentic-dev-data:
+    driver: local

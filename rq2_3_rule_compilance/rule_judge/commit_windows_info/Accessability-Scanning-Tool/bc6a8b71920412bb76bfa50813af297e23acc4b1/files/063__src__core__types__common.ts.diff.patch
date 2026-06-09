@@ -1,0 +1,374 @@
+diff --git a/src/core/types/common.ts b/src/core/types/common.ts
+index 066a091..32906a5 100644
+--- a/src/core/types/common.ts
++++ b/src/core/types/common.ts
+@@ -4,7 +4,7 @@ export interface PageInfo {
+   depth: number;
+   foundOn: string;
+   status: number;
+-  loadTime?: number;
++  loadTime: number; // Make loadTime required
+ }
+ 
+ export interface AnalysisResult {
+@@ -24,8 +24,22 @@ export interface ProcessedViolation {
+   wcagTags: string[];
+   wcagLevel: 'A' | 'AA' | 'AAA' | 'Unknown';
+   occurrences: number;
+-  tools: string[];
+-  elements: ViolationElement[];
++  browsers?: string[]; // List of browsers where this violation was found
++  tools: string[]; // List of tools that found this violation (axe, pa11y)
++  elements: Array<{
++    html: string;
++    target: ViolationTarget;
++    failureSummary: string;
++    screenshot?: string; // Base64 encoded screenshot
++    selector: string; // CSS selector for the element
++    xpath?: string; // XPath for the element
++    boundingRect?: { x: number; y: number; width: number; height: number };
++    relatedNodes?: Array<{
++      html: string;
++      target: ViolationTarget;
++    }>;
++  }>;
++  scenarioRelevance: string[];
+   remediation: {
+     priority: 'High' | 'Medium' | 'Low';
+     effort: 'Low' | 'Medium' | 'High';
+@@ -34,9 +48,88 @@ export interface ProcessedViolation {
+   };
+ }
+ 
++export interface AccessibilityReport {
++  url: string;
++  timestamp: string;
++  testSuite: string;
++  browser?: string;
++  viewport?: string;
++  summary: {
++    totalViolations: number;
++    criticalViolations: number;
++    seriousViolations: number;
++    moderateViolations: number;
++    minorViolations: number;
++    wcagAAViolations: number;
++    wcagAAAViolations: number;
++  };
++  violations: ProcessedViolation[];
++  pageAnalysis: {
++    title: string;
++    headingStructure: Array<{ level: number; text: string; tagName: string }>;
++    landmarks: { main: boolean; nav: boolean; footer: boolean };
++    skipLink: { exists: boolean; isVisible: boolean; targetExists: boolean };
++    images: Array<{ src: string; alt: string; hasAlt: boolean; ariaLabel?: string }>;
++    links: Array<{ text: string; href: string; hasAriaLabel: boolean; ariaLabel?: string }>;
++    forms: Array<{
++      hasLabel: boolean;
++      labelText: string;
++      inputType: string;
++      isRequired: boolean;
++      hasAriaLabel: boolean;
++    }>;
++    keyboardNavigation: Array<{ element: string; canFocus: boolean; hasVisibleFocus: boolean }>;
++    responsive?: { mobile: boolean; tablet: boolean; desktop: boolean };
++  };
++}
++
++export interface SiteWideAccessibilityReport {
++  siteUrl: string;
++  timestamp: string;
++  testSuite: string;
++  summary: {
++    totalPages: number;
++    pagesWithViolations: number;
++    totalViolations: number;
++    criticalViolations: number;
++    seriousViolations: number;
++    moderateViolations: number;
++    minorViolations: number;
++    compliancePercentage: number;
++    mostCommonViolations: Array<{
++      id: string;
++      affectedPages: number;
++      totalOccurrences: number;
++      impact: string;
++      description: string;
++    }>;
++  };
++  pageReports: AccessibilityReport[];
++  violationsByType: Record<
++    string,
++    {
++      count: number;
++      pages: string[];
++      impact: string;
++      description: string;
++      totalOccurrences: number;
++      browsers: string[]; // List of browsers where this violation was found
++      tools: string[]; // List of tools that detected this violation
++    }
++  >;
++}
++
++// Type for accessibility tool target selectors
++export interface ViolationTarget {
++  selector?: string;
++  xpath?: string;
++  element?: Element;
++  [key: string]: unknown;
++}
++
+ export interface ViolationElement {
+   html: string;
+-  target: any;
++  target: ViolationTarget;
+   failureSummary: string;
+   screenshot?: string;
+   selector: string;
+@@ -52,10 +145,10 @@ export interface AnalysisSummary {
+   minorViolations: number;
+ }
+ 
+-export interface ToolResult {
++export interface ToolResult<T = unknown> {
+   tool: string;
+   success: boolean;
+-  data?: any;
++  data?: T;
+   error?: string;
+   duration: number;
+ }
+@@ -76,39 +169,34 @@ export interface BatchResult {
+   };
+ }
+ 
+-export interface ServiceResult<T> {
++export interface ServiceResult<T = unknown> {
+   success: boolean;
+   data?: T;
+   error?: Error;
+   message?: string;
+-  metadata?: any;
++  metadata?: Record<string, unknown>;
++}
++
++export interface SuccessResult<T> extends ServiceResult<T> {
++  success: true;
++  data: T;
++  timestamp?: string;
++}
++
++export interface ErrorResult extends ServiceResult<never> {
++  success: false;
++  error: Error;
++  context?: string;
+ }
+ 
+ export interface Task {
+   id: string;
+   type: 'crawl' | 'analyze' | 'report';
+   url: string;
+-  options: any;
++  options: AccessibilityTestOptions;
+   priority: number;
+ }
+ 
+-export interface CachedResult {
+-  result: AnalysisResult;
+-  timestamp: number;
+-  ttl: number;
+-}
+-
+-export interface Metric {
+-  timestamp: number;
+-  value: number;
+-  unit: string;
+-}
+-
+-export interface Timer {
+-  start(): void;
+-  end(): number;
+-}
+-
+ // Phase 2: Queue-based Processing Types
+ export interface AnalysisTask {
+   id: string;
+@@ -123,10 +211,10 @@ export interface AnalysisTask {
+   completedAt?: Date;
+ }
+ 
+-export interface TaskResult {
++export interface TaskResult<T = ServiceResult> {
+   taskId: string;
+   success: boolean;
+-  result?: ServiceResult<any>;
++  result?: T;
+   error?: Error;
+   duration: number;
+   memoryUsage: number;
+@@ -136,7 +224,7 @@ export interface TaskResult {
+ export interface Worker {
+   id: string;
+   isAvailable: boolean;
+-  currentTask?: AnalysisTask;
++  currentTask: AnalysisTask | null;
+   processedTasks: number;
+   totalProcessingTime: number;
+   lastActivity: Date;
+@@ -159,8 +247,8 @@ export interface TaskQueue {
+ }
+ 
+ // Phase 2: Caching Types
+-export interface CachedResult {
+-  result: any;
++export interface CachedResult<T = AnalysisResult> {
++  result: T;
+   timestamp: number;
+   ttl: number;
+   url: string;
+@@ -176,54 +264,6 @@ export interface CacheMetadata {
+   domain: string;
+ }
+ 
+-export interface CacheConfig {
+-  maxSize: number;
+-  defaultTTL: number;
+-  cleanupInterval: number;
+-  compressionEnabled: boolean;
+-}
+-
+-// Phase 2: Enhanced Monitoring Types
+-export interface Metric {
+-  timestamp: number;
+-  value: number;
+-  unit: string;
+-  context: string;
+-  tags: Record<string, string>;
+-}
+-
+-export interface PerformanceReport {
+-  memoryUsage: MemoryTrend;
+-  processingTimes: ProcessingTimeMetrics;
+-  throughput: ThroughputMetrics;
+-  cachePerformance: CachePerformance;
+-  workerUtilization: WorkerUtilizationMetrics;
+-  systemHealth: SystemHealthMetrics;
+-}
+-
+-export interface MemoryTrend {
+-  current: number;
+-  peak: number;
+-  average: number;
+-  trend: 'increasing' | 'decreasing' | 'stable';
+-  history: Array<{ timestamp: number; value: number }>;
+-}
+-
+-export interface ProcessingTimeMetrics {
+-  averageTime: number;
+-  medianTime: number;
+-  p95Time: number;
+-  p99Time: number;
+-  totalTime: number;
+-}
+-
+-export interface ThroughputMetrics {
+-  pagesPerSecond: number;
+-  pagesPerMinute: number;
+-  tasksPerSecond: number;
+-  peakThroughput: number;
+-}
+-
+ export interface CachePerformance {
+   hitRate: number;
+   missRate: number;
+@@ -232,22 +272,14 @@ export interface CachePerformance {
+   entryCount: number;
+ }
+ 
+-export interface WorkerUtilizationMetrics {
+-  activeWorkers: number;
+-  totalWorkers: number;
+-  utilizationRate: number;
+-  averageTaskTime: number;
+-  queueLength: number;
++export interface CacheConfig {
++  maxSize: number;
++  defaultTTL: number;
++  cleanupInterval: number;
++  compressionEnabled: boolean;
+ }
+ 
+-export interface SystemHealthMetrics {
+-  cpuUsage: number;
+-  memoryUsage: number;
+-  diskUsage: number;
+-  networkLatency: number;
+-  uptime: number;
+-  errorRate: number;
+-}
++
+ 
+ // Phase 2: API Service Layer Types
+ export interface TestRequest {
+@@ -256,14 +288,14 @@ export interface TestRequest {
+   options: AccessibilityTestOptions;
+   priority: 'low' | 'medium' | 'high';
+   callback?: string;
+-  metadata?: Record<string, any>;
++  metadata?: Record<string, unknown>;
+ }
+ 
+-export interface TestResponse {
++export interface TestResponse<T = ServiceResult> {
+   requestId: string;
+   status: 'pending' | 'processing' | 'completed' | 'failed';
+   progress: number;
+-  results?: ServiceResult<any>;
++  results?: T;
+   error?: string;
+   metrics: ProcessingMetrics;
+   estimatedCompletion?: Date;
+@@ -294,17 +326,32 @@ export interface DatabaseConfig {
+   };
+ }
+ 
+-export interface StoredResult {
++export interface StoredResult<T = AnalysisResult> {
+   id: string;
+   url: string;
+   testType: string;
+-  results: any;
+-  metadata: Record<string, any>;
++  results: T;
++  metadata: Record<string, unknown>;
+   createdAt: Date;
+   updatedAt: Date;
+   expiresAt?: Date;
+ }
+ 
++export interface CrawlOptions {
++  maxPages?: number;
++  maxDepth?: number;
++  allowedDomains?: string[];
++  excludePatterns?: RegExp[];
++  includePatterns?: RegExp[];
++  delayBetweenRequests?: number;
++  respectRobotsTxt?: boolean;
++  maxRetries?: number;
++  retryDelay?: number;
++  timeoutMs?: number;
++  timeout?: number;
++  userAgent?: string;
++}
++
+ export interface AccessibilityTestOptions {
+   generateReports?: boolean;
+   outputPath?: string;
+@@ -313,5 +360,5 @@ export interface AccessibilityTestOptions {
+   includeBrandColors?: boolean;
+   timeout?: number;
+   retries?: number;
+-  [key: string]: any;
++  [key: string]: unknown;
+ }

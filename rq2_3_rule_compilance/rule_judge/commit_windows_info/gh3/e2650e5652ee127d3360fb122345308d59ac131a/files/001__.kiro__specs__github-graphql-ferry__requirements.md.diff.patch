@@ -1,0 +1,81 @@
+diff --git a/.kiro/specs/github-graphql-ferry/requirements.md b/.kiro/specs/github-graphql-ferry/requirements.md
+index 3482488..127797b 100644
+--- a/.kiro/specs/github-graphql-ferry/requirements.md
++++ b/.kiro/specs/github-graphql-ferry/requirements.md
+@@ -18,17 +18,6 @@ This document captures the requirements for integrating Ferry and ferry_builder
+ 4. WHEN GraphQL responses are received THEN Ferry SHALL provide strongly-typed data models
+ 5. WHEN network errors occur THEN Ferry SHALL handle them gracefully with proper error types
+ 
+-### Requirement 2
+-
+-**User Story:** As a developer, I want Ferry to cache GraphQL responses, so that the app performs better and reduces unnecessary API calls.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN GraphQL queries are executed THEN Ferry SHALL cache responses in memory
+-2. WHEN the same query is requested again THEN Ferry SHALL return cached data if available
+-3. WHEN cached data becomes stale THEN Ferry SHALL provide mechanisms to refresh it
+-4. WHEN mutations are executed THEN Ferry SHALL update relevant cached queries
+-5. WHEN the app restarts THEN Ferry SHALL optionally persist cache to disk
+ 
+ ### Requirement 3
+ 
+@@ -42,41 +31,18 @@ This document captures the requirements for integrating Ferry and ferry_builder
+ 4. WHEN operations reference fragments THEN ferry_builder SHALL handle dependencies correctly
+ 5. WHEN build runs THEN generated code SHALL be type-safe and include proper imports
+ 
+-### Requirement 4
+-
+-**User Story:** As a user, I want to see GitHub user profiles fetched via GraphQL, so that I can view comprehensive user information efficiently.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN viewing a user profile THEN the app SHALL fetch user data using GraphQL
+-2. WHEN user data is requested THEN the query SHALL include profile fields, repositories, and followers
+-3. WHEN user data is displayed THEN it SHALL show avatar, bio, location, repositories, and statistics
+-4. WHEN user data is loading THEN the app SHALL show appropriate loading states
+-5. WHEN user data fails to load THEN the app SHALL display meaningful error messages
+-
+-### Requirement 5
+-
+-**User Story:** As a user, I want to see GitHub repositories fetched via GraphQL, so that I can browse repository information with better performance.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN viewing repositories THEN the app SHALL fetch repository data using GraphQL
+-2. WHEN repository data is requested THEN the query SHALL include metadata, statistics, and README
+-3. WHEN repository lists are displayed THEN they SHALL support pagination through GraphQL cursors
+-4. WHEN repository details are shown THEN they SHALL include stars, forks, issues, and languages
+-5. WHEN repository README is displayed THEN it SHALL be fetched and rendered as markdown
+ 
+ ### Requirement 6
+ 
+-**User Story:** As a developer, I want Ferry to integrate with the existing architecture, so that GraphQL and REST APIs can coexist during migration.
++**User Story:** As a developer, I want Ferry to integrate with the existing architecture, so that GraphQL operations follow established patterns.
+ 
+ #### Acceptance Criteria
+ 
+-1. WHEN Ferry is integrated THEN it SHALL work alongside existing REST API services
+-2. WHEN dependency injection is used THEN Ferry client SHALL be registered with get_it
+-3. WHEN ViewModels need GraphQL data THEN they SHALL receive Ferry client through injection
+-4. WHEN GraphQL operations are used THEN they SHALL follow the same error handling patterns
+-5. WHEN authentication tokens change THEN Ferry client SHALL update its headers automatically
++1. WHEN Ferry is integrated THEN Ferry client SHALL be registered with Injectable + GetIt for services
++2. WHEN ViewModels need GraphQL data THEN they SHALL receive Ferry client through constructor injection from ViewModel factories
++3. WHEN GraphQL operations are used THEN they SHALL follow the same error handling patterns as REST APIs
++4. WHEN authentication tokens change THEN Ferry client SHALL update its headers automatically
++5. WHEN screens use GraphQL THEN they SHALL maintain the screen-based modular architecture pattern
+ 
+ ### Requirement 8
+ 
+@@ -87,8 +53,8 @@ This document captures the requirements for integrating Ferry and ferry_builder
+ 1. WHEN GraphQL errors occur THEN Ferry SHALL distinguish between network and GraphQL errors
+ 2. WHEN authentication fails THEN Ferry SHALL provide specific error types
+ 3. WHEN rate limiting occurs THEN Ferry SHALL handle GitHub's rate limit headers
+-4. WHEN partial data is returned THEN Ferry SHALL provide both data and errors
+-5. WHEN offline scenarios occur THEN Ferry SHALL provide cached data when available
++4. WHEN GraphQL responses contain errors THEN Ferry SHALL treat them as failures (no partial data handling)
++5. WHEN offline scenarios occur THEN Ferry SHALL provide appropriate error messages
+ 
+ ### Requirement 9
+ 

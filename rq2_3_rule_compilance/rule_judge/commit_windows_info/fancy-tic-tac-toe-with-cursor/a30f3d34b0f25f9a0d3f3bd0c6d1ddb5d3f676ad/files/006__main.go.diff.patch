@@ -1,0 +1,44 @@
+diff --git a/main.go b/main.go
+index 890672f..b1fc431 100644
+--- a/main.go
++++ b/main.go
+@@ -2,33 +2,20 @@
+ 
+ package main
+ 
+-import "syscall/js"
+-
+-type Game struct {
+-	Board []string
+-	text  string
+-}
+-
+-func NewGame() *Game {
+-	return &Game{
+-		Board: make([]string, 9),
+-		text:  "hello",
+-	}
+-}
+-
+-func (g *Game) Text() string {
+-	return g.text
+-}
++import (
++	"syscall/js"
++	"tictactoe/game"
++)
+ 
+ func main() {
+ 	c := make(chan struct{}, 0)
+ 
+-	game := NewGame()
++	game := game.NewGame()
+ 
+ 	// Register our game in JavaScript
+ 	js.Global().Set("tictactoeGame", js.ValueOf(map[string]interface{}{
+ 		"newGame": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+-			return game.Board
++			return game.Board()
+ 		}),
+ 		"text": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+ 			return game.Text()

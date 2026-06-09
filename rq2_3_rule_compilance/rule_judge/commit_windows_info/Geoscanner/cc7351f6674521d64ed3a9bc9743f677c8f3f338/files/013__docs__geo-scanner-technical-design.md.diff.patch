@@ -1,0 +1,315 @@
+diff --git a/docs/geo-scanner-technical-design.md b/docs/geo-scanner-technical-design.md
+index 4a10b12..2fdca02 100644
+--- a/docs/geo-scanner-technical-design.md
++++ b/docs/geo-scanner-technical-design.md
+@@ -3,6 +3,7 @@
+ Dit document beschrijft het technisch ontwerp voor de GEO Scanner applicatie, gebaseerd op de gekozen techstack. Het ontwerp focust op optimale performance, schaalbaarheid en onderhoudbaarheid voor de MVP.
+ 
+ ## Inhoudsopgave
++
+ 1. [Architectuur Overzicht](#1-architectuur-overzicht)
+ 2. [Frontend Architectuur](#2-frontend-architectuur)
+ 3. [API Layer](#3-api-layer)
+@@ -20,7 +21,7 @@ Dit document beschrijft het technisch ontwerp voor de GEO Scanner applicatie, ge
+ ┌─────────────────────────────────────────────────────────────────┐
+ │                         Client Browser                           │
+ └───────────────────────────────┬─────────────────────────────────┘
+-                                │ 
++                                │
+                                 ▼
+ ┌─────────────────────────────────────────────────────────────────┐
+ │                     Vercel Edge Network (CDN)                    │
+@@ -126,7 +127,7 @@ components/
+ 1. **Server State**: TanStack Query voor data fetching en caching
+ 2. **Form State**: React Hook Form + Zod
+ 3. **URL State**: URL parameters voor deelbare resultaten
+-4. **UI State**: React useState en useReducer 
++4. **UI State**: React useState en useReducer
+ 5. **Global State**: Context API (minimaal gebruiken)
+ 
+ ### 2.4 Performance Optimalisatie
+@@ -195,14 +196,14 @@ const ratelimit = new Ratelimit({
+ export async function middleware(request: Request) {
+   const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+   const { success, limit, reset, remaining } = await ratelimit.limit(ip);
+-  
++
+   if (!success) {
+     return NextResponse.json(
+       { error: 'Too many requests' },
+       { status: 429, headers: { 'Retry-After': reset.toString() } }
+     );
+   }
+-  
++
+   return NextResponse.next();
+ }
+ 
+@@ -223,10 +224,10 @@ export async function runScan(url: string, scanId: string) {
+   try {
+     // 1. Crawl de URL
+     const html = await crawlUrl(url);
+-    
++
+     // 2. Parse de basis informatie
+     const baseInfo = extractBaseInfo(html, url);
+-    
++
+     // 3. Start parallel analyses
+     const moduleResults = await Promise.allSettled([
+       analyzeModule1(html, url), // Crawl-toegang
+@@ -238,16 +239,16 @@ export async function runScan(url: string, scanId: string) {
+       analyzeModule7(html, url), // Multimodale leesbaarheid
+       analyzeModule8(html, url), // Monitoring-haakjes
+     ]);
+-    
++
+     // 4. Combineer resultaten
+     const results = combineResults(moduleResults, baseInfo);
+-    
++
+     // 5. Genereer rapport
+     const reportUrl = await generateReport(results, scanId);
+-    
++
+     // 6. Update scan status
+     await updateScanStatus(scanId, 'completed', results, reportUrl);
+-    
++
+     return results;
+   } catch (error) {
+     await updateScanStatus(scanId, 'failed', null, null, error);
+@@ -266,23 +267,23 @@ export async function crawlUrl(url: string) {
+   // 1. Fetch robots.txt en sitemap.xml
+   const robotsTxt = await fetchRobotsTxt(url);
+   const sitemap = await fetchSitemap(url);
+-  
++
+   // 2. Controleer of bots toegang hebben
+   if (!canBotAccess(robotsTxt, url)) {
+     throw new Error('URL blocks bots');
+   }
+-  
++
+   // 3. Fetch initial HTML
+   let html = await fetchHtml(url);
+-  
++
+   // 4. Check of JavaScript rendering nodig is
+   const needsJS = checkIfNeedsJavaScript(html);
+-  
++
+   if (needsJS) {
+     // Gebruik Puppeteer via Vercel Browserless
+     html = await fetchWithPuppeteer(url);
+   }
+-  
++
+   return {
+     html,
+     robotsTxt,
+@@ -301,22 +302,22 @@ Elke analysemodule is geïmplementeerd als een aparte functie met een consistent
+ export async function analyzeModule1(html: string, url: string) {
+   // 1. Parse robots.txt
+   const robotsRules = parseRobotsRules(html);
+-  
++
+   // 2. Check bot toegang
+   const botAccess = checkBotAccess(robotsRules);
+-  
++
+   // 3. Valideer sitemap
+   const sitemapValid = validateSitemap(html);
+-  
++
+   // 4. Check HTTP status
+   const httpStatus = await checkHttpStatus(url);
+-  
++
+   // 5. Bereken score (0-25)
+   const score = calculateModule1Score(botAccess, sitemapValid, httpStatus);
+-  
++
+   // 6. Genereer fix suggesties
+   const fixes = generateModule1Fixes(botAccess, sitemapValid, httpStatus);
+-  
++
+   return {
+     name: 'Crawl-toegang',
+     score,
+@@ -352,24 +353,24 @@ export const scanQueue = new Queue({
+ // Enqueue a scan job
+ export async function enqueueScan(url: string, userId: string) {
+   const scanId = generateScanId();
+-  
++
+   await scanQueue.enqueue({
+     url,
+     scanId,
+     userId,
+     createdAt: new Date().toISOString(),
+   });
+-  
++
+   // Create initial scan record in database
+   await createScanRecord(scanId, url, userId);
+-  
++
+   return scanId;
+ }
+ 
+ // Process scan jobs
+ export async function processScanJob(job) {
+   const { url, scanId, userId } = job;
+-  
++
+   try {
+     await updateScanStatus(scanId, 'processing');
+     const results = await runScan(url, scanId);
+@@ -390,7 +391,7 @@ export async function processScanJob(job) {
+ import { pgTable, serial, text, timestamp, integer, json } from 'drizzle-orm/pg-core';
+ 
+ export const users = pgTable('users', {
+-  id: text('id').primaryKey(),         // Clerk user ID
++  id: text('id').primaryKey(), // Clerk user ID
+   email: text('email').notNull(),
+   createdAt: timestamp('created_at').defaultNow(),
+   planId: text('plan_id').default('free'),
+@@ -445,12 +446,12 @@ export async function cachedFetch<T>(
+   ttl: number = 3600 // 1 hour default
+ ): Promise<T> {
+   const cached = await redis.get<T>(key);
+-  
++
+   if (cached) return cached;
+-  
++
+   const fresh = await fetchFn();
+   await redis.set(key, fresh, { ex: ttl });
+-  
++
+   return fresh;
+ }
+ ```
+@@ -467,7 +468,7 @@ export async function storeHtmlSnapshot(scanId: string, html: string) {
+   const blob = await put(`html-snapshots/${scanId}.html`, html, {
+     contentType: 'text/html',
+   });
+-  
++
+   return blob.url;
+ }
+ 
+@@ -475,7 +476,7 @@ export async function storePdfReport(scanId: string, pdfBuffer: Buffer) {
+   const blob = await put(`reports/${scanId}.pdf`, pdfBuffer, {
+     contentType: 'application/pdf',
+   });
+-  
++
+   return blob.url;
+ }
+ ```
+@@ -509,10 +510,10 @@ export default async function handler(req) {
+ export function optimizeMemoryUsage(data) {
+   // Alleen essentiële data bijhouden
+   const { html, ...rest } = data;
+-  
++
+   // HTML alleen in snapshot opslaan, niet in memory
+   await storeHtmlSnapshot(data.scanId, html);
+-  
++
+   return rest; // Ga verder met gereduceerde data
+ }
+ ```
+@@ -564,7 +565,9 @@ import { Suspense, lazy } from 'react';
+ import { useQuery } from '@tanstack/react-query';
+ 
+ // Basis resultaten meteen laden
+-const SimpleScore = () => { /* Lichtgewicht component */ };
++const SimpleScore = () => {
++  /* Lichtgewicht component */
++};
+ 
+ // Zware componenten lazy loaden
+ const DetailedAnalysis = lazy(() => import('./DetailedAnalysis'));
+@@ -575,19 +578,19 @@ export function ScanResult({ scanId }) {
+     queryKey: ['scan', scanId],
+     queryFn: () => getScanResults(scanId),
+   });
+-  
++
+   if (isLoading) return <LoadingSkeleton />;
+-  
++
+   return (
+     <div>
+       {/* Direct zichtbare content */}
+       <SimpleScore score={data.overallScore} />
+-      
++
+       {/* Progressief geladen content */}
+       <Suspense fallback={<ChartSkeleton />}>
+         <RadarChart data={data.moduleScores} />
+       </Suspense>
+-      
++
+       <Suspense fallback={<DetailsSkeleton />}>
+         <DetailedAnalysis data={data.details} />
+       </Suspense>
+@@ -604,7 +607,7 @@ export function ScanResult({ scanId }) {
+ // vercel.json
+ {
+   "framework": "nextjs",
+-  "regions": ["arn1"],  // Amsterdam region voor GDPR compliance
++  "regions": ["arn1"], // Amsterdam region voor GDPR compliance
+   "functions": {
+     "api/analyze-*.js": {
+       "memory": 1024,
+@@ -646,24 +649,24 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v3
+-      
++
+       - name: Setup Node.js
+         uses: actions/setup-node@v3
+         with:
+           node-version: '20'
+-          
++
+       - name: Install dependencies
+         run: npm ci
+-        
++
+       - name: Typecheck
+         run: npm run typecheck
+-        
++
+       - name: Lint
+         run: npm run lint
+-        
++
+       - name: Test
+         run: npm test
+-        
++
+       - name: Deploy to Vercel
+         if: github.event_name == 'push'
+         uses: vercel/action@v1
+@@ -680,15 +683,12 @@ De architectuur is ontworpen met toekomstige uitbreiding in gedachten:
+ 
+ 1. **Plugin Systeem**: Extensies voor CMS-integraties
+    - Connector interfaces voor WordPress, Webflow etc.
+-   
+ 2. **Multi-tenant Support**: Voor agencies
+    - Eigen whitelabel rapporten
+    - Team management
+-   
+ 3. **Monitoring Service**: Voor continue scans
+    - Webhook notificaties
+    - Scheduled scans
+-   
+ 4. **API voor Externe Integraties**:
+    - Publieke API voor third-party tools
+    - Webhooks voor automation platforms

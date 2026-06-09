@@ -1,0 +1,41 @@
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 6032a2e..7fbedcf 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
+ import type { ConfigOptions } from "@nuxt/test-utils/playwright";
+ 
+ export default defineConfig<ConfigOptions>({
++  globalSetup: "./tests/playwright-global-setup.ts",
++  globalTeardown: "./tests/playwright-global-teardown.ts",
+   testDir: "./tests/e2e",
+   fullyParallel: true,
+   forbidOnly: !!process.env.CI,
+@@ -17,24 +19,11 @@ export default defineConfig<ConfigOptions>({
+     },
+     baseURL: "http://localhost:3000",
+     trace: "on-first-retry",
++    screenshot: "only-on-failure",
++    video: "retain-on-failure",
++    // viewport: { width: 1280, height: 720 },
+   },
+ 
+-  projects: [
+-    {
+-      name: "chromium",
+-      use: { ...devices["Desktop Chrome"] },
+-    },
+-    // Uncomment these for full cross-browser testing
+-    // {
+-    //   name: "firefox",
+-    //   use: { ...devices["Desktop Firefox"] },
+-    // },
+-    // {
+-    //   name: "webkit",
+-    //   use: { ...devices["Desktop Safari"] },
+-    // },
+-  ],
+-
+   webServer: {
+     command: "npm run dev",
+     port: 3000,

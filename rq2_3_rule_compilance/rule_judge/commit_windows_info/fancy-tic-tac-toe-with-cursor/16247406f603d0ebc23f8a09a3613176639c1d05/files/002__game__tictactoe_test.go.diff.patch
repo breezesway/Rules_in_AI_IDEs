@@ -1,0 +1,52 @@
+diff --git a/game/tictactoe_test.go b/game/tictactoe_test.go
+index 22258c9..4a65cb5 100644
+--- a/game/tictactoe_test.go
++++ b/game/tictactoe_test.go
+@@ -123,3 +123,47 @@ func TestMakeMove(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestWinner(t *testing.T) {
++	tests := []struct {
++		name       string
++		setupMoves []int
++		wantWinner string
++	}{
++		{
++			name:       "no winner on empty board",
++			setupMoves: []int{},
++			wantWinner: "",
++		},
++		{
++			name:       "X wins top row",
++			setupMoves: []int{0, 3, 1, 4, 2},
++			wantWinner: "X",
++		},
++		{
++			name:       "O wins diagonal",
++			setupMoves: []int{1, 0, 3, 4, 7, 8},
++			wantWinner: "O",
++		},
++		{
++			name:       "no winner in ongoing game",
++			setupMoves: []int{0, 1, 2, 3},
++			wantWinner: "",
++		},
++		{
++			name:       "X wins vertical",
++			setupMoves: []int{1, 0, 4, 3, 7},
++			wantWinner: "X",
++		},
++	}
++
++	for _, test := range tests {
++		t.Run(test.name, func(t *testing.T) {
++			game := NewGame()
++			for _, move := range test.setupMoves {
++				_ = game.MakeMove(move)
++			}
++			assert.Equal(t, test.wantWinner, game.Winner())
++		})
++	}
++}

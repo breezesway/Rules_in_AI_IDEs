@@ -1,0 +1,2540 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/angular-developer.mdc
+- Change Type: added
+- Target Rule Content:
+NEVER USE - NgClass and NgStyle
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically Angular HTML templates (*.html) and TypeScript files (*.ts) containing component templates.
+- Suggested Logic: Scan the source code for the presence of the Angular directives 'ngClass', '[ngClass]', 'ngStyle', or '[ngStyle]'. This can be achieved using a simple regex or a template parser to identify these specific attributes in HTML tags.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Work on phase seven (#11)
+
+* Enhance UI with refined styles, gradients, and improved visual design
+
+Co-authored-by: santosflores <santosflores@gmail.com>
+
+* Enhance responsive design and styling for desktop across components
+
+Co-authored-by: santosflores <santosflores@gmail.com>
+
+* Enhance UI/UX with animations, toast notifications, and confirmation dialog
+
+Co-authored-by: santosflores <santosflores@gmail.com>
+
+---------
+
+Co-authored-by: Cursor Agent <cursoragent@cursor.com>
+- Changed Files List: 
+src/app/app.component.css	+467	-56	after_lines=587
+src/app/app.component.html	+25	-8	after_lines=94
+src/app/app.component.ts	+11	-2	after_lines=93
+src/app/components/confirmation-dialog/confirmation-dialog.component.ts	+342	-0	after_lines=342
+src/app/components/kanban-board/kanban-board.component.css	+238	-31	after_lines=742
+src/app/components/kanban-board/kanban-board.component.html	+8	-0	after_lines=105
+src/app/components/kanban-board/kanban-board.component.ts	+78	-35	after_lines=879
+src/app/components/task-card/task-card.component.ts	+200	-84	after_lines=558
+src/app/components/toast/toast.component.ts	+264	-0	after_lines=264
+src/styles.css	+71	-1	after_lines=71
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── angular-developer.mdc
+│       ├── dart-developer.mdc
+│       ├── generate-task-list.mdc
+│       ├── process-task-list.mdc
+│       ├── product-manager.mdc
+│       └── typescript-developer.mdc
+├── .editorconfig
+├── .gitignore
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   └── tasks.json
+├── README.md
+├── TESTING_REPORT_PHASE_5.md
+├── TESTING_REPORT_PHASE_6.md
+├── angular.json
+├── package-lock.json
+├── package.json
+├── public
+│   └── favicon.ico
+├── src
+│   ├── app
+│   │   ├── app.component.css
+│   │   ├── app.component.html
+│   │   ├── app.component.spec.ts
+│   │   ├── app.component.ts
+│   │   ├── app.config.ts
+│   │   ├── app.routes.ts
+│   │   ├── components
+│   │   │   ├── confirmation-dialog
+│   │   │   │   └── confirmation-dialog.component.ts
+│   │   │   ├── kanban-board
+│   │   │   │   ├── TESTING.md
+│   │   │   │   ├── drag-drop-test-runner.ts
+│   │   │   │   ├── kanban-board.component.css
+│   │   │   │   ├── kanban-board.component.html
+│   │   │   │   ├── kanban-board.component.spec.ts
+│   │   │   │   ├── kanban-board.component.ts
+│   │   │   │   ├── kanban-board.integration.spec.ts
+│   │   │   │   └── kanban-board.performance.spec.ts
+│   │   │   ├── task-card
+│   │   │   │   ├── task-card.component.spec.ts
+│   │   │   │   └── task-card.component.ts
+│   │   │   ├── task-edit-modal
+│   │   │   │   └── task-edit-modal.component.ts
+│   │   │   └── toast
+│   │   │       └── toast.component.ts
+│   │   ├── models
+│   │   │   ├── task-status.model.ts
+│   │   │   └── task.model.ts
+│   │   └── services
+│   │       ├── task.persistence.integration.spec.ts
+│   │       ├── task.service.migration.spec.ts
+│   │       ├── task.service.spec.ts
+│   │       ├── task.service.ts
+│   │       ├── toast.service.spec.ts
+│   │       └── toast.service.ts
+│   ├── index.html
+│   ├── main.ts
+│   └── styles.css
+├── tasks
+│   ├── prd-todo-list-app.md
+│   └── tasks-prd-todo-list-app.md
+├── tsconfig.app.json
+├── tsconfig.json
+└── tsconfig.spec.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/app.component.css ---
+diff --git a/src/app/app.component.css b/src/app/app.component.css
+index 88868c3..d4d5926 100644
+--- a/src/app/app.component.css
++++ b/src/app/app.component.css
+@@ -1,9 +1,14 @@
+ .app-container {
+-  max-width: 1400px;
++  max-width: 1440px;
+   margin: 0 auto;
+-  padding: 20px;
++  padding: 24px;
+   min-height: 100vh;
+-  background-color: #f8f9fa;
++  background: 
++    linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%),
++    radial-gradient(circle at 20% 80%, rgba(0, 123, 255, 0.05) 0%, transparent 50%),
++    radial-gradient(circle at 80% 20%, rgba(0, 86, 179, 0.05) 0%, transparent 50%);
++  animation: app-fade-in 0.8s ease-out;
++  position: relative;
+ }
+ 
+ /* Header Styles */
+@@ -11,56 +16,287 @@
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+-  margin-bottom: 30px;
+-  padding: 20px 0;
+-  border-bottom: 2px solid #e9ecef;
++  margin-bottom: 32px;
++  padding: 32px 40px;
++  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++  border-radius: 20px;
++  border: 1px solid #e8edf2;
++  box-shadow: 
++    0 6px 20px rgba(0, 0, 0, 0.08),
++    0 2px 8px rgba(0, 0, 0, 0.04);
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++  position: relative;
++  overflow: hidden;
++  animation: app-fade-in 0.8s ease-out 0.2s both;
++}
++
++.app-header::before {
++  content: '';
++  position: absolute;
++  top: 0;
++  left: 0;
++  right: 0;
++  height: 4px;
++  background: linear-gradient(90deg, #007bff 0%, #0056b3 50%, #007bff 100%);
++  background-size: 200% 100%;
++  animation: gradient-shift 3s ease-in-out infinite;
++}
++
++@keyframes gradient-shift {
++  0%, 100% { background-position: 0% 50%; }
++  50% { background-position: 100% 50%; }
++}
++
++.app-header:hover {
++  transform: translateY(-2px);
++  box-shadow: 
++    0 10px 30px rgba(0, 0, 0, 0.12),
++    0 4px 12px rgba(0, 0, 0, 0.08);
++  border-color: #d1d9e0;
++}
++
++.header-brand {
++  display: flex;
++  align-items: center;
++  gap: 20px;
++}
++
++.brand-icon {
++  position: relative;
++}
++
++.icon-circle {
++  width: 64px;
++  height: 64px;
++  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
++  border-radius: 16px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
++  position: relative;
++  overflow: hidden;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++}
++
++.icon-circle:hover {
++  transform: scale(1.1) rotate(5deg);
++  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+ }
+ 
+-.app-header h1 {
++.icon-circle::before {
++  content: '';
++  position: absolute;
++  top: -50%;
++  left: -50%;
++  width: 200%;
++  height: 200%;
++  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
++  transform: rotate(-45deg);
++  animation: icon-shine 2s ease-in-out infinite;
++}
++
++@keyframes icon-shine {
++  0%, 100% { transform: translateX(-100%) rotate(-45deg); }
++  50% { transform: translateX(100%) rotate(-45deg); }
++}
++
++@keyframes icon-float {
++  0%, 100% { 
++    transform: translateY(0) rotate(0deg); 
++  }
++  50% { 
++    transform: translateY(-2px) rotate(1deg); 
++  }
++}
++
++.icon {
++  font-size: 32px;
++  position: relative;
++  z-index: 1;
++  animation: icon-float 4s ease-in-out infinite;
++}
++
++.brand-content {
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++}
++
++.brand-title {
+   margin: 0;
+-  color: #2c3e50;
++  color: #1a202c;
+   font-size: 2.5rem;
+-  font-weight: 600;
++  font-weight: 800;
++  letter-spacing: -0.03em;
++  line-height: 1.1;
++  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
++  -webkit-background-clip: text;
++  -webkit-text-fill-color: transparent;
++  background-clip: text;
++  transition: all 0.3s ease;
++  cursor: default;
++}
++
++.brand-title:hover {
++  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
++  -webkit-background-clip: text;
++  -webkit-text-fill-color: transparent;
++  background-clip: text;
++  transform: scale(1.05);
++}
++
++.brand-subtitle {
++  margin: 0;
++  color: #718096;
++  font-size: 16px;
++  font-weight: 500;
++  letter-spacing: 0.01em;
++  transition: all 0.3s ease;
++  cursor: default;
++}
++
++.brand-subtitle:hover {
++  color: #4a5568;
++  transform: translateX(4px);
++}
++
++.header-actions {
++  display: flex;
++  align-items: center;
++  gap: 16px;
+ }
+ 
+ /* Button Styles */
+ .btn {
+-  padding: 12px 24px;
++  padding: 14px 28px;
+   border: none;
+-  border-radius: 8px;
+-  font-size: 14px;
+-  font-weight: 500;
++  border-radius: 12px;
++  font-size: 15px;
++  font-weight: 600;
+   cursor: pointer;
+-  transition: all 0.2s ease;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   text-decoration: none;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
++  letter-spacing: 0.02em;
++  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
++  position: relative;
++  overflow: hidden;
++}
++
++.btn::before {
++  content: '';
++  position: absolute;
++  top: 50%;
++  left: 50%;
++  width: 0;
++  height: 0;
++  background: rgba(255, 255, 255, 0.3);
++  border-radius: 50%;
++  transform: translate(-50%, -50%);
++  transition: width 0.3s ease, height 0.3s ease;
++}
++
++.btn:active::before {
++  width: 300px;
++  height: 300px;
+ }
+ 
+ .btn-primary {
+-  background-color: #007bff;
++  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+   color: white;
++  border: 1px solid rgba(255, 255, 255, 0.2);
+ }
+ 
+ .btn-primary:hover:not(:disabled) {
+-  background-color: #0056b3;
+-  transform: translateY(-1px);
++  background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
++  transform: translateY(-2px) scale(1.05);
++  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
++}
++
++.btn-primary:active:not(:disabled) {
++  transform: translateY(0) scale(1.02);
++  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+ }
+ 
+ .btn-primary:disabled {
+-  background-color: #6c757d;
++  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
++  color: #ffffff;
+   cursor: not-allowed;
++  transform: none;
++  box-shadow: none;
++  opacity: 0.6;
++}
++
++.btn-primary:disabled::before {
++  display: none;
++}
++
++/* Enhanced Add Task Button */
++.add-task-btn {
++  padding: 16px 32px;
++  font-size: 16px;
++  font-weight: 700;
++  border-radius: 14px;
++  display: flex;
++  align-items: center;
++  gap: 12px;
++  box-shadow: 
++    0 4px 12px rgba(0, 123, 255, 0.3),
++    0 2px 6px rgba(0, 123, 255, 0.2);
++  position: relative;
++  overflow: hidden;
++}
++
++.add-task-btn::after {
++  content: '';
++  position: absolute;
++  top: 0;
++  left: -100%;
++  width: 100%;
++  height: 100%;
++  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
++  transition: left 0.5s ease;
++}
++
++.add-task-btn:hover::after {
++  left: 100%;
++}
++
++.btn-icon {
++  font-size: 20px;
++  font-weight: 300;
++  line-height: 1;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  width: 24px;
++  height: 24px;
++  background: rgba(255, 255, 255, 0.2);
++  border-radius: 50%;
++}
++
++.btn-text {
++  letter-spacing: 0.02em;
+ }
+ 
+ .btn-secondary {
+-  background-color: #6c757d;
++  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+   color: white;
++  border: 1px solid rgba(255, 255, 255, 0.2);
+ }
+ 
+ .btn-secondary:hover {
+-  background-color: #545b62;
+-  transform: translateY(-1px);
++  background: linear-gradient(135deg, #545b62 0%, #495057 100%);
++  transform: translateY(-2px) scale(1.05);
++  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
++}
++
++.btn-secondary:active {
++  transform: translateY(0) scale(1.02);
++  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.4);
+ }
+ 
+ .btn.hidden {
+@@ -69,83 +305,232 @@
+ 
+ /* Task Form Styles */
+ .task-form-container {
+-  background: white;
+-  border-radius: 12px;
+-  padding: 24px;
+-  margin-bottom: 30px;
+-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+-  border: 1px solid #e9ecef;
++  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++  border-radius: 16px;
++  padding: 32px;
++  margin-bottom: 32px;
++  box-shadow: 
++    0 4px 12px rgba(0, 0, 0, 0.08),
++    0 2px 6px rgba(0, 0, 0, 0.04);
++  border: 1px solid #e8edf2;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++  animation: app-fade-in 0.8s ease-out 0.4s both;
++}
++
++.task-form-container:hover {
++  transform: translateY(-1px);
++  box-shadow: 
++    0 6px 16px rgba(0, 0, 0, 0.1),
++    0 3px 8px rgba(0, 0, 0, 0.06);
++  border-color: #d1d9e0;
+ }
+ 
+ .task-form h2 {
+-  margin: 0 0 20px 0;
+-  color: #2c3e50;
+-  font-size: 1.5rem;
+-  font-weight: 600;
++  margin: 0 0 24px 0;
++  color: #1a202c;
++  font-size: 1.75rem;
++  font-weight: 700;
++  letter-spacing: -0.02em;
++  line-height: 1.2;
+ }
+ 
+ .form-group {
+-  margin-bottom: 20px;
++  margin-bottom: 24px;
+ }
+ 
+ .form-group label {
+   display: block;
+-  margin-bottom: 8px;
+-  font-weight: 500;
+-  color: #495057;
++  margin-bottom: 10px;
++  font-weight: 600;
++  color: #2d3748;
++  font-size: 15px;
++  letter-spacing: 0.01em;
++  cursor: pointer;
++  transition: color 0.2s ease;
++}
++
++.form-group label:hover {
++  color: #1a202c;
+ }
+ 
+ .form-group input,
+ .form-group textarea {
+   width: 100%;
+-  padding: 12px;
+-  border: 2px solid #e9ecef;
+-  border-radius: 8px;
+-  font-size: 14px;
+-  transition: border-color 0.2s ease;
++  padding: 14px 16px;
++  border: 2px solid #e2e8f0;
++  border-radius: 12px;
++  font-size: 15px;
++  font-weight: 400;
++  line-height: 1.5;
++  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+   box-sizing: border-box;
++  color: #4a5568;
++}
++
++.form-group input:hover:not(:focus),
++.form-group textarea:hover:not(:focus) {
++  border-color: #cbd5e0;
++  background: #f7fafc;
++  transform: translateY(-1px);
+ }
+ 
+ .form-group input:focus,
+ .form-group textarea:focus {
+   outline: none;
+   border-color: #007bff;
++  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
++  background: #fafbfc;
++  transform: translateY(-1px);
+ }
+ 
+ .form-group input.error,
+ .form-group textarea.error {
+-  border-color: #dc3545;
++  border-color: #e53e3e;
++  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
++  background: #fef5f5;
+ }
+ 
+ .form-group textarea {
+   resize: vertical;
+-  min-height: 80px;
++  min-height: 100px;
++  font-family: inherit;
++  line-height: 1.65;
+ }
+ 
+ .error-message {
+-  color: #dc3545;
+-  font-size: 12px;
+-  margin-top: 4px;
++  color: #e53e3e;
++  font-size: 13px;
++  font-weight: 500;
++  margin-top: 6px;
++  display: flex;
++  align-items: center;
++  gap: 6px;
+ }
+ 
+ .form-actions {
+   display: flex;
+-  gap: 12px;
++  gap: 16px;
+   justify-content: flex-end;
+-  margin-top: 24px;
++  margin-top: 32px;
++  padding-top: 24px;
++  border-top: 1px solid rgba(0, 0, 0, 0.04);
+ }
+ 
+ /* Kanban Container */
+ .kanban-container {
+-  background: white;
+-  border-radius: 12px;
+-  padding: 24px;
+-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+-  border: 1px solid #e9ecef;
+-  min-height: 600px;
++  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++  border-radius: 16px;
++  padding: 32px;
++  box-shadow: 
++    0 6px 20px rgba(0, 0, 0, 0.08),
++    0 3px 8px rgba(0, 0, 0, 0.04);
++  border: 1px solid #e8edf2;
++  min-height: 640px;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++  animation: app-fade-in 0.8s ease-out 0.6s both;
++}
++
++.kanban-container:hover {
++  box-shadow: 
++    0 8px 25px rgba(0, 0, 0, 0.1),
++    0 4px 12px rgba(0, 0, 0, 0.06);
++  border-color: #d1d9e0;
++}
++
++/* Desktop Responsive Design */
++
++/* Large Desktop (1440px+) - Optimal viewing experience */
++@media (min-width: 1440px) {
++  .app-container {
++    max-width: 1600px;
++    padding: 32px;
++  }
++  
++  .app-header {
++    padding: 28px 40px;
++    margin-bottom: 40px;
++  }
++  
++  .app-header h1 {
++    font-size: 3rem;
++  }
++  
++  .task-form-container {
++    padding: 40px;
++    margin-bottom: 40px;
++  }
++  
++  .kanban-container {
++    padding: 40px;
++    min-height: 700px;
++  }
++}
++
++/* Standard Desktop (1200px - 1439px) */
++@media (min-width: 1200px) and (max-width: 1439px) {
++  .app-container {
++    max-width: 1400px;
++    padding: 28px;
++  }
++  
++  .app-header {
++    padding: 26px 36px;
++    margin-bottom: 36px;
++  }
++  
++  .task-form-container {
++    padding: 36px;
++    margin-bottom: 36px;
++  }
++  
++  .kanban-container {
++    padding: 36px;
++    min-height: 660px;
++  }
++}
++
++/* Medium Desktop (992px - 1199px) */
++@media (min-width: 992px) and (max-width: 1199px) {
++  .app-container {
++    max-width: 1200px;
++    padding: 24px;
++  }
++  
++  .app-header h1 {
++    font-size: 2.5rem;
++  }
++  
++  .kanban-container {
++    min-height: 620px;
++  }
++}
++
++/* Tablet/Small Desktop (769px - 991px) */
++@media (min-width: 769px) and (max-width: 991px) {
++  .app-container {
++    padding: 20px;
++  }
++  
++  .app-header {
++    padding: 20px 24px;
++    margin-bottom: 28px;
++  }
++  
++  .app-header h1 {
++    font-size: 2.25rem;
++  }
++  
++  .task-form-container {
++    padding: 28px;
++  }
++  
++  .kanban-container {
++    padding: 28px;
++    min-height: 580px;
++  }
+ }
+ 
+-/* Responsive Design */
++/* Mobile and smaller screens */
+ @media (max-width: 768px) {
+   .app-container {
+     padding: 15px;
+@@ -153,14 +538,40 @@
+ 
+   .app-header {
+     flex-direction: column;
+-    gap: 15px;
++    gap: 20px;
+     text-align: center;
++    padding: 24px 20px;
++    border-radius: 16px;
+   }
+ 
+-  .app-header h1 {
++  .header-brand {
++    flex-direction: column;
++    gap: 16px;
++    text-align: center;
++  }
++
++  .icon-circle {
++    width: 56px;
++    height: 56px;
++  }
++
++  .icon {
++    font-size: 28px;
++  }
++
++  .brand-title {
+     font-size: 2rem;
+   }
+ 
++  .brand-subtitle {
++    font-size: 14px;
++  }
++
++  .add-task-btn {
++    padding: 14px 28px;
++    font-size: 15px;
++  }
++
+   .task-form-container,
+   .kanban-container {
+     padding: 20px;
+
+--- FILE: src/app/app.component.html ---
+diff --git a/src/app/app.component.html b/src/app/app.component.html
+index 82d1d10..8d9bbeb 100644
+--- a/src/app/app.component.html
++++ b/src/app/app.component.html
+@@ -1,14 +1,28 @@
+ <div class="app-container">
+   <!-- Header -->
+   <header class="app-header">
+-    <h1>{{ title }}</h1>
+-    <button 
+-      class="btn btn-primary" 
+-      (click)="showTaskForm()"
+-      [class.hidden]="showForm()"
+-      type="button">
+-      Add Task
+-    </button>
++    <div class="header-brand">
++      <div class="brand-icon">
++        <div class="icon-circle">
++          <span class="icon">📋</span>
++        </div>
++      </div>
++      <div class="brand-content">
++        <h1 class="brand-title">{{ title }}</h1>
++        <p class="brand-subtitle">Stay organized, stay productive</p>
++      </div>
++    </div>
++    <div class="header-actions">
++      @if (!showForm()) {
++        <button 
++          class="btn btn-primary add-task-btn" 
++          (click)="showTaskForm()"
++          type="button">
++          <span class="btn-icon">+</span>
++          <span class="btn-text">Add Task</span>
++        </button>
++      }
++    </div>
+   </header>
+ 
+   <!-- Task Creation Form -->
+@@ -74,4 +88,7 @@
+   </main>
+ </div>
+ 
++<!-- Toast Notifications -->
++<app-toast />
++
+ <router-outlet />
+\ No newline at end of file
+
+--- FILE: src/app/app.component.ts ---
+diff --git a/src/app/app.component.ts b/src/app/app.component.ts
+index 3711fc5..01d042d 100644
+--- a/src/app/app.component.ts
++++ b/src/app/app.component.ts
+@@ -3,12 +3,14 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
+ import { CommonModule } from '@angular/common';
+ import { RouterOutlet } from '@angular/router';
+ import { TaskService } from './services/task.service';
++import { ToastService } from './services/toast.service';
+ import { KanbanBoardComponent } from './components/kanban-board/kanban-board.component';
++import { ToastComponent } from './components/toast/toast.component';
+ import { Task } from './models/task.model';
+ 
+ @Component({
+   selector: 'app-root',
+-  imports: [RouterOutlet, CommonModule, ReactiveFormsModule, KanbanBoardComponent],
++  imports: [RouterOutlet, CommonModule, ReactiveFormsModule, KanbanBoardComponent, ToastComponent],
+   templateUrl: './app.component.html',
+   styleUrl: './app.component.css',
+   changeDetection: ChangeDetectionStrategy.OnPush
+@@ -18,6 +20,7 @@ export class AppComponent {
+   
+   private fb = inject(FormBuilder);
+   private taskService = inject(TaskService);
++  private toastService = inject(ToastService);
+   
+   // Form for creating new tasks
+   taskForm: FormGroup;
+@@ -30,6 +33,11 @@ export class AppComponent {
+       title: ['', [Validators.required, Validators.maxLength(128)]],
+       description: ['', [Validators.maxLength(256)]]
+     });
++    
++    // Show welcome toast notification
++    setTimeout(() => {
++      this.toastService.showInfo('Welcome to your daily task manager!', 4000);
++    }, 1000);
+   }
+   
+   /**
+@@ -56,9 +64,10 @@ export class AppComponent {
+       try {
+         this.taskService.createTask(title, description);
+         this.hideTaskForm();
++        this.toastService.showSuccess(`Task "${title}" created successfully!`);
+       } catch (error) {
+         console.error('Error creating task:', error);
+-        // TODO: Show toast notification for error
++        this.toastService.showError('Failed to create task. Please try again.');
+       }
+     }
+   }
+
+--- FILE: src/app/components/confirmation-dialog/confirmation-dialog.component.ts ---
+diff --git a/src/app/components/confirmation-dialog/confirmation-dialog.component.ts b/src/app/components/confirmation-dialog/confirmation-dialog.component.ts
+new file mode 100644
+index 0000000..dee016f
+--- /dev/null
++++ b/src/app/components/confirmation-dialog/confirmation-dialog.component.ts
+@@ -0,0 +1,342 @@
++import { Component, ChangeDetectionStrategy, input, output, effect } from '@angular/core';
++import { CommonModule } from '@angular/common';
++
++export interface ConfirmationDialogData {
++  title: string;
++  message: string;
++  confirmText?: string;
++  cancelText?: string;
++  type?: 'danger' | 'warning' | 'info';
++}
++
++/**
++ * Modern confirmation dialog component
++ */
++@Component({
++  selector: 'app-confirmation-dialog',
++  imports: [CommonModule],
++  template: `
++    @if (isOpen()) {
++      <div class="dialog-overlay" (click)="onCancel()">
++        <div class="dialog-container" (click)="$event.stopPropagation()" tabindex="-1">
++          <div class="dialog-header">
++            <div class="dialog-icon"
++                 [class.icon-danger]="data().type === 'danger'"
++                 [class.icon-warning]="data().type === 'warning'"
++                 [class.icon-info]="data().type === 'info' || !data().type">
++              @switch (data().type) {
++                @case ('danger') { ⚠️ }
++                @case ('warning') { ⚠️ }
++                @default { ❓ }
++              }
++            </div>
++            <h3 class="dialog-title">{{ data().title }}</h3>
++          </div>
++          
++          <div class="dialog-content">
++            <p class="dialog-message">{{ data().message }}</p>
++          </div>
++          
++          <div class="dialog-actions">
++            <button 
++              class="btn btn-secondary"
++              (click)="onCancel()"
++              type="button">
++              {{ data().cancelText || 'Cancel' }}
++            </button>
++            <button 
++              class="btn"
++              [class.btn-danger]="data().type === 'danger'"
++              [class.btn-warning]="data().type === 'warning'"
++              [class.btn-primary]="data().type === 'info' || !data().type"
++              (click)="onConfirm()"
++              type="button">
++              {{ data().confirmText || 'Confirm' }}
++            </button>
++          </div>
++        </div>
++      </div>
++    }
++  `,
++  styles: [`
++    .dialog-overlay {
++      position: fixed;
++      top: 0;
++      left: 0;
++      right: 0;
++      bottom: 0;
++      background: rgba(0, 0, 0, 0.6);
++      backdrop-filter: blur(4px);
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      z-index: 1100;
++      padding: 24px;
++      animation: overlay-fade-in 0.2s ease-out;
++    }
++
++    @keyframes overlay-fade-in {
++      from {
++        opacity: 0;
++        backdrop-filter: blur(0px);
++      }
++      to {
++        opacity: 1;
++        backdrop-filter: blur(4px);
++      }
++    }
++
++    .dialog-container {
++      background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++      border-radius: 16px;
++      box-shadow: 
++        0 20px 40px rgba(0, 0, 0, 0.2),
++        0 10px 20px rgba(0, 0, 0, 0.1);
++      border: 1px solid #e8edf2;
++      width: 100%;
++      max-width: 480px;
++      max-height: 90vh;
++      overflow: hidden;
++      transform: scale(0.9);
++      animation: dialog-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
++      outline: none;
++    }
++
++    .dialog-container:focus {
++      box-shadow: 
++        0 20px 40px rgba(0, 0, 0, 0.2),
++        0 10px 20px rgba(0, 0, 0, 0.1),
++        0 0 0 3px rgba(0, 123, 255, 0.3);
++    }
++
++    @keyframes dialog-slide-up {
++      from {
++        transform: scale(0.9) translateY(20px);
++        opacity: 0;
++      }
++      to {
++        transform: scale(1) translateY(0);
++        opacity: 1;
++      }
++    }
++
++    .dialog-header {
++      display: flex;
++      align-items: center;
++      gap: 16px;
++      padding: 24px 28px 20px 28px;
++      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
++      background: linear-gradient(145deg, #fafbfc 0%, #ffffff 100%);
++    }
++
++    .dialog-icon {
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      width: 48px;
++      height: 48px;
++      border-radius: 50%;
++      font-size: 24px;
++      flex-shrink: 0;
++    }
++
++    .dialog-icon.icon-danger {
++      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
++      color: #dc2626;
++      border: 2px solid rgba(220, 38, 38, 0.2);
++    }
++
++    .dialog-icon.icon-warning {
++      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
++      color: #d97706;
++      border: 2px solid rgba(217, 119, 6, 0.2);
++    }
++
++    .dialog-icon.icon-info {
++      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
++      color: #2563eb;
++      border: 2px solid rgba(37, 99, 235, 0.2);
++    }
++
++    .dialog-title {
++      margin: 0;
++      font-size: 1.5rem;
++      font-weight: 700;
++      color: #1a202c;
++      line-height: 1.3;
++      letter-spacing: -0.02em;
++    }
++
++    .dialog-content {
++      padding: 24px 28px;
++    }
++
++    .dialog-message {
++      margin: 0;
++      font-size: 16px;
++      line-height: 1.6;
++      color: #4a5568;
++      font-weight: 400;
++    }
++
++    .dialog-actions {
++      display: flex;
++      gap: 12px;
++      padding: 20px 28px 28px 28px;
++      justify-content: flex-end;
++      border-top: 1px solid rgba(0, 0, 0, 0.06);
++      background: linear-gradient(145deg, #fafbfc 0%, #ffffff 100%);
++    }
++
++    .btn {
++      padding: 12px 24px;
++      border: none;
++      border-radius: 10px;
++      font-size: 14px;
++      font-weight: 600;
++      cursor: pointer;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      text-decoration: none;
++      display: inline-flex;
++      align-items: center;
++      justify-content: center;
++      letter-spacing: 0.02em;
++      min-width: 100px;
++    }
++
++    .btn-primary {
++      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
++      color: white;
++      border: 1px solid rgba(255, 255, 255, 0.2);
++      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
++    }
++
++    .btn-primary:hover {
++      background: linear-gradient(135deg, #0056b3 0%, #003d82 100%);
++      transform: translateY(-1px);
++      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
++    }
++
++    .btn-secondary {
++      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
++      color: #495057;
++      border: 1px solid #ced4da;
++      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
++    }
++
++    .btn-secondary:hover {
++      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
++      color: #343a40;
++      transform: translateY(-1px);
++      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
++    }
++
++    .btn-danger {
++      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
++      color: white;
++      border: 1px solid rgba(255, 255, 255, 0.2);
++      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
++    }
++
++    .btn-danger:hover {
++      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
++      transform: translateY(-1px);
++      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
++    }
++
++    .btn-warning {
++      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
++      color: white;
++      border: 1px solid rgba(255, 255, 255, 0.2);
++      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
++    }
++
++    .btn-warning:hover {
++      background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
++      transform: translateY(-1px);
++      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
++    }
++
++    .btn:active {
++      transform: translateY(0) scale(0.98);
++    }
++
++    /* Mobile responsive */
++    @media (max-width: 768px) {
++      .dialog-container {
++        margin: 16px;
++        max-width: none;
++        border-radius: 12px;
++      }
++      
++      .dialog-header,
++      .dialog-content,
++      .dialog-actions {
++        padding-left: 20px;
++        padding-right: 20px;
++      }
++      
++      .dialog-actions {
++        flex-direction: column-reverse;
++        gap: 8px;
++      }
++      
++      .btn {
++        width: 100%;
++      }
++    }
++  `],
++  changeDetection: ChangeDetectionStrategy.OnPush
++})
++export class ConfirmationDialogComponent {
++  // Input for dialog visibility
++  isOpen = input<boolean>(false);
++  
++  // Input for dialog configuration
++  data = input.required<ConfirmationDialogData>();
++  
++  // Output events
++  confirm = output<void>();
++  cancel = output<void>();
++
++  constructor() {
++    // Handle keyboard events when dialog is open
++    effect(() => {
++      if (this.isOpen()) {
++        const handleKeyDown = (event: KeyboardEvent) => {
++          if (event.key === 'Escape') {
++            this.onCancel();
++          } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
++            this.onConfirm();
++          }
++        };
++
++        document.addEventListener('keydown', handleKeyDown);
++        
++        // Focus the dialog for keyboard accessibility
++        setTimeout(() => {
++          const dialog = document.querySelector('.dialog-container') as HTMLElement;
++          dialog?.focus();
++        });
++
++        return () => {
++          document.removeEventListener('keydown', handleKeyDown);
++        };
++      }
++    });
++  }
++
++  /**
++   * Handles confirmation action
++   */
++  onConfirm(): void {
++    this.confirm.emit();
++  }
++
++  /**
++   * Handles cancel action
++   */
++  onCancel(): void {
++    this.cancel.emit();
++  }
++}
+\ No newline at end of file
+
+--- FILE: src/app/components/kanban-board/kanban-board.component.css ---
+diff --git a/src/app/components/kanban-board/kanban-board.component.css b/src/app/components/kanban-board/kanban-board.component.css
+index c767773..e4bfd26 100644
+--- a/src/app/components/kanban-board/kanban-board.component.css
++++ b/src/app/components/kanban-board/kanban-board.component.css
+@@ -5,86 +5,292 @@
+   padding: 1rem;
+ }
+ 
++/* Enhanced scrolling for desktop */
++@media (min-width: 992px) {
++  .kanban-board {
++    overflow-x: hidden; /* Desktop should not need horizontal scroll */
++  }
++  
++  .column-content {
++    overflow-y: auto;
++    scrollbar-width: thin;
++    scrollbar-color: #cbd5e0 transparent;
++  }
++  
++  .column-content::-webkit-scrollbar {
++    width: 6px;
++  }
++  
++  .column-content::-webkit-scrollbar-track {
++    background: transparent;
++    border-radius: 3px;
++  }
++  
++  .column-content::-webkit-scrollbar-thumb {
++    background: #cbd5e0;
++    border-radius: 3px;
++    transition: background 0.2s ease;
++  }
++  
++  .column-content::-webkit-scrollbar-thumb:hover {
++    background: #a0aec0;
++  }
++}
++
+ .kanban-columns {
+-  display: flex;
+-  gap: 1.5rem;
++  display: grid;
++  grid-template-columns: 1fr 1fr 1fr;
++  gap: 2rem;
+   min-height: 600px;
+   align-items: flex-start;
++  width: 100%;
+ }
+ 
+ .kanban-column {
+-  flex: 1;
+-  min-width: 300px;
+-  background-color: #f8f9fa;
+-  border-radius: 8px;
+-  border: 1px solid #e9ecef;
++  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
++  border-radius: 16px;
++  border: 1px solid #e8edf2;
+   display: flex;
+   flex-direction: column;
+   max-height: 80vh;
++  box-shadow: 
++    0 4px 12px rgba(0, 0, 0, 0.05),
++    0 2px 6px rgba(0, 0, 0, 0.08);
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++  min-width: 0; /* Allow columns to shrink if needed */
++  animation: column-slide-in 0.6s ease-out both;
++}
++
++@keyframes column-slide-in {
++  from {
++    opacity: 0;
++    transform: translateY(30px);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0);
++  }
+ }
+ 
++/* Staggered column animations */
++.kanban-column:nth-child(1) { animation-delay: 0.1s; }
++.kanban-column:nth-child(2) { animation-delay: 0.2s; }
++.kanban-column:nth-child(3) { animation-delay: 0.3s; }
++
+ .column-header {
+-  padding: 1rem 1rem 0.5rem 1rem;
+-  border-bottom: 1px solid #e9ecef;
+-  background-color: white;
+-  border-radius: 8px 8px 0 0;
++  padding: 1.5rem 1.5rem 1rem 1.5rem;
++  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
++  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++  border-radius: 16px 16px 0 0;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
++  position: relative;
+ }
+ 
+ .column-title {
+   margin: 0;
+-  font-size: 1.1rem;
+-  font-weight: 600;
+-  color: #495057;
++  font-size: 1.25rem;
++  font-weight: 700;
++  color: #2d3748;
++  letter-spacing: -0.02em;
++  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++}
++
++.column-header:hover .column-title {
++  color: #1a202c;
++  transform: translateX(2px);
+ }
+ 
+ .task-count {
+-  background-color: #6c757d;
++  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+   color: white;
+-  border-radius: 12px;
+-  padding: 0.25rem 0.5rem;
++  border-radius: 14px;
++  padding: 0.4rem 0.8rem;
+   font-size: 0.75rem;
+-  font-weight: 500;
+-  min-width: 1.5rem;
++  font-weight: 600;
++  min-width: 1.8rem;
+   text-align: center;
++  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
++  border: 1px solid rgba(255, 255, 255, 0.2);
++  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++  animation: badge-pulse 3s ease-in-out infinite;
++}
++
++@keyframes badge-pulse {
++  0%, 100% { 
++    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
++    transform: scale(1);
++  }
++  50% { 
++    box-shadow: 0 3px 8px rgba(108, 117, 125, 0.4);
++    transform: scale(1.02);
++  }
++}
++
++.task-count:hover {
++  transform: scale(1.1);
++  box-shadow: 0 3px 6px rgba(108, 117, 125, 0.4);
+ }
+ 
+ .column-description {
+-  padding: 0 1rem 1rem 1rem;
++  padding: 0 1.5rem 1.25rem 1.5rem;
+   margin: 0;
+   font-size: 0.875rem;
+-  color: #6c757d;
+-  background-color: white;
++  font-weight: 500;
++  color: #718096;
++  background-color: transparent;
++  line-height: 1.5;
++  letter-spacing: 0.01em;
+ }
+ 
+ .column-content {
+   flex: 1;
+-  padding: 1rem;
++  padding: 1.25rem 1.5rem;
+   overflow-y: auto;
+ }
+ 
++/* Desktop column hover effects */
++@media (min-width: 992px) {
++  .kanban-column:hover {
++    transform: translateY(-2px);
++    box-shadow: 
++      0 8px 25px rgba(0, 0, 0, 0.08),
++      0 4px 12px rgba(0, 0, 0, 0.06);
++  }
++  
++  .kanban-column:hover .column-header {
++    background: linear-gradient(145deg, #fafbfc 0%, #ffffff 100%);
++  }
++}
++
+ .task-list {
+   display: flex;
+   flex-direction: column;
+-  gap: 0.75rem;
++  gap: 1rem;
++  padding: 0.5rem 0;
++}
++
++/* Staggered task animations */
++.task-item {
++  animation: task-slide-in 0.5s ease-out;
++}
++
++@keyframes task-slide-in {
++  from {
++    opacity: 0;
++    transform: translateY(20px) scale(0.95);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0) scale(1);
++  }
+ }
+ 
+ .empty-column {
+   text-align: center;
+-  padding: 2rem 1rem;
+-  color: #6c757d;
++  padding: 3rem 1.5rem;
++  color: #a0aec0;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
++  border-radius: 12px;
++  border: 2px dashed transparent;
++}
++
++.empty-column:hover {
++  color: #718096;
++  background: rgba(0, 123, 255, 0.02);
++  border-color: rgba(0, 123, 255, 0.1);
++  transform: translateY(-2px);
+ }
+ 
+ .empty-column p {
+   margin: 0;
+   font-style: italic;
++  font-size: 15px;
++  font-weight: 500;
++}
++
++/* Desktop Responsive Design */
++
++/* Large Desktop (1440px+) */
++@media (min-width: 1440px) {
++  .kanban-columns {
++    gap: 2.5rem;
++    max-width: 1400px;
++    margin: 0 auto;
++  }
++  
++  .kanban-column {
++    max-height: 85vh;
++  }
++  
++  .column-content {
++    padding: 1.5rem;
++  }
++}
++
++/* Standard Desktop (1200px - 1439px) */
++@media (min-width: 1200px) and (max-width: 1439px) {
++  .kanban-columns {
++    gap: 2rem;
++  }
++  
++  .kanban-column {
++    max-height: 80vh;
++  }
++}
++
++/* Medium Desktop (992px - 1199px) */
++@media (min-width: 992px) and (max-width: 1199px) {
++  .kanban-columns {
++    gap: 1.5rem;
++  }
++  
++  .kanban-board {
++    padding: 0.75rem;
++  }
++  
++  .column-header {
++    padding: 1.25rem 1.25rem 0.75rem 1.25rem;
++  }
++  
++  .column-content {
++    padding: 1rem;
++  }
+ }
+ 
+-/* Responsive design */
+-@media (max-width: 1024px) {
++/* Tablet/Small Desktop (769px - 991px) */
++@media (min-width: 769px) and (max-width: 991px) {
+   .kanban-columns {
++    grid-template-columns: 1fr 1fr 1fr;
++    gap: 1rem;
++  }
++  
++  .kanban-board {
++    padding: 0.5rem;
++  }
++  
++  .column-header {
++    padding: 1rem 1rem 0.5rem 1rem;
++  }
++  
++  .column-header .column-title {
++    font-size: 1.1rem;
++  }
++  
++  .column-content {
++    padding: 0.75rem;
++  }
++  
++  .kanban-column {
++    max-height: 70vh;
++  }
++}
++
++/* Mobile and smaller screens */
++@media (max-width: 768px) {
++  .kanban-columns {
++    display: flex;
+     flex-direction: column;
+     gap: 1rem;
+   }
+@@ -98,13 +304,14 @@
+ /* Drag and Drop Styles */
+ .task-item {
+   cursor: grab;
+-  transition: all 0.2s ease;
++  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   position: relative;
+ }
+ 
+ .task-item:hover:not(.cdk-drag-dragging) {
+-  transform: translateY(-2px);
+-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
++  transform: translateY(-3px) scale(1.02);
++  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
++  z-index: 10;
+ }
+ 
+ .task-item:active {
+
+--- FILE: src/app/components/kanban-board/kanban-board.component.html ---
+diff --git a/src/app/components/kanban-board/kanban-board.component.html b/src/app/components/kanban-board/kanban-board.component.html
+index 9f5b8c6..bc6043e 100644
+--- a/src/app/components/kanban-board/kanban-board.component.html
++++ b/src/app/components/kanban-board/kanban-board.component.html
+@@ -95,3 +95,11 @@
+   (save)="onModalSave($event)"
+   (cancel)="closeEditModal()"
+ />
++
++<!-- Confirmation Dialog -->
++<app-confirmation-dialog
++  [isOpen]="isConfirmDialogOpen()"
++  [data]="confirmDialogData()"
++  (confirm)="onConfirmDialogConfirm()"
++  (cancel)="onConfirmDialogCancel()"
++/>
+
+--- FILE: src/app/components/kanban-board/kanban-board.component.ts ---
+diff --git a/src/app/components/kanban-board/kanban-board.component.ts b/src/app/components/kanban-board/kanban-board.component.ts
+index 5bb1d8c..cd6df24 100644
+--- a/src/app/components/kanban-board/kanban-board.component.ts
++++ b/src/app/components/kanban-board/kanban-board.component.ts
+@@ -23,7 +23,9 @@ import {
+ } from '@angular/cdk/drag-drop';
+ import { TaskCardComponent } from '../task-card/task-card.component';
+ import { TaskEditModalComponent } from '../task-edit-modal/task-edit-modal.component';
++import { ConfirmationDialogComponent, ConfirmationDialogData } from '../confirmation-dialog/confirmation-dialog.component';
+ import { TaskService } from '../../services/task.service';
++import { ToastService } from '../../services/toast.service';
+ import { Task } from '../../models/task.model';
+ import { TaskStatus, TaskStatusType } from '../../models/task-status.model';
+ import { DragDropTestRunner } from './drag-drop-test-runner';
+@@ -42,6 +44,7 @@ declare global {
+     CommonModule,
+     TaskCardComponent,
+     TaskEditModalComponent,
++    ConfirmationDialogComponent,
+     CdkDropListGroup,
+     CdkDropList,
+     CdkDrag,
+@@ -54,6 +57,7 @@ declare global {
+ })
+ export class KanbanBoardComponent {
+   private taskService = inject(TaskService);
++  private toastService = inject(ToastService);
+   private elementRef = inject(ElementRef);
+ 
+   // Visual feedback signals
+@@ -64,6 +68,11 @@ export class KanbanBoardComponent {
+   // Modal state
+   isModalOpen = signal(false);
+   editingTask = signal<Task | null>(null);
++  
++  // Confirmation dialog state
++  isConfirmDialogOpen = signal(false);
++  confirmDialogData = signal<ConfirmationDialogData>({ title: '', message: '' });
++  pendingDeleteTaskId = signal<string | null>(null);
+ 
+   // Test runner instance
+   private testRunner: DragDropTestRunner;
+@@ -157,20 +166,17 @@ export class KanbanBoardComponent {
+       return;
+     }
+ 
+-    const confirmed = confirm(
+-      `Are you sure you want to delete the task "${task.title}"?\n\nThis action cannot be undone.`
+-    );
+-
+-    if (confirmed) {
+-      const success = this.taskService.deleteTask(taskId);
+-      if (success) {
+-        // TODO: Show success toast notification
+-        console.log('Task deleted successfully');
+-      } else {
+-        // TODO: Show error toast notification
+-        console.error('Failed to delete task');
+-      }
+-    }
++    // Set up confirmation dialog
++    this.confirmDialogData.set({
++      title: 'Delete Task',
++      message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
++      confirmText: 'Delete',
++      cancelText: 'Cancel',
++      type: 'danger'
++    });
++    
++    this.pendingDeleteTaskId.set(taskId);
++    this.isConfirmDialogOpen.set(true);
+   }
+ 
+   /**
+@@ -179,14 +185,20 @@ export class KanbanBoardComponent {
+   onUpdateTask(event: { id: string; updates: Partial<Pick<Task, 'title' | 'description'>> }): void {
+     try {
+       const updatedTask = this.taskService.updateTask(event.id, event.updates);
+-      console.log('Task updated successfully:', updatedTask);
+-      // TODO: Show success toast notification
++      
++      // Show appropriate success message based on what was updated
++      if (event.updates.title) {
++        this.toastService.showSuccess(`Task title updated to "${event.updates.title}"`);
++      } else if (event.updates.description !== undefined) {
++        if (event.updates.description) {
++          this.toastService.showSuccess('Task description updated successfully');
++        } else {
++          this.toastService.showSuccess('Task description removed');
++        }
++      }
+     } catch (error) {
+       console.error('Failed to update task:', error);
+-      // TODO: Show error toast notification
+-      if (error instanceof Error) {
+-        alert(`Failed to update task: ${error.message}`);
+-      }
++      this.toastService.showError('Failed to update task. Please try again.');
+     }
+   }
+ 
+@@ -214,6 +226,41 @@ export class KanbanBoardComponent {
+     this.editingTask.set(null);
+   }
+ 
++  /**
++   * Handles confirmation dialog confirm action
++   */
++  onConfirmDialogConfirm(): void {
++    const taskId = this.pendingDeleteTaskId();
++    if (taskId) {
++      const task = this.taskService.getTask(taskId);
++      const success = this.taskService.deleteTask(taskId);
++      
++      if (success && task) {
++        this.toastService.showSuccess(`Task "${task.title}" deleted successfully`);
++      } else {
++        this.toastService.showError('Failed to delete task. Please try again.');
++      }
++    }
++    
++    this.closeConfirmDialog();
++  }
++
++  /**
++   * Handles confirmation dialog cancel action
++   */
++  onConfirmDialogCancel(): void {
++    this.closeConfirmDialog();
++  }
++
++  /**
++   * Closes the confirmation dialog and cleans up state
++   */
++  private closeConfirmDialog(): void {
++    this.isConfirmDialogOpen.set(false);
++    this.pendingDeleteTaskId.set(null);
++    this.confirmDialogData.set({ title: '', message: '' });
++  }
++
+   /**
+    * Handles saving from the modal (both create and edit)
+    */
+@@ -222,25 +269,20 @@ export class KanbanBoardComponent {
+       if (event.task) {
+         // Editing existing task
+         const updatedTask = this.taskService.updateTask(event.task.id, event.updates);
+-        console.log('Task updated successfully:', updatedTask);
+-        // TODO: Show success toast notification
++        this.toastService.showSuccess(`Task "${updatedTask.title}" updated successfully`);
+       } else {
+         // Creating new task
+         const newTask = this.taskService.createTask(
+           event.updates.title!,
+           event.updates.description
+         );
+-        console.log('Task created successfully:', newTask);
+-        // TODO: Show success toast notification
++        this.toastService.showSuccess(`Task "${newTask.title}" created successfully!`);
+       }
+       
+       this.closeEditModal();
+     } catch (error) {
+       console.error('Failed to save task:', error);
+-      // TODO: Show error toast notification
+-      if (error instanceof Error) {
+-        alert(`Failed to save task: ${error.message}`);
+-      }
++      this.toastService.showError('Failed to save task. Please try again.');
+     }
+   }
+ 
+@@ -391,23 +433,24 @@ export class KanbanBoardComponent {
+   }
+ 
+   /**
+-   * Shows success message (placeholder for toast service integration)
++   * Shows success message to user
+    */
+   private showSuccessMessage(message: string): void {
+     console.log('Success:', message);
+-    // TODO: Integrate with ToastService when implemented
++    this.toastService.showSuccess(message);
+   }
+ 
+   /**
+-   * Shows error message (placeholder for toast service integration)
++   * Shows error message to user
+    */
+   private showErrorMessage(message: string): void {
+     console.error('Error:', message);
+-    // TODO: Integrate with ToastService when implemented
+-
+-    // For now, show a simple alert for critical errors
++    
++    // Show critical errors with no auto-dismiss
+     if (message.includes('Critical')) {
+-      alert(message);
++      this.toastService.showError(message, 0);
++    } else {
++      this.toastService.showError(message, 8000); // 8 seconds for regular errors
+     }
+   }
+
+--- FILE: src/app/components/task-card/task-card.component.ts ---
+diff --git a/src/app/components/task-card/task-card.component.ts b/src/app/components/task-card/task-card.component.ts
+index 009f9cd..6cd876f 100644
+--- a/src/app/components/task-card/task-card.component.ts
++++ b/src/app/components/task-card/task-card.component.ts
+@@ -92,43 +92,78 @@ import { Task } from '../../models/task.model';
+   `,
+   styles: [`
+     .task-card {
+-      background: white;
+-      border: 1px solid #e1e5e9;
+-      border-radius: 8px;
+-      padding: 16px;
+-      margin-bottom: 12px;
+-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+-      transition: all 0.2s ease;
++      background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++      border: 1px solid #e8edf2;
++      border-radius: 12px;
++      padding: 20px;
++      margin-bottom: 16px;
++      box-shadow: 
++        0 2px 8px rgba(0, 0, 0, 0.06),
++        0 1px 3px rgba(0, 0, 0, 0.1),
++        inset 0 1px 0 rgba(255, 255, 255, 0.6);
++      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+       cursor: grab;
++      position: relative;
++      overflow: hidden;
++    }
++
++    .task-card::before {
++      content: '';
++      position: absolute;
++      top: 0;
++      left: 0;
++      width: 4px;
++      height: 100%;
++      background: linear-gradient(180deg, #007bff 0%, #0056b3 100%);
++      border-radius: 2px 0 0 2px;
++    }
++
++    .task-card.task-backlog::before {
++      background: linear-gradient(180deg, #6c757d 0%, #495057 100%);
++    }
++
++    .task-card.task-in-progress::before {
++      background: linear-gradient(180deg, #ffc107 0%, #ff8f00 100%);
++    }
++
++    .task-card.task-done::before {
++      background: linear-gradient(180deg, #28a745 0%, #1e7e34 100%);
+     }
+ 
+     .task-card:hover {
+-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+-      transform: translateY(-1px);
++      transform: translateY(-3px) scale(1.02);
++      box-shadow: 
++        0 8px 25px rgba(0, 0, 0, 0.12),
++        0 4px 12px rgba(0, 0, 0, 0.08),
++        inset 0 1px 0 rgba(255, 255, 255, 0.8);
++      border-color: #d1d9e0;
+     }
+ 
+     .task-card:active {
+       cursor: grabbing;
++      transform: rotate(2deg) scale(1.03);
+     }
+ 
+     .task-header {
+       display: flex;
+       justify-content: space-between;
+       align-items: flex-start;
+-      margin-bottom: 8px;
++      margin-bottom: 12px;
++      gap: 12px;
+     }
+ 
+     .task-title {
+       margin: 0;
+-      font-size: 16px;
+-      font-weight: 600;
+-      color: #333;
+-      line-height: 1.4;
++      font-size: 17px;
++      font-weight: 700;
++      color: #1a202c;
++      line-height: 1.3;
+       flex: 1;
+       word-wrap: break-word;
+-      padding: 4px;
+-      border-radius: 4px;
+-      transition: background-color 0.2s ease;
++      padding: 8px;
++      border-radius: 8px;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      letter-spacing: -0.01em;
+     }
+ 
+     .task-title.clickable {
+@@ -136,76 +171,113 @@ import { Task } from '../../models/task.model';
+     }
+ 
+     .task-title.clickable:hover {
+-      background-color: #f5f5f5;
++      background-color: rgba(0, 123, 255, 0.08);
++      color: #0056b3;
++      transform: scale(1.02);
++    }
++
++    .task-title.clickable:active {
++      transform: scale(0.98);
++      background-color: rgba(0, 123, 255, 0.12);
+     }
+ 
+     .task-title-input {
+       margin: 0;
+-      font-size: 16px;
+-      font-weight: 600;
+-      color: #333;
+-      line-height: 1.4;
++      font-size: 17px;
++      font-weight: 700;
++      color: #1a202c;
++      line-height: 1.3;
+       flex: 1;
+-      border: 2px solid #2196F3;
+-      border-radius: 4px;
+-      padding: 4px 8px;
+-      background: white;
++      border: 2px solid #e2e8f0;
++      border-radius: 10px;
++      padding: 8px 12px;
++      background: #ffffff;
+       outline: none;
+       font-family: inherit;
++      letter-spacing: -0.01em;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+     }
+ 
+     .task-title-input:focus {
+-      border-color: #1976D2;
+-      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
++      border-color: #007bff;
++      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
++      background: #fafbfc;
+     }
+ 
+     .task-actions {
+       display: flex;
+-      gap: 4px;
+-      margin-left: 8px;
++      gap: 6px;
++      margin-left: 12px;
+       flex-shrink: 0;
++      opacity: 0.7;
++      transition: opacity 0.2s ease;
++    }
++
++    .task-card:hover .task-actions {
++      opacity: 1;
+     }
+ 
+     .edit-btn,
+     .delete-btn {
+-      background: none;
+-      border: none;
+-      color: #666;
+-      font-size: 16px;
++      background: rgba(255, 255, 255, 0.8);
++      border: 1px solid rgba(0, 0, 0, 0.08);
++      color: #6c757d;
++      font-size: 14px;
+       cursor: pointer;
+-      padding: 0;
+-      width: 24px;
+-      height: 24px;
++      padding: 6px;
++      width: 32px;
++      height: 32px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+-      border-radius: 4px;
+-      transition: all 0.2s ease;
++      border-radius: 8px;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      backdrop-filter: blur(4px);
+     }
+ 
+     .edit-btn:hover {
+-      background: #f5f5f5;
+-      color: #2196F3;
++      background: rgba(33, 150, 243, 0.1);
++      border-color: rgba(33, 150, 243, 0.3);
++      color: #1976D2;
++      transform: scale(1.1);
++      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
++    }
++
++    .edit-btn:active {
++      transform: scale(1.05);
++      box-shadow: 0 1px 4px rgba(33, 150, 243, 0.3);
+     }
+ 
+     .delete-btn {
+-      font-size: 18px;
++      font-size: 16px;
+     }
+ 
+     .delete-btn:hover {
+-      background: #f5f5f5;
++      background: rgba(244, 67, 54, 0.1);
++      border-color: rgba(244, 67, 54, 0.3);
+       color: #d32f2f;
++      transform: scale(1.1);
++      box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
++    }
++
++    .delete-btn:active {
++      transform: scale(1.05);
++      box-shadow: 0 1px 4px rgba(244, 67, 54, 0.3);
+     }
+ 
+     .task-description {
+-      margin: 0 0 12px 0;
+-      color: #666;
+-      font-size: 14px;
+-      line-height: 1.5;
++      margin: 0 0 20px 0;
++      color: #4a5568;
++      font-size: 15px;
++      line-height: 1.65;
+       word-wrap: break-word;
+-      padding: 4px;
+-      border-radius: 4px;
+-      transition: background-color 0.2s ease;
++      word-break: break-word;
++      padding: 12px;
++      border-radius: 8px;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      font-weight: 400;
++      text-align: left;
++      hyphens: auto;
+     }
+ 
+     .task-description.clickable {
+@@ -213,45 +285,64 @@ import { Task } from '../../models/task.model';
+     }
+ 
+     .task-description.clickable:hover {
+-      background-color: #f5f5f5;
++      background-color: rgba(0, 123, 255, 0.08);
++      color: #2d3748;
++      transform: scale(1.01);
++    }
++
++    .task-description.clickable:active {
++      transform: scale(0.99);
++      background-color: rgba(0, 123, 255, 0.12);
+     }
+ 
+     .task-description-placeholder {
+-      margin: 0 0 12px 0;
+-      color: #999;
+-      font-size: 14px;
+-      line-height: 1.5;
++      margin: 0 0 20px 0;
++      color: #a0aec0;
++      font-size: 15px;
++      line-height: 1.65;
+       font-style: italic;
+-      padding: 4px;
+-      border-radius: 4px;
+-      transition: background-color 0.2s ease;
++      padding: 12px;
++      border-radius: 8px;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+       cursor: pointer;
++      border: 2px dashed transparent;
+     }
+ 
+     .task-description-placeholder:hover {
+-      background-color: #f5f5f5;
+-      color: #777;
++      background-color: rgba(0, 123, 255, 0.04);
++      color: #718096;
++      border-color: rgba(0, 123, 255, 0.2);
++      transform: scale(1.01);
++    }
++
++    .task-description-placeholder:active {
++      transform: scale(0.99);
++      background-color: rgba(0, 123, 255, 0.08);
++      border-color: rgba(0, 123, 255, 0.3);
+     }
+ 
+     .task-description-input {
+-      margin: 0 0 12px 0;
+-      color: #666;
+-      font-size: 14px;
+-      line-height: 1.5;
++      margin: 0 0 20px 0;
++      color: #4a5568;
++      font-size: 15px;
++      line-height: 1.65;
+       width: 100%;
+-      border: 2px solid #2196F3;
+-      border-radius: 4px;
+-      padding: 8px;
+-      background: white;
++      border: 2px solid #e2e8f0;
++      border-radius: 10px;
++      padding: 12px 14px;
++      background: #ffffff;
+       outline: none;
+       font-family: inherit;
+       resize: vertical;
+-      min-height: 60px;
++      min-height: 80px;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      font-weight: 400;
+     }
+ 
+     .task-description-input:focus {
+-      border-color: #1976D2;
+-      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
++      border-color: #007bff;
++      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
++      background: #fafbfc;
+     }
+ 
+     .task-footer {
+@@ -259,34 +350,59 @@ import { Task } from '../../models/task.model';
+       justify-content: space-between;
+       align-items: center;
+       font-size: 12px;
+-      color: #888;
++      color: #718096;
++      margin-top: 4px;
++      padding-top: 16px;
++      border-top: 1px solid rgba(0, 0, 0, 0.04);
++      gap: 12px;
+     }
+ 
+     .task-status {
+-      background: #f0f0f0;
+-      padding: 2px 8px;
+-      border-radius: 12px;
+-      font-weight: 500;
+-      text-transform: capitalize;
++      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
++      border: 1px solid rgba(0, 0, 0, 0.08);
++      padding: 6px 12px;
++      border-radius: 16px;
++      font-weight: 600;
++      font-size: 11px;
++      text-transform: uppercase;
++      letter-spacing: 0.5px;
++      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+     }
+ 
+     .task-backlog .task-status {
+-      background: #e3f2fd;
+-      color: #1976d2;
++      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
++      color: #1565c0;
++      border-color: rgba(21, 101, 192, 0.2);
+     }
+ 
+     .task-in-progress .task-status {
+-      background: #fff3e0;
+-      color: #f57c00;
++      background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%);
++      color: #ef6c00;
++      border-color: rgba(239, 108, 0, 0.2);
+     }
+ 
+     .task-done .task-status {
+-      background: #e8f5e8;
+-      color: #388e3c;
++      background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
++      color: #2e7d32;
++      border-color: rgba(46, 125, 50, 0.2);
+     }
+ 
+     .task-created {
+-      font-style: italic;
++      font-style: normal;
++      font-size: 11px;
++      font-weight: 500;
++      color: #a0aec0;
++      letter-spacing: 0.02em;
++      text-transform: uppercase;
++      transition: color 0.2s ease;
++    }
++
++    .task-footer:hover .task-created {
++      color: #718096;
++    }
++
++    .task-footer:hover .task-status {
++      transform: scale(1.05);
+     }
+   `],
+   changeDetection: ChangeDetectionStrategy.OnPush
+
+--- FILE: src/app/components/toast/toast.component.ts ---
+diff --git a/src/app/components/toast/toast.component.ts b/src/app/components/toast/toast.component.ts
+new file mode 100644
+index 0000000..9b8d102
+--- /dev/null
++++ b/src/app/components/toast/toast.component.ts
+@@ -0,0 +1,264 @@
++import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
++import { CommonModule } from '@angular/common';
++import { ToastService, Toast } from '../../services/toast.service';
++
++/**
++ * Component for displaying toast notifications
++ */
++@Component({
++  selector: 'app-toast',
++  imports: [CommonModule],
++  template: `
++    <div class="toast-container">
++      @for (toast of toasts(); track toast.id) {
++        <div 
++          class="toast"
++          [class.toast-success]="toast.type === 'success'"
++          [class.toast-error]="toast.type === 'error'"
++          [class.toast-warning]="toast.type === 'warning'"
++          [class.toast-info]="toast.type === 'info'">
++          
++          <div class="toast-icon">
++            @switch (toast.type) {
++              @case ('success') { ✓ }
++              @case ('error') { ✕ }
++              @case ('warning') { ⚠ }
++              @case ('info') { ℹ }
++            }
++          </div>
++          
++          <div class="toast-content">
++            <p class="toast-message">{{ toast.message }}</p>
++            <small class="toast-time">{{ getTimeAgo(toast.createdAt) }}</small>
++          </div>
++          
++          <button 
++            class="toast-close"
++            (click)="dismissToast(toast.id)"
++            type="button"
++            aria-label="Close notification">
++            ×
++          </button>
++        </div>
++      }
++    </div>
++  `,
++  styles: [`
++    .toast-container {
++      position: fixed;
++      top: 24px;
++      right: 24px;
++      z-index: 1000;
++      display: flex;
++      flex-direction: column;
++      gap: 12px;
++      max-width: 420px;
++      pointer-events: none;
++    }
++
++    .toast {
++      background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
++      border-radius: 12px;
++      padding: 16px 20px;
++      border: 1px solid #e8edf2;
++      box-shadow: 
++        0 8px 25px rgba(0, 0, 0, 0.12),
++        0 4px 12px rgba(0, 0, 0, 0.08);
++      display: flex;
++      align-items: flex-start;
++      gap: 12px;
++      min-height: 72px;
++      pointer-events: auto;
++      transform: translateX(100%);
++      opacity: 0;
++      animation: toast-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
++      position: relative;
++      overflow: hidden;
++    }
++
++    @keyframes toast-slide-in {
++      0% {
++        transform: translateX(120%) scale(0.8);
++        opacity: 0;
++      }
++      60% {
++        transform: translateX(-10%) scale(1.05);
++        opacity: 0.8;
++      }
++      100% {
++        transform: translateX(0) scale(1);
++        opacity: 1;
++      }
++    }
++
++    .toast::before {
++      content: '';
++      position: absolute;
++      top: 0;
++      left: 0;
++      width: 4px;
++      height: 100%;
++      border-radius: 2px 0 0 2px;
++    }
++
++    .toast-success::before {
++      background: linear-gradient(180deg, #28a745 0%, #1e7e34 100%);
++    }
++
++    .toast-error::before {
++      background: linear-gradient(180deg, #dc3545 0%, #bd2130 100%);
++    }
++
++    .toast-warning::before {
++      background: linear-gradient(180deg, #ffc107 0%, #e0a800 100%);
++    }
++
++    .toast-info::before {
++      background: linear-gradient(180deg, #17a2b8 0%, #138496 100%);
++    }
++
++    .toast-icon {
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      width: 28px;
++      height: 28px;
++      border-radius: 50%;
++      font-size: 16px;
++      font-weight: 700;
++      flex-shrink: 0;
++      margin-top: 2px;
++    }
++
++    .toast-success .toast-icon {
++      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
++      color: white;
++    }
++
++    .toast-error .toast-icon {
++      background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
++      color: white;
++    }
++
++    .toast-warning .toast-icon {
++      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
++      color: white;
++    }
++
++    .toast-info .toast-icon {
++      background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
++      color: white;
++    }
++
++    .toast-content {
++      flex: 1;
++      display: flex;
++      flex-direction: column;
++      gap: 4px;
++    }
++
++    .toast-message {
++      margin: 0;
++      font-size: 15px;
++      font-weight: 500;
++      color: #2d3748;
++      line-height: 1.4;
++    }
++
++    .toast-time {
++      color: #a0aec0;
++      font-size: 12px;
++      font-weight: 500;
++      text-transform: uppercase;
++      letter-spacing: 0.02em;
++    }
++
++    .toast-close {
++      background: rgba(0, 0, 0, 0.05);
++      border: none;
++      border-radius: 50%;
++      width: 28px;
++      height: 28px;
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      cursor: pointer;
++      color: #a0aec0;
++      font-size: 18px;
++      font-weight: 600;
++      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
++      flex-shrink: 0;
++      margin-top: 2px;
++    }
++
++    .toast-close:hover {
++      background: rgba(0, 0, 0, 0.1);
++      color: #718096;
++      transform: scale(1.1);
++    }
++
++    .toast-close:active {
++      transform: scale(1.05);
++      background: rgba(0, 0, 0, 0.15);
++    }
++
++    /* Toast hover effects */
++    .toast:hover {
++      transform: translateY(-2px) scale(1.02);
++      box-shadow: 
++        0 12px 35px rgba(0, 0, 0, 0.15),
++        0 6px 16px rgba(0, 0, 0, 0.1);
++    }
++
++    /* Mobile responsive */
++    @media (max-width: 768px) {
++      .toast-container {
++        top: 16px;
++        right: 16px;
++        left: 16px;
++        max-width: none;
++      }
++      
++      .toast {
++        padding: 14px 16px;
++        min-height: 64px;
++      }
++      
++      .toast-message {
++        font-size: 14px;
++      }
++    }
++  `],
++  changeDetection: ChangeDetectionStrategy.OnPush
++})
++export class ToastComponent {
++  private toastService = inject(ToastService);
++  
++  // Expose toasts signal
++  toasts = this.toastService.toasts;
++
++  /**
++   * Dismisses a toast
++   */
++  dismissToast(id: string): void {
++    this.toastService.removeToast(id);
++  }
++
++  /**
++   * Gets a human-readable time ago string
++   */
++  getTimeAgo(createdAt: Date): string {
++    const now = new Date();
++    const diffInSeconds = Math.floor((now.getTime() - createdAt.getTime()) / 1000);
++
++    if (diffInSeconds < 60) {
++      return 'Just now';
++    } else if (diffInSeconds < 3600) {
++      const minutes = Math.floor(diffInSeconds / 60);
++      return `${minutes}m ago`;
++    } else {
++      const hours = Math.floor(diffInSeconds / 3600);
++      return `${hours}h ago`;
++    }
++  }
++}
+\ No newline at end of file
+
+--- FILE: src/styles.css ---
+diff --git a/src/styles.css b/src/styles.css
+index 90d4ee0..d22420a 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -1 +1,71 @@
+-/* You can add global styles to this file, and also import other style files */
++/* Global Styles - Modern Desktop-Focused Design */
++
++* {
++  box-sizing: border-box;
++}
++
++html {
++  font-size: 16px;
++  line-height: 1.6;
++}
++
++body {
++  margin: 0;
++  padding: 0;
++  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
++  font-feature-settings: 'kern' 1;
++  text-rendering: optimizeLegibility;
++  -webkit-font-smoothing: antialiased;
++  -moz-osx-font-smoothing: grayscale;
++  background: #f1f3f4;
++  overflow-x: hidden;
++}
++
++/* Loading animation for the app */
++@keyframes app-fade-in {
++  from {
++    opacity: 0;
++    transform: translateY(20px);
++  }
++  to {
++    opacity: 1;
++    transform: translateY(0);
++  }
++}
++
++/* Smooth scrolling */
++html {
++  scroll-behavior: smooth;
++}
++
++/* Desktop Typography Scaling */
++@media (min-width: 1440px) {
++  html {
++    font-size: 18px;
++  }
++}
++
++@media (min-width: 1200px) and (max-width: 1439px) {
++  html {
++    font-size: 17px;
++  }
++}
++
++@media (min-width: 992px) and (max-width: 1199px) {
++  html {
++    font-size: 16px;
++  }
++}
++
++/* Focus styles for accessibility */
++*:focus {
++  outline: 2px solid #007bff;
++  outline-offset: 2px;
++}
++
++button:focus,
++input:focus,
++textarea:focus {
++  outline: 2px solid #007bff;
++  outline-offset: 2px;
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

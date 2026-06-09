@@ -1,0 +1,325 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Deepgram
+ - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
+ - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code content within specific files (src/app/api/deepgram/transcribe-audio/route.ts and src/lib/contexts/DeepgramContext.tsx).
+- Suggested Logic: 1. Verify the existence of the file path 'src/app/api/deepgram/transcribe-audio/route.ts'.
+2. Verify the existence of the file path 'src/lib/contexts/DeepgramContext.tsx'.
+3. Perform a static analysis (regex or AST) on 'DeepgramContext.tsx' to ensure it defines or exports a hook named 'useDeepgram'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: Merge branch 'main' of https://github.com/ansh/template-2
+- Changed Files List: 
+package-lock.json	+234	-132	after_lines=7430
+package.json	+6	-3	after_lines=36
+paths/voice-notes.md	+24	-0	after_lines=24
+src/app/all-notes/page.tsx	+56	-0	after_lines=56
+src/app/api/deepgram/route.ts	+49	-0	after_lines=49
+src/app/api/openai/transcribe/route.ts	+38	-0	after_lines=38
+src/app/page.tsx	+154	-31	after_lines=164
+src/components/NotesList.tsx	+37	-0	after_lines=37
+src/components/VoiceRecorder.tsx	+46	-0	after_lines=46
+src/hooks/useRecordVoice.ts	+130	-0	after_lines=130
+src/lib/contexts/DeepgramContext.tsx	+136	-0	after_lines=136
+src/lib/firebase/firebaseUtils.ts	+7	-2	after_lines=56
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .eslintrc.json
+├── .gitignore
+├── .replit
+├── README.md
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── paths
+│   ├── chat.md
+│   ├── image-generation.md
+│   ├── social-media.md
+│   └── voice-notes.md
+├── postcss.config.mjs
+├── public
+│   ├── next.svg
+│   └── vercel.svg
+├── src
+│   ├── app
+│   │   ├── all-notes
+│   │   │   └── page.tsx
+│   │   ├── api
+│   │   │   ├── anthropic
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   ├── deepgram
+│   │   │   │   └── route.ts
+│   │   │   ├── openai
+│   │   │   │   ├── chat
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── transcribe
+│   │   │   │       └── route.ts
+│   │   │   └── replicate
+│   │   │       └── generate-image
+│   │   │           └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── ImageUpload.tsx
+│   │   ├── NotesList.tsx
+│   │   ├── SignInWithGoogle.tsx
+│   │   └── VoiceRecorder.tsx
+│   ├── hooks
+│   │   └── useRecordVoice.ts
+│   └── lib
+│       ├── contexts
+│       │   ├── AuthContext.tsx
+│       │   └── DeepgramContext.tsx
+│       ├── firebase
+│       │   ├── firebase.ts
+│       │   └── firebaseUtils.ts
+│       └── hooks
+│           └── useAuth.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: package-lock.json ---
+
+--- FILE: package.json ---
+
+--- FILE: paths/voice-notes.md ---
+
+--- FILE: src/app/all-notes/page.tsx ---
+
+--- FILE: src/app/api/deepgram/route.ts ---
+
+--- FILE: src/app/api/openai/transcribe/route.ts ---
+
+--- FILE: src/app/page.tsx ---
+
+--- FILE: src/components/NotesList.tsx ---
+
+--- FILE: src/components/VoiceRecorder.tsx ---
+
+--- FILE: src/hooks/useRecordVoice.ts ---
+
+--- FILE: src/lib/contexts/DeepgramContext.tsx ---
+diff --cc src/lib/contexts/DeepgramContext.tsx
+index 0000000,0000000..ef0619b
+new file mode 100644
+--- /dev/null
++++ b/src/lib/contexts/DeepgramContext.tsx
+@@@ -1,0 -1,0 +1,136 @@@
+++"use client";
+++
+++import {
+++  createClient,
+++  LiveClient,
+++  SOCKET_STATES,
+++  LiveTranscriptionEvents,
+++  type LiveSchema,
+++  type LiveTranscriptionEvent,
+++} from "@deepgram/sdk";
+++
+++import { createContext, useContext, useState, ReactNode, FunctionComponent, useRef } from "react";
+++
+++interface DeepgramContextType {
+++  connectToDeepgram: () => Promise<void>;
+++  disconnectFromDeepgram: () => void;
+++  connectionState: SOCKET_STATES;
+++  realtimeTranscript: string;
+++  error: string | null;
+++}
+++
+++const DeepgramContext = createContext<DeepgramContextType | undefined>(undefined);
+++
+++interface DeepgramContextProviderProps {
+++  children: ReactNode;
+++}
+++
+++const getApiKey = async (): Promise<string> => {
+++  const response = await fetch("/api/deepgram", { cache: "no-store" });
+++  const result = await response.json();
+++  return result.key;
+++};
+++
+++const DeepgramContextProvider: FunctionComponent<DeepgramContextProviderProps> = ({ children }) => {
+++  const [connection, setConnection] = useState<WebSocket | null>(null);
+++  const [connectionState, setConnectionState] = useState<SOCKET_STATES>(SOCKET_STATES.closed);
+++  const [realtimeTranscript, setRealtimeTranscript] = useState("");
+++  const [error, setError] = useState<string | null>(null);
+++  const audioRef = useRef<MediaRecorder | null>(null);
+++
+++  const connectToDeepgram = async () => {
+++    try {
+++      setError(null);
+++      setRealtimeTranscript("");
+++      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+++      audioRef.current = new MediaRecorder(stream);
+++
+++      const apiKey = await getApiKey();
+++
+++      console.log("Opening WebSocket connection...");
+++      const socket = new WebSocket("wss://api.deepgram.com/v1/listen", ["token", apiKey]);
+++
+++      socket.onopen = () => {
+++        setConnectionState(SOCKET_STATES.open);
+++        console.log("WebSocket connection opened");
+++        audioRef.current!.addEventListener("dataavailable", (event) => {
+++          if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+++            socket.send(event.data);
+++          }
+++        });
+++
+++        audioRef.current!.start(250);
+++      };
+++
+++      socket.onmessage = (event) => {
+++        const data = JSON.parse(event.data);
+++        if (data.channel && data.channel.alternatives && data.channel.alternatives[0]) {
+++          const newTranscript = data.channel.alternatives[0].transcript;
+++          setRealtimeTranscript((prev) => prev + " " + newTranscript);
+++        }
+++      };
+++
+++      socket.onerror = (error) => {
+++        console.error("WebSocket error:", error);
+++        setError("Error connecting to Deepgram. Please try again.");
+++        disconnectFromDeepgram();
+++      };
+++
+++      socket.onclose = (event) => {
+++        setConnectionState(SOCKET_STATES.closed);
+++        console.log("WebSocket connection closed:", event.code, event.reason);
+++      };
+++
+++      setConnection(socket);
+++    } catch (error) {
+++      console.error("Error starting voice recognition:", error);
+++      setError(error instanceof Error ? error.message : "An unknown error occurred");
+++      setConnectionState(SOCKET_STATES.closed);
+++    }
+++  };
+++
+++  const disconnectFromDeepgram = () => {
+++    if (connection) {
+++      connection.close();
+++      setConnection(null);
+++    }
+++    if (audioRef.current) {
+++      audioRef.current.stop();
+++    }
+++    setRealtimeTranscript("");
+++    setConnectionState(SOCKET_STATES.closed);
+++  };
+++
+++  return (
+++    <DeepgramContext.Provider
+++      value={{
+++        connectToDeepgram,
+++        disconnectFromDeepgram,
+++        connectionState,
+++        realtimeTranscript,
+++        error,
+++      }}
+++    >
+++      {children}
+++    </DeepgramContext.Provider>
+++  );
+++};
+++
+++// Use the useDeepgram hook to access the deepgram context and use the deepgram in any component.
+++// This allows you to connect to the deepgram and disconnect from the deepgram via a socket.
+++// Make sure to wrap your application in a DeepgramContextProvider to use the deepgram.
+++function useDeepgram(): DeepgramContextType {
+++  const context = useContext(DeepgramContext);
+++  if (context === undefined) {
+++    throw new Error("useDeepgram must be used within a DeepgramContextProvider");
+++  }
+++  return context;
+++}
+++
+++export {
+++  DeepgramContextProvider,
+++  useDeepgram,
+++  SOCKET_STATES,
+++  LiveTranscriptionEvents,
+++  type LiveTranscriptionEvent,
+++};
+
+--- FILE: src/lib/firebase/firebaseUtils.ts ---
+diff --cc src/lib/firebase/firebaseUtils.ts
+index af252f6,0000000..b780d3a
+mode 100644,000000..100644
+--- a/src/lib/firebase/firebaseUtils.ts
++++ b/src/lib/firebase/firebaseUtils.ts
+@@@ -1,51 -1,0 +1,56 @@@
+ +import { auth, db, storage } from "./firebase";
+ +import {
+ +  signInWithEmailAndPassword,
+ +  createUserWithEmailAndPassword,
+ +  signOut,
+ +  GoogleAuthProvider,
+ +  signInWithPopup,
+ +} from "firebase/auth";
+ +import {
+ +  collection,
+ +  addDoc,
+ +  getDocs,
+ +  doc,
+ +  updateDoc,
+ +  deleteDoc,
+ +} from "firebase/firestore";
+ +import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+ +
+ +// Auth functions
+ +export const logoutUser = () => signOut(auth);
+ +
+ +export const signInWithGoogle = async () => {
+ +  const provider = new GoogleAuthProvider();
+ +  try {
+ +    const result = await signInWithPopup(auth, provider);
+ +    return result.user;
+ +  } catch (error) {
+ +    console.error("Error signing in with Google", error);
+ +    throw error;
+ +  }
+ +};
+ +
+ +// Firestore functions
+ +export const addDocument = (collectionName: string, data: any) =>
+ +  addDoc(collection(db, collectionName), data);
+ +
+- export const getDocuments = (collectionName: string) =>
+-   getDocs(collection(db, collectionName));
+++export const getDocuments = async (collectionName: string) => {
+++  const querySnapshot = await getDocs(collection(db, collectionName));
+++  return querySnapshot.docs.map(doc => ({
+++    id: doc.id,
+++    ...doc.data()
+++  }));
+++};
+ +
+ +export const updateDocument = (collectionName: string, id: string, data: any) =>
+ +  updateDoc(doc(db, collectionName, id), data);
+ +
+ +export const deleteDocument = (collectionName: string, id: string) =>
+ +  deleteDoc(doc(db, collectionName, id));
+ +
+ +// Storage functions
+ +export const uploadFile = async (file: File, path: string) => {
+ +  const storageRef = ref(storage, path);
+ +  await uploadBytes(storageRef, file);
+ +  return getDownloadURL(storageRef);
+ +};
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

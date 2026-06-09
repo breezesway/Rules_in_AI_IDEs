@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import { RotateCcw, FileText, FolderOpen, Palette } from 'lucide-react';
+import { Modal } from '../ui/modal';
+import { SaveLocationSelector } from '../ui/save-location-selector';
+import { ThemeSelector } from '../ui/theme-selector';
+import { AppConfig, ThemeMode } from '../types/electron.d';
+import { useTheme } from '../hooks/use-theme';
+import { toast } from 'sonner';
+
+interface AppSettingsProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+  const [config, setConfig] = useState<AppConfig>({
+    autoNumberDuplicateFiles: true,
+    defaultSaveLocation: '',
+    theme: 'system'
+  });
+  const [loading, setLoading] = useState(false);
+  const [changingTheme, setChangingTheme] = useState(false);
+  const { theme, changeTheme } = useTheme();
+
+  // 加载配置
+  const loadConfig = async () => {
+    setLoading(true);
+    try {
+      const currentConfig = await window.electronAPI.getAppConfig();
+      setConfig(currentConfig);
+      // 注意：主题状态由useTheme Hook管理，这里不需要额外处理
+    } catch (error) {
+      console.error('加载配置失败:', error);
+      toast.error('加载配置失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 立即保存配置项
+  const updateConfigAndSave = async (key: keyof AppConfig, value: boolean | string) => {
+    try {
+      // 更新本地状态
+      const newConfig = { ...config, [key]: value };
+      setConfig(newConfig);
+
+      // 立即保存到后端
+      const result = await window.electronAPI.updateAppConfig(newConfig);
+      if (!result.success) {
+        // 如果保存失败，回滚本地状态
+        setConfig(config);
+        toast.error('保存失败: ' + result.error);
+      }
+    } catch (error) {
+      // 如果保存失败，回滚本地状态
+      setConfig(config);
+      console.error('保存配置失败:', error);
+      toast.error('保存配置失败');
+    }
+  };
+
+  // 重置配置
+  const resetConfig = async () => {
+    if (!window.confirm('确定要重置所有配置为默认值吗？')) {
+      return;
+    }
+
+    try {
+      const result = await window.electronAPI.resetAppConfig();
+      if (result.success) {
+        await loadConfig(); // 重新加载配置
+        toast.success('配置已重置为默认值');
+      } else {
+        toast.error('重置失败: ' + result.error);
+      }
+    } catch (error) {
+      console.error('重置配置失败:', error);
+      toast.error('重置配置失败');
+    }
+  };
+
+  // 处理主题切换（立即生效）
+  const handleThemeChange = async (newTheme: ThemeMode) => {
+    if (changingTheme) return; // 防止重复点击
+    
+    setChangingTheme(true);
+    try {
+      // 立即应用主题
+      await changeTheme(newTheme);
+      
+      // 更新本地配置状态并保存
+      await updateConfigAndSave('theme', newTheme);
+      
+      // 显示成功提示
+      const themeNames = {
+        light: '浅色',
+        dark: '深色',
+        system: '跟随系统'
+      };
+      toast.success(`已切换到${themeNames[newTheme]}模式`);
+    } catch (error) {
+      console.error('切换主题失败:', error);
+      toast.error('主题切换失败，请重试');
+    } finally {
+      setChangingTheme(false);
+    }
+  };
+
+  // 选择默认保存位置
+  const handleSelectDefaultSaveLocation = async () => {
+    try {
+      const result = await window.electronAPI.selectSaveLocation();
+      if (result.success && result.path) {
+        await updateConfigAndSave('defaultSaveLocation', result.path);
+        toast.success('默认保存位置已更新');
+      }
+    } catch (error) {
+      console.error('选择保存位置失败:', error);
+      toast.error('选择保存位置失败，请重试');
+    }
+  };
+
+  // 处理自动编号设置变更
+  const handleAutoNumberChange = async (checked: boolean) => {
+    await updateConfigAndSave('autoNumberDuplicateFiles', checked);
+    toast.success(checked ? '已启用自动编号' : '已禁用自动编号');
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadConfig();
+    }
+  }, [isOpen]);
+
+  const footerContent = (
+    <div className="flex justify-end">
+      <button
+        onClick={resetConfig}
+        disabled={loading}
+        className="flex items-center space-x-2 px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <RotateCcw className="h-4 w-4" />
+        <span>重置为默认</span>
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="应用设置" footer={footerContent}>
+      <div className="space-y-6">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">加载中...</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* 文件保存设置 - 改进分组和层次 */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 space-y-6">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
+                  <FolderOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">文件保存</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">配置文件保存相关设置</p>
+                </div>
+              </div>
+
+              {/* 默认保存位置设置 */}
+              <div className="bg-white dark:bg-gray-700/50 p-5 border border-gray-200 dark:border-gray-600 rounded-xl">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      默认保存位置
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      设置所有工具的默认文件保存位置。如果不设置，将使用系统默认下载目录。
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">保存位置</label>
+                    <SaveLocationSelector
+                      value={config.defaultSaveLocation}
+                      placeholder="使用系统默认下载目录"
+                      onSelect={handleSelectDefaultSaveLocation}
+                      disabled={loading}
+                    />
+                    {config.defaultSaveLocation && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        当前设置: {config.defaultSaveLocation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 文件处理设置 - 统一分组样式 */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 space-y-6">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-xl">
+                  <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">文件处理</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">配置文件处理相关设置</p>
+                </div>
+              </div>
+
+              {/* 自动添加数字序号设置 */}
+              <div className="bg-white dark:bg-gray-700/50 p-5 border border-gray-200 dark:border-gray-600 rounded-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      文件名重复时自动添加序号
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      当输出文件名已存在时，自动在文件名后添加数字序号（如 document(1).pdf），
+                      而不是询问是否覆盖原文件。
+                    </p>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                      <p>• 启用：自动生成 document(1).pdf, document(2).pdf...</p>
+                      <p>• 禁用：弹出对话框询问是否覆盖现有文件</p>
+                    </div>
+                  </div>
+                  
+                  <div className="ml-4 flex-shrink-0">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={config.autoNumberDuplicateFiles}
+                        onChange={(e) => handleAutoNumberChange(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 dark:peer-focus:ring-gray-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900 dark:peer-checked:bg-white peer-checked:after:bg-white dark:peer-checked:after:bg-gray-900"></div>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* 示例展示 */}
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">示例：</p>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    {config.autoNumberDuplicateFiles ? (
+                      <>
+                        <p>✓ 原文件：document.pdf</p>
+                        <p>✓ 新文件：document(1).pdf（自动生成）</p>
+                        <p>✓ 再次保存：document(2).pdf（自动生成）</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>⚠ 原文件：document.pdf</p>
+                        <p>⚠ 新文件：document.pdf（询问是否覆盖）</p>
+                        <p>⚠ 需要用户选择：覆盖 或 取消</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 主题设置 - 统一分组样式 */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 space-y-6">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-xl">
+                  <Palette className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">外观主题</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">选择应用的外观主题</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-700/50 p-5 border border-gray-200 dark:border-gray-600 rounded-xl">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      主题模式
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      选择应用的外观主题。跟随系统模式会根据您的系统设置自动切换。
+                    </p>
+                  </div>
+                  
+                  <ThemeSelector
+                    currentTheme={theme}
+                    onThemeChange={handleThemeChange}
+                    disabled={loading}
+                    isChanging={changingTheme}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 配置信息 */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                配置文件保存在应用数据目录中，重装应用后配置会保留。所有设置修改后立即生效。
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+} 

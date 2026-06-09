@@ -1,0 +1,98 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: internal/domain/.cursor/rules/entity.mdc
+- Change Type: added
+- Target Rule Content:
+All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing data structures with field tags or decorators (e.g., Go structs, Rust structs with serde, or TypeScript classes with decorators).
+- Suggested Logic: 1. Scan source code for struct/class field definitions.
+2. Locate 'json' tags/annotations and use a regular expression to verify that the tag value follows snake_case (e.g., `^[a-z0-9_]+$`).
+3. Check for the presence of a 'secret' tag/annotation on fields.
+4. If a 'secret' tag is present, verify that the 'json' tag is set to omit the field (e.g., `json:"-"` in Go).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: docs: expand and clarify generic types pattern guide
+
+- Add Identity type pattern for UUID-based strong typing (e.g., TenantID)
+- Clarify usage of Enumerated String pattern with comments and naming conventions
+- Emphasize fault tolerance and flexibility in code generation
+- Provide practical examples for both patterns
+- Improve guidance for future generic type definitions in Go
+- Changed Files List: 
+internal/domain/.cursor/rules/generic-types.mdc	+22	-3	after_lines=46
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── global.mdc
+├── README.md
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+└── internal
+    └── domain
+        └── .cursor
+            └── rules
+                └── generic-types.mdc
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: internal/domain/.cursor/rules/generic-types.mdc ---
+diff --git a/internal/domain/.cursor/rules/generic-types.mdc b/internal/domain/.cursor/rules/generic-types.mdc
+index b16fcc5..f87f82a 100644
+--- a/internal/domain/.cursor/rules/generic-types.mdc
++++ b/internal/domain/.cursor/rules/generic-types.mdc
+@@ -1,16 +1,35 @@
+ ## Generic Data Types 
+ 
+-This rule describe meta information of generic data type generator
++This rule describe meta information of generic data type generator. This also act as guide of pattern definition to generate code in go. All of pattern described here should be fault tolerant. Which means it should be ok if definition make small mistake, as long as it understandable.
++
++### Identity
++
++It represent new type defintion of ``uuid.UUID`` from library ``github.com/google/uuid``. For example, when it written something like this : 
++
++```
++Identity of Tenant
++```
++
++It represent as code :  
++
++```go
++
++import "github.com/google/uuid"
++
++type TenantID uuid.UUID
++
++```
++
+ 
+ ### Enumerated String
+ 
+-It's represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this (Please make it fault tolerant. It should be a little bit flexible. U know, I am a little bit clumsy): 
++It represent new type definition of string and some constants with these type. The constants are defined in CamelCase prefixed by type name, and the value are written in snake case. For example, when it written something like this : 
+ 
+ ```
+ UserStatus is Enumerated string of "active" and "inactive"
+ ```
+ 
+-It can be representation of code :  
++It represent as code :  
+ 
+ ```go
+ // UserStatus represents the status of a user account.
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

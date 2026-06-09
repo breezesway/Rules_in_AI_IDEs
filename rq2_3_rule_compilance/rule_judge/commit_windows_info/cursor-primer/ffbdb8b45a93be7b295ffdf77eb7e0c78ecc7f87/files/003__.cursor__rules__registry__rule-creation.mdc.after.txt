@@ -1,0 +1,105 @@
+---
+description: Guidelines for creating new Cursor rules, ensuring proper file creation and directory structure
+type: agent_requested
+---
+
+# Creating New Cursor Rules
+
+## Context
+When creating new rules for Cursor, it's essential to ensure the proper directory structure exists and that the file is created correctly. Due to how Cursor treats .mdc files specially, we must create the file with a different extension first, then rename it after content verification. Creating the draft in the registry directory keeps related files together and reduces file movement.
+
+## Key Rules
+
+1. **Directory Structure**
+   - Always ensure the `.cursor/rules/registry` directory structure exists
+   - Create directories before attempting to write files
+   ```bash
+   mkdir -p .cursor/rules/registry
+   ```
+
+2. **File Creation Process**
+   - Create the rule file with .md extension in the registry directory
+   - Verify content is written correctly
+   - Rename in place to .mdc
+   ```bash
+   # Create with .md extension in registry
+   edit_file .cursor/rules/registry/new-rule.md
+
+   # Verify content
+   cat .cursor/rules/registry/new-rule.md
+
+   # Rename in place if content is correct
+   mv .cursor/rules/registry/new-rule.md .cursor/rules/registry/new-rule.mdc
+   ```
+
+## Examples
+
+### ❌ Incorrect Approaches
+```bash
+# Don't create .mdc files directly - they're treated specially by Cursor
+edit_file .cursor/rules/registry/new-rule.mdc
+
+# Don't scatter draft files across the project
+edit_file new-rule.md
+mv new-rule.md .cursor/rules/registry/new-rule.mdc
+```
+
+### ✅ Correct Approach
+```bash
+# 1. Ensure directory exists
+mkdir -p .cursor/rules/registry
+
+# 2. Create content as .md file in registry
+edit_file .cursor/rules/registry/new-rule.md
+
+# 3. Verify content
+cat .cursor/rules/registry/new-rule.md
+
+# 4. Rename in place to .mdc
+mv .cursor/rules/registry/new-rule.md .cursor/rules/registry/new-rule.mdc
+```
+
+## Implementation Guidelines
+
+1. **File Extension Strategy**
+   - Always create files as .md first
+   - Only rename to .mdc after content verification
+   - This avoids issues with Cursor's special handling of .mdc files
+
+2. **Location Strategy**
+   - Create files directly in .cursor/rules/registry
+   - Use .md extension for drafts
+   - Rename in place to .mdc after verification
+   - This keeps related files together and minimizes file movement
+
+3. **Content Verification**
+   - Always verify file content after creation
+   - Use `cat` or similar to check content
+   - Only proceed with rename if content is correct
+
+4. **File Naming**
+   - Use kebab-case for file names
+   - Make names descriptive and specific
+   - Follow pattern: `descriptive-name.md` → `descriptive-name.mdc`
+   - Keep draft and final file in same directory
+
+## Error Prevention
+
+Common failures to avoid:
+1. Creating .mdc files directly
+2. Scattering draft files across project
+3. Not verifying content before renaming
+4. Skipping the .md → .mdc rename step
+
+## Verification Steps
+
+After creating a rule:
+1. Check that the .md file exists in registry directory
+2. Verify content is complete and correct
+3. Rename to .mdc in place
+4. Verify final name and content
+
+## Related Rules
+- Rule content structure
+- Rule naming conventions
+- Rule metadata requirements 

@@ -1,0 +1,540 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Deepgram
+ - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
+ - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code content within specific files (src/app/api/deepgram/transcribe-audio/route.ts and src/lib/contexts/DeepgramContext.tsx).
+- Suggested Logic: 1. Verify the existence of the file path 'src/app/api/deepgram/transcribe-audio/route.ts'.
+2. Verify the existence of the file path 'src/lib/contexts/DeepgramContext.tsx'.
+3. Perform a static analysis (regex or AST) on 'DeepgramContext.tsx' to ensure it defines or exports a hook named 'useDeepgram'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: organize template better & add .cursorrules
+- Changed Files List: 
+.cursorrules	+19	-0	after_lines=19
+.replit	+2	-1	after_lines=13
+src/app/api/generate-image/route.ts	+0	-37	after_lines=0
+src/app/api/replicate/generate-image/route.ts	+37	-0	after_lines=37
+src/app/layout.tsx	+6	-5	after_lines=13
+src/components/SignInWithGoogle.tsx	+4	-2	after_lines=49
+src/contexts/AuthContext.tsx	+0	-30	after_lines=0
+src/lib/contexts/AuthContext.tsx	+37	-0	after_lines=37
+src/lib/firebase.ts	+0	-21	after_lines=0
+src/lib/firebase/firebase.ts	+21	-0	after_lines=21
+src/lib/firebase/firebaseUtils.ts	+51	-0	after_lines=51
+src/lib/firebaseUtils.ts	+0	-50	after_lines=0
+src/lib/hooks/useAuth.ts	+4	-0	after_lines=4
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .eslintrc.json
+├── .gitignore
+├── .replit
+├── README.md
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── paths
+│   ├── chat.md
+│   ├── image-generation.md
+│   └── social-media.md
+├── postcss.config.mjs
+├── public
+│   ├── next.svg
+│   └── vercel.svg
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── anthropic
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   ├── openai
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   └── replicate
+│   │   │       └── generate-image
+│   │   │           └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── ImageUpload.tsx
+│   │   └── SignInWithGoogle.tsx
+│   └── lib
+│       ├── contexts
+│       │   └── AuthContext.tsx
+│       ├── firebase
+│       │   ├── firebase.ts
+│       │   └── firebaseUtils.ts
+│       └── hooks
+│           └── useAuth.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursorrules ---
+diff --git a/.cursorrules b/.cursorrules
+new file mode 100644
+index 0000000..ad4be48
+--- /dev/null
++++ b/.cursorrules
+@@ -0,0 +1,19 @@
++You are an expert in TypeScript, Next.js App Router, React, and Tailwind. Follow @Next.js 14 App Router docs for Data Fetching, Rendering, and Routing. Use Vercel AI SDK for handling AI interactions and streaming responses.
++
++- All project files are saved in the /src folder. 
++  - src/app has the page.tsx and layout.tsx files
++  - src/app/api has the API routes
++  - src/app/components has all the React components
++  - src/app/lib has all the other code like helpers, hooks, and contexts
++
++There are some pre-configured APIs in this template that can be used but only if required by the current project:
++- Firebase
++  - In src/lib/firebase there is a firebase.ts configuration file as well as firebaseUtils.ts for various utility functions when interacting with Firebase Database, Storage, and Authencation
++  - In src/lib/contexts there is an AuthContext.tsx file that has user authentication with Firebase set up with the onAuthStateChanged listener.
++  - In src/lib/hooks there is a useAuth.ts hook
++- OpenAI 
++  - src/app/api/openai has chat/route.ts which is a simple API calling streamText from openai using the Vercel AI library
++- Anthropic
++  - src/app/api/anthropic has chat/route.ts which is a simple API calling streamText from Anthropic using the Vercel AI library
++- Replicate
++  - src/app/api/replicate has generate-image/route.ts which is a simple API calling the Stable Diffusion model hosted on Replicate to generate images
+\ No newline at end of file
+
+--- FILE: .replit ---
+diff --git a/.replit b/.replit
+index 0d00d98..1c8155c 100644
+--- a/.replit
++++ b/.replit
+@@ -5,7 +5,8 @@ run = "npm run dev"
+ channel = "stable-24_05"
+ 
+ [deployment]
+-run = ["sh", "-c", "npm run dev"]
++run = ["sh", "-c", "npm run start"]
++build = ["sh", "-c", "npm run build"]
+ 
+ [[ports]]
+ localPort = 3000
+
+--- FILE: src/app/api/generate-image/route.ts ---
+diff --git a/src/app/api/generate-image/route.ts b/src/app/api/generate-image/route.ts
+deleted file mode 100644
+index e5a13da..0000000
+--- a/src/app/api/generate-image/route.ts
++++ /dev/null
+@@ -1,37 +0,0 @@
+-import { NextResponse } from "next/server";
+-import Replicate from "replicate";
+-
+-const replicate = new Replicate({
+-  auth: process.env.REPLICATE_API_TOKEN,
+-});
+-
+-export async function POST(request: Request) {
+-  if (!process.env.REPLICATE_API_TOKEN) {
+-    throw new Error(
+-      "The REPLICATE_API_TOKEN environment variable is not set. See README.md for instructions on how to set it."
+-    );
+-  }
+-
+-  const { prompt } = await request.json();
+-
+-  try {
+-    const output = await replicate.run(
+-      "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
+-      {
+-        input: {
+-          prompt: prompt,
+-          image_dimensions: "512x512",
+-          num_outputs: 1,
+-          num_inference_steps: 50,
+-          guidance_scale: 7.5,
+-          scheduler: "DPMSolverMultistep",
+-        },
+-      }
+-    );
+-
+-    return NextResponse.json({ output }, { status: 200 });
+-  } catch (error) {
+-    console.error("Error from Replicate API:", error);
+-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+-  }
+-}
+
+--- FILE: src/app/api/replicate/generate-image/route.ts ---
+diff --git a/src/app/api/replicate/generate-image/route.ts b/src/app/api/replicate/generate-image/route.ts
+new file mode 100644
+index 0000000..e5a13da
+--- /dev/null
++++ b/src/app/api/replicate/generate-image/route.ts
+@@ -0,0 +1,37 @@
++import { NextResponse } from "next/server";
++import Replicate from "replicate";
++
++const replicate = new Replicate({
++  auth: process.env.REPLICATE_API_TOKEN,
++});
++
++export async function POST(request: Request) {
++  if (!process.env.REPLICATE_API_TOKEN) {
++    throw new Error(
++      "The REPLICATE_API_TOKEN environment variable is not set. See README.md for instructions on how to set it."
++    );
++  }
++
++  const { prompt } = await request.json();
++
++  try {
++    const output = await replicate.run(
++      "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
++      {
++        input: {
++          prompt: prompt,
++          image_dimensions: "512x512",
++          num_outputs: 1,
++          num_inference_steps: 50,
++          guidance_scale: 7.5,
++          scheduler: "DPMSolverMultistep",
++        },
++      }
++    );
++
++    return NextResponse.json({ output }, { status: 200 });
++  } catch (error) {
++    console.error("Error from Replicate API:", error);
++    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
++  }
++}
+
+--- FILE: src/app/layout.tsx ---
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index e07bc11..3ca8f2d 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -1,12 +1,13 @@
+-import { AuthProvider } from "../contexts/AuthContext";
+ import "./globals.css";
+ 
+-export default function RootLayout({ children }: { children: React.ReactNode }) {
++export default function RootLayout({
++  children,
++}: {
++  children: React.ReactNode;
++}) {
+   return (
+     <html lang="en">
+-      <body>
+-        <AuthProvider>{children}</AuthProvider>
+-      </body>
++      <body>{children}</body>
+     </html>
+   );
+ }
+
+--- FILE: src/components/SignInWithGoogle.tsx ---
+diff --git a/src/components/SignInWithGoogle.tsx b/src/components/SignInWithGoogle.tsx
+index ae71b9f..cb371ce 100644
+--- a/src/components/SignInWithGoogle.tsx
++++ b/src/components/SignInWithGoogle.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+-import { auth } from "../lib/firebase";
++import { auth } from "../lib/firebase/firebase";
+ 
+ export default function SignInWithGoogle() {
+   const signIn = () => {
+@@ -39,7 +39,9 @@ export default function SignInWithGoogle() {
+             <path fill="none" d="M0 0h48v48H0z"></path>
+           </svg>
+         </div>
+-        <span className="gsi-material-button-contents">Sign in with Google</span>
++        <span className="gsi-material-button-contents">
++          Sign in with Google
++        </span>
+         <span style={{ display: "none" }}>Sign in with Google</span>
+       </div>
+     </button>
+
+--- FILE: src/contexts/AuthContext.tsx ---
+diff --git a/src/contexts/AuthContext.tsx b/src/contexts/AuthContext.tsx
+deleted file mode 100644
+index 5042f6e..0000000
+--- a/src/contexts/AuthContext.tsx
++++ /dev/null
+@@ -1,30 +0,0 @@
+-"use client";
+-
+-import React, { createContext, useContext, useEffect, useState } from "react";
+-import { auth } from "../lib/firebase";
+-import { User } from "firebase/auth";
+-
+-interface AuthContextType {
+-  user: User | null;
+-  loading: boolean;
+-}
+-
+-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+-
+-export function AuthProvider({ children }: { children: React.ReactNode }) {
+-  const [user, setUser] = useState<User | null>(null);
+-  const [loading, setLoading] = useState(true);
+-
+-  useEffect(() => {
+-    const unsubscribe = auth.onAuthStateChanged((user) => {
+-      setUser(user);
+-      setLoading(false);
+-    });
+-
+-    return () => unsubscribe();
+-  }, []);
+-
+-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
+-}
+-
+-export const useAuth = () => useContext(AuthContext);
+
+--- FILE: src/lib/contexts/AuthContext.tsx ---
+diff --git a/src/lib/contexts/AuthContext.tsx b/src/lib/contexts/AuthContext.tsx
+new file mode 100644
+index 0000000..6f917e9
+--- /dev/null
++++ b/src/lib/contexts/AuthContext.tsx
+@@ -0,0 +1,37 @@
++"use client";
++
++import React, { createContext, useEffect, useState } from "react";
++import { auth } from "../firebase/firebase";
++import { User } from "firebase/auth";
++
++interface AuthContextType {
++  user: User | null;
++  loading: boolean;
++}
++
++const AuthContext = createContext<AuthContextType>({
++  user: null,
++  loading: true,
++});
++
++export function AuthProvider({ children }: { children: React.ReactNode }) {
++  const [user, setUser] = useState<User | null>(null);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    const unsubscribe = auth.onAuthStateChanged((user) => {
++      setUser(user);
++      setLoading(false);
++    });
++
++    return () => unsubscribe();
++  }, []);
++
++  return (
++    <AuthContext.Provider value={{ user, loading }}>
++      {children}
++    </AuthContext.Provider>
++  );
++}
++
++export { AuthContext };
+
+--- FILE: src/lib/firebase.ts ---
+diff --git a/src/lib/firebase.ts b/src/lib/firebase.ts
+deleted file mode 100644
+index 5e8b4bb..0000000
+--- a/src/lib/firebase.ts
++++ /dev/null
+@@ -1,21 +0,0 @@
+-import { initializeApp, getApps, getApp } from "firebase/app";
+-import { getAuth } from "firebase/auth";
+-import { getFirestore } from "firebase/firestore";
+-import { getStorage } from "firebase/storage";
+-
+-const firebaseConfig = {
+-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+-};
+-
+-// Initialize Firebase
+-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+-const auth = getAuth(app);
+-const db = getFirestore(app);
+-const storage = getStorage(app);
+-
+-export { app, auth, db, storage };
+
+--- FILE: src/lib/firebase/firebase.ts ---
+diff --git a/src/lib/firebase/firebase.ts b/src/lib/firebase/firebase.ts
+new file mode 100644
+index 0000000..5e8b4bb
+--- /dev/null
++++ b/src/lib/firebase/firebase.ts
+@@ -0,0 +1,21 @@
++import { initializeApp, getApps, getApp } from "firebase/app";
++import { getAuth } from "firebase/auth";
++import { getFirestore } from "firebase/firestore";
++import { getStorage } from "firebase/storage";
++
++const firebaseConfig = {
++  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
++  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
++  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
++  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
++  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
++  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
++};
++
++// Initialize Firebase
++const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
++const auth = getAuth(app);
++const db = getFirestore(app);
++const storage = getStorage(app);
++
++export { app, auth, db, storage };
+
+--- FILE: src/lib/firebase/firebaseUtils.ts ---
+diff --git a/src/lib/firebase/firebaseUtils.ts b/src/lib/firebase/firebaseUtils.ts
+new file mode 100644
+index 0000000..af252f6
+--- /dev/null
++++ b/src/lib/firebase/firebaseUtils.ts
+@@ -0,0 +1,51 @@
++import { auth, db, storage } from "./firebase";
++import {
++  signInWithEmailAndPassword,
++  createUserWithEmailAndPassword,
++  signOut,
++  GoogleAuthProvider,
++  signInWithPopup,
++} from "firebase/auth";
++import {
++  collection,
++  addDoc,
++  getDocs,
++  doc,
++  updateDoc,
++  deleteDoc,
++} from "firebase/firestore";
++import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
++
++// Auth functions
++export const logoutUser = () => signOut(auth);
++
++export const signInWithGoogle = async () => {
++  const provider = new GoogleAuthProvider();
++  try {
++    const result = await signInWithPopup(auth, provider);
++    return result.user;
++  } catch (error) {
++    console.error("Error signing in with Google", error);
++    throw error;
++  }
++};
++
++// Firestore functions
++export const addDocument = (collectionName: string, data: any) =>
++  addDoc(collection(db, collectionName), data);
++
++export const getDocuments = (collectionName: string) =>
++  getDocs(collection(db, collectionName));
++
++export const updateDocument = (collectionName: string, id: string, data: any) =>
++  updateDoc(doc(db, collectionName, id), data);
++
++export const deleteDocument = (collectionName: string, id: string) =>
++  deleteDoc(doc(db, collectionName, id));
++
++// Storage functions
++export const uploadFile = async (file: File, path: string) => {
++  const storageRef = ref(storage, path);
++  await uploadBytes(storageRef, file);
++  return getDownloadURL(storageRef);
++};
+
+--- FILE: src/lib/firebaseUtils.ts ---
+diff --git a/src/lib/firebaseUtils.ts b/src/lib/firebaseUtils.ts
+deleted file mode 100644
+index 29d425f..0000000
+--- a/src/lib/firebaseUtils.ts
++++ /dev/null
+@@ -1,50 +0,0 @@
+-import { auth, db, storage } from "./firebase";
+-import {
+-  signInWithEmailAndPassword,
+-  createUserWithEmailAndPassword,
+-  signOut,
+-  GoogleAuthProvider,
+-  signInWithPopup,
+-} from "firebase/auth";
+-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+-
+-// Auth functions
+-export const loginUser = (email: string, password: string) =>
+-  signInWithEmailAndPassword(auth, email, password);
+-
+-export const registerUser = (email: string, password: string) =>
+-  createUserWithEmailAndPassword(auth, email, password);
+-
+-export const logoutUser = () => signOut(auth);
+-
+-// Firestore functions
+-export const addDocument = (collectionName: string, data: any) =>
+-  addDoc(collection(db, collectionName), data);
+-
+-export const getDocuments = (collectionName: string) => getDocs(collection(db, collectionName));
+-
+-export const updateDocument = (collectionName: string, id: string, data: any) =>
+-  updateDoc(doc(db, collectionName, id), data);
+-
+-export const deleteDocument = (collectionName: string, id: string) =>
+-  deleteDoc(doc(db, collectionName, id));
+-
+-// Storage functions
+-export const uploadFile = async (file: File, path: string) => {
+-  const storageRef = ref(storage, path);
+-  await uploadBytes(storageRef, file);
+-  return getDownloadURL(storageRef);
+-};
+-
+-// Add Google Auth function
+-export const signInWithGoogle = async () => {
+-  const provider = new GoogleAuthProvider();
+-  try {
+-    const result = await signInWithPopup(auth, provider);
+-    return result.user;
+-  } catch (error) {
+-    console.error("Error signing in with Google", error);
+-    throw error;
+-  }
+-};
+
+--- FILE: src/lib/hooks/useAuth.ts ---
+diff --git a/src/lib/hooks/useAuth.ts b/src/lib/hooks/useAuth.ts
+new file mode 100644
+index 0000000..8712a54
+--- /dev/null
++++ b/src/lib/hooks/useAuth.ts
+@@ -0,0 +1,4 @@
++import { useContext } from "react";
++import { AuthContext } from "../contexts/AuthContext";
++
++export const useAuth = () => useContext(AuthContext);
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,837 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Uses shadcn/ui for UI components.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Configuration files (components.json, package.json), file system directory structure (e.g., components/ui/), and source code imports.
+- Suggested Logic: 1. Search for a 'components.json' file in the project root (the standard configuration file for shadcn/ui).
+2. Check 'package.json' for required dependencies such as 'tailwind-merge', 'lucide-react', and various '@radix-ui/react-*' primitives.
+3. Verify the existence of a UI component directory (commonly 'src/components/ui' or 'components/ui') containing component files like 'button.tsx' or 'card.tsx'.
+4. Scan source code for import statements referencing the shadcn/ui directory (e.g., 'import { Button } from "@/components/ui/button"').
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: feat: implement Shift key drag mode and improved zoom for Canvas
+
+    * Add Shift key support for temporarily enabling drag mode in CanvasContainer
+    * Update Zustand drag store to track Shift key status and previous drag state
+    * Move wheel/zoom event handling to document to ensure smooth zooming even when Shift is held
+    * Prevent shape drawing while in drag mode
+    * Disable manual drag toggle when Shift is pressed; toolbar drag button shows tooltip "Hold Shift to enter drag mode"
+    * Add tooltip UI support to CanvasToolbar using shadcn/ui
+    * Update .cursorrules with new development and conversation file documentation
+    * Add @radix-ui/react-tooltip dependency and Tooltip component
+    * Clean up Canvas, CanvasContainer, CanvasToolbar, and Zustand store to coordinate drag/zoom interactions for improved user experience
+- Changed Files List: 
+.cursorrules	+36	-2	after_lines=54
+bun.lock	+5	-0	after_lines=1109
+conversations/25-shift-key-drag-mode-with-zoom-support.md	+125	-0	after_lines=125
+package.json	+1	-0	after_lines=43
+src/components/Canvas.tsx	+10	-7	after_lines=634
+src/components/CanvasContainer.tsx	+65	-20	after_lines=211
+src/components/CanvasToolbar.tsx	+83	-68	after_lines=183
+src/components/ui/tooltip.tsx	+61	-0	after_lines=61
+src/store/index.ts	+8	-0	after_lines=235
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 10-sidebar-scrollbar-overflow.md
+│   ├── 11-redesign-layer-items.md
+│   ├── 12-add-shadcn-button-with-icons.md
+│   ├── 13-add-product-name-reduce-padding.md
+│   ├── 14-implement-draggable-canvas.md
+│   ├── 15-add-copy-functionality-with-toast-notifications.md
+│   ├── 16-sidebar-redesign-light-theme.md
+│   ├── 17-implement-canvas-zoom-functionality.md
+│   ├── 18-fix-passive-event-listener-errors.md
+│   ├── 19-implement-container-level-zoom-drag.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 20-fix-sidebar-layers-scrolling.md
+│   ├── 21-add-shape-type-persistence-to-layers.md
+│   ├── 22-implement-canvas-size-dropdown-with-drag-constraints.md
+│   ├── 23-update-chat-history-rules.md
+│   ├── 24-update-chat-history-files-to-new-cursorrules-format.md
+│   ├── 25-shift-key-drag-mode-with-zoom-support.md
+│   ├── 3-adjust-layers-rendering.md
+│   ├── 4-implement-drag-drop-layers.md
+│   ├── 5-implement-text-shape.md
+│   ├── 6-remove-add-layer-button-fix-remove-functionality.md
+│   ├── 7-implement-layer-hover-highlighting.md
+│   ├── 8-optimize-shape-rendering.md
+│   └── 9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ui
+│   │       ├── button.tsx
+│   │       ├── select.tsx
+│   │       ├── sonner.tsx
+│   │       └── tooltip.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursorrules ---
+diff --git a/.cursorrules b/.cursorrules
+index cd0907c..53e80c4 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -10,11 +10,45 @@
+   - The same request repeatedly occurs (asking to fix something again and again)
+ - Note any code changes made during each conversation
+ - Name files as `num-{conversation summary}.md` where num is 1 larger than the latest
+-- Always ask for confirmation before creating the conversation file
++- **ALWAYS ask for confirmation before creating the conversation file**
+ - Start numbering from 1 for the first conversation
+ 
++## Conversation File Format
++Follow this exact structure for all conversation files:
++```
++# Conversation X: [Title]
++
++**Date**: [Date]  
++**Participants**: Chuang, Cursor
++
++## Full Conversation
++[Include the actual conversation with user messages and assistant responses]
++
++## Code Changes Made
++[Detailed list of changes by file]
++
++## Technical Challenges Solved
++[Problems encountered and solutions implemented]
++
++## Features Implemented
++[Checklist of completed features]
++
++## Files Modified
++[List of files that were changed]
++```
++
+ ## Project Context
+ - This is an ASCII Canvas project with Next.js
+ - Main components: Canvas, CanvasContainer, CanvasToolbar, Sidebar
+ - Uses TypeScript and modern React patterns
+-- Use bun for package management (bun add, bun install, etc.) 
+\ No newline at end of file
++- Use bun for package management (bun add, bun install, etc.)
++- Uses Zustand for state management
++- Uses shadcn/ui for UI components
++
++## Development Guidelines
++- Always examine existing code before making changes
++- Test functionality after implementing changes
++- Follow TypeScript best practices
++- Maintain consistent code style
++- Document complex logic and state management
++- Handle edge cases and error states 
+\ No newline at end of file
+
+--- FILE: bun.lock ---
+diff --git a/bun.lock b/bun.lock
+index ebe8d41..2891da9 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -9,6 +9,7 @@
+         "@dnd-kit/utilities": "^3.2.2",
+         "@radix-ui/react-select": "^2.2.5",
+         "@radix-ui/react-slot": "^1.2.3",
++        "@radix-ui/react-tooltip": "^1.2.7",
+         "@types/d3": "^7.4.3",
+         "class-variance-authority": "^0.7.1",
+         "clsx": "^2.1.1",
+@@ -199,12 +200,16 @@
+ 
+     "@radix-ui/react-portal": ["@radix-ui/react-portal@1.1.9", "", { "dependencies": { "@radix-ui/react-primitive": "2.1.3", "@radix-ui/react-use-layout-effect": "1.1.1" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-bpIxvq03if6UNwXZ+HTK71JLh4APvnXntDc6XOX8UVq4XQOVl7lwok0AvIl+b8zgCw3fSaVTZMpAPPagXbKmHQ=="],
+ 
++    "@radix-ui/react-presence": ["@radix-ui/react-presence@1.1.4", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2", "@radix-ui/react-use-layout-effect": "1.1.1" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-ueDqRbdc4/bkaQT3GIpLQssRlFgWaL/U2z/S31qRwwLWoxHLgry3SIfCwhxeQNbirEUXFa+lq3RL3oBYXtcmIA=="],
++
+     "@radix-ui/react-primitive": ["@radix-ui/react-primitive@2.1.3", "", { "dependencies": { "@radix-ui/react-slot": "1.2.3" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-m9gTwRkhy2lvCPe6QJp4d3G1TYEUHn/FzJUtq9MjH46an1wJU+GdoGC5VLof8RX8Ft/DlpshApkhswDLZzHIcQ=="],
+ 
+     "@radix-ui/react-select": ["@radix-ui/react-select@2.2.5", "", { "dependencies": { "@radix-ui/number": "1.1.1", "@radix-ui/primitive": "1.1.2", "@radix-ui/react-collection": "1.1.7", "@radix-ui/react-compose-refs": "1.1.2", "@radix-ui/react-context": "1.1.2", "@radix-ui/react-direction": "1.1.1", "@radix-ui/react-dismissable-layer": "1.1.10", "@radix-ui/react-focus-guards": "1.1.2", "@radix-ui/react-focus-scope": "1.1.7", "@radix-ui/react-id": "1.1.1", "@radix-ui/react-popper": "1.2.7", "@radix-ui/react-portal": "1.1.9", "@radix-ui/react-primitive": "2.1.3", "@radix-ui/react-slot": "1.2.3", "@radix-ui/react-use-callback-ref": "1.1.1", "@radix-ui/react-use-controllable-state": "1.2.2", "@radix-ui/react-use-layout-effect": "1.1.1", "@radix-ui/react-use-previous": "1.1.1", "@radix-ui/react-visually-hidden": "1.2.3", "aria-hidden": "^1.2.4", "react-remove-scroll": "^2.6.3" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-HnMTdXEVuuyzx63ME0ut4+sEMYW6oouHWNGUZc7ddvUWIcfCva/AMoqEW/3wnEllriMWBa0RHspCYnfCWJQYmA=="],
+ 
+     "@radix-ui/react-slot": ["@radix-ui/react-slot@1.2.3", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A=="],
+ 
++    "@radix-ui/react-tooltip": ["@radix-ui/react-tooltip@1.2.7", "", { "dependencies": { "@radix-ui/primitive": "1.1.2", "@radix-ui/react-compose-refs": "1.1.2", "@radix-ui/react-context": "1.1.2", "@radix-ui/react-dismissable-layer": "1.1.10", "@radix-ui/react-id": "1.1.1", "@radix-ui/react-popper": "1.2.7", "@radix-ui/react-portal": "1.1.9", "@radix-ui/react-presence": "1.1.4", "@radix-ui/react-primitive": "2.1.3", "@radix-ui/react-slot": "1.2.3", "@radix-ui/react-use-controllable-state": "1.2.2", "@radix-ui/react-visually-hidden": "1.2.3" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-Ap+fNYwKTYJ9pzqW+Xe2HtMRbQ/EeWkj2qykZ6SuEV4iS/o1bZI5ssJbk4D2r8XuDuOBVz/tIx2JObtuqU+5Zw=="],
++
+     "@radix-ui/react-use-callback-ref": ["@radix-ui/react-use-callback-ref@1.1.1", "", { "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-FkBMwD+qbGQeMu1cOHnuGB6x4yzPjho8ap5WtbEJ26umhgqVXbhekKUQO+hZEL1vU92a3wHwdp0HAcqAUF5iDg=="],
+ 
+     "@radix-ui/react-use-controllable-state": ["@radix-ui/react-use-controllable-state@1.2.2", "", { "dependencies": { "@radix-ui/react-use-effect-event": "0.0.2", "@radix-ui/react-use-layout-effect": "1.1.1" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-BjasUjixPFdS+NKkypcyyN5Pmg83Olst0+c6vGov0diwTEo6mgdqVR6hxcEgFuh4QrAs7Rc+9KuGJ9TVCj0Zzg=="],
+
+--- FILE: conversations/25-shift-key-drag-mode-with-zoom-support.md ---
+diff --git a/conversations/25-shift-key-drag-mode-with-zoom-support.md b/conversations/25-shift-key-drag-mode-with-zoom-support.md
+new file mode 100644
+index 0000000..436e01b
+--- /dev/null
++++ b/conversations/25-shift-key-drag-mode-with-zoom-support.md
+@@ -0,0 +1,125 @@
++# Conversation 25: Shift Key Drag Mode with Zoom Support
++
++**Date**: December 2024  
++**Participants**: Chuang, Cursor
++
++## Full Conversation
++
++**Chuang**: Support pressing 'shift' enter the dragging mode, and releasing for exiting. Add a tooltip to the 'drag' button on the toolbar to inform about this. Use the tooltip component from shadcn.
++
++**Cursor**: I'll help you implement shift key support for entering/exiting drag mode and add a tooltip to the drag button. Let me first examine the current store structure to understand how drag mode is managed.
++
++[Code implementation begins - examining store, updating drag store, CanvasContainer, CanvasToolbar, and Canvas components]
++
++**Chuang**: Perfect. Can we keep zooming working when 'shift' is pressed?
++
++**Cursor**: Yes! I need to update the zoom functionality to work even when shift is held down. Currently, the shift key is being used for drag mode, but we can modify the logic to allow zooming with the mouse wheel while shift is held down.
++
++[Updated CanvasContainer to handle wheel events properly when shift is pressed]
++
++**Chuang**: Zooming isn't working with 'shift' pressed after the change.
++
++**Cursor**: You're right! The issue is that when shift is pressed, the canvas enters drag mode, which prevents the wheel events from being processed properly. Let me fix this by updating the wheel event handler to work regardless of the drag state.
++
++[Multiple attempts to fix zooming - removed conflicting event listeners, added document-level handlers]
++
++**Chuang**: Two issues:
++* The conversation history wasn't following the @.cursorrules 
++* The zooming issue wasn't resolved yet.
++
++**Cursor**: You're absolutely right on both points! I should have asked for confirmation before creating the conversation file, as specified in the .cursorrules. Let me address these issues.
++
++[Fixed conversation history format and continued working on zooming issue]
++
++**Chuang**: I see these error logs in the console when mouse wheeling:
++```
++CanvasContainer.tsx:81 Unable to preventDefault inside passive event listener invocation.
++```
++The zooming issue is still there when holding 'shift'. I think it's related to the `delta` calculation where we might want to use `e.deltaX` when holding 'shift'
++
++**Cursor**: You're absolutely right! The error shows that we can't call `preventDefault()` in a passive event listener, and you've identified the real issue - when holding shift, the wheel event's `deltaY` might be different or we should be using `deltaX` instead.
++
++[Fixed passive event listener errors and updated delta calculation to use deltaX when shift is pressed]
++
++**Chuang**: It works well now. Remove the logs and save this to the history file.
++
++**Cursor**: Great! Let me remove the debug logs and then create the conversation history file.
++
++[Removed debug logs and created properly formatted conversation file]
++
++## Code Changes Made
++
++### 1. Enhanced Drag Store (`src/store/index.ts`)
++- Added `isShiftPressed` state to track shift key status
++- Added `wasDraggingBeforeShift` state to remember previous drag state
++- Added `setShiftPressed` and `setWasDraggingBeforeShift` functions
++- Updated DragStore interface to include new state management
++
++### 2. Updated CanvasContainer (`src/components/CanvasContainer.tsx`)
++- Added keyboard event listeners for shift key press/release
++- When shift is pressed: enters drag mode and remembers previous state
++- When shift is released: restores previous drag state
++- Fixed zooming functionality to work when shift is pressed by:
++  - Using `deltaX` when shift is pressed, `deltaY` otherwise
++  - Adding document-level wheel event listener with `passive: false`
++  - Removing `preventDefault()` from React wheel handlers to avoid passive event listener errors
++  - Multiple layers of wheel event handling for reliability
++
++### 3. Enhanced CanvasToolbar (`src/components/CanvasToolbar.tsx`)
++- Added tooltip component from shadcn/ui
++- Added tooltip to drag button: "Hold Shift to enter drag mode"
++- Disabled drag button when shift is pressed (to prevent conflicts)
++- Updated shape selection logic to not exit drag mode when shift is pressed
++- Wrapped toolbar in TooltipProvider
++
++### 4. Updated Canvas Component (`src/components/Canvas.tsx`)
++- Added `onWheel` prop to handle wheel events directly
++- Updated all drawing handlers to check for drag mode
++- Prevented shape drawing when in drag mode (either manual or shift-triggered)
++- Added proper TypeScript types for wheel events
++
++### 5. Added Tooltip Component
++- Installed shadcn tooltip component using `bunx shadcn@latest add tooltip`
++
++## Technical Challenges Solved
++
++### Passive Event Listener Errors
++- **Problem**: `preventDefault()` was being called in passive event listeners
++- **Root Cause**: React wheel handlers are passive by default
++- **Solution**: Removed `preventDefault()` from React handlers, kept it only in document-level listener with `passive: false`
++
++### Shift Key Zooming Issue
++- **Problem**: When shift is pressed, wheel events might use `deltaX` instead of `deltaY`
++- **Root Cause**: Browser behavior changes wheel event deltas when shift is held
++- **Solution**: Added logic to use `deltaX` when shift is pressed, `deltaY` otherwise
++
++### Multiple Event Handler Conflicts
++- **Problem**: Container-level and canvas-level wheel event listeners were conflicting
++- **Root Cause**: Multiple handlers trying to process the same events
++- **Solution**: Implemented layered approach with document-level listener as primary handler
++
++### State Management Complexity
++- **Problem**: Need to track both manual drag mode and shift-triggered drag mode
++- **Root Cause**: Shift key should temporarily override manual drag state
++- **Solution**: Added `wasDraggingBeforeShift` state to remember and restore previous state
++
++## Features Implemented
++
++✅ **Shift Key Drag Mode**: Press and hold Shift to quickly enter drag mode  
++✅ **Automatic State Restoration**: Release Shift to exit drag mode and restore previous state  
++✅ **Manual Drag Toggle**: Click drag button for persistent drag mode (when shift not pressed)  
++✅ **Uninterrupted Zooming**: Mouse wheel zooming works in all scenarios  
++✅ **Smart Delta Handling**: Uses `deltaX` when shift pressed, `deltaY` otherwise  
++✅ **Visual Feedback**: Tooltip on drag button explains shift key functionality  
++✅ **No Event Conflicts**: Proper event handling without passive listener errors  
++✅ **State Priority**: Shift key drag mode takes precedence over manual toggle  
++✅ **Shape Drawing Prevention**: Prevents shape drawing when in drag mode  
++
++## Files Modified
++- `src/store/index.ts` - Added shift key state management
++- `src/components/CanvasContainer.tsx` - Added keyboard handlers and fixed zooming
++- `src/components/CanvasToolbar.tsx` - Added tooltip and updated drag logic
++- `src/components/Canvas.tsx` - Added wheel prop and drag mode checks
++- `src/components/ui/tooltip.tsx` - Added shadcn tooltip component
++
++The implementation provides a smooth, intuitive experience where users can quickly access drag mode with the shift key while maintaining full zoom functionality and visual feedback through tooltips. 
+\ No newline at end of file
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index ed63d60..0107862 100644
+--- a/package.json
++++ b/package.json
+@@ -14,6 +14,7 @@
+     "@dnd-kit/utilities": "^3.2.2",
+     "@radix-ui/react-select": "^2.2.5",
+     "@radix-ui/react-slot": "^1.2.3",
++    "@radix-ui/react-tooltip": "^1.2.7",
+     "@types/d3": "^7.4.3",
+     "class-variance-authority": "^0.7.1",
+     "clsx": "^2.1.1",
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+index 7f2c270..6dbfa49 100644
+--- a/src/components/Canvas.tsx
++++ b/src/components/Canvas.tsx
+@@ -28,13 +28,15 @@ interface CanvasProps {
+   onMouseMove?: (e: React.MouseEvent) => void;
+   onMouseUp?: (e: React.MouseEvent) => void;
+   onMouseLeave?: () => void;
++  onWheel?: (e: React.WheelEvent) => void;
+ }
+ 
+ export default function Canvas({ 
+   onMouseDown, 
+   onMouseMove, 
+   onMouseUp, 
+-  onMouseLeave 
++  onMouseLeave,
++  onWheel
+ }: CanvasProps) {
+   const layers = useLayersStore((state) => state.layers);
+   const hoveredLayerId = useLayersStore((state) => state.hoveredLayerId);
+@@ -351,8 +353,8 @@ export default function Canvas({
+       return;
+     }
+ 
+-    // Handle drawing shapes
+-    if (!selectedShape) return;
++    // Handle drawing shapes - only if not in drag mode
++    if (!selectedShape || isDragging) return;
+ 
+     setIsDrawing(true);
+     setStartPos(coords);
+@@ -360,8 +362,8 @@ export default function Canvas({
+ 
+   // Handle mouse move
+   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    // Handle drawing preview
+-    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
++    // Handle drawing preview - only if not in drag mode
++    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text" || isDragging) return;
+ 
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+@@ -444,7 +446,7 @@ export default function Canvas({
+ 
+   // Handle mouse up
+   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
++    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text" || isDragging) return;
+ 
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+@@ -482,7 +484,7 @@ export default function Canvas({
+ 
+   // Handle mouse leave - finish drawing if in progress
+   const handleMouseLeave = () => {
+-    if (isDrawing && startPos && selectedShape && selectedShape.type !== "text") {
++    if (isDrawing && startPos && selectedShape && selectedShape.type !== "text" && !isDragging) {
+       // Use the last known position or a default position
+       const endPos = { x: startPos.x, y: startPos.y };
+       
+@@ -625,6 +627,7 @@ export default function Canvas({
+         onMouseMove={onMouseMove || handleMouseMove}
+         onMouseUp={onMouseUp || handleMouseUp}
+         onMouseLeave={onMouseLeave || handleMouseLeave}
++        onWheel={onWheel}
+       />
+     </div>
+   );
+
+--- FILE: src/components/CanvasContainer.tsx ---
+diff --git a/src/components/CanvasContainer.tsx b/src/components/CanvasContainer.tsx
+index e40b51e..cbe2cd2 100644
+--- a/src/components/CanvasContainer.tsx
++++ b/src/components/CanvasContainer.tsx
+@@ -18,24 +18,83 @@ export default function CanvasContainer() {
+   const isDragging = useDragStore((state) => state.isDragging);
+   const dragPosition = useDragStore((state) => state.dragPosition);
+   const setDragPosition = useDragStore((state) => state.setDragPosition);
++  const isShiftPressed = useDragStore((state) => state.isShiftPressed);
++  const setShiftPressed = useDragStore((state) => state.setShiftPressed);
++  const setDragging = useDragStore((state) => state.setDragging);
++  const wasDraggingBeforeShift = useDragStore((state) => state.wasDraggingBeforeShift);
++  const setWasDraggingBeforeShift = useDragStore((state) => state.setWasDraggingBeforeShift);
+   
+   // Drag state
+   const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+ 
++  // Handle keyboard events for shift key
++  const handleKeyDown = (e: KeyboardEvent) => {
++    if (e.key === "Shift" && !isShiftPressed) {
++      setShiftPressed(true);
++      // Remember the current drag state before shift was pressed
++      setWasDraggingBeforeShift(isDragging);
++      // Enter drag mode
++      setDragging(true);
++    }
++  };
++
++  const handleKeyUp = (e: KeyboardEvent) => {
++    if (e.key === "Shift" && isShiftPressed) {
++      setShiftPressed(false);
++      // Restore the previous drag state
++      setDragging(wasDraggingBeforeShift);
++    }
++  };
++
++  // Set up keyboard event listeners
++  useEffect(() => {
++    document.addEventListener("keydown", handleKeyDown);
++    document.addEventListener("keyup", handleKeyUp);
++    
++    return () => {
++      document.removeEventListener("keydown", handleKeyDown);
++      document.removeEventListener("keyup", handleKeyUp);
++    };
++  }, [isShiftPressed, setShiftPressed, setDragging, isDragging, wasDraggingBeforeShift, setWasDraggingBeforeShift]);
++
++  // Set up document-level wheel event listener
++  useEffect(() => {
++    const documentWheelHandler = (e: WheelEvent) => {
++      // Only handle wheel events when the target is within our canvas container
++      const container = containerRef.current;
++      if (container && container.contains(e.target as Node)) {
++        // Prevent default scrolling when we're handling the wheel event
++        e.preventDefault();
++        handleWheel(e);
++      }
++    };
++
++    document.addEventListener('wheel', documentWheelHandler, { passive: false });
++    
++    return () => {
++      document.removeEventListener('wheel', documentWheelHandler);
++    };
++  }, [isShiftPressed, isDragging]);
++
+   // Handle wheel events for zooming
+-  const handleWheel = (e: WheelEvent) => {
+-    e.preventDefault();
++  const handleWheel = (e: WheelEvent | React.WheelEvent) => {
++    // Don't call preventDefault() to avoid passive event listener errors
++    // e.preventDefault();
++    // e.stopPropagation();
+     
+     // Get current scale from store
+     const currentScale = useScalingStore.getState().scale;
+     
++    // When shift is pressed, use deltaX instead of deltaY for horizontal scrolling
++    const deltaValue = isShiftPressed ? e.deltaX : e.deltaY;
++    
+     // Calculate new scale based on wheel delta with better sensitivity
+     const zoomSensitivity = 0.001; // Adjust this value to change zoom sensitivity
+-    const delta = e.deltaY > 0 ? 1 - (e.deltaY * zoomSensitivity) : 1 + (Math.abs(e.deltaY) * zoomSensitivity);
++    const delta = deltaValue > 0 ? 1 - (deltaValue * zoomSensitivity) : 1 + (Math.abs(deltaValue) * zoomSensitivity);
+     const newScale = currentScale * delta;
+     
+-    // Update scaling
++    // Update scaling - allow zooming even when shift is pressed
+     updateScaling(newScale);
+   };
+ 
+@@ -124,21 +183,6 @@ export default function CanvasContainer() {
+     }
+   };
+ 
+-  // Set up wheel event listener with non-passive option
+-  useEffect(() => {
+-    const container = containerRef.current;
+-    if (!container) return;
+-
+-    const wheelHandler = (e: WheelEvent) => handleWheel(e);
+-    
+-    // Add event listener with non-passive option
+-    container.addEventListener('wheel', wheelHandler, { passive: false });
+-    
+-    return () => {
+-      container.removeEventListener('wheel', wheelHandler);
+-    };
+-  }, [updateScaling]);
+-
+   // Reset drag position when canvas size or zoom changes
+   useEffect(() => {
+     setDragPosition({ x: 0, y: 0 });
+@@ -157,8 +201,9 @@ export default function CanvasContainer() {
+         onMouseMove={handleMouseMove}
+         onMouseUp={handleMouseUp}
+         onMouseLeave={handleMouseLeave}
++        onWheel={handleWheel}
+       >
+-        <Canvas />
++        <Canvas onWheel={handleWheel} />
+       </div>
+       <CanvasToolbar />
+     </div>
+
+--- FILE: src/components/CanvasToolbar.tsx ---
+diff --git a/src/components/CanvasToolbar.tsx b/src/components/CanvasToolbar.tsx
+index d21f80a..440cadd 100644
+--- a/src/components/CanvasToolbar.tsx
++++ b/src/components/CanvasToolbar.tsx
+@@ -4,6 +4,7 @@ import { useShapeStore, useDragStore, useLayersStore, useCopyStore, useScalingSt
+ import type { Shape } from "@/store";
+ import { Button } from "@/components/ui/button";
+ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
++import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+ import { Square, Circle, Triangle, Type, Minus, Hand, Copy, ZoomIn, ZoomOut } from "lucide-react";
+ import { toast } from "sonner";
+ import { CANVAS_SIZES } from "@/lib/constants";
+@@ -16,6 +17,7 @@ export default function CanvasToolbar() {
+   
+   const isDragging = useDragStore((state) => state.isDragging);
+   const setDragging = useDragStore((state) => state.setDragging);
++  const isShiftPressed = useDragStore((state) => state.isShiftPressed);
+ 
+   const layers = useLayersStore((state) => state.layers);
+   const copyCanvasContent = useCopyStore((state) => state.copyCanvasContent);
+@@ -44,20 +46,23 @@ export default function CanvasToolbar() {
+   };
+ 
+   const handleDragToggle = () => {
+-    if (isDragging) {
+-      setDragging(false);
+-    } else {
+-      // Turn off any selected shape when enabling drag mode
+-      if (selectedShape) {
+-        unselectShape();
++    // Only allow manual toggle if shift is not pressed
++    if (!isShiftPressed) {
++      if (isDragging) {
++        setDragging(false);
++      } else {
++        // Turn off any selected shape when enabling drag mode
++        if (selectedShape) {
++          unselectShape();
++        }
++        setDragging(true);
+       }
+-      setDragging(true);
+     }
+   };
+ 
+   const handleShapeSelect = (shape: Shape) => {
+-    // Turn off drag mode when selecting a shape
+-    if (isDragging) {
++    // Turn off drag mode when selecting a shape (only if not shift-pressed)
++    if (isDragging && !isShiftPressed) {
+       setDragging(false);
+     }
+     
+@@ -98,71 +103,81 @@ export default function CanvasToolbar() {
+   };
+ 
+   return (
+-    <div className="flex h-12 w-full items-center justify-between bg-gray-200 p-2">
+-      <div className="flex space-x-2">
+-        {shapes.map((shape) => (
+-          <Button
+-            key={shape.id}
+-            variant={selectedShape?.id === shape.id ? "default" : "secondary"}
+-            size="sm"
+-            onClick={() => handleShapeSelect(shape)}
+-          >
+-            {getShapeIcon(shape.type)}
+-            <span className="ml-0.5">{shape.type}</span>
+-          </Button>
+-        ))}
+-        <Button
+-          variant={isDragging ? "default" : "secondary"}
+-          size="sm"
+-          onClick={handleDragToggle}
+-        >
+-          <Hand className="h-4 w-4" />
+-          <span className="ml-0.5">drag</span>
+-        </Button>
+-        <Select value={currentSize} onValueChange={handleCanvasSizeChange}>
+-          <SelectTrigger className="w-[140px] h-8">
+-            <SelectValue />
+-          </SelectTrigger>
+-          <SelectContent>
+-            {Object.entries(CANVAS_SIZES).map(([key, size]) => (
+-              <SelectItem key={key} value={key}>
+-                {size.name}
+-              </SelectItem>
+-            ))}
+-          </SelectContent>
+-        </Select>
+-      </div>
+-      <div className="flex items-center space-x-2">
+-        <div className="flex items-center space-x-1">
+-          <Button
+-            variant="outline"
+-            size="sm"
+-            onClick={handleZoomOut}
+-            title="Zoom Out"
+-          >
+-            <ZoomOut className="h-4 w-4" />
+-          </Button>
+-          <div className="px-2 py-1 text-sm font-mono bg-white rounded border">
+-            {fontSize}px
++    <TooltipProvider>
++      <div className="flex h-12 w-full items-center justify-between bg-gray-200 p-2">
++        <div className="flex space-x-2">
++          {shapes.map((shape) => (
++            <Button
++              key={shape.id}
++              variant={selectedShape?.id === shape.id ? "default" : "secondary"}
++              size="sm"
++              onClick={() => handleShapeSelect(shape)}
++            >
++              {getShapeIcon(shape.type)}
++              <span className="ml-0.5">{shape.type}</span>
++            </Button>
++          ))}
++          <Tooltip>
++            <TooltipTrigger asChild>
++              <Button
++                variant={isDragging ? "default" : "secondary"}
++                size="sm"
++                onClick={handleDragToggle}
++                disabled={isShiftPressed}
++              >
++                <Hand className="h-4 w-4" />
++                <span className="ml-0.5">drag</span>
++              </Button>
++            </TooltipTrigger>
++            <TooltipContent>
++              <p>Hold Shift to enter drag mode</p>
++            </TooltipContent>
++          </Tooltip>
++          <Select value={currentSize} onValueChange={handleCanvasSizeChange}>
++            <SelectTrigger className="w-[140px] h-8">
++              <SelectValue />
++            </SelectTrigger>
++            <SelectContent>
++              {Object.entries(CANVAS_SIZES).map(([key, size]) => (
++                <SelectItem key={key} value={key}>
++                  {size.name}
++                </SelectItem>
++              ))}
++            </SelectContent>
++          </Select>
++        </div>
++        <div className="flex items-center space-x-2">
++          <div className="flex items-center space-x-1">
++            <Button
++              variant="outline"
++              size="sm"
++              onClick={handleZoomOut}
++              title="Zoom Out"
++            >
++              <ZoomOut className="h-4 w-4" />
++            </Button>
++            <div className="px-2 py-1 text-sm font-mono bg-white rounded border">
++              {fontSize}px
++            </div>
++            <Button
++              variant="outline"
++              size="sm"
++              onClick={handleZoomIn}
++              title="Zoom In"
++            >
++              <ZoomIn className="h-4 w-4" />
++            </Button>
+           </div>
+           <Button
+-            variant="outline"
++            variant="secondary"
+             size="sm"
+-            onClick={handleZoomIn}
+-            title="Zoom In"
++            onClick={handleCopy}
+           >
+-            <ZoomIn className="h-4 w-4" />
++            <Copy className="h-4 w-4" />
++            <span className="ml-0.5">copy</span>
+           </Button>
+         </div>
+-        <Button
+-          variant="secondary"
+-          size="sm"
+-          onClick={handleCopy}
+-        >
+-          <Copy className="h-4 w-4" />
+-          <span className="ml-0.5">copy</span>
+-        </Button>
+       </div>
+-    </div>
++    </TooltipProvider>
+   );
+ }
+
+--- FILE: src/components/ui/tooltip.tsx ---
+diff --git a/src/components/ui/tooltip.tsx b/src/components/ui/tooltip.tsx
+new file mode 100644
+index 0000000..4ee26b3
+--- /dev/null
++++ b/src/components/ui/tooltip.tsx
+@@ -0,0 +1,61 @@
++"use client"
++
++import * as React from "react"
++import * as TooltipPrimitive from "@radix-ui/react-tooltip"
++
++import { cn } from "@/lib/utils"
++
++function TooltipProvider({
++  delayDuration = 0,
++  ...props
++}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
++  return (
++    <TooltipPrimitive.Provider
++      data-slot="tooltip-provider"
++      delayDuration={delayDuration}
++      {...props}
++    />
++  )
++}
++
++function Tooltip({
++  ...props
++}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
++  return (
++    <TooltipProvider>
++      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
++    </TooltipProvider>
++  )
++}
++
++function TooltipTrigger({
++  ...props
++}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
++  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
++}
++
++function TooltipContent({
++  className,
++  sideOffset = 0,
++  children,
++  ...props
++}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
++  return (
++    <TooltipPrimitive.Portal>
++      <TooltipPrimitive.Content
++        data-slot="tooltip-content"
++        sideOffset={sideOffset}
++        className={cn(
++          "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
++          className
++        )}
++        {...props}
++      >
++        {children}
++        <TooltipPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
++      </TooltipPrimitive.Content>
++    </TooltipPrimitive.Portal>
++  )
++}
++
++export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+
+--- FILE: src/store/index.ts ---
+diff --git a/src/store/index.ts b/src/store/index.ts
+index 50cbd6e..26e8d8d 100644
+--- a/src/store/index.ts
++++ b/src/store/index.ts
+@@ -101,17 +101,25 @@ export const useShapeStore = create<ShapeStore>((set) => ({
+ interface DragStore {
+   isDragging: boolean;
+   dragPosition: { x: number; y: number };
++  isShiftPressed: boolean;
++  wasDraggingBeforeShift: boolean;
+   setDragging: (isDragging: boolean) => void;
+   setDragPosition: (position: { x: number; y: number }) => void;
+   resetDragPosition: () => void;
++  setShiftPressed: (isPressed: boolean) => void;
++  setWasDraggingBeforeShift: (wasDragging: boolean) => void;
+ }
+ 
+ export const useDragStore = create<DragStore>((set) => ({
+   isDragging: false,
+   dragPosition: { x: 0, y: 0 },
++  isShiftPressed: false,
++  wasDraggingBeforeShift: false,
+   setDragging: (isDragging) => set({ isDragging }),
+   setDragPosition: (position) => set({ dragPosition: position }),
+   resetDragPosition: () => set({ dragPosition: { x: 0, y: 0 } }),
++  setShiftPressed: (isPressed) => set({ isShiftPressed: isPressed }),
++  setWasDraggingBeforeShift: (wasDragging) => set({ wasDraggingBeforeShift: wasDragging }),
+ }));
+ 
+ interface CanvasSizeStore {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

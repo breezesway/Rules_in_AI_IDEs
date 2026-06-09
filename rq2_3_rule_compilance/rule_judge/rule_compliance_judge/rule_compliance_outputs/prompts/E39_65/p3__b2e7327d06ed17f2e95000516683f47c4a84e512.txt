@@ -1,0 +1,291 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/unit-tests.mdc
+- Change Type: added
+- Target Rule Content:
+This project uses pytest for unit testing.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Python dependency configuration files (e.g., requirements.txt, pyproject.toml, setup.py), and test source code files (e.g., test_*.py, *_test.py).
+- Suggested Logic: 1. Search for 'pytest' in dependency files like 'requirements.txt', 'pyproject.toml', or 'setup.py'. 2. Check for the existence of 'conftest.py' files. 3. Scan Python test files for 'import pytest' statements or pytest-specific decorators such as '@pytest.mark.parametrize' or '@pytest.fixture'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Added strong typing to equations generator
+- Changed Files List: 
+requirements.txt	+-	--	after_lines=SKIPPED	skipped_reason=binary (numstat=-)
+src/app/equations/equations.py	+72	-49	after_lines=563
+*(Note: The following files were modified but ignored because diff details are unavailable (e.g., binary/skipped in meta): requirements.txt.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .cloudbuild
+│   └── infrastructure.yaml
+├── .cursor
+│   └── rules
+│       └── unit-tests.mdc
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── README.MD
+├── cloudbuild.yaml
+├── docker-compose.debug.yml
+├── docker-compose.yml
+├── infrastructure
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── pytest.ini
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── equations
+│   │   │   ├── __init__.py
+│   │   │   └── equations.py
+│   │   └── game
+│   │       ├── __init__.py
+│   │       ├── game_config.py
+│   │       ├── game_manager.py
+│   │       ├── quiz_engine.py
+│   │       └── session_manager.py
+│   ├── data
+│   │   └── quizzes.json
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── images
+│   │       ├── bulbasaur.png
+│   │       ├── charmander.png
+│   │       ├── favicon.svg
+│   │       ├── mew.png
+│   │       ├── pikachu.png
+│   │       ├── pokeball-1.gif
+│   │       └── psyduck_wonder.gif
+│   └── templates
+│       ├── all_exercises.html
+│       ├── base.html
+│       ├── index.html
+│       ├── new_exercise.html
+│       ├── profile.html
+│       └── quiz.html
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── data
+    │   └── quizzes.json
+    └── unit
+        ├── __init__.py
+        ├── test_game_manager.py
+        ├── test_quiz_data.py
+        ├── test_quiz_engine.py
+        └── test_session_manager.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/equations/equations.py ---
+diff --git a/src/app/equations/equations.py b/src/app/equations/equations.py
+index 84e4230..cc565db 100644
+--- a/src/app/equations/equations.py
++++ b/src/app/equations/equations.py
+@@ -1,7 +1,26 @@
+ import random
+-import sympy as sp
+-import numpy as np
+ from fractions import Fraction
++from typing import List, Dict, Tuple, Set, Union, Optional, Any, NamedTuple
++
++import sympy as sp
++
++
++class Equation(NamedTuple):
++    """Strongly typed representation of a generated equation."""
++    symbolic: Any  # SymPy equation
++    formatted: str  # Human-readable format
++
++
++class DynamicQuizSolution(NamedTuple):
++    """Strongly typed representation of variable solutions."""
++    symbolic: Dict[Any, Union[int, Fraction]]  # SymPy symbols to values
++    human_readable: Dict[str, Union[int, Fraction]]  # Variable names to values
++
++
++class DynamicQuiz(NamedTuple):
++    """Strongly typed representation of a complete quiz with equations and solutions."""
++    equations: List[Equation]
++    solution: DynamicQuizSolution
+ 
+ 
+ class MathEquationGenerator:
+@@ -9,11 +28,11 @@ class MathEquationGenerator:
+         self.variables = list('xyzwvu')
+         self.operations = ['+', '-', '*']
+ 
+-    def generate_quiz(self, num_unknowns=1, num_equations=1,
+-                      allow_fractions=False, allow_division=False,
+-                      complexity=1, num_helper_equations=0,
+-                      very_simple=False, max_elements=None,
+-                      ensure_operation=True):
++    def generate_quiz(self, num_unknowns: int = 1, num_equations: int = 1,
++                      allow_fractions: bool = False, allow_division: bool = False,
++                      complexity: int = 1, num_helper_equations: int = 0,
++                      very_simple: bool = False, max_elements: Optional[int] = None,
++                      ensure_operation: bool = True) -> DynamicQuiz:
+         """
+         Generate a system of equations with guaranteed solutions.
+ 
+@@ -32,7 +51,7 @@ class MathEquationGenerator:
+                            (not just "x = 2")
+ 
+         Returns:
+-        - dictionary with equations, solution, and formatted output
++        - Quiz object containing equations and solution
+         """
+         # Constrain parameters to valid ranges
+         num_unknowns = min(max(1, num_unknowns), 3)
+@@ -66,7 +85,7 @@ class MathEquationGenerator:
+         # Generate the required number of equations
+         equations = []
+         formatted_equations = []
+-        coefficient_sets = set()  # Track the coefficient sets to avoid duplicates
++        coefficient_sets: Set[Tuple] = set()  # Track the coefficient sets to avoid duplicates
+ 
+         attempt_count = 0
+         max_attempts = 50  # Maximum attempts to generate unique equations
+@@ -89,30 +108,26 @@ class MathEquationGenerator:
+                 equations.append(equation)
+                 formatted_equations.append(formatted_eq)
+ 
+-        # If we couldn't generate enough unique equations, inform the user
+-        if len(equations) < (num_equations + num_helper_equations):
+-            formatted_equations.append("Note: Could not generate enough unique equations with the given constraints.")
+-
+-        # Format the output
+-        quiz_text = "Solve the following system of equations:\n\n"
+-        for i, eq in enumerate(formatted_equations, 1):
+-            quiz_text += f"Equation {i}: {eq}\n"
+-
+-        solution_text = "Solution:\n"
+-        for var, val in solution.items():
+-            solution_text += f"{var} = {val}\n"
+-
+-        return {
+-            "equations": equations,
+-            "formatted_equations": formatted_equations,
+-            "symbolic_solution": solution_dict,
+-            "solution": solution,
+-            "quiz_text": quiz_text,
+-            "solution_text": solution_text
+-        }
++        # Create list of Equation objects
++        equation_objects = [
++            Equation(symbolic=eq, formatted=fmt)
++            for eq, fmt in zip(equations, formatted_equations)
++        ]
++
++        # Create solution object
++        quiz_solution = DynamicQuizSolution(
++            symbolic=solution_dict,
++            human_readable=solution
++        )
++
++        # Create and return Quiz object
++        return DynamicQuiz(
++            equations=equation_objects,
++            solution=quiz_solution
++        )
+ 
+     def _generate_equation(self, var_symbols, solution_dict, complexity, allow_division, very_simple,
+-                           max_elements=None):
++                           max_elements=None) -> Tuple[Any, str, Tuple, bool]:
+         """
+         Generate a single equation that is satisfied by the solution.
+         Returns the equation, formatted equation, a coefficient tuple for uniqueness checking,
+@@ -356,20 +371,15 @@ class MathEquationGenerator:
+ 
+         return equation, formatted_equation, coefficient_tuple, has_operation
+ 
+-    def generate_quiz_worksheet(self, num_problems=5, **kwargs):
++    def generate_quiz_worksheet(self, num_problems: int = 5, **kwargs) -> List[DynamicQuiz]:
+         """Generate a complete worksheet with multiple problems."""
+-        worksheet = "MATH EQUATIONS WORKSHEET\n\n"
+-        solutions = "SOLUTIONS\n\n"
++        quizzes = []
+ 
+-        for i in range(1, num_problems + 1):
++        for _ in range(num_problems):
+             quiz = self.generate_quiz(**kwargs)
+-            worksheet += f"Problem {i}:\n{quiz['quiz_text']}\n\n"
+-            solutions += f"Problem {i}:\n{quiz['solution_text']}\n\n"
++            quizzes.append(quiz)
+ 
+-        return {
+-            "worksheet": worksheet,
+-            "solutions": solutions
+-        }
++        return quizzes
+ 
+ 
+ # Example usage
+@@ -499,11 +509,15 @@ if __name__ == "__main__":
+         for i in range(1, 5):
+             quiz = generator.generate_quiz(**config['params'])
+             print(f"\nExample {i}:")
+-            print(quiz["quiz_text"])
+-            print(quiz["solution_text"])
++            print(f"Equations:")
++            for j, eq in enumerate(quiz.equations, 1):
++                print(f"Equation {j}: {eq.formatted}")
++            print("\nSolution:")
++            for var, val in quiz.solution.human_readable.items():
++                print(f"{var} = {val}")
+             print(f"{'-' * 40}")
+ 
+-        # Test for single-variable equations to ensure they have operations
++    # Test for single-variable equations to ensure they have operations
+     print("\nTESTING SINGLE VARIABLE EQUATIONS WITH OPERATION REQUIREMENT:")
+     for i in range(5):
+         test_simple = generator.generate_quiz(
+@@ -512,7 +526,8 @@ if __name__ == "__main__":
+             ensure_operation=True
+         )
+         print(f"Test {i + 1}:")
+-        print(test_simple["quiz_text"])
++        for j, eq in enumerate(test_simple.equations, 1):
++            print(f"Equation {j}: {eq.formatted}")
+     print("-" * 40)
+ 
+     # Test for a specific issue with duplicate equations
+@@ -523,8 +538,12 @@ if __name__ == "__main__":
+         complexity=2,
+         max_elements=5  # Test with element limit
+     )
+-    print(test_system["quiz_text"])
+-    print(test_system["solution_text"])
++    print("Equations:")
++    for j, eq in enumerate(test_system.equations, 1):
++        print(f"Equation {j}: {eq.formatted}")
++    print("\nSolution:")
++    for var, val in test_system.solution.human_readable.items():
++        print(f"{var} = {val}")
+     print("-" * 40)
+ 
+     # Test with very simple equations and element limit
+@@ -535,6 +554,10 @@ if __name__ == "__main__":
+         very_simple=True,
+         max_elements=3  # Limit to 3 elements total
+     )
+-    print(test_simple["quiz_text"])
+-    print(test_simple["solution_text"])
++    print("Equations:")
++    for j, eq in enumerate(test_simple.equations, 1):
++        print(f"Equation {j}: {eq.formatted}")
++    print("\nSolution:")
++    for var, val in test_simple.solution.human_readable.items():
++        print(f"{var} = {val}")
+     print("-" * 40)
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

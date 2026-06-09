@@ -1,0 +1,1198 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: refactor: 使用新的animationSequencer代替老旧的animationDispatcher
+- Changed Files List: 
+.trae/rules/project_rules.md	+1	-1	after_lines=8
+src/components/EffectDisplayBar.vue	+3	-3	after_lines=154
+src/data/animationDispatcher.js	+10	-9	after_lines=463
+src/data/animationInstructionHelpers.js	+449	-0	after_lines=449
+src/data/animationSequencer.js	+134	-0	after_lines=134
+src/data/battle.js	+14	-14	after_lines=418
+src/data/battleLogUtils.js	+2	-2	after_lines=74
+src/data/battleUtils.js	+5	-7	after_lines=209
+src/data/dialogues.js	+1	-1	after_lines=344
+src/data/effectProcessor.js	+1	-1	after_lines=342
+src/data/enemies/basic.js	+1	-1	after_lines=285
+src/data/enemies/boss.js	+1	-1	after_lines=154
+src/data/enemies/special.js	+1	-1	after_lines=53
+src/data/skills/fireAssist.js	+1	-1	after_lines=576
+src/data/skills/shielding.js	+1	-1	after_lines=185
+src/main.js	+6	-4	after_lines=55
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationDispatcher.js
+│   │   ├── animationInstructionHelpers.js
+│   │   ├── animationSequencer.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── animationOrchestrator.js
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .trae/rules/project_rules.md ---
+diff --git a/.trae/rules/project_rules.md b/.trae/rules/project_rules.md
+index 73f691a..3053763 100644
+--- a/.trae/rules/project_rules.md
++++ b/.trae/rules/project_rules.md
+@@ -3,6 +3,6 @@
+ 3. 编辑文件之前，一定要先看文件，不要破坏原有的其它代码逻辑，在确认修改不会改变无关代码的逻辑的情况下，再进行修改。
+ 4. 你不需使用`npm`启动测试服务器检查项目是否有编译错误，用户会测试项目，并告知你错误。
+ 5. 不要混淆前后端的`gameState`，UI使用`displayGameState`，后端使用`backendGameState`。
+-6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+ 7. 编码时，请同时考虑优化代码结构设计，如果有可以抽离共用的逻辑，尽量抽离出来，避免重复代码。
+ 8. 在执行重构任务时，记得删除废弃的旧代码，比如CSS、不使用的函数等。
+\ No newline at end of file
+
+--- FILE: src/components/EffectDisplayBar.vue ---
+diff --git a/src/components/EffectDisplayBar.vue b/src/components/EffectDisplayBar.vue
+index c2376e8..ed9fe29 100644
+--- a/src/components/EffectDisplayBar.vue
++++ b/src/components/EffectDisplayBar.vue
+@@ -18,7 +18,7 @@
+ <script>
+ import EffectIcon from './EffectIcon.vue';
+ import effectDescriptions from '../data/effectDescription.js';
+-import { enqueueUI } from '../data/animationDispatcher.js';
++import frontendEventBus from "../frontendEventBus";
+ 
+ export default {
+   name: 'EffectDisplayBar',
+@@ -121,8 +121,8 @@ export default {
+         }
+       }];
+       
+-      // 通过动画调度器发送UI动作（而非后端事件）
+-      enqueueUI('spawnParticles', { particles });
++      // 立刻触发粒子生成
++      frontendEventBus.emit('spawn-particles',  particles );
+     }
+   }
+ };
+
+--- FILE: src/data/animationDispatcher.js ---
+diff --git a/src/data/animationDispatcher.js b/src/data/animationDispatcher.js
+index 82cf2a9..f466649 100644
+--- a/src/data/animationDispatcher.js
++++ b/src/data/animationDispatcher.js
+@@ -55,6 +55,8 @@
+ import { watch, toRaw } from 'vue';
+ import { backendGameState, displayGameState } from './gameState.js';
+ import frontendEventBus from '../frontendEventBus.js';
++import { enqueueUI as _enqueueUI_Helper, enqueueDelay as _enqueueDelay_Helper } from './animationInstructionHelpers.js';
++import { enqueueState as _enqueueState_Helper } from './animationInstructionHelpers.js';
+ 
+ // 队列项类型：
+ // - { kind: 'state', snapshot, duration? }
+@@ -415,23 +417,22 @@ export function enqueueState(options = {}) {
+ }
+ // 入队一个UI动作
+ export function enqueueUI(name, payload = {}, options = {}) {
+-  const { duration = 0, blockBeforePreviousAnimations = false } = options;
+-  // 若有存在未同步的后端变更，则在它之前切片一次状态（默认带屏障）
++  // 在迁移前保留旧语义：如有未同步状态，先切片一次（默认带屏障）
+   if (defaultStateChangeDuration !== 0 && dirty) {
+-    enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
++    _enqueueState_Helper({});
++    dirty = false;
+   }
+-  queue.push({ kind: 'ui', name, payload, duration, blockBeforePreviousAnimations });
+-  tryStartProcessQueue();
++  return _enqueueUI_Helper(name, payload, options);
+ }
+ 
+ // 入队一个延时
+ export function enqueueDelay(duration = defaultStepMs) {
+-  // 若有存在未同步的后端变更，则在它之前切片一次状态（默认带屏障）
++  // 在迁移前保留旧语义：如有未同步状态，先切片一次（默认带屏障）
+   if (defaultStateChangeDuration !== 0 && dirty) {
+-    enqueueState({ snapshot: captureSnapshot(), duration: defaultStateChangeDuration });
++    _enqueueState_Helper({});
++    dirty = false;
+   }
+-  queue.push({ kind: 'delay', duration });
+-  tryStartProcessQueue();
++  return _enqueueDelay_Helper(typeof duration === 'number' ? duration : 0);
+ }
+ 
+ export function clearQueue() {
+
+--- FILE: src/data/animationInstructionHelpers.js ---
+diff --git a/src/data/animationInstructionHelpers.js b/src/data/animationInstructionHelpers.js
+new file mode 100644
+index 0000000..7db3b0d
+--- /dev/null
++++ b/src/data/animationInstructionHelpers.js
+@@ -0,0 +1,449 @@
++// animationInstructionHelpers.js — 状态同步相关助手
++// 从 animationDispatcher 拷贝并抽取：captureSnapshot 与 applyProjectionToDisplay
++// 另外提供 enqueueState，便于将一次状态同步作为指令推入 animationSequencer
++
++import {toRaw, watch} from 'vue';
++import { backendGameState, displayGameState } from './gameState.js';
++import animationSequencer from './animationSequencer.js';
++import frontendEventBus from '../frontendEventBus.js';
++
++// 内部：S 子集规则
++function isWritableProperty(target, key) {
++  const desc = Object.getOwnPropertyDescriptor(target, key);
++  if (!desc) return true;
++  if (typeof desc.get === 'function' && typeof desc.set !== 'function') return false;
++  if (desc.writable === false) return false;
++  return true;
++}
++
++function isSKey(key) {
++  return typeof key !== 'string' || !key.endsWith('_');
++}
++
++// projectToS：将 backendGameState 投影为轻量快照，仅包含 S 字段
++function projectToS(value, seen = new WeakMap()) {
++  if (value === null || typeof value !== 'object') return value;
++  if (seen.has(value)) return seen.get(value);
++
++  if (Array.isArray(value)) {
++    const arr = new Array(value.length);
++    seen.set(value, arr);
++    for (let i = 0; i < value.length; i++) {
++      arr[i] = projectToS(value[i], seen);
++    }
++    return arr;
++  }
++
++  const out = {};
++  seen.set(value, out);
++
++  for (const key of Object.keys(value)) {
++    if (!isSKey(key)) continue;
++    const raw = toRaw(value);
++    const desc = Object.getOwnPropertyDescriptor(raw, key);
++    if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function') continue;
++    const v = value[key];
++    if (typeof v === 'function') continue;
++    out[key] = projectToS(v, seen);
++  }
++  return out;
++}
++
++function getIdKeyFromArray(arr) {
++  if (!Array.isArray(arr)) return null;
++  for (const el of arr) {
++    if (el && typeof el === 'object') {
++      if ('uniqueID' in el) return 'uniqueID';
++      if ('id' in el) return 'id';
++    }
++  }
++  return null;
++}
++
++function createInstanceFromBackendNode(bEl) {
++  if (bEl && typeof bEl === 'object') {
++    const proto = Object.getPrototypeOf(toRaw(bEl));
++    return Object.create(proto || Object.prototype);
++  }
++  return {};
++}
++
++function reconcileArrayById(sArr, dArr, bArr) {
++  const idKey = getIdKeyFromArray(sArr) || getIdKeyFromArray(bArr);
++  if (!idKey) return false;
++  const dstMap = new Map();
++  for (let i = 0; i < dArr.length; i++) {
++    const el = dArr[i];
++    if (el && typeof el === 'object' && idKey in el) dstMap.set(el[idKey], el);
++  }
++  const newArr = new Array(sArr.length);
++  for (let i = 0; i < sArr.length; i++) {
++    const sEl = sArr[i];
++    const bEl = Array.isArray(bArr) ? bArr[i] : undefined;
++    if (sEl && typeof sEl === 'object' && idKey in sEl) {
++      const id = sEl[idKey];
++      let target = dstMap.get(id);
++      if (!target) target = createInstanceFromBackendNode(bEl);
++      applyProjectionToDisplay(sEl, target, bEl);
++      newArr[i] = target;
++    } else if (sEl && typeof sEl === 'object') {
++      let target = (Array.isArray(bArr) && bArr[i]) ? createInstanceFromBackendNode(bArr[i]) : {};
++      applyProjectionToDisplay(sEl, target, Array.isArray(bArr) ? bArr[i] : undefined);
++      newArr[i] = target;
++    } else {
++      newArr[i] = sEl;
++    }
++  }
++  dArr.splice(0, dArr.length, ...newArr);
++  return true;
++}
++
++// 将 S 投影快照合并到显示层，仅写入/删除 S 字段，保留实例/方法
++export function applyProjectionToDisplay(src, dst, backendNode = undefined) {
++  if (Array.isArray(src) && Array.isArray(dst)) {
++    const bArr = Array.isArray(backendNode) ? backendNode : undefined;
++    const done = reconcileArrayById(src, dst, bArr);
++    if (done) return;
++
++    const len = src.length;
++    for (let i = 0; i < len; i++) {
++      const sEl = src[i];
++      const dEl = dst[i];
++      const bEl = bArr ? bArr[i] : undefined;
++      if (sEl && typeof sEl === 'object') {
++        if (dEl && typeof dEl === 'object') {
++          applyProjectionToDisplay(sEl, dEl, bEl);
++        } else {
++          const inst = createInstanceFromBackendNode(bEl);
++          applyProjectionToDisplay(sEl, inst, bEl);
++          dst[i] = inst;
++        }
++      } else {
++        dst[i] = sEl;
++      }
++    }
++    if (dst.length > len) dst.splice(len);
++    return;
++  }
++
++  for (const key of Object.keys(dst)) {
++    if (!isSKey(key)) continue;
++    const desc = Object.getOwnPropertyDescriptor(dst, key);
++    if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function') continue;
++    if (typeof dst[key] === 'function') continue;
++    if (!Object.prototype.hasOwnProperty.call(src, key)) {
++      try { delete dst[key]; } catch (_) {}
++    }
++  }
++
++  for (const key of Object.keys(src)) {
++    if (!isWritableProperty(dst, key)) continue;
++    const sVal = src[key];
++    const dVal = dst[key];
++    const bVal = backendNode && typeof backendNode === 'object' ? backendNode[key] : undefined;
++
++    if (Array.isArray(sVal)) {
++      if (Array.isArray(dVal)) {
++        applyProjectionToDisplay(sVal, dVal, bVal);
++      } else {
++        const arr = new Array(0);
++        dst[key] = arr;
++        applyProjectionToDisplay(sVal, arr, bVal);
++      }
++      continue;
++    }
++
++    if (sVal && typeof sVal === 'object') {
++      if (dVal && typeof dVal === 'object' && !Array.isArray(dVal)) {
++        if (bVal && typeof bVal === 'object') {
++          try {
++            const backendProto = Object.getPrototypeOf(toRaw(bVal));
++            const dstProto = Object.getPrototypeOf(dVal);
++            if (backendProto && dstProto !== backendProto) {
++              Object.setPrototypeOf(dVal, backendProto);
++            }
++          } catch (_) {}
++        }
++        applyProjectionToDisplay(sVal, dVal, bVal);
++      } else {
++        let obj;
++        if (bVal && typeof bVal === 'object' && !Array.isArray(bVal)) {
++          obj = Object.create(Object.getPrototypeOf(toRaw(bVal)));
++        } else {
++          obj = {};
++        }
++        applyProjectionToDisplay(sVal, obj, bVal);
++        dst[key] = obj;
++      }
++      continue;
++    }
++
++    if (dst[key] !== sVal) dst[key] = sVal;
++  }
++}
++
++// 捕获一次后台状态快照
++export function captureSnapshot() {
++  return projectToS(backendGameState);
++}
++
++// 默认的状态同步“虚拟动画”时长
++export const DEFAULT_STATE_CHANGE_DURATION = 400;
++
++function computeWaitTags(options = {}) {
++  const explicit = options.waitTags;
++  const legacyBlock = options.blockBeforePreviousAnimations;
++  if (Array.isArray(explicit)) return explicit;
++  if (legacyBlock === true) return ['all'];
++  if (legacyBlock === false) return []; // 不等待任何前序
++  return ['all']; // 默认等待全部
++}
++
++// 对外暴露：将一次状态同步作为指令推入 sequencer
++export function enqueueState({ snapshot, durationMs } = {}) {
++  const snap = snapshot || captureSnapshot();
++  const dur = typeof durationMs === 'number' ? durationMs : DEFAULT_STATE_CHANGE_DURATION;
++  return animationSequencer.enqueueInstruction({
++    tags: ['state'],
++    waitTags: ['all'],
++    durationMs: dur,
++    start: () => {
++      try {
++        applyProjectionToDisplay(snap, displayGameState, backendGameState);
++      } catch (err) {
++        console.error('[animationInstructionHelpers] applyProjectionToDisplay failed:', err);
++      }
++    }
++  });
++}
++
++// 内部：监听 backendGameState 变化，标记为脏
++// 如果backendGameState为脏，则在任何enqueueInstruction调用前，自动插入一次enqueueState，并清除脏标记
++let backendStateDirty = false;
++let endOfTickStateSycnScheduled = false;
++function scheduleEndOfTickCheck() {
++  if (endOfTickStateSycnScheduled) return;
++  endOfTickStateSycnScheduled = true;
++  setTimeout(() => {
++    endOfTickStateSycnScheduled = false;
++    if (backendStateDirty) {
++      // tick 结束仍有未同步的变更，强制入队一次当前快照（默认带屏障）
++      enqueueState();
++    }
++  }, 0);
++}
++
++export function registerBackendStateWatcher() {
++  watch(backendGameState, () => {
++    backendStateDirty = true;
++    scheduleEndOfTickCheck();
++  }, {deep: true, flush: "sync"});
++}
++
++export function enqueueInstruction(payload) {
++  if(backendStateDirty) {
++    // 在入队任何新指令前，先入队一次状态同步
++    enqueueState();
++    backendStateDirty = false;
++  }
++  return animationSequencer.enqueueInstruction(payload);
++}
++
++// 兼容：延时（纯等待型指令）
++export function enqueueDelay(durationMs = 0, { tags = [], waitTags } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags,
++    durationMs: Math.max(0, durationMs),
++    start: () => {},
++  });
++}
++
++// 兼容原接口：enqueueUI(name, payload = {}, options = {})
++// 根据 name 路由到更清晰的助手，或退回到通用事件指令
++export function enqueueUI(name, payload = {}, options = {}) {
++  switch (name) {
++    case 'lockControl':
++      return enqueueLockControl(options);
++    case 'unlockControl':
++      return enqueueUnlockControl(options);
++    case 'spawnParticles':
++      return enqueueParticles(payload?.particles || payload, options);
++    case 'playSound':
++      return enqueueSound(payload, options);
++    case 'popMessage':
++      return enqueuePopMessage(payload, options);
++    case 'displayDialog':
++      return enqueueDialog(payload, options);
++    case 'addBattleLog':
++    case 'addBattleLogUI':
++      return enqueueBattleLog(payload, options);
++    case 'clearBattleLog':
++    case 'clearBattleLogUI':
++      return enqueueClearBattleLog(options);
++    case 'animateCardById':
++      return enqueueAnimateCardById(payload, options);
++    case 'clearCardAnimations':
++      return enqueueClearCardAnimations(options);
++    case 'idle':
++      // No-op, immediate finish
++      return enqueueInstruction({ tags: ['ui'], waitTags: computeWaitTags(options), durationMs: 0, start: () => {} });
++    default: {
++      // 通用：将 name → 事件名（尽量贴近原约定），无完成回调，立即完成
++      const eventName = uiNameToEvent(name);
++      return enqueueInstruction({
++        tags: ['ui'],
++        waitTags: computeWaitTags(options),
++        durationMs: options.duration ?? 0,
++        start: ({ emit }) => { try { emit(eventName, payload); } catch (_) {} },
++      });
++    }
++  }
++}
++
++function uiNameToEvent(name) {
++  switch (name) {
++    case 'spawnParticles': return 'spawn-particles';
++    case 'playSound': return 'play-sound';
++    case 'popMessage': return 'pop-message';
++    case 'displayDialog': return 'display-dialog';
++    case 'addBattleLog':
++    case 'addBattleLogUI': return 'add-battle-log';
++    case 'clearBattleLog':
++    case 'clearBattleLogUI': return 'clear-battle-log';
++    case 'animateCardById': return 'animate-card-by-id';
++    case 'clearCardAnimations': return 'clear-card-animations';
++    default: return name;
++  }
++}
++
++// 粒子（同步，无需等待完成）
++export function enqueueParticles(particles = [], { tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('spawn-particles', particles); } catch (_) {} },
++  });
++}
++
++// 音效（同步，无需等待完成）
++export function enqueueSound(payload = {}, { tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('play-sound', payload); } catch (_) {} },
++  });
++}
++
++// 飘字/消息（同步，无需等待完成）
++export function enqueuePopMessage(payload = {}, { tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('pop-message', payload); } catch (_) {} },
++  });
++}
++
++// 战斗日志（同步，无需等待完成）
++export function enqueueBattleLog(payload = {}, { tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('add-battle-log', payload); } catch (_) {} },
++  });
++}
++export function enqueueClearBattleLog({ tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('clear-battle-log'); } catch (_) {} },
++  });
++}
++
++export function enqueueDialog(dialogItems = [], { tags = ['ui'], waitTags, durationMs = Infinity, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ id, emit }) => {
++      const handler = () => {
++        frontendEventBus.off('dialog-ended', handler);
++        frontendEventBus.emit('animation-instruction-finished', { id });
++      };
++      frontendEventBus.on('dialog-ended', handler);
++      try { emit('display-dialog', dialogItems); } catch (_) { frontendEventBus.off('dialog-ended', handler); }
++    },
++  });
++}
++
++export function enqueueAnimateCardById(payload = {}, { tags = ['ui'], waitTags, durationMs = Infinity, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ id, emit }) => {
++      const token = id;
++      const onFinished = (msg = {}) => {
++        const t = msg?.token;
++        if (t === token) {
++          frontendEventBus.off('animation-card-by-id-finished', onFinished);
++          frontendEventBus.emit('animation-instruction-finished', { id });
++        }
++      };
++      frontendEventBus.on('animation-card-by-id-finished', onFinished);
++      try { emit('animate-card-by-id', Object.assign({}, payload || {}, { completionToken: token })); }
++      catch (_) { frontendEventBus.off('animation-card-by-id-finished', onFinished); }
++    },
++  });
++}
++
++export function enqueueClearCardAnimations({ tags = ['ui'], waitTags, durationMs = 0, ...rest } = {}) {
++  return enqueueInstruction({
++    tags,
++    waitTags: waitTags ?? computeWaitTags(rest),
++    durationMs,
++    start: ({ emit }) => { try { emit('clear-card-animations'); } catch (_) {} },
++  });
++}
++
++// 控制锁定/解锁（直接修改 display 层计数，立即完成）
++export function enqueueLockControl(options = {}) {
++  return enqueueInstruction({
++    tags: ['ui'],
++    waitTags: computeWaitTags(options),
++    durationMs: options.duration ?? 0,
++    start: () => { displayGameState.controlDisableCount = (displayGameState.controlDisableCount || 0) + 1; },
++  });
++}
++export function enqueueUnlockControl(options = {}) {
++  return enqueueInstruction({
++    tags: ['ui'],
++    waitTags: computeWaitTags(options),
++    durationMs: options.duration ?? 0,
++    start: () => { displayGameState.controlDisableCount = Math.max(0, (displayGameState.controlDisableCount || 0) - 1); },
++  });
++}
++
++export default {
++  captureSnapshot,
++  applyProjectionToDisplay,
++  enqueueState,
++  enqueueDelay,
++  enqueueUI,
++  enqueueParticles,
++  enqueueSound,
++  enqueueBattleLog,
++  enqueueClearBattleLog,
++  enqueuePopMessage,
++  enqueueDialog,
++  enqueueAnimateCardById,
++  enqueueClearCardAnimations,
++  enqueueLockControl,
++  enqueueUnlockControl,
++  DEFAULT_STATE_CHANGE_DURATION,
++};
+
+--- FILE: src/data/animationSequencer.js ---
+diff --git a/src/data/animationSequencer.js b/src/data/animationSequencer.js
+new file mode 100644
+index 0000000..dc5d093
+--- /dev/null
++++ b/src/data/animationSequencer.js
+@@ -0,0 +1,134 @@
++// animationSequencer.js — 新一代动画队列/执行器
++// 抽象说明
++// - 指令（Instruction）具有：
++//   id: string
++//   status: 'pending' | 'running' | 'finished'
++//   tags: Set<string>         // 默认至少包含 'all'
++//   waitTags: Set<string>     // 默认至少包含 'all'
++//   durationMs: number        // 预设时长；Infinity 代表仅靠前端事件完成
++//   start: (ctx) => void      // 启动逻辑，在进入 running 时触发
++//   meta?: any                // 透传数据（可选）
++// - 可执行判定（假设更符合直觉的语义）：
++//   指令 X 可以开始执行，当且仅当 序列中位于 X 之前、且与 X.waitTags 存在“交集”的所有指令均已 finished。
++//   这样等待标签表示“我需要等待的类别”，默认 ['all'] 即等待所有前序指令。
++// - 结束条件：
++//   1) 前端通过事件总线发出 'animation-instruction-finished'，携带 { id }；或
++//   2) 指令超时：running 状态下超过 durationMs（有限时）则强制完成。
++
++import frontendEventBus from '../frontendEventBus.js';
++
++// 生成唯一ID
++function genId() { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
++
++// 工具：集合交集是否非空
++function hasIntersection(a, b) {
++  for (const x of a) { if (b.has(x)) return true; }
++  return false;
++}
++
++// Sequencer 单例
++class AnimationSequencer {
++  constructor() {
++    this._instructions = [];   // 保序数组
++    this._idToTimer = new Map();
++
++    // 监听来自前端的“动画完成”通知
++    frontendEventBus.on('animation-instruction-finished', (payload = {}) => {
++      const id = payload?.id;
++      if (id) this.finish(id, 'frontend');
++    });
++  }
++
++  // —— 指令入队（低层API） ——
++  enqueueInstruction({ tags = ['all'], waitTags, durationMs = Infinity, start, meta } = {}) {
++    const id = genId();
++    const instr = {
++      id,
++      status: 'pending',
++      // 所有指令都拥有 all 标签
++      tags: new Set([...(tags || []), 'all']),
++      // 等待标签：未显式给出时，默认等待 all；显式给出则按调用者提供
++      waitTags: new Set(waitTags === undefined ? ['all'] : (waitTags || [])),
++      durationMs: durationMs,
++      start: typeof start === 'function' ? start : () => {},
++      meta: meta,
++      _startedAt: 0,
++    };
++    this._instructions.push(instr);
++    // 入队后尝试推进
++    this._pump();
++    return id;
++  }
++
++  // —— 完成某条指令 ——
++  finish(id, reason = 'manual') {
++    const instr = this._instructions.find(i => i.id === id);
++    if (!instr) return false;
++    if (instr.status === 'finished') return true;
++
++    // 结束本条
++    instr.status = 'finished';
++    // 清理超时器
++    const t = this._idToTimer.get(id);
++    if (t) {
++      clearTimeout(t);
++      this._idToTimer.delete(id);
++    }
++
++    // 释放已完成的指令节点（保持顺序，过滤已完成条目）
++    this._instructions = this._instructions.filter(i => i.status !== 'finished');
++
++    // 推进后续可能可运行的指令
++    this._pump();
++    return true;
++  }
++
++  // —— 内部：尝试启动所有“可执行”的 pending 指令（自左向右） ——
++  _pump() {
++    let startedAny = false;
++    for (let i = 0; i < this._instructions.length; i++) {
++      const ins = this._instructions[i];
++      if (!ins || ins.status !== 'pending') continue;
++      if (!this._canExecute(i)) continue;
++      this._startInstruction(ins);
++      startedAny = true;
++    }
++    return startedAny;
++  }
++
++  // 可执行判定：所有位于 index 之前、且与 waitTags 有交集的，都必须 finished
++  _canExecute(index) {
++    const current = this._instructions[index];
++    if (!current) return false;
++    for (let j = 0; j < index; j++) {
++      const prev = this._instructions[j];
++      if (!prev) continue;
++      if (prev.status === 'finished') continue;
++      if (hasIntersection(prev.tags, current.waitTags)) {
++        return false;
++      }
++    }
++    return true;
++  }
++
++  _startInstruction(instr) {
++    instr.status = 'running';
++    instr._startedAt = Date.now();
++    try {
++      instr.start({ id: instr.id, meta: instr.meta, emit: (name, payload) => frontendEventBus.emit(name, payload) });
++    } catch (err) {
++      console.error('[animationSequencer] start logic error:', err);
++    }
++    if (isFinite(instr.durationMs) && instr.durationMs >= 0) {
++      const timerId = setTimeout(() => {
++        this.finish(instr.id, 'timeout');
++      }, Math.max(0, instr.durationMs));
++      this._idToTimer.set(instr.id, timerId);
++    }
++  }
++}
++
++// 单例导出
++const animationSequencer = new AnimationSequencer();
++
++export default animationSequencer;
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 9c60d22..62e4869 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -5,7 +5,12 @@ import backendEventBus, { EventNames } from '../backendEventBus.js'
+ import { processStartOfTurnEffects, processEndOfTurnEffects, processSkillActivationEffects } from './effectProcessor.js'
+ import { addSystemLog, addPlayerActionLog, addEnemyActionLog, addDeathLog } from './battleLogUtils.js'
+ import { backendGameState as gameState } from './gameState.js'
+-import { enqueueUI, enqueueDelay } from './animationDispatcher.js'
++import {
++  enqueueDelay,
++  enqueueUnlockControl,
++  enqueueAnimateCardById,
++  enqueueLockControl, enqueueClearCardAnimations, enqueueState
++} from './animationInstructionHelpers.js'
+ import {burnSkillCard, drawSkillCard, dropSkillCard} from "./battleUtils";
+ 
+ // 开始战斗
+@@ -87,7 +92,7 @@ function startPlayerTurn() {
+     return;
+   }
+ 
+-  enqueueUI('unlockControl');
++  enqueueUnlockControl();
+ 
+   // 等待玩家操作
+   // 玩家操作通过BattleScreen组件的事件处理
+@@ -152,13 +157,10 @@ function useSkill(skill) {
+   addPlayerActionLog(`你使用了 /blue{${skill.name}}！`);
+ 
+   // 技能脱手发动动画（卡牌移动到中央）
+-  enqueueUI('animateCardById', {id: skill.uniqueID, kind: 'flyToCenter'});
+-
+-  // 通知UI层锁定控制面板
+-  // enqueueUI('lockControl');
++  enqueueAnimateCardById({id: skill.uniqueID, kind: 'flyToCenter'});
+ 
+   // 增设一条idle动画指令，确保animateCardByID动画完成后才开始播放卡牌发动带来的各种效果的动画
+-  enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
++  enqueueDelay(0);
+ 
+   // 资源结算（后端状态）
+   skill.consumeResources(gameState.player);
+@@ -173,9 +175,7 @@ function useSkill(skill) {
+ 
+   if(checkBattleVictory()) return ;
+ 
+-  // UI解锁
+-  // enqueueUI('unlockControl', {}, { blockBeforePreviousAnimations: true });
+-  enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
++  enqueueDelay(0);
+ }
+ 
+ 
+@@ -206,7 +206,7 @@ function enemyTurn() {
+   // 敌人行动逻辑
+   gameState.isEnemyTurn = true;
+ 
+-  enqueueUI('lockControl');
++  enqueueLockControl();
+ 
+   addEnemyActionLog(`/red{${gameState.enemy.name}} 的回合！`);
+ 
+@@ -268,10 +268,10 @@ function battleVictory(isVictory) {
+   enqueueDelay(3000);
+ 
+   // 清理掉卡牌ghost
+-  enqueueUI('clearCardAnimations');
++  enqueueClearCardAnimations();
+ 
+   // 解锁操作面板
+-  enqueueUI('unlockControl');
++  enqueueUnlockControl();
+ 
+   // 战斗结束事件
+   backendEventBus.emit(EventNames.Game.POST_BATTLE, {
+@@ -303,7 +303,7 @@ function handleSkillAfterUse(skill) {
+   const index = gameState.player.frontierSkills.findIndex(s => s === skill);
+   if (index !== -1) {
+     // 首先，入队一个idle指令，保证后续动画在技能使用动画结束之后播放
+-    enqueueUI('idle', {}, { blockBeforePreviousAnimations: true });
++    enqueueDelay();
+     if (skill.coldDownTurns !== 0 || skill.maxUses === Infinity || skill.remainingUses > 0) {
+       // 如果是可充能/无限使用技能，或者充能有剩余，移动到后备技能列表尾部
+       dropSkillCard(gameState.player, skill.uniqueID);
+
+--- FILE: src/data/battleLogUtils.js ---
+diff --git a/src/data/battleLogUtils.js b/src/data/battleLogUtils.js
+index 539eeb0..a09735b 100644
+--- a/src/data/battleLogUtils.js
++++ b/src/data/battleLogUtils.js
+@@ -1,6 +1,6 @@
+ // battleLogUtils.js - 提供战斗日志管理的助手函数
+ 
+-import { enqueueUI } from './animationDispatcher.js';
++import {enqueueBattleLog} from "./animationInstructionHelpers";
+ 
+ // 战斗日志类型枚举
+ export const BattleLogType = {
+@@ -17,7 +17,7 @@ export const BattleLogType = {
+ // 添加普通战斗日志
+ export function addBattleLog(log, type = BattleLogType.OTHER) {
+   // 通过动画调度器入队，保证UI顺序展示
+-  enqueueUI('addBattleLog', { log, type });
++  enqueueBattleLog({ log, type });
+ }
+ 
+ // 添加玩家行动日志
+
+--- FILE: src/data/battleUtils.js ---
+diff --git a/src/data/battleUtils.js b/src/data/battleUtils.js
+index e5914f2..deaf7e4 100644
+--- a/src/data/battleUtils.js
++++ b/src/data/battleUtils.js
+@@ -4,7 +4,7 @@ import {
+   processPostAttackEffects, processAttackTakenEffects, processDamageTakenEffects, processAttackFinishEffects
+ } from './effectProcessor.js';
+ import { addBattleLog, addDamageLog, addDeathLog, addHealLog } from './battleLogUtils.js';
+-import {enqueueUI} from "./animationDispatcher";
++import {enqueueAnimateCardById} from "./animationInstructionHelpers";
+ import backendEventBus, {EventNames} from "../backendEventBus";
+ 
+ // 将护盾/生命结算 + 日志输出 + 死亡判定抽象为通用助手
+@@ -150,10 +150,8 @@ export function drawSkillCard(player, number = 1) {
+ 
+     // 手动触发入手动画，与其他卡牌动画保持一致（等待前序动画完成）
+     if (firstSkill && firstSkill.uniqueID) {
+-      enqueueUI(
+-        'animateCardById',
+-        { id: firstSkill.uniqueID, kind: 'appearFromDeck', options: { durationMs: 450, startScale: 0.6, fade: true } },
+-        { duration: 0, blockBeforePreviousAnimations: true }
++      enqueueAnimateCardById(
++        { id: firstSkill.uniqueID, kind: 'appearFromDeck', options: { durationMs: 450, startScale: 0.6, fade: true } }
+       );
+     }
+ 
+@@ -165,7 +163,7 @@ export function dropSkillCard(player, skillID) {
+   const index = player.frontierSkills.findIndex(skill => skill.uniqueID === skillID);
+   if (index !== -1) {
+     // 播放动画
+-    enqueueUI('animateCardById', {id: skillID, kind: 'drop'});
++    enqueueAnimateCardById( {id: skillID, kind: 'drop'});
+     // 执行逻辑
+     const [droppedSkill] = player.frontierSkills.splice(index, 1);
+     player.backupSkills.push(droppedSkill);
+@@ -188,7 +186,7 @@ export function burnSkillCard(player, skillID) {
+     return;
+   }
+   // 播放动画
+-  enqueueUI('animateCardById', {id: skillID, kind: 'burn'});
++  enqueueAnimateCardById( {id: skillID, kind: 'burn'});
+   let exhaustedSkill = null;
+   if (frontierIndex !== -1) {
+     exhaustedSkill = player.frontierSkills.splice(frontierIndex, 1)[0];
+
+--- FILE: src/data/dialogues.js ---
+diff --git a/src/data/dialogues.js b/src/data/dialogues.js
+index 8ef567d..7631a18 100644
+--- a/src/data/dialogues.js
++++ b/src/data/dialogues.js
+@@ -1,7 +1,7 @@
+ // dialogues.js - 对话事件管理
+ import backendEventBus, { EventNames } from '../backendEventBus.js'
+ import { getPlayerTierFromTierIndex } from './player.js';
+-import { enqueueUI } from './animationDispatcher.js';
++import { enqueueUI } from './animationInstructionHelpers.js';
+ 
+ let isRemiPresent = false;
+ export function setIsRemiPresent(flag) {
+
+--- FILE: src/data/effectProcessor.js ---
+diff --git a/src/data/effectProcessor.js b/src/data/effectProcessor.js
+index a3461a5..7fd6947 100644
+--- a/src/data/effectProcessor.js
++++ b/src/data/effectProcessor.js
+@@ -4,7 +4,7 @@
+ import effectDescriptions from '../data/effectDescription.js';
+ import { dealDamage } from './battleUtils.js';
+ import { addEffectLog, addBattleLog } from './battleLogUtils.js';
+-import {enqueueDelay} from "./animationDispatcher";
++import {enqueueDelay} from "./animationInstructionHelpers.js";
+ 
+ /**
+  * 处理回合开始时触发的效果
+
+--- FILE: src/data/enemies/basic.js ---
+diff --git a/src/data/enemies/basic.js b/src/data/enemies/basic.js
+index dd90e88..08f80cb 100644
+--- a/src/data/enemies/basic.js
++++ b/src/data/enemies/basic.js
+@@ -187,7 +187,7 @@ export class BuzzlingBugs extends Enemy {
+ 
+ // 黏黏史莱姆敌人
+ import { SlimeCurse } from '../skills/curses.js';
+-import {enqueueDelay} from "../animationDispatcher";
++import {enqueueDelay} from "../animationInstructionHelpers";
+ 
+ export class SlimySlime extends Enemy {
+   constructor(battleIntensity) {
+
+--- FILE: src/data/enemies/boss.js ---
+diff --git a/src/data/enemies/boss.js b/src/data/enemies/boss.js
+index 79ca365..804e6c3 100644
+--- a/src/data/enemies/boss.js
++++ b/src/data/enemies/boss.js
+@@ -1,7 +1,7 @@
+ import Enemy from '../enemy.js';
+ import { launchAttack } from '../battleUtils.js';
+ import { addEnemyActionLog } from '../battleLogUtils.js';
+-import {enqueueDelay} from "../animationDispatcher";
++import {enqueueDelay} from "../animationInstructionHelpers";
+ 
+ // MEFM-3 Boss敌人
+ export class MEFM3 extends Enemy {
+
+--- FILE: src/data/enemies/special.js ---
+diff --git a/src/data/enemies/special.js b/src/data/enemies/special.js
+index d35dadb..60db1a5 100644
+--- a/src/data/enemies/special.js
++++ b/src/data/enemies/special.js
+@@ -1,7 +1,7 @@
+ import Enemy from '../enemy.js';
+ import { launchAttack } from '../battleUtils.js';
+ import { addEnemyActionLog } from '../battleLogUtils.js';
+-import {enqueueDelay} from "../animationDispatcher";
++import {enqueueDelay} from "../animationInstructionHelpers";
+ 
+ // 雪狼 精英敌人
+ export class BigWolf extends Enemy {
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index 655df99..de330b2 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -2,7 +2,7 @@
+ 
+ import Skill from '../skill.js';
+ import {applyHeal, burnSkillCard, dealDamage, drawSkillCard, dropSkillCard, launchAttack} from '../battleUtils.js';
+-import {enqueueDelay} from "../animationDispatcher";
++import {enqueueDelay} from "../animationInstructionHelpers";
+ 
+ // 无缘烈焰（C-）
+ // 丢弃冷却中的技能，自己和敌人各获得3层燃烧
+
+--- FILE: src/data/skills/shielding.js ---
+diff --git a/src/data/skills/shielding.js b/src/data/skills/shielding.js
+index 87fba9b..605a291 100644
+--- a/src/data/skills/shielding.js
++++ b/src/data/skills/shielding.js
+@@ -1,6 +1,6 @@
+ import Skill from '../skill.js';
+ import { launchAttack, dealDamage, gainShield } from '../battleUtils.js';
+-import {enqueueDelay} from "../animationDispatcher";
++import {enqueueDelay} from "../animationInstructionHelpers";
+ 
+ // 紧急护盾技能
+ // 获得14点护盾，每次使用后，冷却时间增1
+
+--- FILE: src/main.js ---
+diff --git a/src/main.js b/src/main.js
+index 2dfb770..d3bdb83 100644
+--- a/src/main.js
++++ b/src/main.js
+@@ -9,7 +9,10 @@ import './assets/main.css'
+ import './assets/common.css'
+ import './assets/zLayers.css'
+ import SkillManager from './data/skillManager.js'
+-import { initAnimationDispatcher } from './data/animationDispatcher.js'
++// 保证单例初始化
++import animationSequencer from "./data/animationSequencer";
++// state sync watcher
++import {registerBackendStateWatcher} from "./data/animationInstructionHelpers";
+ import {initGameFlowListeners} from "./game";
+ import AbilityManager from "./data/abilityManager";
+ 
+@@ -32,9 +35,6 @@ const app = createApp(App)
+ // 使用路由
+ app.use(router)
+ 
+-// 初始化动画调度器（一次）
+-initAnimationDispatcher();
+-
+ // 加载所有技能
+ SkillManager.loadAllSkills().then(skillManager => {
+   // 将skillManager实例添加到全局属性中，以便在应用中使用
+@@ -48,6 +48,8 @@ SkillManager.loadAllSkills().then(skillManager => {
+   // 挂载应用
+ });
+ 
++// 初始化后端状态观察者
++registerBackendStateWatcher();
+ 
+ // 初始化后端游戏流程在backendEventBus上的监听器
+ initGameFlowListeners();
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

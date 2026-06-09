@@ -1,0 +1,102 @@
+diff --git a/src/main/utils/dialog-utils.ts b/src/main/utils/dialog-utils.ts
+new file mode 100644
+index 0000000..222a571
+--- /dev/null
++++ b/src/main/utils/dialog-utils.ts
+@@ -0,0 +1,95 @@
++import { dialog, app } from 'electron';
++import path from 'node:path';
++import { getFilesInfo } from './file-utils';
++
++// 选择保存位置
++export async function selectSavePath() {
++  const result = await dialog.showSaveDialog({
++    title: '选择保存位置',
++    defaultPath: 'merged-document.pdf',
++    filters: [
++      { name: 'PDF文件', extensions: ['pdf'] }
++    ]
++  });
++  
++  if (result.canceled) {
++    return null;
++  }
++  
++  return {
++    filePath: result.filePath,
++    directory: path.dirname(result.filePath || ''),
++    fileName: path.basename(result.filePath || '')
++  };
++}
++
++// 获取默认下载目录
++export async function getDownloadsPath() {
++  return app.getPath('downloads');
++}
++
++// 选择PDF文件
++export async function selectPdfFiles() {
++  const result = await dialog.showOpenDialog({
++    title: '选择PDF文件',
++    filters: [
++      { name: 'PDF文件', extensions: ['pdf'] }
++    ],
++    properties: ['openFile', 'multiSelections']
++  });
++  
++  if (result.canceled || !result.filePaths.length) {
++    return null;
++  }
++  
++  return await getFilesInfo(result.filePaths);
++}
++
++// 选择图片文件
++export async function selectImages() {
++  try {
++    const result = await dialog.showOpenDialog({
++      title: '选择图片文件',
++      filters: [
++        { name: '图片文件', extensions: ['jpg', 'jpeg', 'png', 'webp'] }
++      ],
++      properties: ['openFile', 'multiSelections']
++    });
++    
++    if (result.canceled || !result.filePaths.length) {
++      return { success: false, error: '未选择文件' };
++    }
++    
++    const validFiles = await getFilesInfo(result.filePaths);
++    
++    return {
++      success: true,
++      files: validFiles
++    };
++  } catch (error) {
++    console.error('选择图片文件失败:', error);
++    return { success: false, error: error instanceof Error ? error.message : '选择文件失败' };
++  }
++}
++
++// 选择保存位置
++export async function selectSaveLocation() {
++  try {
++    const result = await dialog.showOpenDialog({
++      title: '选择保存位置',
++      properties: ['openDirectory']
++    });
++    
++    if (result.canceled || !result.filePaths.length) {
++      return { success: false, error: '未选择保存位置' };
++    }
++    
++    return {
++      success: true,
++      path: result.filePaths[0]
++    };
++  } catch (error) {
++    console.error('选择保存位置失败:', error);
++    return { success: false, error: error instanceof Error ? error.message : '选择保存位置失败' };
++  }
++} 
+\ No newline at end of file

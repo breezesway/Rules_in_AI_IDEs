@@ -1,0 +1,66 @@
+diff --git a/playwright/tests/utils/pdf-generators/pdf-orchestrator.ts b/playwright/tests/utils/pdf-generators/pdf-orchestrator.ts
+index a7babfe..2cf0ae7 100644
+--- a/playwright/tests/utils/pdf-generators/pdf-orchestrator.ts
++++ b/playwright/tests/utils/pdf-generators/pdf-orchestrator.ts
+@@ -1,4 +1,7 @@
+ import { Page } from '@playwright/test';
++import { chromium } from 'playwright';
++import { join } from 'path';
++import { statSync, readdirSync } from 'fs';
+ import { SiteWideAccessibilityReport } from '../accessibility-test-orchestrator';
+ import { PdfTemplateGenerator } from './pdf-template-generator';
+ import { ConfigurationService } from '../services/configuration-service';
+@@ -73,7 +76,6 @@ export class PdfOrchestrator {
+         }
+ 
+         // Create a new browser instance specifically for PDF generation
+-        const { chromium } = require('playwright');
+         const browser = await chromium.launch({ headless: true });
+ 
+         try {
+@@ -126,7 +128,7 @@ export class PdfOrchestrator {
+       // Generate unique filename for the screenshot
+       const timestamp = Date.now();
+       const screenshotFilename = `main-page-screenshot-${timestamp}.png`;
+-      const screenshotPath = require('path').join(process.cwd(), screenshotFilename);
++      const screenshotPath = join(process.cwd(), screenshotFilename);
+ 
+       try {
+         // Navigate to the main page if not already there
+@@ -212,7 +214,7 @@ export class PdfOrchestrator {
+           });
+ 
+           // Get file size
+-          const stats = require('fs').statSync(pdfPath);
++          const stats = statSync(pdfPath);
+           const sizeKB = Math.round(stats.size / 1024);
+ 
+           this.errorHandler.logSuccess(`PDF generated: ${pdfPath} (${sizeKB}KB)`);
+@@ -238,7 +240,7 @@ export class PdfOrchestrator {
+    */
+   private async createTemporaryHtmlFile(content: string, audience: string): Promise<string> {
+     const tempFilename = `temp-${audience}-report-${Date.now()}.html`;
+-    const tempPath = require('path').join(process.cwd(), tempFilename);
++    const tempPath = join(process.cwd(), tempFilename);
+ 
+     const result = this.fileOps.writeFile(tempPath, content);
+ 
+@@ -254,7 +256,7 @@ export class PdfOrchestrator {
+    */
+   private generatePdfFilePath(baseFilename: string, audience: string): string {
+     const reportsDir = this.fileOps.getReportsDirectory();
+-    return require('path').join(reportsDir, `${baseFilename}-${audience}.pdf`);
++    return join(reportsDir, `${baseFilename}-${audience}.pdf`);
+   }
+ 
+   /**
+@@ -324,8 +326,7 @@ export class PdfOrchestrator {
+    */
+   async cleanup(): Promise<void> {
+     try {
+-      const tempFiles = require('fs')
+-        .readdirSync(process.cwd())
++      const tempFiles = readdirSync(process.cwd())
+         .filter((file: string) => file.startsWith('temp-') && file.endsWith('.html'));
+ 
+       for (const file of tempFiles) {

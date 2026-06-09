@@ -1,0 +1,2462 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: a0.5.1
+- Changed Files List: 
+public/changelog.md	+15	-0	after_lines=160
+src/assets/common.css	+12	-1	after_lines=27
+src/components/AbilityRewardPanel.vue	+24	-55	after_lines=228
+src/components/ActionPanel.vue	+25	-7	after_lines=140
+src/components/ActionPointsBar.vue	+26	-1	after_lines=120
+src/components/BreakthroughRewardPanel.vue	+3	-35	after_lines=66
+src/components/BurntSkillsIcon.vue	+112	-0	after_lines=112
+src/components/CardsDisplayOverlayPanel.vue	+118	-0	after_lines=118
+src/components/DeckIcon.vue	+19	-0	after_lines=137
+src/components/DeckOverlayPanel.vue	+0	-116	after_lines=0
+src/components/EffectIcon.vue	+3	-12	after_lines=117
+src/components/HurtAnimationWrapper.vue	+54	-106	after_lines=359
+src/components/ManaBar.vue	+26	-1	after_lines=120
+src/components/MoneyRewardPanel.vue	+4	-36	after_lines=60
+src/components/PlayerBasicStats.vue	+26	-1	after_lines=183
+src/components/PlayerStatusPanel.vue	+1	-1	after_lines=216
+src/components/RestControlPanel.vue	+42	-4	after_lines=93
+src/components/RestScreen.vue	+44	-93	after_lines=267
+src/components/ShopPanel.vue	+1	-33	after_lines=220
+src/components/SkillCard.vue	+18	-2	after_lines=228
+src/components/SkillRewardPanel.vue	+12	-44	after_lines=96
+src/components/SkillsHand.vue	+1	-0	after_lines=393
+src/data/animationInstructionHelpers.js	+42	-4	after_lines=503
+src/data/battle.js	+4	-2	after_lines=432
+src/data/battleUtils.js	+26	-5	after_lines=239
+src/data/gameState.js	+3	-0	after_lines=77
+src/data/player.js	+4	-1	after_lines=178
+src/data/rest.js	+53	-2	after_lines=194
+src/data/skills/fireAssist.js	+4	-11	after_lines=565
+src/game.js	+5	-2	after_lines=113
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── BurntSkillsIcon.vue
+│   │   ├── CardsDisplayOverlayPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   ├── TestEffectDisplay.vue
+│   │   └── skillCard
+│   │       ├── SkillCosts.vue
+│   │       ├── SkillMeta.vue
+│   │       └── SkillUses.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationInstructionHelpers.js
+│   │   ├── animationSequencer.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── cardAnimationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       ├── colorUtils.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: public/changelog.md ---
+diff --git a/public/changelog.md b/public/changelog.md
+index 72f523f..9f72d4f 100644
+--- a/public/changelog.md
++++ b/public/changelog.md
+@@ -1,3 +1,18 @@
++## 2025.10.2 [Alpha 0.5.1]
++- 签名：Hineven
++
++### 新增
++- 卡牌坟地
++
++### 改进
++- 完善动画引擎更新代来的问题
++- 动画细节增强
++- 休整阶段动画控制逻辑迁移到后端
++- 修复：闪避动画消失
++
++### 已知问题
++- 重新开始游戏时状态异常
++
+ ## 2025.10.1 [Alpha 0.5.0]
+ - 签名：Hineven
+
+--- FILE: src/assets/common.css ---
+diff --git a/src/assets/common.css b/src/assets/common.css
+index 5cf2383..47d053f 100644
+--- a/src/assets/common.css
++++ b/src/assets/common.css
+@@ -13,4 +13,15 @@ button {
+ button:disabled {
+   opacity: 0.5;
+   cursor: not-allowed;
+-}
+\ No newline at end of file
++}
++
++/* 统一：数值/按钮缩放跳动动画 */
++@keyframes stat-bump {
++  0% { transform: scale(1); }
++  28% { transform: scale(1.14); }
++  56% { transform: scale(1.06); }
++  100% { transform: scale(1); }
++}
++.stat-bump {
++  animation: stat-bump 260ms cubic-bezier(0.22, 1, 0.36, 1);
++}
+
+--- FILE: src/components/AbilityRewardPanel.vue ---
+diff --git a/src/components/AbilityRewardPanel.vue b/src/components/AbilityRewardPanel.vue
+index cd61283..8579575 100644
+--- a/src/components/AbilityRewardPanel.vue
++++ b/src/components/AbilityRewardPanel.vue
+@@ -1,33 +1,31 @@
+ <template>
+-  <transition-group name="slide" tag="div" class="ability-reward-panel-wrapper">
+-    <div class="ability-reward-panel" v-if="isVisible" key="panel">
+-      <!-- 选中效果覆盖层 -->
+-      <transition name="selection-overlay-fade">
+-        <div class="selection-overlay" v-if="showSelectionEffect" key="overlay"></div>
+-      </transition>
+-      
+-      <h2>选择一项能力！</h2>
+-      <div class="ability-cards">
+-        <div 
+-          v-for="ability in abilities"
+-          :key="ability.uniqueID"
+-          :class="[
+-            'ability-card', 
+-            'tier-' + ability.tier,
+-            { 'selected-glow': selectedAbility === ability && showSelectionEffect }
+-          ]"
+-          @click="selectAbility(ability)"
+-        >
+-          <div class="ability-tier">{{ getAbilityTierLabel(ability.tier) }}</div>
+-          <div class="ability-name">{{ ability.name }}</div>
+-          <div class="ability-description">
+-            <ColoredText :text="ability.description" />
+-          </div>
++  <div class="ability-reward-panel" key="panel">
++    <!-- 选中效果覆盖层 -->
++    <transition name="selection-overlay-fade">
++      <div class="selection-overlay" v-if="showSelectionEffect" key="overlay"></div>
++    </transition>
++
++    <h2>选择一项能力！</h2>
++    <div class="ability-cards">
++      <div
++        v-for="ability in abilities"
++        :key="ability.uniqueID"
++        :class="[
++          'ability-card',
++          'tier-' + ability.tier,
++          { 'selected-glow': selectedAbility === ability && showSelectionEffect }
++        ]"
++        @click="selectAbility(ability)"
++      >
++        <div class="ability-tier">{{ getAbilityTierLabel(ability.tier) }}</div>
++        <div class="ability-name">{{ ability.name }}</div>
++        <div class="ability-description">
++          <ColoredText :text="ability.description" />
+         </div>
+       </div>
+-      <button @click="closePanel">放弃</button>
+     </div>
+-  </transition-group>
++    <button @click="closePanel">放弃</button>
++  </div>
+ </template>
+ 
+ <script>
+@@ -43,10 +41,6 @@ export default {
+     abilities: {
+       type: Array,
+       default: () => []
+-    },
+-    isVisible: {
+-      type: Boolean,
+-      default: false
+     }
+   },
+   data() {
+@@ -231,29 +225,4 @@ button:hover {
+   box-shadow: 0 0 20px 10px #f44336;
+ }
+ 
+-/* 滑动进入和退出动画 */
+-.slide-enter-active, .slide-leave-active {
+-  transition: all 0.5s ease;
+-}
+-
+-.slide-enter-from {
+-  transform: translateY(100%);
+-  opacity: 0;
+-}
+-
+-.slide-leave-to {
+-  transform: translateY(-100%);
+-  opacity: 0;
+-}
+-
+-.slide-enter-to, .slide-leave-from {
+-  transform: translateY(0);
+-  opacity: 1;
+-}
+-
+-/* 为transition-group添加样式 */
+-.ability-reward-panel-wrapper {
+-  display: flex;
+-  justify-content: center;
+-}
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/ActionPanel.vue ---
+diff --git a/src/components/ActionPanel.vue b/src/components/ActionPanel.vue
+index 7399146..35b30b0 100644
+--- a/src/components/ActionPanel.vue
++++ b/src/components/ActionPanel.vue
+@@ -18,12 +18,20 @@
+       @click="onDeckClick"
+     />
+ 
+-    <!-- Deck 全屏覆盖面板 -->
+-    <DeckOverlayPanel
+-      v-if="showDeckOverlay"
+-      :skills="player?.backupSkills || []"
++    <BurntSkillsIcon
++      v-if="player?.burntSkills?.length > 0"
++      :count="player.burntSkills.length"
+       :player="player"
+-      @close="showDeckOverlay = false"
++      @click="onBurntSkillsClick"
++    />
++
++    <!-- 卡牌列表覆盖面板（通用） -->
++    <CardsDisplayOverlayPanel
++      v-if="showDeckOverlay || showBurntSkillsOverlay"
++      :skills="showDeckOverlay ? (player?.backupSkills || []) : (player?.burntSkills || [])"
++      :player="player"
++      :title="showDeckOverlay ? '牌库' : '坟地'"
++      @close="showDeckOverlay = false; showBurntSkillsOverlay = false"
+     />
+ 
+     <button @click="onDropSkillButtonClicked" :disabled="!canDropSkill">⚡1 丢弃头部技能</button>
+@@ -34,14 +42,15 @@
+ <script>
+ import SkillsHand from './SkillsHand.vue';
+ import DeckIcon from './DeckIcon.vue';
+-import DeckOverlayPanel from './DeckOverlayPanel.vue';
++import BurntSkillsIcon from './BurntSkillsIcon.vue';
++import CardsDisplayOverlayPanel from './CardsDisplayOverlayPanel.vue';
+ import frontendEventBus from '../frontendEventBus.js';
+ import backendEventBus, { EventNames } from '../backendEventBus';
+ import orchestrator from '../utils/cardAnimationOrchestrator.js';
+ 
+ export default {
+   name: 'ActionPanel',
+-  components: { SkillsHand, DeckIcon, DeckOverlayPanel },
++  components: { SkillsHand, DeckIcon, BurntSkillsIcon, CardsDisplayOverlayPanel },
+   props: {
+     player: { type: Object, required: true },
+     isPlayerTurn: { type: Boolean, default: true }
+@@ -49,6 +58,7 @@ export default {
+   data() {
+     return {
+       showDeckOverlay: false,
++      showBurntSkillsOverlay: false,
+       isControlDisabled: true // 可以通过外部事件控制面板禁用
+     };
+   },
+@@ -99,6 +109,14 @@ export default {
+       // 打开牌库覆盖面板，并隐藏悬浮tooltip
+       this.showDeckOverlay = true;
+       frontendEventBus.emit('tooltip:hide');
++    },
++    onBurntSkillsClick() {
++      const burntSkills = this.player?.burntSkills || [];
++      if (burntSkills.length === 0) return;
++      // 打开烧毁技能覆盖面板
++      this.showBurntSkillsOverlay = true;
++      // 隐藏悬浮tooltip
++      frontendEventBus.emit('tooltip:hide');
+     }
+   }
+ };
+
+--- FILE: src/components/ActionPointsBar.vue ---
+diff --git a/src/components/ActionPointsBar.vue b/src/components/ActionPointsBar.vue
+index 4de0247..a9d6248 100644
+--- a/src/components/ActionPointsBar.vue
++++ b/src/components/ActionPointsBar.vue
+@@ -1,6 +1,6 @@
+ <template>
+   <div class="action-points-bar">
+-    <div class="action-points-text">⚡行动点 {{ player.remainingActionPoints }}/{{ player.maxActionPoints }}</div>
++    <div class="action-points-text" ref="apText">⚡行动点 {{ player.remainingActionPoints }}/{{ player.maxActionPoints }}</div>
+     <div class="action-points-dots">
+       <BarPoint
+         v-for="(dot, index) in actionPointsDots" 
+@@ -71,6 +71,28 @@ export default {
+       this.highlightedActionPointCost = 0;
+     },
+ 
++    // 触发缩放动画
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流以重启动画
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      const onEnd = () => {
++        el.classList.remove('stat-bump');
++        el.removeEventListener('animationend', onEnd);
++      };
++      el.addEventListener('animationend', onEnd);
++    }
++  },
++  watch: {
++    'player.remainingActionPoints'(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.apText));
++    },
++    'player.maxActionPoints'(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.apText));
++    }
+   }
+ };
+ </script>
+@@ -91,5 +113,8 @@ export default {
+   font-size: 14px;
+   font-weight: bold;
+   width: 100px;
++  will-change: transform;
+ }
++
++/* 使用全局的 .stat-bump 动画（见 src/assets/common.css） */
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/BreakthroughRewardPanel.vue ---
+diff --git a/src/components/BreakthroughRewardPanel.vue b/src/components/BreakthroughRewardPanel.vue
+index a9dbeb7..f0bfeee 100644
+--- a/src/components/BreakthroughRewardPanel.vue
++++ b/src/components/BreakthroughRewardPanel.vue
+@@ -1,9 +1,7 @@
+ <template>
+-  <transition-group name="slide" tag="div" class="breakthrough-reward-panel-wrapper">
+-    <div class="breakthrough-reward-panel" v-if="isVisible" key="panel" @click="claimReward">
+-      <h2>🏇突破！</h2>
+-    </div>
+-  </transition-group>
++  <div class="breakthrough-reward-panel" key="panel" @click="claimReward">
++    <h2>🏇突破！</h2>
++  </div>
+ </template>
+ 
+ <script>
+@@ -12,10 +10,6 @@ import backendEventBus, { EventNames } from '../backendEventBus.js';
+ export default {
+   name: 'BreakthroughRewardPanel',
+   props: {
+-    isVisible: {
+-      type: Boolean,
+-      default: false
+-    }
+   },
+   methods: {
+     claimReward() {
+@@ -69,30 +63,4 @@ export default {
+   box-shadow: 0 6px 12px rgba(232, 15, 0, 0.5);
+   transform: translateY(-2px);
+ }
+-
+-/* 滑动进入和退出动画 */
+-.slide-enter-active, .slide-leave-active {
+-  transition: all 0.5s ease;
+-}
+-
+-.slide-enter-from {
+-  transform: translateY(100%);
+-  opacity: 0;
+-}
+-
+-.slide-leave-to {
+-  transform: translateY(-100%);
+-  opacity: 0;
+-}
+-
+-.slide-enter-to, .slide-leave-from {
+-  transform: translateY(0);
+-  opacity: 1;
+-}
+-
+-/* 为transition-group添加样式 */
+-.breakthrough-reward-panel-wrapper {
+-  display: flex;
+-  justify-content: center;
+-}
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/BurntSkillsIcon.vue ---
+diff --git a/src/components/BurntSkillsIcon.vue b/src/components/BurntSkillsIcon.vue
+new file mode 100644
+index 0000000..16a5e0d
+--- /dev/null
++++ b/src/components/BurntSkillsIcon.vue
+@@ -0,0 +1,112 @@
++<template>
++  <div
++      class="burnt-skills-icon"
++      :title="`焚毁技能：${count} 张`"
++      @mouseenter="onEnter"
++      @mousemove="onMove"
++      @mouseleave="onLeave"
++      @click="onClick"
++      ref="root"
++  >
++    <span class="icon">🕳️</span>
++    <span class="count" v-if="count > 0">{{ count }}</span>
++  </div>
++</template>
++
++<script>
++import frontendEventBus from '../frontendEventBus.js';
++
++export default {
++  name: 'BurntSkillsIcon',
++  props: {
++    count: { type: Number, default: 0 },
++    player: { type: Object, default: null }
++  },
++  emits: ['click'],
++  data() {
++    return { showPreview: false };
++  },
++  watch: {
++    count(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.root));
++    }
++  },
++  methods: {
++    // 重启动画，使整个组件有一个缩放跳动
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      el.addEventListener('animationend', () => {
++        el.classList.remove('stat-bump');
++      }, { once: true });
++    },
++    onEnter(e) {
++      this.showPreview = true;
++      const listHtml = this.names && this.names.length
++          ? `<ul style='padding-left:16px;margin:6px 0;'>${this.names.map(n => `<li>${n}</li>`).join('')}</ul>`
++          : '';
++      frontendEventBus.emit('tooltip:show', {
++        name: '坟地',
++        text: `已焚毁技能：<strong>${this.count}</strong> 张${listHtml}`,
++        color: '#cd00c3',
++        x: e.clientX,
++        y: e.clientY,
++        maxWidth: 260
++      });
++    },
++    onMove(e) {
++      frontendEventBus.emit('tooltip:move', { x: e.clientX, y: e.clientY });
++    },
++    onLeave() {
++      this.showPreview = false;
++      frontendEventBus.emit('tooltip:hide');
++    },
++    onClick() {
++      this.$emit('click');
++    }
++  }
++};
++</script>
++
++<style scoped>
++.burnt-skills-icon {
++  position: absolute;
++  right: 16px;
++  top: -32px;
++  width: 44px;
++  height: 44px;
++  border-radius: 8px;
++  background: rgba(0,0,0,0.35);
++  color: #ffd54f;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
++  cursor: pointer;
++  user-select: none;
++  z-index: var(--z-overlay);
++  will-change: transform;
++}
++.burnt-skills-icon .icon { font-size: 22px; line-height: 1; }
++.burnt-skills-icon .count {
++  position: absolute;
++  bottom: -6px;
++  right: -6px;
++  min-width: 20px;
++  height: 20px;
++  padding: 0 4px;
++  background: #ff9800;
++  color: #000;
++  border-radius: 10px;
++  font-size: 12px;
++  font-weight: bold;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
++}
++</style>
+
+--- FILE: src/components/CardsDisplayOverlayPanel.vue ---
+diff --git a/src/components/CardsDisplayOverlayPanel.vue b/src/components/CardsDisplayOverlayPanel.vue
+new file mode 100644
+index 0000000..de3f529
+--- /dev/null
++++ b/src/components/CardsDisplayOverlayPanel.vue
+@@ -0,0 +1,118 @@
++<template>
++  <transition name="overlay-fade" appear @after-leave="onAfterLeave">
++    <div v-if="visible" class="deck-overlay" @click="onClose">
++      <transition name="panel-scale" appear>
++        <div class="deck-content">
++          <h2 class="title">{{ title }}（{{ skills.length }}）</h2>
++          <div class="grid">
++            <SkillCard
++              v-for="s in skills"
++              :key="s.uniqueID || s.name"
++              :skill="s"
++              :player="player"
++              :preview-mode="true"
++              :can-click="false"
++            />
++          </div>
++          <div class="tooltip">点击空白处或按 Esc 关闭</div>
++        </div>
++      </transition>
++    </div>
++  </transition>
++</template>
++
++<script>
++import SkillCard from './SkillCard.vue';
++
++export default {
++  name: 'CardsDisplayOverlayPanel',
++  components: { SkillCard },
++  props: {
++    skills: { type: Array, default: () => [] },
++    player: { type: Object, default: null },
++    title: { type: String, default: '牌库' }
++  },
++  emits: ['close'],
++  data() {
++    return { visible: true };
++  },
++  mounted() {
++    window.addEventListener('keydown', this.onKeydown);
++  },
++  beforeUnmount() {
++    window.removeEventListener('keydown', this.onKeydown);
++  },
++  methods: {
++    onClose() {
++      // 先触发关闭动画，动画结束后再真正通知父组件
++      this.visible = false;
++    },
++    onAfterLeave() {
++      this.$emit('close');
++    },
++    onKeydown(e) {
++      const key = e.key || e.code;
++      if (key === 'Escape' || key === 'Esc') {
++        e.preventDefault();
++        this.onClose();
++      }
++    }
++  }
++};
++</script>
++
++<style scoped>
++.deck-overlay {
++  position: fixed;
++  inset: 0;
++  background: rgba(0, 0, 0, 0.6);
++  z-index: var(--z-overlay);
++  display: flex;
++  align-items: stretch;
++  justify-content: center;
++}
++.deck-content {
++  position: relative;
++  margin: 48px 24px;
++  padding: 16px 16px 64px;
++  width: min(1200px, 96vw);
++  overflow: auto;
++}
++.title {
++  margin: 8px 0 16px;
++  color: #fff;
++  text-align: left;
++}
++.grid {
++  display: grid;
++  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
++  gap: 16px;
++}
++.tooltip {
++  position: sticky;
++  bottom: 0;
++  margin-top: 12px;
++  padding: 8px 10px;
++  color: rgba(255,255,255,0.9);
++  text-align: center;
++}
++
++.overlay-fade-enter-active,
++.overlay-fade-leave-active {
++  transition: opacity 0.18s ease;
++}
++.overlay-fade-enter-from,
++.overlay-fade-leave-to {
++  opacity: 0;
++}
++.panel-scale-enter-active,
++.panel-scale-leave-active {
++  transition: transform 0.2s ease, opacity 0.2s ease;
++}
++.panel-scale-enter-from,
++.panel-scale-leave-to {
++  transform: translateY(-6px) scale(0.97);
++  opacity: 0;
++}
++</style>
++
+
+--- FILE: src/components/DeckIcon.vue ---
+diff --git a/src/components/DeckIcon.vue b/src/components/DeckIcon.vue
+index e29fbaa..70c8b79 100644
+--- a/src/components/DeckIcon.vue
++++ b/src/components/DeckIcon.vue
+@@ -6,6 +6,7 @@
+     @mousemove="onMove"
+     @mouseleave="onLeave"
+     @click="onClick"
++    ref="root"
+   >
+     <span class="icon">🃏</span>
+     <span class="count" v-if="count > 0">{{ count }}</span>
+@@ -34,7 +35,24 @@ export default {
+   data() {
+     return { showPreview: false };
+   },
++  watch: {
++    count(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.root));
++    }
++  },
+   methods: {
++    // 重启动画，使整个组件有一个缩放跳动
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      el.addEventListener('animationend', () => {
++        el.classList.remove('stat-bump');
++      }, { once: true });
++    },
+     onEnter(e) {
+       this.showPreview = true;
+       const listHtml = this.names && this.names.length
+@@ -80,6 +98,7 @@ export default {
+   cursor: pointer;
+   user-select: none;
+   z-index: var(--z-overlay);
++  will-change: transform;
+ }
+ .deck-icon .icon { font-size: 22px; line-height: 1; }
+ .deck-icon .count {
+
+--- FILE: src/components/DeckOverlayPanel.vue ---
+diff --git a/src/components/DeckOverlayPanel.vue b/src/components/DeckOverlayPanel.vue
+deleted file mode 100644
+index 57ffd5c..0000000
+--- a/src/components/DeckOverlayPanel.vue
++++ /dev/null
+@@ -1,116 +0,0 @@
+-<template>
+-  <transition name="overlay-fade" appear @after-leave="onAfterLeave">
+-    <div v-if="visible" class="deck-overlay" @click="onClose">
+-      <transition name="panel-scale" appear>
+-        <div class="deck-content">
+-          <h2 class="title">牌库（{{ skills.length }}）</h2>
+-          <div class="grid">
+-            <SkillCard
+-              v-for="s in skills"
+-              :key="s.uniqueID || s.name"
+-              :skill="s"
+-              :player="player"
+-              :preview-mode="true"
+-              :can-click="false"
+-            />
+-          </div>
+-          <div class="tooltip">点击空白处或按 Esc 关闭</div>
+-        </div>
+-      </transition>
+-    </div>
+-  </transition>
+-</template>
+-
+-<script>
+-import SkillCard from './SkillCard.vue';
+-
+-export default {
+-  name: 'DeckOverlayPanel',
+-  components: { SkillCard },
+-  props: {
+-    skills: { type: Array, default: () => [] },
+-    player: { type: Object, default: null }
+-  },
+-  emits: ['close'],
+-  data() {
+-    return { visible: true };
+-  },
+-  mounted() {
+-    window.addEventListener('keydown', this.onKeydown);
+-  },
+-  beforeUnmount() {
+-    window.removeEventListener('keydown', this.onKeydown);
+-  },
+-  methods: {
+-    onClose() {
+-      // 先触发关闭动画，动画结束后再真正通知父组件
+-      this.visible = false;
+-    },
+-    onAfterLeave() {
+-      this.$emit('close');
+-    },
+-    onKeydown(e) {
+-      const key = e.key || e.code;
+-      if (key === 'Escape' || key === 'Esc') {
+-        e.preventDefault();
+-        this.onClose();
+-      }
+-    }
+-  }
+-};
+-</script>
+-
+-<style scoped>
+-.deck-overlay {
+-  position: fixed;
+-  inset: 0;
+-  background: rgba(0, 0, 0, 0.6);
+-  z-index: var(--z-overlay);
+-  display: flex;
+-  align-items: stretch;
+-  justify-content: center;
+-}
+-.deck-content {
+-  position: relative;
+-  margin: 48px 24px;
+-  padding: 16px 16px 64px;
+-  width: min(1200px, 96vw);
+-  overflow: auto;
+-}
+-.title {
+-  margin: 8px 0 16px;
+-  color: #fff;
+-  text-align: left;
+-}
+-.grid {
+-  display: grid;
+-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+-  gap: 16px;
+-}
+-.tooltip {
+-  position: sticky;
+-  bottom: 0;
+-  margin-top: 12px;
+-  padding: 8px 10px;
+-  color: rgba(255,255,255,0.9);
+-  text-align: center;
+-}
+-
+-.overlay-fade-enter-active,
+-.overlay-fade-leave-active {
+-  transition: opacity 0.18s ease;
+-}
+-.overlay-fade-enter-from,
+-.overlay-fade-leave-to {
+-  opacity: 0;
+-}
+-.panel-scale-enter-active,
+-.panel-scale-leave-active {
+-  transition: transform 0.2s ease, opacity 0.2s ease;
+-}
+-.panel-scale-enter-from,
+-.panel-scale-leave-to {
+-  transform: translateY(-6px) scale(0.97);
+-  opacity: 0;
+-}
+-</style>
+
+--- FILE: src/components/EffectIcon.vue ---
+diff --git a/src/components/EffectIcon.vue b/src/components/EffectIcon.vue
+index 3738c97..68b72a7 100644
+--- a/src/components/EffectIcon.vue
++++ b/src/components/EffectIcon.vue
+@@ -5,7 +5,7 @@
+     @mouseenter="showTooltip"
+     @mousemove="onMouseMove"
+     @mouseleave="hideTooltip"
+-    :class="{ 'scale-animation': isScaling }"
++    :class="{ 'stat-bump': isScaling }"
+   >
+     {{ effectIcon }}
+     {{ effectName }}
+@@ -111,16 +111,7 @@ export default {
+   cursor: help;
+   margin: 0 2px;
+   font-weight: bold;
+-  transition: transform 0.5s ease;
+-}
+-
+-.effect-icon.scale-animation {
+-  animation: scaleEffect 0.5s ease;
+-}
+-
+-@keyframes scaleEffect {
+-  0% { transform: scale(1); }
+-  50% { transform: scale(1.3); }
+-  100% { transform: scale(1); }
++  will-change: transform;
+ }
++/* 使用全局的 .stat-bump 动画（见 src/assets/common.css） */
+ </style>
+
+--- FILE: src/components/HurtAnimationWrapper.vue ---
+diff --git a/src/components/HurtAnimationWrapper.vue b/src/components/HurtAnimationWrapper.vue
+index 95891fa..216400b 100644
+--- a/src/components/HurtAnimationWrapper.vue
++++ b/src/components/HurtAnimationWrapper.vue
+@@ -29,14 +29,8 @@ import frontendEventBus from '../frontendEventBus.js';
+ export default {
+   name: 'HurtAnimationWrapper',
+   props: {
+-    unit: {
+-      type: Object,
+-      default: null
+-    },
+-    zIndex: {
+-      type: Number,
+-      default: 1
+-    }
++    unit: { type: Object, default: null },
++    zIndex: { type: Number, default: 1 }
+   },
+   data() {
+     return {
+@@ -49,7 +43,6 @@ export default {
+       shakeIntensity: 0,
+       hurtIntensity: 0,
+       particles: [],
+-      _prevSnapshot: { hp: 0, shield: 0 },
+       _timers: []
+     };
+   },
+@@ -57,7 +50,6 @@ export default {
+     isShielded() {
+       return (this.unit?.shield || 0) > 0;
+     },
+-    // 注意：移除了 shakeStyle，避免与 CSS 动画在 transform 上冲突
+     hurtStyle() {
+       if (!this.isHurt) return {};
+       const intensity = Math.min(this.hurtIntensity / 50, 1);
+@@ -67,34 +59,22 @@ export default {
+         '--hurt-opacity': Math.max(Math.min(intensity, 1), 0.2)
+       };
+     },
+-
+     zIndexStyle() {
+       return { zIndex: this.zIndex };
+-    },
+-
+-    // 用于合并监听 hp/shield 变化的签名
+-    statKey() {
+-      const hp = this.unit?.hp ?? 0;
+-      const shield = this.unit?.shield ?? 0;
+-      const id = this.unit?.uniqueID || this.unit?.name || '';
+-      return `${id}:${hp}/${shield}`;
+     }
+   },
+   mounted() {
+-    // 初始化快照
+-    this._prevSnapshot = {
+-      hp: this.unit?.hp ?? 0,
+-      shield: this.unit?.shield ?? 0
+-    };
++    frontendEventBus.on('unit-hurt', this.onUnitHurt);
++    frontendEventBus.on('unit-death', this.onUnitDeath);
++  },
++  beforeUnmount() {
++    this._clearTimers();
++    frontendEventBus.off('unit-hurt', this.onUnitHurt);
++    frontendEventBus.off('unit-death', this.onUnitDeath);
+   },
+   watch: {
+-    // 当 unit 实例切换时，重置快照，避免跨实例误判
+-    unit(newUnit, oldUnit) {
+-      this._prevSnapshot = {
+-        hp: newUnit?.hp ?? 0,
+-        shield: newUnit?.shield ?? 0
+-      };
+-      // 可选择重置动画状态，避免继承残留态
++    // 当 unit 实例切换时，重置动画状态，避免继承残留态
++    unit() {
+       this.isShaking = false;
+       this.isHurt = false;
+       this.isEvading = false;
+@@ -103,104 +83,73 @@ export default {
+       this.hurtIntensity = 0;
+       this.shakeIntensity = 0;
+       this._clearTimers();
+-    },
+-
+-    // 合并监听 hp/shield 变化，计算 delta 并驱动动画
+-    statKey() {
+-      if (!this.unit) return;
+-      const prevHp = this._prevSnapshot.hp;
+-      const prevShield = this._prevSnapshot.shield;
+-      const currHp = this.unit.hp;
+-      const currShield = this.unit.shield;
+-
+-      const dhp = currHp - prevHp; // 负值=受伤，正值=治疗
+-      const dshield = currShield - prevShield; // 负值=护盾损失
+-
+-      // 死亡触发（hp从>0到<=0），排除玩家
+-      if (prevHp > 0 && currHp <= 0 && this.unit.type !== 'player') {
+-        this.handleBattleVictory();
+-      }
+-
+-      if (dhp < 0 || dshield < 0) {
+-        const hpDamage = Math.max(0, -dhp);
+-        const passThroughDamage = hpDamage + Math.max(0, -dshield);
+-        this.triggerHurtAnimation(hpDamage, passThroughDamage);
+-      } else if (dhp > 0) {
+-        // 治疗
+-        this.triggerHurtAnimation(-dhp, 0);
+-      }
+-
+-      // 更新快照
+-      this._prevSnapshot = { hp: currHp, shield: currShield };
+     }
+   },
+-  beforeUnmount() {
+-    this._clearTimers();
+-  },
+   methods: {
+-    _setTimer(fn, delay) {
+-      const id = setTimeout(fn, delay);
+-      this._timers.push(id);
+-      return id;
+-    },
+-    _clearTimers() {
+-      if (this._timers && this._timers.length) {
+-        for (const id of this._timers) clearTimeout(id);
+-        this._timers = [];
+-      }
+-    },
+-
+-    triggerHurtAnimation(hpDamage, passThroughDamage) {
+-      const damage = hpDamage;
+-      // 无伤害且无穿透 => 闪避
+-      if (damage === 0 && passThroughDamage === 0) {
++    onUnitHurt(payload = {}) {
++      console.log(payload);
++      const id = payload?.unitId;
++      if (!id || id !== this.unit?.uniqueID) return;
++      const hpDamage = payload?.hpDamage ?? 0;
++      const passThroughDamage = payload?.passThroughDamage ?? 0;
++
++      if (hpDamage === 0 && passThroughDamage === 0) {
++        // 闪避
+         this.isEvading = true;
+         this._setTimer(() => { this.isEvading = false; }, 700);
+         return;
+       }
+ 
+-      // 负数伤害 => 治疗
+-      if (damage < 0) {
++      if (hpDamage < 0) {
++        // 治疗
+         this.isHealing = true;
+-        this.createDamageText(damage);
++        this.createDamageText(hpDamage);
+         this._setTimer(() => { this.isHealing = false; }, 600);
+         return;
+       }
+ 
+       // 正常受伤
+-      this.shakeIntensity = damage;
++      this.shakeIntensity = hpDamage;
+       this.isShaking = true;
+-      this.hurtIntensity = damage;
++      this.hurtIntensity = hpDamage;
+       this.isHurt = true;
+ 
+-      // 粒子：hp 伤害红色/橙色，纯护盾伤害蓝色
+-      if (damage > 0) {
+-        this.createParticles(damage, 0);
++      // 粒子与文本
++      if (hpDamage > 0) {
++        this.createParticles(hpDamage, 0);
+       } else {
+-        this.createParticles(Math.abs(damage), 140);
++        this.createParticles(Math.abs(hpDamage), 140);
+       }
+-      // 伤害文本（使用穿透总伤害）
+       this.createDamageText(passThroughDamage);
+ 
+-      // 抖动持续时间
+       const duration = Math.min(200 + passThroughDamage * 2, 600);
+       this._setTimer(() => { this.isShaking = false; this.shakeIntensity = 0; }, duration);
+-      // 受伤特效快速结束
+       this._setTimer(() => { this.isHurt = false; this.hurtIntensity = 0; }, 200);
+     },
+ 
+-    handleBattleVictory() {
+-      if (this.unit.type !== 'player') {
+-        // 持续生成粒子
+-        for (let i = 0; i < 7; i++) {
+-          this._setTimer(() => { this.createParticles(20); }, i * 200);
+-        }
+-        // 爆炸前抖动
+-        this._setTimer(() => { this.isShaking = true; this.shakeIntensity = 20; }, 900);
+-        // 闪烁并置 dead
+-        this._setTimer(() => { this.isDead = true; }, 1400);
+-        // 爆炸粒子
+-        this._setTimer(() => { this.createParticles(100); }, 1400);
++    onUnitDeath(payload = {}) {
++      const id = payload?.unitId;
++      if (!id || id !== this.unit?.uniqueID) return;
++      // 玩家不触发死亡爆炸
++      if (this.unit?.type === 'player') return;
++      // 延续原来的死亡演出
++      for (let i = 0; i < 7; i++) {
++        this._setTimer(() => { this.createParticles(20); }, i * 200);
++      }
++      this._setTimer(() => { this.isShaking = true; this.shakeIntensity = 20; }, 900);
++      this._setTimer(() => { this.isDead = true; }, 1400);
++      this._setTimer(() => { this.createParticles(100); }, 1400);
++    },
++
++    _setTimer(fn, delay) {
++      const id = setTimeout(fn, delay);
++      this._timers.push(id);
++      return id;
++    },
++    _clearTimers() {
++      if (this._timers && this._timers.length) {
++        for (const id of this._timers) clearTimeout(id);
++        this._timers = [];
+       }
+     },
+ 
+@@ -293,7 +242,6 @@ export default {
+           zIndex: 0
+         });
+       }
+-      // 通过事件总线发送粒子生成请求
+       frontendEventBus.emit('spawn-particles', particles);
+     }
+   }
+@@ -305,13 +253,13 @@ export default {
+   width: fit-content;
+   height: fit-content;
+   position: relative;
+-  transition: transform 0.1s ease;
++  margin: 20px;
++  transition: border 0.1s ease, filter 0.1s ease, transform 0.1s ease;
+   /* 受伤特效的默认变量 */
+   --hurt-border-width: 0px;
+   --hurt-opacity: 0;
+   border: var(--hurt-border-width) solid rgba(255, 0, 0, var(--hurt-opacity));
+   filter: drop-shadow(0 0 5px rgba(255, 0, 0, calc(var(--hurt-opacity) * 0.5)));
+-  transition: border 0.2s ease, filter 0.2s ease;
+ }
+ 
+ .hurt-shake {
+
+--- FILE: src/components/ManaBar.vue ---
+diff --git a/src/components/ManaBar.vue b/src/components/ManaBar.vue
+index 25c46bb..0a9543a 100644
+--- a/src/components/ManaBar.vue
++++ b/src/components/ManaBar.vue
+@@ -1,6 +1,6 @@
+ <template>
+   <div class="mana-bar">
+-    <div class="mana-text">💧魏启 {{ player.mana }}/{{ player.maxMana }}</div>
++    <div class="mana-text" ref="manaText">💧魏启 {{ player.mana }}/{{ player.maxMana }}</div>
+     <div class="mana-dots">
+       <BarPoint
+         v-for="(dot, index) in manaDots" 
+@@ -71,6 +71,28 @@ export default {
+       this.highlightedManaCost = 0;
+     },
+ 
++    // 触发缩放动画
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      const onEnd = () => {
++        el.classList.remove('stat-bump');
++        el.removeEventListener('animationend', onEnd);
++      };
++      el.addEventListener('animationend', onEnd);
++    }
++  },
++  watch: {
++    'player.mana'(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.manaText));
++    },
++    'player.maxMana'(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.manaText));
++    }
+   }
+ };
+ </script>
+@@ -91,5 +113,8 @@ export default {
+   font-size: 14px;
+   font-weight: bold;
+   width: 100px;
++  will-change: transform;
+ }
++
++/* 使用全局的 .stat-bump 动画（见 src/assets/common.css） */
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/MoneyRewardPanel.vue ---
+diff --git a/src/components/MoneyRewardPanel.vue b/src/components/MoneyRewardPanel.vue
+index c6fc48b..9f2e8cd 100644
+--- a/src/components/MoneyRewardPanel.vue
++++ b/src/components/MoneyRewardPanel.vue
+@@ -1,10 +1,8 @@
+ <template>
+-  <transition-group name="slide" tag="div" class="money-reward-panel-wrapper">
+-    <div class="money-reward-panel" v-if="isVisible" key="panel" @click="claimReward">
+-      <h2>金币！</h2>
+-      <p>💰 +{{ amount }}</p>
+-    </div>
+-  </transition-group>
++  <div class="money-reward-panel" key="panel" @click="claimReward">
++    <h2>金币！</h2>
++    <p>💰 +{{ amount }}</p>
++  </div>
+ </template>
+ 
+ <script>
+@@ -13,10 +11,6 @@ import backendEventBus, { EventNames } from '../backendEventBus.js';
+ export default {
+   name: 'MoneyRewardPanel',
+   props: {
+-    isVisible: {
+-      type: Boolean,
+-      default: false
+-    },
+     amount: {
+       type: Number,
+       default: 0
+@@ -63,30 +57,4 @@ export default {
+   box-shadow: 0 6px 12px rgba(212, 175, 55, 0.5);
+   transform: translateY(-2px);
+ }
+-
+-/* 滑动进入和退出动画 */
+-.slide-enter-active, .slide-leave-active {
+-  transition: all 0.5s ease;
+-}
+-
+-.slide-enter-from {
+-  transform: translateY(100%);
+-  opacity: 0;
+-}
+-
+-.slide-leave-to {
+-  transform: translateY(-100%);
+-  opacity: 0;
+-}
+-
+-.slide-enter-to, .slide-leave-from {
+-  transform: translateY(0);
+-  opacity: 1;
+-}
+-
+-/* 为transition-group添加样式 */
+-.money-reward-panel-wrapper {
+-  display: flex;
+-  justify-content: center;
+-}
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/PlayerBasicStats.vue ---
+diff --git a/src/components/PlayerBasicStats.vue b/src/components/PlayerBasicStats.vue
+index 00f0fba..38cbd89 100644
+--- a/src/components/PlayerBasicStats.vue
++++ b/src/components/PlayerBasicStats.vue
+@@ -75,19 +75,37 @@ export default {
+       
+       // 通过事件总线发送粒子生成请求
+       frontendEventBus.emit('spawn-particles', particles);
++    },
++
++    // 触发数值栏目的缩放动画（类似层数变化的“跳动”效果）
++    triggerStatBump(statElement) {
++      if (!statElement) return;
++      // 重启动画
++      statElement.classList.remove('stat-bump');
++      // 强制回流以重新应用动画
++      // eslint-disable-next-line no-unused-expressions
++      statElement.offsetWidth;
++      statElement.classList.add('stat-bump');
++      // 动画结束后清理类，便于下次再次触发
++      const handler = () => {
++        statElement.classList.remove('stat-bump');
++        statElement.removeEventListener('animationend', handler);
++      };
++      statElement.addEventListener('animationend', handler);
+     }
+   },
+   
+   watch: {
+     // 监听玩家属性变化
+     player: {
+-      handler(newPlayer, oldPlayerVue) {
++      handler(newPlayer) {
+         if (newPlayer.money !== this.previousPlayer.money) {
+           const diff = newPlayer.money - this.previousPlayer.money;
+           const moneyStat = this.$el.querySelector('.stat:nth-child(1)');
+           if (moneyStat) {
+             const text = diff > 0 ? `+${diff}💰` : `${diff}💰`;
+             this.spawnTextParticle(text, moneyStat, diff > 0 ? '#4caf50' : '#f44336');
++            this.triggerStatBump(moneyStat);
+           }
+         }
+         
+@@ -98,6 +116,7 @@ export default {
+           if (defenseStat) {
+             const text = diff > 0 ? `+${diff}🛡️` : `${diff}🛡️`;
+             this.spawnTextParticle(text, defenseStat, diff > 0 ? '#9c27b0' : '#f44336');
++            this.triggerStatBump(defenseStat);
+           }
+         }
+         
+@@ -108,6 +127,7 @@ export default {
+           if (magicStat && diff !== 0) {
+             const text = diff > 0 ? `+${diff}🔮` : `${diff}🔮`;
+             this.spawnTextParticle(text, magicStat, diff > 0 ? '#2196f3' : '#f44336');
++            this.triggerStatBump(magicStat);
+           }
+         }
+ 
+@@ -117,6 +137,7 @@ export default {
+           if (tierStat) {
+             const newTierLabel = this.getPlayerTierLabel(newPlayer.tier);
+             this.spawnTextParticle(`🏅 ${newTierLabel}`, tierStat, '#ffd700');
++            this.triggerStatBump(tierStat);
+           }
+         }
+         
+@@ -149,10 +170,14 @@ export default {
+   display: flex;
+   align-items: center;
+   margin-right: 15px;
++  /* 在动画期间更平滑 */
++  will-change: transform;
+ }
+ 
+ .stat-label {
+   font-weight: bold;
+   margin-right: 5px;
+ }
++
++/* 使用全局的 .stat-bump 动画（见 src/assets/common.css） */
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/PlayerStatusPanel.vue ---
+diff --git a/src/components/PlayerStatusPanel.vue b/src/components/PlayerStatusPanel.vue
+index ce4e10f..a5ecaa0 100644
+--- a/src/components/PlayerStatusPanel.vue
++++ b/src/components/PlayerStatusPanel.vue
+@@ -5,7 +5,7 @@
+       <PlayerBasicStats :player="player" :show-mana="restScreen" />
+     
+       <!-- 魏启条 -->
+-      <ManaBar :player="player" v-if="!restScreen" />
++      <ManaBar :player="player" />
+       
+       <!-- 行动点条 -->
+       <ActionPointsBar :player="player" v-if="!restScreen" />
+
+--- FILE: src/components/RestControlPanel.vue ---
+diff --git a/src/components/RestControlPanel.vue b/src/components/RestControlPanel.vue
+index 5c8184e..29b48f3 100644
+--- a/src/components/RestControlPanel.vue
++++ b/src/components/RestControlPanel.vue
+@@ -2,8 +2,8 @@
+   <div class="rest-control-panel">
+     <h3 class="title">休整操作</h3>
+     <div class="controls">
+-      <button @click="$emit('toggle-preparation-panel')">
+-        {{ preparationPanelVisible ? '隐藏' : '显示' }} 准备面板
++      <button ref="deckBtn" @click="$emit('toggle-preparation-panel')">
++        牌库
+       </button>
+       <!-- 预留：未来可以在此添加更多休整操作按钮 -->
+     </div>
+@@ -11,12 +11,49 @@
+ </template>
+ 
+ <script>
++import frontendEventBus from '../frontendEventBus.js';
++import orchestrator from '../utils/cardAnimationOrchestrator.js';
+ export default {
+   name: 'RestControlPanel',
+   props: {
+     preparationPanelVisible: { type: Boolean, default: false },
+   },
+-  emits: ['toggle-preparation-panel']
++  emits: ['toggle-preparation-panel'],
++  mounted() {
++    // 监听来自动画序列的“飞入牌库”完成提示，播放按钮缩放动画
++    this._onDeckBump = () => {
++      this.triggerBump(this.$refs.deckBtn);
++    };
++    frontendEventBus.on('rest-deck-bump', this._onDeckBump);
++    // 将全局“牌库”锚点定位到该按钮，便于后端动画使用 toAnchor:'deck'
++    try { orchestrator.deckAnchorEl = this.$refs.deckBtn; } catch (_) {}
++  },
++  beforeUnmount() {
++    if (this._onDeckBump) frontendEventBus.off('rest-deck-bump', this._onDeckBump);
++  },
++  methods: {
++    // 返回“牌库”按钮的中心点（用于作为动画目标）
++    getDeckButtonCenterPoint() {
++      const el = this.$refs.deckBtn;
++      if (!el || !el.getBoundingClientRect) return null;
++      const r = el.getBoundingClientRect();
++      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
++    },
++    // 播放缩放跳动动画
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      const onEnd = () => {
++        el.classList.remove('stat-bump');
++        el.removeEventListener('animationend', onEnd);
++      };
++      el.addEventListener('animationend', onEnd);
++    }
++  }
+ }
+ </script>
+ 
+@@ -47,9 +84,10 @@ button {
+   background: rgba(66, 185, 131, 0.9);
+   color: #fff;
+   cursor: pointer;
++  will-change: transform;
+ }
+ button:hover {
+   background: rgba(53, 156, 109, 0.95);
+ }
++/* 使用全局的 .stat-bump 动画（见 src/assets/common.css） */
+ </style>
+-
+
+--- FILE: src/components/RestScreen.vue ---
+diff --git a/src/components/RestScreen.vue b/src/components/RestScreen.vue
+index d5d4512..2eafa18 100644
+--- a/src/components/RestScreen.vue
++++ b/src/components/RestScreen.vue
+@@ -5,49 +5,50 @@
+       
+       <div class="content-wrapper">
+         <!-- 左侧固定大小面板容器 -->
+-        <div class="left-panel-container" :class="{ 'two-panels': currentPanel === 'shop' }">
++        <div class="left-panel-container" :class="{ 'two-panels': currentStage === 'shop' }">
++          <transition name="rest-screen-panels" mode="out-in">
+           <!-- 金钱奖励面板 -->
+           <MoneyRewardPanel
+-            :is-visible="currentPanel === 'money'"
++            v-if="currentStage === 'money'"
+             :amount="gameState.rewards.money"
+-            @claimed="onMoneyRewardClaimed"
+           />
+           
+           <!-- 突破奖励面板 -->
+           <BreakthroughRewardPanel
+-            :is-visible="currentPanel === 'breakthrough'"
+-            @claimed="onBreakthroughRewardClaimed"
++            v-else-if="currentStage === 'breakthrough'"
+           />
+           
+           <!-- 技能奖励面板 -->
+           <SkillRewardPanel
+-            :is-visible="currentPanel === 'skill'"
++            v-else-if="currentStage === 'skill'"
+             :skills="gameState.rewards.skills"
+-            @close="closeSkillRewardPanel"
++            @close="onCloseSkillRewardPanel"
+             @selected-skill-reward="onSkillRewardSelected"
+           />
+           
+           <!-- 能力奖励面板 -->
+           <AbilityRewardPanel
+-            :is-visible="currentPanel === 'ability'"
++            v-else-if="currentStage === 'ability'"
+             :abilities="gameState.rewards.abilities"
+             @selected-ability-reward="onAbilityRewardSelected"
+-            @close="closeAbilityRewardPanel"
++            @close="onCloseAbilityRewardPanel"
+           />
+           
+           <!-- 商店 + 准备面板并列显示 -->
+           <ShopPanel
+-            :isVisible="currentPanel === 'shop'"
++            v-else-if="currentStage === 'shop'"
+             :shop-items="gameState.shopItems"
+             :game-state="gameState"
+             @close="closeShopPanel"
+           />
++          </transition>
+         </div>
+         
+         <!-- 右侧：玩家状态 + 常驻控制面板 -->
+         <div class="right-panel-container">
+           <PlayerStatusPanel :player="gameState.player" :restScreen="true"/>
+           <RestControlPanel
++            ref="restControl"
+             :preparation-panel-visible="preparationPanelVisible"
+             @toggle-preparation-panel="preparationPanelVisible = !preparationPanelVisible"
+           />
+@@ -109,88 +110,26 @@ export default {
+   },
+   data() {
+     return {
+-      currentPanel: '', // 'money', 'breakthrough', 'skill', 'ability', 'shop' or empty
+       skillSelectionPanelVisible: false,
+       preparationPanelVisible: false,
+       claimingSkill: null,
+-      sequentialPanels: [],
+-      currentRewardIndex: 0
+     }
+   },
+-  mounted() {
+-    // 初始化奖励面板队列
+-    this.initRewardPanels();
+-    // 显示第一个奖励面板
+-    this.showNextRewardPanel();
+-    // 监听后端商品购买，弹出UI消息
+-    backendEventBus.on(EventNames.Shop.ITEM_PURCHASED, (purchasedItem) => {
+-      frontendEventBus.emit("pop-message", {
+-        id: 'item-purchased',
+-        text: `购买了物品：${purchasedItem.name}`
+-      });
+-    });
+-  },
+-  beforeUnmount() {
+-    backendEventBus.off && backendEventBus.off(EventNames.Shop.ITEM_PURCHASED);
++  computed: {
++    currentStage() {
++      return this.gameState.restScreenStage || '';
++    }
+   },
+   methods: {
+-    initRewardPanels() {
+-      this.sequentialPanels = [];
+-      
+-      // 按顺序添加奖励面板
+-      if (this.gameState.rewards.money > 0) {
+-        this.sequentialPanels.push('money');
+-      }
+-      
+-      if (this.gameState.rewards.breakthrough) {
+-        this.sequentialPanels.push('breakthrough');
+-      }
+-      
+-      if (this.gameState.rewards.skills.length > 0) {
+-        this.sequentialPanels.push('skill');
+-      }
+-      
+-      if (this.gameState.rewards.abilities.length > 0) {
+-        this.sequentialPanels.push('ability');
+-      }
+-      
+-      // 总是添加商店面板
+-      this.sequentialPanels.push('shop');
+-    },
+-    
+-    showNextRewardPanel() {
+-      // 先隐藏当前面板
+-      this.currentPanel = 'none';
+-      // 稍等片刻后，再显示下一个面板
+-      setTimeout(()=> {
+-        if (this.currentRewardIndex < this.sequentialPanels.length) {
+-          this.currentPanel = this.sequentialPanels[this.currentRewardIndex];
+-        } else {
+-          // 所有奖励面板都已显示完毕
+-          this.currentPanel = '';
+-        }
+-      }, 500);
+-    },
+-    
+-    onMoneyRewardClaimed() {
+-      this.currentRewardIndex++;
+-      this.showNextRewardPanel();
+-    },
+-    onBreakthroughRewardClaimed() {
+-      this.currentRewardIndex++;
+-      this.showNextRewardPanel();
+-    },
+-    closeSkillRewardPanel() {
+-      this.currentRewardIndex++;
+-      this.showNextRewardPanel();
++    onCloseSkillRewardPanel() {
++      // 后端控制阶段切换，此处不做处理
+     },
+-    closeAbilityRewardPanel() {
+-      this.currentRewardIndex++;
+-      this.showNextRewardPanel();
++    onCloseAbilityRewardPanel() {
++      // 后端控制阶段切换，此处不做处理
+     },
+ 
+     onSkillRewardSelected(currentSkill) {
+-      // 简化后的自动升级逻辑：如果奖励技能带有 upgradedFrom，直接替换来源技能
++      // 简化后的自动升级逻辑：如果奖励技能带有 upgradedFrom，尝试替换来源技能
+       if(currentSkill.isUpgradeCandidate && currentSkill.upgradedFrom) {
+         const slots = this.gameState.player.cultivatedSkills;
+         const sourceSlotIndex = slots.findIndex(s => s && s.name === currentSkill.upgradedFrom);
+@@ -205,24 +144,21 @@ export default {
+             id: 'skill-upgraded',
+             text: `技能升级：${oldSkill.name} -> ${currentSkill.name}`
+           });
+-          this.closeSkillRewardPanel();
+           return;
+         }
+       }
+-      // 回退：未能自动升级则自动增添到末尾
++      // 回退：未能自动升级则自动增添到末尾（若有空位）
+       if(this.gameState.player.cultivatedSkills.length < this.gameState.player.maxSkills) {
+-        // 直接添加到末尾
+         backendEventBus.emit(EventNames.Rest.CLAIM_SKILL, {
+           skill: currentSkill,
+           slotIndex: -1,
+           clearRewards: false
+         });
+-        this.closeSkillRewardPanel();
+         return;
+       }
+-      // 如果技能栏已满，则弹出技能选择面板，替换一个技能
++      // 技能栏已满，弹出选择面板
+       this.claimingSkill = currentSkill;
+-      setTimeout(() => { this.skillSelectionPanelVisible = true; }, 300);
++      setTimeout(() => { this.skillSelectionPanelVisible = true; }, 200);
+     },
+     closeSkillSelectionPanel() {
+       this.skillSelectionPanelVisible = false;
+@@ -233,25 +169,19 @@ export default {
+         slotIndex,
+         clearRewards: false
+       });
+-      // 关闭面板
+       this.closeSkillSelectionPanel();
+-      this.closeSkillRewardPanel();
+     },
+     onAbilityRewardSelected(ability) {
+       backendEventBus.emit(EventNames.Rest.CLAIM_ABILITY, {
+         ability,
+         clearRewards: false
+       });
+-      this.closeAbilityRewardPanel();
+     },
+     closeShopPanel() {
+-      // 结束休整阶段，开始下一场战斗（后端流程监听）
+       backendEventBus.emit(EventNames.Rest.FINISH);
+     },
+     onApplySkillOrderChanges(newSkills) {
+-      // 将拖拽后的顺序回写到 cultivatedSkills
+       const skillIDs = newSkills.map(s => s.uniqueID);
+-      // 通知后端更新
+       backendEventBus.emit(EventNames.Rest.REORDER_SKILLS, { skillIDs });
+     }
+ 
+@@ -313,4 +243,25 @@ export default {
+   flex-shrink: 0;
+ }
+ 
++/* 滑动进入和退出动画 */
++.rest-screen-panels-enter-active, .rest-screen-panels-leave-active {
++  transition: all 0.5s ease;
++}
++
++.rest-screen-panels-enter-from {
++  transform: translateY(100%);
++  opacity: 0;
++}
++
++.rest-screen-panels-leave-to {
++  transform: translateY(-100%);
++  opacity: 0;
++}
++
++.rest-screen-panels-enter-to, .rest-screen-panels-leave-from {
++  transform: translateY(0);
++  opacity: 1;
++}
++
++
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/ShopPanel.vue ---
+diff --git a/src/components/ShopPanel.vue b/src/components/ShopPanel.vue
+index 1c077cf..c60df53 100644
+--- a/src/components/ShopPanel.vue
++++ b/src/components/ShopPanel.vue
+@@ -1,6 +1,5 @@
+ <template>
+-  <transition-group name="slide" tag="div" class="shop-panel-wrapper">
+-  <div class="shop-panel" v-if="isVisible" key="panel">
++  <div class="shop-panel" key="panel">
+     <h2>商店</h2>
+     <div class="shop-items">
+       <div 
+@@ -26,7 +25,6 @@
+     </div>
+     <button @click="$emit('close')">离开</button>
+   </div>
+-  </transition-group>
+ </template>
+ 
+ <script>
+@@ -47,10 +45,6 @@ export default {
+     gameState: {
+       type: Object,
+       required: true
+-    },
+-    isVisible: {
+-      type: Boolean,
+-      default: false
+     }
+   },
+   methods: {
+@@ -223,30 +217,4 @@ button {
+ button:hover {
+   background-color: #616161; /* 深灰色 */
+ }
+-
+-/* 滑动进入和退出动画 */
+-.slide-enter-active, .slide-leave-active {
+-  transition: all 0.5s ease;
+-}
+-
+-.slide-enter-from {
+-  transform: translateY(100%);
+-  opacity: 0;
+-}
+-
+-.slide-leave-to {
+-  transform: translateY(-100%);
+-  opacity: 0;
+-}
+-
+-.slide-enter-to, .slide-leave-from {
+-  transform: translateY(0);
+-  opacity: 1;
+-}
+-
+-/* 为transition-group添加样式 */
+-.shop-panel-wrapper {
+-  display: flex;
+-  justify-content: center;
+-}
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/SkillCard.vue ---
+diff --git a/src/components/SkillCard.vue b/src/components/SkillCard.vue
+index 2b1ad62..63459d3 100644
+--- a/src/components/SkillCard.vue
++++ b/src/components/SkillCard.vue
+@@ -5,6 +5,7 @@
+     @mouseenter="onMouseEnter"
+     @mouseleave="onMouseLeave"
+     :style="skillCardStyle"
++    ref="root"
+   >
+     <div class="skill-card-background-paper"></div>
+     <div class="skill-card-background-image" :style="skillCardImageStyle"></div>
+@@ -40,6 +41,7 @@ import SkillCosts from './skillCard/SkillCosts.vue';
+ import SkillUses from './skillCard/SkillUses.vue';
+ import SkillMeta from './skillCard/SkillMeta.vue';
+ import {adjustColorBrightness} from "../utils/colorUtils";
++import { registerCardEl, unregisterCardEl } from '../utils/cardDomRegistry.js';
+ 
+ export default {
+   name: 'SkillCard',
+@@ -51,10 +53,12 @@ export default {
+     playerMana: { type: Number, default: Infinity },
+     previewMode: { type: Boolean, default: false },
+     canClick: { type: Boolean, default: true },
+-    suppressActivationAnimationOnClick: { type: Boolean, default: false }
++    suppressActivationAnimationOnClick: { type: Boolean, default: false },
++    // 当父组件已手动注册 DOM（如 SkillsHand）时，关闭此项以避免重复注册
++    autoRegisterInRegistry: { type: Boolean, default: true }
+   },
+   data() {
+-    return { hovered: false };
++    return { hovered: false, _registeredSelf: false };
+   },
+   computed: {
+     skillDescription() {
+@@ -93,6 +97,18 @@ export default {
+       return { backgroundImage: `url(${this.skillCardImageUrl})` };
+     }
+   },
++  mounted() {
++    // 仅在需要时由组件自身注册到全局卡片DOM注册表
++    if (this.autoRegisterInRegistry) {
++      try { registerCardEl(this.skill?.uniqueID, this.$refs.root); this._registeredSelf = true; } catch (_) {}
++    }
++  },
++  beforeUnmount() {
++    if (this._registeredSelf) {
++      try { unregisterCardEl(this.skill?.uniqueID, this.$refs.root); } catch (_) {}
++      this._registeredSelf = false;
++    }
++  },
+   methods: {
+     getSkillTierLabel,
+     adjustColorBrightness,
+
+--- FILE: src/components/SkillRewardPanel.vue ---
+diff --git a/src/components/SkillRewardPanel.vue b/src/components/SkillRewardPanel.vue
+index 8bfe883..7af2046 100644
+--- a/src/components/SkillRewardPanel.vue
++++ b/src/components/SkillRewardPanel.vue
+@@ -1,19 +1,17 @@
+ <template>
+-  <transition-group name="slide" tag="div" class="skill-reward-panel-wrapper">
+-    <div class="skill-reward-panel" v-if="isVisible" key="panel">
+-      <h2>选择一个技能！</h2>
+-      <div class="skill-cards">
+-        <SkillCard
+-          v-for="(skill, index) in skills" 
+-          :key="skill.uniqueID"
+-          :skill="skill"
+-          :preview-mode="true"
+-          @skill-card-clicked="onSkillCardClicked"
+-        />
+-      </div>
+-      <button @click="closePanel">放弃</button>
++  <div class="skill-reward-panel" key="panel">
++    <h2>选择一个技能！</h2>
++    <div class="skill-cards">
++      <SkillCard
++        v-for="(skill, index) in skills"
++        :key="skill.uniqueID"
++        :skill="skill"
++        :preview-mode="true"
++        @skill-card-clicked="onSkillCardClicked"
++      />
+     </div>
+-  </transition-group>
++    <button @click="closePanel">放弃</button>
++  </div>
+ </template>
+ 
+ <script>
+@@ -27,10 +25,6 @@ export default {
+     skills: {
+       type: Array,
+       default: () => []
+-    },
+-    isVisible: {
+-      type: Boolean,
+-      default: false
+     }
+   },
+   methods: {
+@@ -99,30 +93,4 @@ button {
+ button:hover:not(:disabled) {
+   background-color: #43a047; /* 深一点的绿色 */
+ }
+-
+-/* 滑动进入和退出动画 */
+-.slide-enter-active, .slide-leave-active {
+-  transition: all 0.5s ease;
+-}
+-
+-.slide-enter-from {
+-  transform: translateY(100%);
+-  opacity: 0;
+-}
+-
+-.slide-leave-to {
+-  transform: translateY(-100%);
+-  opacity: 0;
+-}
+-
+-.slide-enter-to, .slide-leave-from {
+-  transform: translateY(0);
+-  opacity: 1;
+-}
+-
+-/* 为transition-group添加样式 */
+-.skill-reward-panel-wrapper {
+-  display: flex;
+-  justify-content: center;
+-}
+ </style>
+\ No newline at end of file
+
+--- FILE: src/components/SkillsHand.vue ---
+diff --git a/src/components/SkillsHand.vue b/src/components/SkillsHand.vue
+index 6e5d162..08e60ac 100644
+--- a/src/components/SkillsHand.vue
++++ b/src/components/SkillsHand.vue
+@@ -16,6 +16,7 @@
+         :player-mana="(player && player.mana != null) ? player.mana : Infinity"
+         :can-click="draggable || (isPlayerTurn && !isControlDisabled && canUseSkill(skill))"
+         :suppress-activation-animation-on-click="true"
++        :auto-register-in-registry="false"
+         :ref="el => setCardRef(el, skill.uniqueID)"
+         @skill-card-clicked="onSkillCardClicked"
+       />
+
+--- FILE: src/data/animationInstructionHelpers.js ---
+diff --git a/src/data/animationInstructionHelpers.js b/src/data/animationInstructionHelpers.js
+index f092736..51595b2 100644
+--- a/src/data/animationInstructionHelpers.js
++++ b/src/data/animationInstructionHelpers.js
+@@ -9,10 +9,17 @@ import frontendEventBus from '../frontendEventBus.js';
+ 
+ // 内部：S 子集规则
+ function isWritableProperty(target, key) {
+-  const desc = Object.getOwnPropertyDescriptor(target, key);
+-  if (!desc) return true;
+-  if (typeof desc.get === 'function' && typeof desc.set !== 'function') return false;
+-  if (desc.writable === false) return false;
++  // 查找自身及原型链的属性描述符，避免向仅 getter 的访问器属性赋值
++  let cur = target;
++  let desc = undefined;
++  while (cur) {
++    desc = Object.getOwnPropertyDescriptor(cur, key);
++    if (desc) break;
++    cur = Object.getPrototypeOf(cur);
++  }
++  if (!desc) return true; // 未定义则可安全写入（会创建自有属性）
++  if (typeof desc.get === 'function' && typeof desc.set !== 'function') return false; // getter-only
++  if (desc.writable === false) return false; // 数据属性非可写
+   return true;
+ }
+ 
+@@ -445,6 +452,35 @@ export function enqueueUnlockControl(options = {}) {
+   });
+ }
+ 
++// 受伤/治疗动画指令：由后端调用，以动画节奏发送到前端
++export function enqueueHurtAnimation({ unitId, hpDamage = 0, passThroughDamage = 0 } = {}) {
++  // 计算一个与现有实现接近的时长：
++  const isHealing = hpDamage < 0;
++  const durationMs = isHealing ? 400 : Math.min(200 + Math.max(0, passThroughDamage) * 2, 600);
++  return enqueueInstruction({
++    tags: ['ui'],
++    waitTags: ['all'],
++    durationMs,
++    start: ({ emit }) => {
++      try { emit('unit-hurt', { unitId, hpDamage, passThroughDamage }); } catch (_) {}
++    }
++  });
++}
++
++// 死亡动画指令
++export function enqueueUnitDeath({ unitId } = {}) {
++  // 参考 HurtAnimationWrapper：抖动/闪烁/爆炸总计 ~1400ms
++  const durationMs = 1500;
++  return enqueueInstruction({
++    tags: ['ui'],
++    waitTags: ['all'],
++    durationMs,
++    start: ({ emit }) => {
++      try { emit('unit-death', { unitId }); } catch (_) {}
++    }
++  });
++}
++
+ export default {
+   captureSnapshot,
+   applyProjectionToDisplay,
+@@ -462,4 +498,6 @@ export default {
+   enqueueLockControl,
+   enqueueUnlockControl,
+   DEFAULT_STATE_CHANGE_DURATION,
++  enqueueHurtAnimation,
++  enqueueUnitDeath,
+ };
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 59743ce..a1a5608 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -50,9 +50,10 @@ function startBattle() {
+   addSystemLog(`战斗 #${gameState.battleCount} 开始！`);
+   addSystemLog(`遭遇了 ${gameState.enemy.name}！`);
+ 
+-  // 初始化前台和后备技能列表
++  // 初始化前台/后备/坟地技能列表
+   gameState.player.backupSkills = [...gameState.player.skills];
+   gameState.player.frontierSkills = [];
++  gameState.player.burntSkills = [];
+ 
+   // 搞定后立刻锁定操作面板
+   enqueueLockControl();
+@@ -278,9 +279,10 @@ function battleVictory(isVictory) {
+ 
+   // 添加延迟，让玩家体验到胜利或失败的感觉
+   enqueueDelay(3000);
+-  // 之后再把前台和后备技能列表清空
++  // 之后再把前台/后备/坟地技能列表清空
+   gameState.player.frontierSkills = [];
+   gameState.player.backupSkills = [];
++  gameState.player.burntSkills = [];
+ 
+   // 清理掉卡牌ghost
+   enqueueClearCardAnimations();
+
+--- FILE: src/data/battleUtils.js ---
+diff --git a/src/data/battleUtils.js b/src/data/battleUtils.js
+index ddf59e9..6784c16 100644
+--- a/src/data/battleUtils.js
++++ b/src/data/battleUtils.js
+@@ -5,6 +5,7 @@ import {
+ } from './effectProcessor.js';
+ import { addBattleLog, addDamageLog, addDeathLog, addHealLog } from './battleLogUtils.js';
+ import {captureSnapshot, enqueueAnimateCardById, enqueueState} from "./animationInstructionHelpers";
++import {enqueueHurtAnimation, enqueueUnitDeath} from "./animationInstructionHelpers";
+ import backendEventBus, {EventNames} from "../backendEventBus";
+ 
+ // 将护盾/生命结算 + 日志输出 + 死亡判定抽象为通用助手
+@@ -15,9 +16,16 @@ function applyDamageAndLog(target, mitigatedDamage, { mode = 'attack', attacker
+   if (mitigatedDamage > 0) {
+     // 先打护盾
+     const shieldDamage = Math.min(target.shield, mitigatedDamage);
+-    target.shield -= shieldDamage;
+     mitigatedDamage -= shieldDamage;
+     hpDamage = mitigatedDamage;
++
++    // 入队受伤/治疗动画指令（通过前端事件驱动实际播放）
++    enqueueHurtAnimation({
++      unitId: target.uniqueID, hpDamage: hpDamage, passThroughDamage: passThoughDamage
++    });
++
++    // 更新生命值状态
++    target.shield -= shieldDamage;
+     target.hp = Math.max(target.hp - mitigatedDamage, 0);
+ 
+     if (mitigatedDamage > 0) {
+@@ -40,6 +48,10 @@ function applyDamageAndLog(target, mitigatedDamage, { mode = 'attack', attacker
+       }
+     }
+   } else {
++    // 入队闪避动画指令（通过前端事件驱动实际播放）
++    enqueueHurtAnimation({
++      unitId: target.uniqueID, hpDamage: 0, passThroughDamage: 0
++    });
+     if (mode === 'attack') {
+       if (attacker) addBattleLog(`${attacker.name} 攻击了 ${target.name}，但不起作用！`);
+       else addBattleLog(`你被攻击，但没有作用！`);
+@@ -78,6 +90,8 @@ export function launchAttack (attacker, target, damage) {
+   if (!result.dead) {
+     // 发射攻击完成事件，用于结算攻击特效等
+     processAttackFinishEffects(attacker, target, result.hpDamage, result.passThoughDamage);
++  } else {
++    try { enqueueUnitDeath({ unitId: target.uniqueID }); } catch (_) {}
+   }
+ 
+   return result;
+@@ -90,7 +104,11 @@ export function dealDamage (source, target, damage, penetrateDefense = false) {
+   // 固定防御减免
+   if(!penetrateDefense) finalDamage = Math.max(finalDamage - target.defense, 0);
+ 
+-  return applyDamageAndLog(target, finalDamage, { mode: 'direct', source });
++  const result = applyDamageAndLog(target, finalDamage, { mode: 'direct', source });
++  if (result.dead) {
++    try { enqueueUnitDeath({ unitId: target.uniqueID }); } catch (_) {}
++  }
++  return result;
+ }
+ 
+ // 任意获得护盾的结算逻辑
+@@ -130,8 +148,8 @@ export function applyHeal(target, heal) {
+   const delta = Math.min(canHeal, heal);
+   target.hp += heal;
+   if (target.hp > target.maxHp) target.hp = target.maxHp;
+-  // 如需日志，可在此处添加，但为避免重复日志，保持静默
+-  // addHealLog(`${target.name}恢复了${heal}点生命！`);
++  // 入队治疗动画指令（hpDamage 传负值表示治疗）
++  try { enqueueHurtAnimation({ unitId: target.uniqueID, hpDamage: -Math.abs(delta), passThroughDamage: 0 }); } catch (_) {}
+ }
+ 
+ export function drawSkillCard(player, number = 1) {
+@@ -202,7 +220,10 @@ export function burnSkillCard(player, skillID) {
+     // 从玩家技能列表中移除该技能
+     const skillListIndex = player.skills.findIndex(skill => skill === exhaustedSkill);
+     if (skillListIndex !== -1) {
+-      player.skills.splice(skillListIndex, 1);
++      const burnt = player.skills.splice(skillListIndex, 1);
++      console.log('焚烧技能：', burnt);
++      // 加入坟地
++      player.burntSkills.push(burnt[0]);
+     }
+   }
+   if (backupIndex !== -1) {
+
+--- FILE: src/data/gameState.js ---
+diff --git a/src/data/gameState.js b/src/data/gameState.js
+index 873f68f..6df83a5 100644
+--- a/src/data/gameState.js
++++ b/src/data/gameState.js
+@@ -10,6 +10,9 @@ export function createGameState() {
+     // 游戏阶段: 'start', 'battle', 'rest', 'end'
+     gameStage: 'start',
+ 
++    // 休整界面阶段：'money' | 'breakthrough' | 'skill' | 'ability' | 'shop' | ''（不显示）
++    restScreenStage: '',
++
+     // 是否开启了瑞米进行游戏
+     isRemiPresent: false,
+
+--- FILE: src/data/player.js ---
+diff --git a/src/data/player.js b/src/data/player.js
+index 1d65ac5..9d719d4 100644
+--- a/src/data/player.js
++++ b/src/data/player.js
+@@ -92,15 +92,18 @@ export class Player extends Unit {
+     this.maxSkills = 20; // 玩家拥有的总技能上限
+     this.cultivatedSkills = []; // 已培养技能（顺序即为战斗中的默认顺序）
+     // 场上技能与战斗列表
+-    this.skills = []; // 场上技能。在战斗开始前由 cultivatedSkills 深拷贝生成，在战斗结束后清空。
++    this.skills = []; // 初始场上技能。在战斗开始前由 cultivatedSkills 深拷贝生成，在战斗结束后清空。
+     this.frontierSkills = []; // 前台技能列表，玩家在当前回合可以使用的技能
+     this.backupSkills = []; // 后备技能列表，用于存储暂时不可用的技能
++    this.burntSkills = []; // 坟地技能列表，存放被焚毁的技能（战斗中完全消耗掉的技能）
+     this.maxFrontierSkills = 10; // 最大前台技能数量
+     this.drawFrontierSkills = 4; // 每回合抽取前台技能数量
+     // effects 由 Unit 初始化
+     this.leino = ['normal']; // 灵脉列表，可以包含normal, fire, wind, wood, earth, water, thunder, light, dark
+     this.abilities = []; // 玩家能力列表
+ 
++    this.uniqueID = 'playeruniqueid'; // 玩家唯一ID（用于动画同步等）
++
+     // 属性修正器管线（按顺序应用）
+     this.modifiers = [];
+   }
+
+--- FILE: src/data/rest.js ---
+diff --git a/src/data/rest.js b/src/data/rest.js
+index d3d79ea..6daf36a 100644
+--- a/src/data/rest.js
++++ b/src/data/rest.js
+@@ -6,6 +6,8 @@ import ItemManager from './itemManager.js'
+ import backendEventBus, { EventNames } from '../backendEventBus.js'
+ import { backendGameState as gameState } from './gameState.js'
+ import { getNextPlayerTier, upgradePlayerTier } from './player.js'
++import { enqueueAnimateCardById } from './animationInstructionHelpers.js'
++import frontendEventBus from '../frontendEventBus.js'
+ 
+ export function spawnSkillRewards() {
+   // 技能奖励
+@@ -64,12 +66,30 @@ export function claimMoney() {
+   gameState.player.money += gameState.rewards.money;
+   const amount = gameState.rewards.money;
+   gameState.rewards.money = 0;
++  // 阶段推进
++  gotoNextRestStage();
+   // 发送事件（已领取）
+   backendEventBus.emit(EventNames.Player.MONEY_CLAIMED, amount);
+ }
+ 
+ // 领取技能奖励
+ export function claimSkillReward(skill, slotIndex, clearRewardsFlag) {
++  if (!skill) return;
++  // 先入队飞行动画（以便在状态同步/切换面板前克隆幽灵）
++  try {
++    enqueueAnimateCardById({
++      id: skill.uniqueID,
++      kind: undefined,
++      steps: [
++        { toAnchor: 'deck', scale: 0.55, rotate: 18, duration: 520, ease: 'power2.in' },
++        { opacity: 0, duration: 120 },
++        { call: () => { try { frontendEventBus.emit('rest-deck-bump'); } catch (_) {} }, holdMs: 0 }
++      ],
++      hideStart: true,
++      options: { endMode: 'destroy' }
++    }, { waitTags: ['all'] });
++  } catch (_) {}
++
+   // 计算可用容量（最多 maxSkills 个）
+   const capacity = Math.min(gameState.player.maxSkills || 0, gameState.player.cultivatedSkills.length + 1);
+   if (typeof slotIndex !== 'number' || slotIndex < 0) slotIndex = gameState.player.cultivatedSkills.length;
+@@ -82,11 +102,14 @@ export function claimSkillReward(skill, slotIndex, clearRewardsFlag) {
+   } else {
+     gameState.player.cultivatedSkills[slotIndex] = skill;
+   }
+-  console.log(gameState.player.cultivatedSkills);
+ 
+   if(clearRewardsFlag) {
++    // 领取一个技能后，清空剩余技能奖励（仅允许领取一次）
+     gameState.rewards.skills = [];
+   }
++  // 阶段推进
++  gotoNextRestStage();
++
+   // 发送事件（统一为 Player.SKILL_REWARD_CLAIMED）
+   backendEventBus.emit(EventNames.Player.SKILL_REWARD_CLAIMED, { skill: skill, slotIndex: slotIndex });
+ }
+@@ -99,15 +122,19 @@ export function claimAbilityReward(ability, clearRewardsFlag) {
+   if(clearRewardsFlag) {
+     gameState.rewards.abilities = [];
+   }
++  // 阶段推进
++  gotoNextRestStage();
+   // 发送玩家领取能力奖励事件（已领取）
+   backendEventBus.emit(EventNames.Player.ABILITY_CLAIMED, { ability: ability });
+ }
+ 
+-// 领取突破奖励（新加：由UI调用，而不是在UI组件中直接变更display层）
++// 领取突破奖励
+ export function claimBreakthroughReward() {
+   if (!gameState.rewards.breakthrough) return;
+   gameState.rewards.breakthrough = false;
+   upgradePlayerTier(gameState.player);
++  // 阶段推进
++  gotoNextRestStage();
+   backendEventBus.emit(EventNames.Player.TIER_UPGRADED, gameState.player);
+ }
+ 
+@@ -141,3 +168,27 @@ export function reorderSkills(skillUniqueIDs) {
+   console.log('技能顺序已更新：', reordered);
+   backendEventBus.emit(EventNames.Player.SKILLS_REORDERED, reordered);
+ }
++
++function computeNextRestStage(currentStage = gameState.restScreenStage) {
++  // 按顺序：money -> breakthrough -> skill -> ability -> shop
++  let availableStages = [];
++  if (gameState.rewards.money > 0) availableStages.push('money');
++  if (gameState.rewards.breakthrough) availableStages.push('breakthrough');
++  if (Array.isArray(gameState.rewards.skills) && gameState.rewards.skills.length > 0) availableStages.push('skill');
++  if (Array.isArray(gameState.rewards.abilities) && gameState.rewards.abilities.length > 0) availableStages.push('ability');
++  if (gameState.shopItems.length > 0) availableStages.push('shop');
++  const currentIndex = availableStages.indexOf(currentStage);
++  if (currentIndex === -1 || currentIndex === availableStages.length - 1) {
++    return availableStages[0] || '';
++  } else {
++    return availableStages[currentIndex + 1];
++  }
++}
++
++export function setInitialRestStage() {
++  gameState.restScreenStage = computeNextRestStage();
++}
++
++export function gotoNextRestStage() {
++  gameState.restScreenStage = computeNextRestStage();
++}
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index 1e2c3fc..34769be 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -115,14 +115,14 @@ export class SearingHeat extends Skill {
+ }
+ 
+ // 火花（C-)
+-// 获得2层燃烧，抽1张牌
++// 获得2层燃烧，抽2张牌
+ export class Spark extends Skill {
+   constructor() {
+     super('火花', 'fire', 1, 0, 1, 1);
+     this.baseColdDownTurns = 1;
+   }
+   get cards() {
+-    return Math.max(1 + this.power, 1);
++    return Math.max(2 + this.power, 1);
+   }
+   get stacks() {
+     return 2;
+@@ -132,10 +132,7 @@ export class Spark extends Skill {
+       player.addEffect('燃烧', this.stacks);
+       return false;
+     } else {
+-      for(let i = 0; i < this.cards; i ++) {
+-        drawSkillCard(player)
+-        enqueueDelay(400);
+-      }
++      drawSkillCard(player, this.cards);
+       return true;
+     }
+   }
+@@ -301,7 +298,6 @@ export class ScorchingCurse extends Skill {
+       burnSkillCard(player, closestSkillID, true);
+       return false;
+     } else {
+-      enqueueDelay(500);
+       enemy.addEffect('燃烧', this.getStacks(player));
+       return true;
+     }
+@@ -351,10 +347,7 @@ export class HotHands extends Skill {
+       player.addEffect('燃烧', this.stacks);
+       return false;
+     } else {
+-      for(let i = 0; i < this.cards; i ++) {
+-        drawSkillCard(player)
+-        enqueueDelay(400);
+-      }
++      drawSkillCard(player, this.cards);
+       return true;
+     }
+   }
+
+--- FILE: src/game.js ---
+diff --git a/src/game.js b/src/game.js
+index 21b39b0..60762d9 100644
+--- a/src/game.js
++++ b/src/game.js
+@@ -8,7 +8,7 @@ import {
+   initializeBattleFlowListeners
+ } from './data/battle.js'
+ import {
+-  claimMoney, claimSkillReward, claimAbilityReward, claimBreakthroughReward, reorderSkills, purchaseItem, spawnRewards, clearRewards
++  claimMoney, claimSkillReward, claimAbilityReward, claimBreakthroughReward, reorderSkills, purchaseItem, spawnRewards, clearRewards, setInitialRestStage
+ } from './data/rest.js'
+ 
+ function startGame() {
+@@ -20,8 +20,9 @@ function startGame() {
+   const initialSkill2 = SkillManager.getInstance().createSkill('活动筋骨');
+   const initialSkill3 = SkillManager.getInstance().createSkill('打滚');
+   const initialSkill4 = SkillManager.getInstance().createSkill('抱头防御');
++  const initialSkill5 = SkillManager.getInstance().createSkill('冲锋盾');
+ 
+-  backendGameState.player.cultivatedSkills = [initialSkill1, initialSkill2, initialSkill3, initialSkill4];
++  backendGameState.player.cultivatedSkills = [initialSkill1, initialSkill2, initialSkill3, initialSkill4, initialSkill5];
+ 
+   // 升满级调试
+   // while(backendGameState.player.tier < 9) {
+@@ -75,6 +76,8 @@ export function initGameFlowListeners() {
+ 
+   backendEventBus.on(EventNames.Game.ENTER_REST_STAGE, () => {
+     gameState.gameStage = 'rest';
++    // 由后端控制休整面板阶段
++    setInitialRestStage();
+   });
+ 
+   // 休整阶段：事件驱动的后端结算与流程推进
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

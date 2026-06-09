@@ -1,0 +1,237 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Maintain clear module separation: config/, notion_db/, processors/, utils/
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project file directory structure and file paths.
+- Suggested Logic: Check for the existence of the directories 'config/', 'notion_db/', 'processors/', and 'utils/'. Verify that source code files are appropriately organized into these specific modules and that no new top-level modules are introduced that violate this specific architectural separation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: docs
+- Changed Files List: 
+.kiro/steering/tech.md	+70	-63	after_lines=81
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 66c0403..5e2fbc5 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -1,74 +1,81 @@
+-# Technology Stack
+-
+-## Core Technologies
+-
+-- **Python 3.12+**: Primary language with modern packaging structure
+-- **Notion SDK**: Official Python client for Notion API integration
+-- **Google Gemini AI**: AI-powered video summary generation
+-- **YouTube Data API**: Optional metadata extraction (falls back to web scraping)
+-
+-## Key Dependencies
+-
+-```
+-notion-client          # Notion API integration
+-python-dotenv          # Environment variable management
+-pytest                 # Testing framework
+-google-genai>=0.1.0    # Google Gemini AI integration
+-google-api-python-client>=2.0.0  # YouTube Data API
+-requests>=2.25.0       # HTTP requests for web scraping fallback
++---
++inclusion: always
++---
++
++# Technical Guidelines
++
++## Technology Stack & Dependencies
++
++**Core Stack**: Python 3.12+, Notion SDK, Google Gemini AI, YouTube Data API
++**Key Dependencies**: `notion-client`, `google-genai>=0.1.0`, `python-dotenv`, `pytest`
++
++## Development Patterns
++
++### Package Structure
++- Use relative imports within `src/youtube_notion/` package
++- Follow modern Python packaging with `pyproject.toml`
++- Maintain clear module separation: `config/`, `notion_db/`, `processors/`, `utils/`
++
++### Testing Requirements
++- **Always use**: `python run_tests.py` (handles PYTHONPATH automatically)
++- **Avoid**: Direct `pytest` calls without proper path setup
++- Install in development mode: `pip install -e .` before testing
++
++### Test-Driven Development Standards
++- **MANDATORY**: Write proper unit tests for every functionality change
++- **NEVER**: Use print statements or quick checks for validation
++- **ALWAYS**: Run full test suite after any code changes
++- **REQUIRED**: Review and update existing tests when functionality changes
++- **PREFER**: Unit tests over integration tests (faster execution)
++- **STRUCTURE**: Follow existing test patterns in `tests/` directory
++- **COVERAGE**: Ensure new code paths are covered by tests
++- **VALIDATION**: Tests must pass before considering changes complete
++
++### Error Handling Standards
++- Return boolean success indicators from main functions
++- Use specific exception types with retry logic
++- Provide user-friendly error messages with troubleshooting context
++- Implement graceful fallbacks (YouTube API → web scraping)
++
++### Configuration Management
++- Use `.env` files with `python-dotenv` for environment variables
++- Validate configuration based on operation mode (YouTube vs example data)
++- Support multiple API providers with graceful degradation
++
++## Code Style Rules
++
++### Import Conventions
++```python
++# Internal package imports (relative)
++from .notion_db.operations import find_database_by_name
++from .config.example_data import EXAMPLE_DATA
++
++# External dependencies (absolute)
++from notion_client import Client
+ ```
+ 
+-## Build System
++### CLI Design Patterns
++- Support dual entry points: `youtube_notion_cli.py` (dev) and console script (installed)
++- Use mutually exclusive argument groups for different modes
++- Provide comprehensive help documentation with examples
+ 
+-- **Modern Python Packaging**: Uses `pyproject.toml` with setuptools backend
+-- **Development Installation**: `pip install -e .` for editable installs
+-- **Entry Points**: Console script `youtube-notion` available after installation
++### API Integration Standards
++- Implement retry logic for external API calls
++- Use structured error handling with specific exception types
++- Support fallback mechanisms (API → web scraping)
++- Validate API responses before processing
+ 
+-## Common Commands
++## Development Commands
+ 
+-### Development Setup
+ ```bash
+-# Clone and install dependencies
+-pip install -r requirements.txt
+-
+-# Install in development mode (recommended)
++# Setup (required)
+ pip install -e .
+-
+-# Copy environment template
+ cp .env.example .env
+-```
+ 
+-### Testing
+-```bash
+-# Preferred method - uses test runner with proper path setup
++# Testing (preferred method)
+ python run_tests.py
+ 
+-# Direct pytest (requires proper PYTHONPATH)
+-python -m pytest tests/ -v
+-
+-# Install package first, then test
+-pip install -e .
+-pytest tests/ -v
+-```
+-
+-### Running the Application
+-```bash
+-# CLI script (recommended for development)
+-python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"
+-
+-# Installed console command
+-youtube-notion --url "https://youtu.be/VIDEO_ID"
+-
+-# Module execution
+-python -m youtube_notion.main
+-
+-# Example data mode (default)
+-python youtube_notion_cli.py --example-data
+-```
+-
+-## Configuration Management
+-
+-- **Environment Variables**: Uses `.env` files with python-dotenv
+-- **Configuration Classes**: Structured config validation in `config/` module
+-- **API Key Management**: Supports multiple API providers with graceful fallbacks
+-- **Mode Detection**: Automatic configuration validation based on operation mode
+\ No newline at end of file
++# Running application
++python youtube_notion_cli.py --example-data  # Default mode
++python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"  # YouTube mode
++```
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

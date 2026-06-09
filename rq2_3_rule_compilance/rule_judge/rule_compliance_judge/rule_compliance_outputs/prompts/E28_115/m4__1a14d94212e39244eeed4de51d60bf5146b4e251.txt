@@ -1,0 +1,226 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: Refactor GraphCanvas and GraphDashboard components for improved rendering management
+- Changed Files List: 
+webview-ui/src/components/GraphCanvas.tsx	+15	-10	after_lines=197
+webview-ui/src/components/GraphDashboard.tsx	+5	-5	after_lines=146
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── 02-cytoscape-graph-visualization
+│   │   │   ├── cytoscape-graph-initial-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── 03-graph-view-layout
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── graph-ui.png
+├── graph-view-layout-prd.md
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   ├── GraphCanvas.tsx
+    │   │   ├── GraphDashboard.tsx
+    │   │   └── GraphToolbar.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   ├── extension-config.service.ts
+    │   │   ├── file-type.service.ts
+    │   │   ├── graph-styles.service.ts
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: webview-ui/src/components/GraphCanvas.tsx ---
+diff --git a/webview-ui/src/components/GraphCanvas.tsx b/webview-ui/src/components/GraphCanvas.tsx
+index bdf0d88..ffc8942 100644
+--- a/webview-ui/src/components/GraphCanvas.tsx
++++ b/webview-ui/src/components/GraphCanvas.tsx
+@@ -1,4 +1,4 @@
+-import { useEffect, useRef, useState } from 'preact/hooks'
++import { useEffect, useRef } from 'preact/hooks'
+ import cytoscape, { Core } from 'cytoscape'
+ import { messenger } from '../services/messenger'
+ import { getFileExt } from '../services/file-type.service'
+@@ -42,17 +42,22 @@ interface GraphCanvasProps {
+ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanvasProps) {
+   const containerRef = useRef<HTMLDivElement>(null)
+   const cyRef = useRef<Core | null>(null)
++  // Keep a stable reference to the callback so the effect below doesn't re-run
++  const onRenderingChangeRef = useRef(onRenderingChange)
++  useEffect(() => { onRenderingChangeRef.current = onRenderingChange }, [onRenderingChange])
+ 
+-  // Create/update Cytoscape instance when data changes
++  // Create/update Cytoscape instance only when data changes
+   useEffect(() => {
+     if (data && containerRef.current) {
+-      onRenderingChange(true)
+-      
++      // Notify parent that (re)render is starting for new data only
++      onRenderingChangeRef.current?.(true)
++
+       // Clean up previous instance to prevent memory leaks
+       if (cyRef.current) {
+         try {
+-          // Remove all event listeners before destroying
+-          cyRef.current.removeAllListeners()
++          // Cytoscape doesn't have removeAllListeners; defensively try off('*')
++          // @ts-ignore - off('*') is accepted at runtime
++          cyRef.current.off?.('*')
+           cyRef.current.destroy()
+         } catch (error) {
+           console.warn('Error destroying previous Cytoscape instance:', error)
+@@ -88,7 +93,7 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
+       // Use setTimeout for large graphs to prevent UI blocking
+       const nodeCount = data.nodes.length
+       const renderDelay = nodeCount > 200 ? 50 : 0
+-      
++
+       setTimeout(() => {
+         try {
+           // Create layout configuration with performance optimizations
+@@ -141,17 +146,17 @@ export function GraphCanvas({ data, isRendering, onRenderingChange }: GraphCanva
+ 
+           // Handle layout completion for performance monitoring
+           cyRef.current.on('layoutstop', () => {
+-            onRenderingChange(false)
++            onRenderingChangeRef.current?.(false)
+             console.log(`Graph layout completed for ${nodeCount} nodes`)
+           })
+ 
+         } catch (error) {
+           console.error('Error creating Cytoscape instance:', error)
+-          onRenderingChange(false)
++          onRenderingChangeRef.current?.(false)
+         }
+       }, renderDelay)
+     }
+-  }, [data, onRenderingChange])
++  }, [data])
+ 
+   // Enhanced cleanup on unmount
+   useEffect(() => {
+
+--- FILE: webview-ui/src/components/GraphDashboard.tsx ---
+diff --git a/webview-ui/src/components/GraphDashboard.tsx b/webview-ui/src/components/GraphDashboard.tsx
+index dc1ff56..d25d60a 100644
+--- a/webview-ui/src/components/GraphDashboard.tsx
++++ b/webview-ui/src/components/GraphDashboard.tsx
+@@ -1,4 +1,4 @@
+-import { useEffect, useState } from 'preact/hooks'
++import { useCallback, useEffect, useState } from 'preact/hooks'
+ import { messenger } from '../services/messenger'
+ import { GraphToolbar } from './GraphToolbar'
+ import { GraphCanvas } from './GraphCanvas'
+@@ -76,15 +76,15 @@ export function GraphDashboard() {
+     messenger.on(handleMessage)
+   }, [])
+ 
+-  const handleRescan = () => {
++  const handleRescan = useCallback(() => {
+     // Reset rendering state when starting a new scan
+     setIsRendering(false)
+     messenger.post('graph/scan')
+-  }
++  }, [])
+ 
+-  const handleRenderingChange = (rendering: boolean) => {
++  const handleRenderingChange = useCallback((rendering: boolean) => {
+     setIsRendering(rendering)
+-  }
++  }, [])
+ 
+   return (
+     <div className="graph-dashboard">
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

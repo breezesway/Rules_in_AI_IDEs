@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Architecture Rule (方案一：React + Vite + TypeScript + Node.js/Express)
+
+> **Rule Type:** Always
+
+## 架构概述
+- 前端：React 18 + Vite + TypeScript + Tailwind CSS
+- 后端：Node.js + Express + TypeScript
+- 前后端完全分离，接口通过 RESTful API 通信
+- 后端负责代理 DeepSeek API，前端不直接暴露 API Key
+- 统一使用 TypeScript 保证类型安全
+- 代码风格、目录结构、依赖管理、接口规范等均需遵循下述标准
+
+---
+
+## 前端技术标准（2025 最佳实践）
+- 使用 React 18 函数组件和 Hooks，禁止使用类组件
+- 状态管理优先使用 React Context + useReducer，复杂场景可用 Zustand/Recoil
+- 路由管理使用 React Router v6
+- 样式优先使用 Tailwind CSS，禁止全局 CSS，组件内可用 CSS Modules
+- 组件拆分粒度适中，复用性强，禁止在组件内直接操作 DOM
+- API 请求统一封装（如 axios/fetch），所有请求类型定义于 `src/types/api.ts`
+- 严格使用 TypeScript，所有 props、state、API 数据均需类型声明
+- 目录结构建议：
+  - `src/components/` 复用组件
+  - `src/pages/` 页面组件
+  - `src/hooks/` 自定义 Hook
+  - `src/types/` 类型定义
+  - `src/utils/` 工具函数
+  - `src/services/` API 封装
+- 代码风格遵循 Prettier + ESLint（airbnb 或官方推荐规则）
+- 单元测试优先使用 Vitest（2025年主流，速度快，兼容性好）+ React Testing Library，支持组件和逻辑的高效测试
+- 国际化、历史记录等功能后续章节实现，预留扩展点
+
+## 后端技术标准（2025 最佳实践）
+- 使用 Node.js 20+，Express 5+，TypeScript 5+
+- 路由、控制器、服务、类型分层清晰，目录结构建议：
+  - `src/routes/` 路由定义
+  - `src/controllers/` 控制器
+  - `src/services/` 业务逻辑
+  - `src/types/` 类型定义
+  - `src/utils/` 工具函数
+- 所有 API 接口严格定义输入输出类型，统一错误处理
+- API 路径风格遵循 RESTful 规范，返回 JSON
+- 环境变量管理使用 dotenv，敏感信息不入库
+- 日志记录使用 winston/pino，开发与生产分级
+- 代码风格遵循 Prettier + ESLint（airbnb/base 或官方推荐规则）
+- 单元测试优先使用 Jest（2025年依然主流，生态完善，支持依赖注入），集成 supertest 进行 API 测试；推荐结合 ts-jest、jest-mock-extended 与 typedi/inversify 等依赖注入库，确保服务、控制器等可独立测试
+- 仅暴露必要 API，前端不可直接访问 DeepSeek API Key
+
+## 通用规范
+- 依赖管理使用 pnpm/yarn/npm，锁定依赖版本
+- 代码提交前必须通过 lint、type check、单元测试
+- 代码注释清晰，重要逻辑需中英文注释
+- 统一接口文档（如 OpenAPI/Swagger），便于前后端协作
+- 预留后续功能扩展点（如 i18n、历史记录、用户系统等）
+
+---
+
+> 本规则为本项目架构与技术标准的唯一权威来源，后续所有开发、讨论、代码生成均需严格遵循本文件内容。

@@ -1,0 +1,59 @@
+import React from "react"
+import { cn } from "../lib/utils"
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "primary" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  size?: "default" | "sm" | "lg" | "icon"
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", ...props }, ref) => {
+    const baseClasses = "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+    
+    const variants = {
+      // 主要操作按钮 - 使用品牌色，高对比度
+      primary: "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] focus-visible:ring-blue-500/50",
+      
+      // 默认按钮
+      default: "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 shadow-sm hover:shadow-md focus-visible:ring-gray-500/50",
+      
+      // 危险操作按钮
+      destructive: "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 dark:from-red-500 dark:to-red-600 dark:hover:from-red-600 dark:hover:to-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] focus-visible:ring-red-500/50",
+      
+      // 边框按钮 - 次要操作
+      outline: "border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus-visible:ring-gray-500/50",
+      
+      // 次要按钮
+      secondary: "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 focus-visible:ring-gray-500/50",
+      
+      // 幽灵按钮 - 最轻量的操作
+      ghost: "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-gray-500/50",
+      
+      // 链接按钮
+      link: "text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline hover:text-blue-700 dark:hover:text-blue-300 focus-visible:ring-blue-500/50",
+    }
+    
+    const sizes = {
+      default: "h-11 px-6 py-3",
+      sm: "h-9 px-4 py-2 text-sm",
+      lg: "h-14 px-8 py-4 text-lg font-semibold",
+      icon: "h-11 w-11",
+    }
+
+    return (
+      <button
+        className={cn(
+          baseClasses,
+          variants[variant],
+          sizes[size],
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button } 

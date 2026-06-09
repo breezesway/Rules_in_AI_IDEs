@@ -1,0 +1,371 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/unit-tests.mdc
+- Change Type: added
+- Target Rule Content:
+This project uses pytest for unit testing.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Python dependency configuration files (e.g., requirements.txt, pyproject.toml, setup.py), and test source code files (e.g., test_*.py, *_test.py).
+- Suggested Logic: 1. Search for 'pytest' in dependency files like 'requirements.txt', 'pyproject.toml', or 'setup.py'. 2. Check for the existence of 'conftest.py' files. 3. Scan Python test files for 'import pytest' statements or pytest-specific decorators such as '@pytest.mark.parametrize' or '@pytest.fixture'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: Added possibility for partial answers
+- Changed Files List: 
+src/app/app.py	+3	-1	after_lines=120
+src/app/game/game_manager.py	+12	-4	after_lines=130
+src/app/game/quiz_engine.py	+23	-11	after_lines=106
+src/static/css/style.css	+14	-3	after_lines=493
+src/static/images/psyduck_wonder.gif	+-	--	after_lines=SKIPPED	skipped_reason=binary (numstat=-)
+src/templates/quiz.html	+51	-13	after_lines=165
+*(Note: The following files were modified but ignored because diff details are unavailable (e.g., binary/skipped in meta): src/static/images/psyduck_wonder.gif.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .cloudbuild
+│   └── infrastructure.yaml
+├── .cursor
+│   └── rules
+│       └── unit-tests.mdc
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── README.MD
+├── cloudbuild.yaml
+├── docker-compose.debug.yml
+├── docker-compose.yml
+├── infrastructure
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── variables.tf
+├── pytest.ini
+├── requirements.txt
+├── src
+│   ├── __init__.py
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── equations
+│   │   │   ├── __init__.py
+│   │   │   └── equations.py
+│   │   └── game
+│   │       ├── __init__.py
+│   │       ├── game_config.py
+│   │       ├── game_manager.py
+│   │       ├── quiz_engine.py
+│   │       └── session_manager.py
+│   ├── data
+│   │   └── quizzes.json
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   └── images
+│   │       ├── bulbasaur.png
+│   │       ├── charmander.png
+│   │       ├── favicon.svg
+│   │       ├── mew.png
+│   │       ├── pikachu.png
+│   │       ├── pokeball-1.gif
+│   │       └── psyduck_wonder.gif
+│   └── templates
+│       ├── all_exercises.html
+│       ├── base.html
+│       ├── index.html
+│       ├── new_exercise.html
+│       ├── profile.html
+│       └── quiz.html
+└── tests
+    ├── __init__.py
+    ├── conftest.py
+    ├── data
+    │   └── quizzes.json
+    └── unit
+        ├── __init__.py
+        ├── test_game_manager.py
+        ├── test_quiz_data.py
+        ├── test_quiz_engine.py
+        └── test_session_manager.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/app.py ---
+diff --git a/src/app/app.py b/src/app/app.py
+index 59082f7..d9a5e69 100644
+--- a/src/app/app.py
++++ b/src/app/app.py
+@@ -77,9 +77,11 @@ def quiz(quiz_id):
+         return "Quiz not found", 404
+ 
+     if request.method == 'POST':
++        # Filter out empty inputs
+         user_answers = {
+             key: int(value) 
+             for key, value in request.form.items()
++            if value.strip()  # Only include non-empty values
+         }
+         
+         result = quiz_session.check_answers(quiz_id, user_answers)
+@@ -94,7 +96,7 @@ def quiz(quiz_id):
+         return render_template('quiz.html',
+                              quiz=quiz_state['quiz'],
+                              pokemon_vars=quiz_state['pokemon_vars'],
+-                             result=result['correct'],
++                             result=result,
+                              user_answers=user_answers,
+                              version_info=get_version_info())
+
+--- FILE: src/app/game/game_manager.py ---
+diff --git a/src/app/game/game_manager.py b/src/app/game/game_manager.py
+index 9c51256..95d9bd3 100644
+--- a/src/app/game/game_manager.py
++++ b/src/app/game/game_manager.py
+@@ -98,18 +98,26 @@ class GameManager:
+             return {'error': 'Quiz not found'}
+ 
+         # Use the quiz_engine module to check answers
+-        all_correct, correct_answers = check_quiz_answers(
++        all_correct, correct_answers, all_answered = check_quiz_answers(
+             quiz,
+             user_answers
+         )
+ 
+-        if all_correct:
++        # Only mark as solved if all answers are correct and all questions were answered
++        if all_correct and all_answered:
+             self.session_manager.mark_quiz_solved(quiz_id)
+ 
++        # Count how many answers are correct
++        correct_count = sum(1 for is_correct in correct_answers.values() if is_correct)
++        total_count = len(correct_answers)
++        
+         return {
+-            'correct': all_correct,
++            'correct': all_correct and all_answered,
+             'correct_answers': correct_answers,
+-            'next_quiz_id': quiz.next_quiz_id
++            'next_quiz_id': quiz.next_quiz_id,
++            'all_answered': all_answered,
++            'correct_count': correct_count,
++            'total_count': total_count
+         }
+ 
+     def reset(self):
+
+--- FILE: src/app/game/quiz_engine.py ---
+diff --git a/src/app/game/quiz_engine.py b/src/app/game/quiz_engine.py
+index 47a5713..89ee738 100644
+--- a/src/app/game/quiz_engine.py
++++ b/src/app/game/quiz_engine.py
+@@ -38,7 +38,7 @@ def create_variable_mappings(quiz: Quiz, available_pokemons: Dict[str, object])
+     }
+ 
+ 
+-def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool]]:
++def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool, Dict[str, bool], bool]:
+     """
+     Check the user's answers for a quiz.
+     This is a pure function that can be tested in isolation.
+@@ -48,24 +48,36 @@ def check_quiz_answers(quiz: Quiz, user_answers: Dict[str, int]) -> Tuple[bool,
+         user_answers: Dictionary of variable names to user-provided values
+         
+     Returns:
+-        Tuple of (all_correct, correct_answers_dict)
++        Tuple of (all_correct, correct_answers_dict, all_answered)
+     """
+     # Map variable names to their actual values
+     mapped_answers = {}
++    
++    # Get all expected answer variables
++    expected_vars = set(quiz.answer.values.keys())
++    
++    # Track which variables were answered
++    answered_vars = set()
+ 
+     for var, value in user_answers.items():
+-        # For all variables (special or Pokemon), use the integer value directly
+-        mapped_answers[var] = int(value)
+-
+-    # Check each answer
+-    correct_answers = {
+-        var: mapped_answers.get(var, 0) == answer
+-        for var, answer in quiz.answer.values.items()
+-    }
++        if var in expected_vars:
++            # For all variables (special or Pokemon), use the integer value directly
++            mapped_answers[var] = int(value)
++            answered_vars.add(var)
++
++    # Check each answer that was provided
++    correct_answers = {}
++    for var, answer in quiz.answer.values.items():
++        if var in mapped_answers:
++            correct_answers[var] = mapped_answers[var] == answer
++        else:
++            # If the variable wasn't provided, mark it as not correct
++            correct_answers[var] = False
+ 
+     all_correct = all(correct_answers.values())
++    all_answered = answered_vars == expected_vars
+ 
+-    return all_correct, correct_answers
++    return all_correct, correct_answers, all_answered
+ 
+ 
+ def get_display_variables(game_config: GameConfig,
+
+--- FILE: src/static/css/style.css ---
+diff --git a/src/static/css/style.css b/src/static/css/style.css
+index 44a3245..3a5e9c2 100644
+--- a/src/static/css/style.css
++++ b/src/static/css/style.css
+@@ -307,7 +307,7 @@ input[type="number"]::-webkit-inner-spin-button {
+ }
+ 
+ /* Result Messages */
+-.result-correct, .result-incorrect {
++.result-correct, .result-incorrect, .result-partial {
+     color: white;
+     padding: var(--spacing-md);
+     border-radius: var(--border-radius-lg);
+@@ -324,6 +324,11 @@ input[type="number"]::-webkit-inner-spin-button {
+     background-color: var(--pokemon-red);
+ }
+ 
++.result-partial {
++    background-color: var(--pokemon-yellow);
++    color: var(--pokemon-dark); /* Dark text for better contrast on yellow */
++}
++
+ /* Pokemon Images */
+ .pokemon-var {
+     height: 40px;
+@@ -338,7 +343,13 @@ input[type="number"]::-webkit-inner-spin-button {
+     display: none;
+ }
+ 
+-.celebration-gif img {
++.incorrect-gif {
++    width: 35px;
++    height: 35px;
++    display: none;
++}
++
++.celebration-gif img, .incorrect-gif img {
+     width: 100%;
+     height: 100%;
+     object-fit: contain;
+@@ -402,7 +413,7 @@ input[type="number"]::-webkit-inner-spin-button {
+         width: 100%;
+     }
+ 
+-    .result-correct, .result-incorrect {
++    .result-correct, .result-incorrect, .result-partial {
+         font-size: 1.2rem;
+         padding: var(--spacing-sm);
+     }
+
+--- FILE: src/templates/quiz.html ---
+diff --git a/src/templates/quiz.html b/src/templates/quiz.html
+index 087d595..010e480 100644
+--- a/src/templates/quiz.html
++++ b/src/templates/quiz.html
+@@ -42,12 +42,14 @@
+               <input type="number" 
+                      name="{{ unknown }}" 
+                      id="{{ unknown }}" 
+-                     value="{{ user_answers[unknown] if unknown in user_answers else '' }}"
+-                     required>
++                     value="{{ user_answers[unknown] if unknown in user_answers else '' }}">
+             </div>
+             <div class="celebration-gif" id="celebration-{{ unknown }}">
+               <img src="/static/images/pokeball-1.gif" alt="Celebration pokeball">
+             </div>
++            <div class="incorrect-gif" id="incorrect-{{ unknown }}">
++              <img src="/static/images/psyduck_wonder.gif" alt="Psyduck wondering">
++            </div>
+           </div>
+         {% endfor %}
+       </div>
+@@ -82,20 +84,33 @@
+         const nextButton = document.getElementById('nextQuiz');
+         const submitButton = document.getElementById('submitBtn');
+         
+-        // Hide all celebration gifs first
+-        document.querySelectorAll('.celebration-gif').forEach(gif => {
++        // Hide all celebration and incorrect gifs first
++        document.querySelectorAll('.celebration-gif, .incorrect-gif').forEach(gif => {
+           gif.style.display = 'none';
+         });
+         
+-        // Show pokeballs for correct answers
++        // Show appropriate gifs for each answer
+         Object.entries(data.correct_answers).forEach(([pokemon, isCorrect]) => {
+-          const celebrationGif = document.getElementById(`celebration-${pokemon}`);
+-          if (celebrationGif) {
+-            celebrationGif.style.display = isCorrect ? 'block' : 'none';
++          // Only show gifs for answers that were provided
++          if (formData.has(pokemon) && formData.get(pokemon).trim() !== '') {
++            if (isCorrect) {
++              // Show pokeball for correct answers
++              const celebrationGif = document.getElementById(`celebration-${pokemon}`);
++              if (celebrationGif) {
++                celebrationGif.style.display = 'block';
++              }
++            } else {
++              // Show psyduck for incorrect answers
++              const incorrectGif = document.getElementById(`incorrect-${pokemon}`);
++              if (incorrectGif) {
++                incorrectGif.style.display = 'block';
++              }
++            }
+           }
+         });
+         
+         if (data.correct) {
++          // All answers are correct and all questions were answered
+           resultsDiv.innerHTML = `
+             <div class="result-correct">
+               <h3>All Correct!</h3>
+@@ -108,11 +123,34 @@
+             nextButton.focus();
+           }
+         } else {
+-          resultsDiv.innerHTML = `
+-            <div class="result-incorrect">
+-              <h3>Keep trying! Some answers are correct!</h3>
+-            </div>
+-          `;
++          // Not all correct or not all answered
++          if (data.correct_count > 0) {
++            // Some answers are correct
++            resultsDiv.innerHTML = `
++              <div class="result-partial">
++                <h3>Making Progress!</h3>
++                <p>You have ${data.correct_count} out of ${data.total_count} correct answers.</p>
++                ${!data.all_answered ? '<p>Try filling in all the answers!</p>' : ''}
++              </div>
++            `;
++          } else if (!data.all_answered && data.correct_count === 0) {
++            // No answers or all wrong
++            resultsDiv.innerHTML = `
++              <div class="result-incorrect">
++                <h3>Keep trying!</h3>
++                <p>Fill in your answers and try again.</p>
++              </div>
++            `;
++          } else {
++            // All answered but all wrong
++            resultsDiv.innerHTML = `
++              <div class="result-incorrect">
++                <h3>Keep trying!</h3>
++                <p>None of your answers are correct yet.</p>
++              </div>
++            `;
++          }
++          
+           submitButton.style.display = 'inline-block';
+           if (nextButton) {
+             nextButton.style.display = 'none';
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

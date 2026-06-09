@@ -1,0 +1,55 @@
+import React, { useState } from 'react';
+import { FileText, Image } from 'lucide-react';
+import { Toaster } from 'sonner';
+import { FeatureCard } from './ui/feature-card';
+import { PdfMerger } from './components/pdf-merger';
+import { ImageCompressor } from './components/image-compressor';
+
+export default function App() {
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">工具集</h1>
+          <p className="text-gray-600">选择一个工具开始使用</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <FeatureCard
+            icon={<FileText className="h-8 w-8 text-gray-700" />}
+            title="合并 PDF 文件"
+            description="将多个 PDF 文件合并为一个文件"
+            onClick={() => setActiveModal('pdf-merger')}
+          />
+
+          <FeatureCard
+            icon={<Image className="h-8 w-8 text-gray-700" />}
+            title="图片压缩"
+            description="压缩图片文件大小，调整尺寸和质量"
+            onClick={() => setActiveModal('image-compressor')}
+          />
+        </div>
+
+        <PdfMerger
+          isOpen={activeModal === 'pdf-merger'}
+          onClose={() => setActiveModal(null)}
+        />
+
+        <ImageCompressor
+          isOpen={activeModal === 'image-compressor'}
+          onClose={() => setActiveModal(null)}
+        />
+        
+        {/* Toast 通知组件 */}
+        <Toaster 
+          position="top-right"
+          richColors
+          expand={true}
+          duration={4000}
+        />
+      </div>
+    </div>
+  );
+} 

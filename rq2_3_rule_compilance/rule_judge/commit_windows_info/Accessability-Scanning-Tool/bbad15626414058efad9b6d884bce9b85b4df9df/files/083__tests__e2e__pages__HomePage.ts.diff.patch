@@ -1,0 +1,180 @@
+diff --git a/tests/e2e/pages/HomePage.ts b/tests/e2e/pages/HomePage.ts
+index 571622c..8d231e9 100644
+--- a/tests/e2e/pages/HomePage.ts
++++ b/tests/e2e/pages/HomePage.ts
+@@ -7,7 +7,7 @@ export class HomePage extends BasePage {
+     private readonly singlePageUrlSelector = '#singlePageUrl';
+     private readonly fullSiteFormSelector = '#fullSiteForm';
+     private readonly singlePageFormSelector = '#singlePageForm';
+-    private readonly regenerateReportsBtnSelector = '#regenerateReportsBtn';
++    private readonly generateReportsBtnSelector = '#generateSelectedReportsBtn';
+     private readonly progressSectionSelector = '#progressSection';
+     private readonly resultsSectionSelector = '#resultsSection';
+     private readonly errorSectionSelector = '#errorSection';
+@@ -15,7 +15,7 @@ export class HomePage extends BasePage {
+     // Scan option selectors
+     private readonly fullSiteScanHeadingSelector = 'h3:has-text("Full Site Scan")';
+     private readonly singlePageScanHeadingSelector = 'h3:has-text("Single Page Scan")';
+-    private readonly reportRegenerationHeadingSelector = 'h3:has-text("Regenerate Reports")';
++    private readonly reportGenerationHeadingSelector = 'h3:has-text("Generate Reports")';
+ 
+     // Button selectors
+     private readonly fullSiteSubmitBtnSelector = '#fullSiteForm button[type="submit"]';
+@@ -50,8 +50,8 @@ export class HomePage extends BasePage {
+         return this.page.locator(this.singlePageFormSelector);
+     }
+ 
+-    get regenerateReportsBtn(): Locator {
+-        return this.page.locator(this.regenerateReportsBtnSelector);
++    get generateReportsBtn(): Locator {
++        return this.page.locator(this.generateReportsBtnSelector);
+     }
+ 
+     get fullSiteSubmitBtn(): Locator {
+@@ -99,8 +99,8 @@ export class HomePage extends BasePage {
+         return this.page.locator(this.singlePageScanHeadingSelector);
+     }
+ 
+-    get reportRegenerationHeading(): Locator {
+-        return this.page.locator(this.reportRegenerationHeadingSelector);
++    get reportGenerationHeading(): Locator {
++        return this.page.locator(this.reportGenerationHeadingSelector);
+     }
+ 
+     // Action methods
+@@ -133,10 +133,10 @@ export class HomePage extends BasePage {
+     }
+ 
+     /**
+-     * Click regenerate reports button
++     * Click generate reports button
+      */
+-    async clickRegenerateReports() {
+-        await this.clickElement(this.regenerateReportsBtn);
++    async clickGenerateReports() {
++        await this.clickElement(this.generateReportsBtn);
+     }
+ 
+     /**
+@@ -173,6 +173,8 @@ export class HomePage extends BasePage {
+      * Focus full site URL input
+      */
+     async focusFullSiteUrl() {
++        // Wait for the element to be available
++        await this.page.waitForSelector(this.fullSiteUrlSelector, { state: 'attached', timeout: 10000 });
+         // Use direct focus instead of tab navigation for more reliability
+         await this.focusElement(this.fullSiteUrlInput);
+         await this.expectElementFocused(this.fullSiteUrlInput);
+@@ -182,6 +184,8 @@ export class HomePage extends BasePage {
+      * Focus single page URL input
+      */
+     async focusSinglePageUrl() {
++        // Wait for the element to be available
++        await this.page.waitForSelector(this.singlePageUrlSelector, { state: 'attached', timeout: 10000 });
+         await this.focusElement(this.singlePageUrlInput);
+     }
+ 
+@@ -189,6 +193,8 @@ export class HomePage extends BasePage {
+      * Focus full site submit button
+      */
+     async focusFullSiteSubmitBtn() {
++        // Wait for the element to be available
++        await this.page.waitForSelector(this.fullSiteSubmitBtnSelector, { state: 'attached', timeout: 10000 });
+         // Use direct focus instead of tab navigation for more reliability
+         await this.focusElement(this.fullSiteSubmitBtn);
+         await this.expectElementFocused(this.fullSiteSubmitBtn);
+@@ -198,6 +204,8 @@ export class HomePage extends BasePage {
+      * Focus single page submit button
+      */
+     async focusSinglePageSubmitBtn() {
++        // Wait for the element to be available
++        await this.page.waitForSelector(this.singlePageSubmitBtnSelector, { state: 'attached', timeout: 10000 });
+         await this.focusElement(this.singlePageSubmitBtn);
+     }
+ 
+@@ -206,21 +214,28 @@ export class HomePage extends BasePage {
+      * Check if page is loaded correctly
+      */
+     async expectPageLoaded() {
+-        await this.expectTitle(/Accessibility Testing/);
++        await this.expectTitle(/Accessibility Testing Tool/);
+         await this.expectElementVisible(this.getHeader());
+-        await this.expectElementVisible(this.fullSiteUrlInput);
+-        await this.expectElementVisible(this.singlePageUrlInput);
+-        await this.expectElementVisible(this.fullSiteSubmitBtn);
+-        await this.expectElementVisible(this.singlePageSubmitBtn);
++        
++        // Wait for navigation links to be available (landing page structure)
++        await this.page.waitForSelector('nav a[href="/single-page"]', { state: 'attached', timeout: 10000 });
++        await this.page.waitForSelector('nav a[href="/full-site"]', { state: 'attached', timeout: 10000 });
++        await this.page.waitForSelector('nav a[href="/reports"]', { state: 'attached', timeout: 10000 });
++        
++        // Now check if they're visible
++        await this.expectElementVisible(this.page.locator('nav a[href="/single-page"]'));
++        await this.expectElementVisible(this.page.locator('nav a[href="/full-site"]'));
++        await this.expectElementVisible(this.page.locator('nav a[href="/reports"]'));
+     }
+ 
+     /**
+      * Check if all scan options are visible
+      */
+     async expectScanOptionsVisible() {
+-        await this.expectElementVisible(this.fullSiteScanHeading);
+-        await this.expectElementVisible(this.singlePageScanHeading);
+-        await this.expectElementVisible(this.reportRegenerationHeading);
++        // Check for feature cards on the landing page
++        await this.expectElementVisible(this.page.locator('.feature-card:has-text("Single Page Scan")'));
++        await this.expectElementVisible(this.page.locator('.feature-card:has-text("Full Site Scan")'));
++        await this.expectElementVisible(this.page.locator('.feature-card:has-text("Search & Generate Reports")'));
+     }
+ 
+     /**
+@@ -241,6 +256,8 @@ export class HomePage extends BasePage {
+      * Check if progress section is visible
+      */
+     async expectProgressSectionVisible() {
++        // Wait for the element to be visible (not hidden)
++        await this.page.waitForSelector(this.progressSectionSelector + ':not([hidden])', { timeout: 10000 });
+         await this.expectElementVisible(this.progressSection);
+     }
+ 
+@@ -255,6 +272,8 @@ export class HomePage extends BasePage {
+      * Check if results section is visible
+      */
+     async expectResultsSectionVisible() {
++        // Wait for the element to be visible (not hidden)
++        await this.page.waitForSelector(this.resultsSectionSelector + ':not([hidden])', { timeout: 10000 });
+         await this.expectElementVisible(this.resultsSection);
+     }
+ 
+@@ -262,6 +281,8 @@ export class HomePage extends BasePage {
+      * Check if error section is visible
+      */
+     async expectErrorSectionVisible() {
++        // Wait for the element to be visible (not hidden)
++        await this.page.waitForSelector(this.errorSectionSelector + ':not([hidden])', { timeout: 10000 });
+         await this.expectElementVisible(this.errorSection);
+     }
+ 
+@@ -290,8 +311,19 @@ export class HomePage extends BasePage {
+      * Check if form has proper accessibility attributes
+      */
+     async expectFormAccessibility() {
+-        await this.expectElementAttribute(this.fullSiteUrlInput, 'aria-describedby', 'fullSiteUrlHelp');
+-        await this.expectElementAttribute(this.singlePageUrlInput, 'aria-describedby', 'singlePageUrlHelp');
++        // Wait for the page to be fully loaded
++        await this.page.waitForLoadState('networkidle');
++        
++        // Wait for elements to be available (they should be visible by default)
++        await this.page.waitForSelector(this.fullSiteUrlSelector, { state: 'attached', timeout: 10000 });
++        await this.page.waitForSelector(this.singlePageUrlSelector, { state: 'attached', timeout: 10000 });
++        
++        // Check that aria-describedby contains the help text ID
++        const fullSiteAriaDescribedBy = await this.fullSiteUrlInput.getAttribute('aria-describedby');
++        const singlePageAriaDescribedBy = await this.singlePageUrlInput.getAttribute('aria-describedby');
++
++        expect(fullSiteAriaDescribedBy).toContain('fullSiteUrlHelp');
++        expect(singlePageAriaDescribedBy).toContain('singlePageUrlHelp');
+     }
+ 
+     /**

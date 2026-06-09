@@ -1,0 +1,436 @@
+diff --git a/src/utils/orchestration/data-transformer.ts b/src/utils/orchestration/data-transformer.ts
+index a2aecf3..721bcfe 100644
+--- a/src/utils/orchestration/data-transformer.ts
++++ b/src/utils/orchestration/data-transformer.ts
+@@ -2,67 +2,67 @@ import { AnalysisResult, SiteWideAccessibilityReport } from '@/core/types/common
+ import { MetricsCalculator, ComplianceMetrics, ViolationPatterns } from './metrics-calculator';
+ 
+ export interface WcagComplianceMatrix {
+-    [criterion: string]: {
+-        status: 'pass' | 'fail' | 'not-assessed';
+-        description: string;
+-        violations: number;
+-        pages: string[];
+-    };
++  [criterion: string]: {
++    status: 'pass' | 'fail' | 'not-assessed';
++    description: string;
++    violations: number;
++    pages: string[];
++  };
+ }
+ 
+ export interface ViolationAggregation {
+-    violationsByType: Record<string, any>;
+-    mostCommonViolations: Array<{
+-        id: string;
+-        description: string;
+-        impact: string;
+-        affectedPages: number;
+-        totalOccurrences: number;
+-    }>;
++  violationsByType: Record<string, any>;
++  mostCommonViolations: Array<{
++    id: string;
++    description: string;
++    impact: string;
++    affectedPages: number;
++    totalOccurrences: number;
++  }>;
+ }
+ 
+ export interface PdfReportData {
+-    siteUrl: string;
+-    timestamp: string;
+-    scanDate: string;
+-    testSuite: string;
+-    wcagLevel: string;
++  siteUrl: string;
++  timestamp: string;
++  scanDate: string;
++  testSuite: string;
++  wcagLevel: string;
++  totalPages: number;
++  pagesAnalyzed: number;
++  totalViolations: number;
++  summary: {
+     totalPages: number;
+     pagesAnalyzed: number;
++    pagesWithViolations: number;
+     totalViolations: number;
+-    summary: {
+-        totalPages: number;
+-        pagesAnalyzed: number;
+-        pagesWithViolations: number;
+-        totalViolations: number;
+-        criticalViolations: number;
+-        seriousViolations: number;
+-        moderateViolations: number;
+-        minorViolations: number;
+-        compliancePercentage: number;
+-        wcagAAViolations: number;
+-        wcagAAAViolations: number;
+-        mostCommonViolations: any[];
+-    };
+-    violationsByType: Record<string, any>;
++    criticalViolations: number;
++    seriousViolations: number;
++    moderateViolations: number;
++    minorViolations: number;
++    compliancePercentage: number;
++    wcagAAViolations: number;
++    wcagAAAViolations: number;
+     mostCommonViolations: any[];
+-    overallSummary: {
+-        totalViolations: number;
+-        criticalViolations: number;
+-        seriousViolations: number;
+-        moderateViolations: number;
+-        minorViolations: number;
+-        compliancePercentage: number;
+-    };
+-    pageAnalysis: Array<{
+-        url: string;
+-        title: string;
+-        timestamp: string;
+-        violations: any[];
+-        summary: any;
+-        tool: string;
+-    }>;
+-    wcagComplianceMatrix: WcagComplianceMatrix;
++  };
++  violationsByType: Record<string, any>;
++  mostCommonViolations: any[];
++  overallSummary: {
++    totalViolations: number;
++    criticalViolations: number;
++    seriousViolations: number;
++    moderateViolations: number;
++    minorViolations: number;
++    compliancePercentage: number;
++  };
++  pageAnalysis: Array<{
++    url: string;
++    title: string;
++    timestamp: string;
++    violations: any[];
++    summary: any;
++    tool: string;
++  }>;
++  wcagComplianceMatrix: WcagComplianceMatrix;
+ }
+ 
+ /**
+@@ -70,25 +70,25 @@ export interface PdfReportData {
+  * Extracted from WorkflowOrchestrator to improve maintainability and testability
+  */
+ export class DataTransformer {
+-    private metricsCalculator: MetricsCalculator;
++  private metricsCalculator: MetricsCalculator;
+ 
+-    constructor() {
+-        this.metricsCalculator = new MetricsCalculator();
+-    }
++  constructor() {
++    this.metricsCalculator = new MetricsCalculator();
++  }
+ 
+-      /**
+-   * Convert analysis results to site-wide report format
+-   */
++  /**
++* Convert analysis results to site-wide report format
++*/
+   convertAnalysisResultsToSiteWideReport(
+     analysisResults: AnalysisResult[],
+     targetUrl: string,
+     wcagLevel: string = 'WCAG2AA'
+   ): SiteWideAccessibilityReport {
+     const timestamp = new Date().toISOString();
+-    
++
+     // Calculate compliance metrics
+     const complianceMetrics = this.metricsCalculator.calculateComplianceMetrics(analysisResults);
+-    
++
+     // Analyze violation patterns
+     const violationPatterns = this.metricsCalculator.analyzeViolationPatterns(analysisResults);
+ 
+@@ -137,105 +137,102 @@ export class DataTransformer {
+     };
+   }
+ 
+-    /**
+-     * Generate WCAG compliance matrix from analysis results
+-     */
+-    generateWcagComplianceMatrix(analysisResults: AnalysisResult[]): WcagComplianceMatrix {
++  /**
++   * Generate WCAG compliance matrix from analysis results
++   */
++      generateWcagComplianceMatrix(analysisResults: AnalysisResult[]): WcagComplianceMatrix {
+         const matrix: WcagComplianceMatrix = {};
+ 
+-        // Initialize WCAG criteria
+-        const wcagCriteria = [
+-            '1.1.1', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6', '1.2.7', '1.2.8', '1.2.9',
+-            '1.3.1', '1.3.2', '1.3.3', '1.3.4', '1.3.5', '1.3.6',
+-            '1.4.1', '1.4.2', '1.4.3', '1.4.4', '1.4.5', '1.4.6', '1.4.7', '1.4.8', '1.4.9', '1.4.10', '1.4.11', '1.4.12', '1.4.13',
+-            '2.1.1', '2.1.2', '2.1.3', '2.1.4',
+-            '2.2.1', '2.2.2',
+-            '2.3.1', '2.3.2',
+-            '2.4.1', '2.4.2', '2.4.3', '2.4.4', '2.4.5', '2.4.6', '2.4.7', '2.4.8', '2.4.9', '2.4.10',
+-            '2.5.1', '2.5.2', '2.5.3', '2.5.4', '2.5.5', '2.5.6',
+-            '2.6.1', '2.6.2',
+-            '3.1.1', '3.1.2', '3.1.3', '3.1.4', '3.1.5', '3.1.6',
+-            '3.2.1', '3.2.2', '3.2.3', '3.2.4',
+-            '3.3.1', '3.3.2', '3.3.3', '3.3.4', '3.3.5', '3.3.6', '3.3.7', '3.3.8', '3.3.9',
+-            '4.1.1', '4.1.2', '4.1.3', '4.1.4',
+-        ];
++        // Return empty matrix for empty results
++        if (analysisResults.length === 0) {
++            return matrix;
++        }
+ 
+-        // Initialize all criteria as not assessed
+-        wcagCriteria.forEach(criterion => {
+-            matrix[criterion] = {
++        // Collect all unique violation types
++        const violationTypes = new Set<string>();
++        analysisResults.forEach(result => {
++            result.violations?.forEach((violation: any) => {
++                violationTypes.add(violation.id || violation.code || 'unknown');
++            });
++        });
++
++        // Initialize matrix with violation types
++        violationTypes.forEach(violationType => {
++            matrix[violationType] = {
+                 status: 'not-assessed',
+-                description: `WCAG 2.1 Criterion ${criterion}`,
++                description: `Violation: ${violationType}`,
+                 violations: 0,
+                 pages: [],
+             };
+         });
+ 
+-        // Analyze violations and map to WCAG criteria
++        // Analyze violations and update matrix
+         analysisResults.forEach(result => {
+             result.violations?.forEach((violation: any) => {
+-                const wcagCriteria = this.extractWcagCriteria(violation);
+-
+-                wcagCriteria.forEach(criterion => {
+-                    if (matrix[criterion]) {
+-                        matrix[criterion].violations++;
+-                        if (!matrix[criterion].pages.includes(result.url)) {
+-                            matrix[criterion].pages.push(result.url);
+-                        }
+-                        matrix[criterion].status = 'fail';
++                const violationType = violation.id || violation.code || 'unknown';
++                
++                if (matrix[violationType]) {
++                    matrix[violationType].violations++;
++                    if (!matrix[violationType].pages.includes(result.url)) {
++                        matrix[violationType].pages.push(result.url);
+                     }
+-                });
++                    matrix[violationType].status = 'fail';
++                }
+             });
+         });
+ 
+-            // Mark criteria as pass if no violations found
+-    Object.keys(matrix).forEach(criterion => {
+-      const criterionData = matrix[criterion];
+-      if (criterionData && criterionData.violations === 0) {
+-        criterionData.status = 'pass';
+-      }
+-    });
++        // Mark violation types as pass if no violations found
++        Object.keys(matrix).forEach(violationType => {
++            const violationData = matrix[violationType];
++            if (violationData && violationData.violations === 0) {
++                violationData.status = 'pass';
++            }
++        });
+ 
+         return matrix;
+     }
+ 
+-    /**
+-     * Extract WCAG criteria from violation data
+-     */
+-    private extractWcagCriteria(violation: any): string[] {
+-        const criteria: string[] = [];
+-
+-        // Check various possible locations for WCAG criteria
+-        if (violation.wcag) {
+-            criteria.push(...violation.wcag);
+-        }
+-        if (violation.criteria) {
+-            criteria.push(...violation.criteria);
+-        }
+-        if (violation.tags) {
+-            const wcagTags = violation.tags.filter((tag: string) =>
+-                /^\d+\.\d+\.\d+$/.test(tag)
+-            );
+-            criteria.push(...wcagTags);
+-        }
++  /**
++   * Extract WCAG criteria from violation data
++   */
++  private extractWcagCriteria(violation: any): string[] {
++    const criteria: string[] = [];
+ 
+-        return criteria;
++    // Check various possible locations for WCAG criteria
++    if (violation.wcag) {
++      criteria.push(...violation.wcag);
+     }
+-
+-    /**
+-     * Aggregate violations by type and frequency
+-     */
+-    aggregateViolations(analysisResults: AnalysisResult[]): ViolationAggregation {
+-        const violationPatterns = this.metricsCalculator.analyzeViolationPatterns(analysisResults);
+-
+-        return {
+-            violationsByType: violationPatterns.violationsByType,
+-            mostCommonViolations: violationPatterns.mostCommonViolations,
+-        };
++    if (violation.criteria) {
++      criteria.push(...violation.criteria);
++    }
++    if (violation.wcagTags) {
++      criteria.push(...violation.wcagTags);
+     }
++    if (violation.tags) {
++      const wcagTags = violation.tags.filter((tag: string) =>
++        /^\d+\.\d+\.\d+$/.test(tag)
++      );
++      criteria.push(...wcagTags);
++    }
++
++    return criteria;
++  }
+ 
+-      /**
+-   * Transform data specifically for PDF generation
++  /**
++   * Aggregate violations by type and frequency
+    */
++  aggregateViolations(analysisResults: AnalysisResult[]): ViolationAggregation {
++    const violationPatterns = this.metricsCalculator.analyzeViolationPatterns(analysisResults);
++
++    return {
++      violationsByType: violationPatterns.violationsByType,
++      mostCommonViolations: violationPatterns.mostCommonViolations,
++    };
++  }
++
++  /**
++* Transform data specifically for PDF generation
++*/
+   transformForPdfGeneration(siteWideReport: SiteWideAccessibilityReport): PdfReportData {
+     return {
+       siteUrl: siteWideReport.siteUrl,
+@@ -298,53 +295,53 @@ export class DataTransformer {
+     };
+   }
+ 
+-    /**
+-     * Calculate compliance percentage from analysis results
+-     */
+-    calculateCompliancePercentage(analysisResults: AnalysisResult[]): number {
+-        const pagesWithViolations = analysisResults.filter(
+-            result => result.summary.totalViolations > 0
+-        ).length;
++  /**
++   * Calculate compliance percentage from analysis results
++   */
++  calculateCompliancePercentage(analysisResults: AnalysisResult[]): number {
++    const pagesWithViolations = analysisResults.filter(
++      result => result.summary.totalViolations > 0
++    ).length;
+ 
+-        return analysisResults.length > 0
+-            ? Math.round(((analysisResults.length - pagesWithViolations) / analysisResults.length) * 100)
+-            : 0;
+-    }
++    return analysisResults.length > 0
++      ? Math.round(((analysisResults.length - pagesWithViolations) / analysisResults.length) * 100)
++      : 100;
++  }
+ 
+-    /**
+-     * Analyze most common violations from analysis results
+-     */
+-    analyzeMostCommonViolations(analysisResults: AnalysisResult[]): any[] {
+-        const violationPatterns = this.metricsCalculator.analyzeViolationPatterns(analysisResults);
+-        return violationPatterns.mostCommonViolations;
+-    }
++  /**
++   * Analyze most common violations from analysis results
++   */
++  analyzeMostCommonViolations(analysisResults: AnalysisResult[]): any[] {
++    const violationPatterns = this.metricsCalculator.analyzeViolationPatterns(analysisResults);
++    return violationPatterns.mostCommonViolations;
++  }
+ 
+-    /**
+-     * Create a simplified summary for quick reporting
+-     */
+-    createSummaryReport(analysisResults: AnalysisResult[], targetUrl: string): {
+-        siteUrl: string;
+-        timestamp: string;
+-        totalPages: number;
+-        totalViolations: number;
+-        compliancePercentage: number;
+-        criticalViolations: number;
+-        seriousViolations: number;
+-        moderateViolations: number;
+-        minorViolations: number;
+-    } {
+-        const complianceMetrics = this.metricsCalculator.calculateComplianceMetrics(analysisResults);
++  /**
++   * Create a simplified summary for quick reporting
++   */
++  createSummaryReport(analysisResults: AnalysisResult[], targetUrl: string): {
++    siteUrl: string;
++    timestamp: string;
++    totalPages: number;
++    totalViolations: number;
++    compliancePercentage: number;
++    criticalViolations: number;
++    seriousViolations: number;
++    moderateViolations: number;
++    minorViolations: number;
++  } {
++    const complianceMetrics = this.metricsCalculator.calculateComplianceMetrics(analysisResults);
+ 
+-        return {
+-            siteUrl: targetUrl,
+-            timestamp: new Date().toISOString(),
+-            totalPages: complianceMetrics.totalPages,
+-            totalViolations: complianceMetrics.totalViolations,
+-            compliancePercentage: complianceMetrics.compliancePercentage,
+-            criticalViolations: complianceMetrics.criticalViolations,
+-            seriousViolations: complianceMetrics.seriousViolations,
+-            moderateViolations: complianceMetrics.moderateViolations,
+-            minorViolations: complianceMetrics.minorViolations,
+-        };
+-    }
++    return {
++      siteUrl: targetUrl,
++      timestamp: new Date().toISOString(),
++      totalPages: complianceMetrics.totalPages,
++      totalViolations: complianceMetrics.totalViolations,
++      compliancePercentage: complianceMetrics.compliancePercentage,
++      criticalViolations: complianceMetrics.criticalViolations,
++      seriousViolations: complianceMetrics.seriousViolations,
++      moderateViolations: complianceMetrics.moderateViolations,
++      minorViolations: complianceMetrics.minorViolations,
++    };
++  }
+ } 
+\ No newline at end of file

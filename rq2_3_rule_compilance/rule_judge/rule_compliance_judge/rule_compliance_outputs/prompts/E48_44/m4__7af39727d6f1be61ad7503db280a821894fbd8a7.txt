@@ -1,0 +1,958 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Production start: npm run start:prod
++ Production start: pnpm run start:prod
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json), CI/CD pipeline definitions (e.g., .github/workflows/*.yml, Jenkinsfile, gitlab-ci.yml), containerization files (Dockerfile), and lock files (pnpm-lock.yaml).
+- Suggested Logic: 1. Verify the existence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' or 'yarn.lock'.
+2. Check 'package.json' to ensure the 'scripts' section contains 'start:prod'.
+3. Scan CI/CD configuration files and Dockerfiles to ensure that the command executed for production deployment/startup is 'pnpm run start:prod' and NOT 'npm run start:prod'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: ✨ Add project context transformation to TransformationService
+
+- Implement comprehensive transformProjectContext method for Kiro to Taptik conversion
+- Add project info extraction from context.md and project-spec.md files
+- Create technical stack extraction covering languages, frameworks, databases, tools, deployment
+- Transform steering files and hooks into development guidelines structure
+- Generate project metadata with source path, platform, and timestamps
+- Add robust extraction methods for all project context components
+- Include comprehensive unit tests with 13 additional test cases covering:
+  * Project info extraction and fallback handling
+  * Technical stack multi-source aggregation
+  * Development guidelines from steering files and hooks
+  * Metadata generation and project ID uniqueness
+  * Edge cases and error handling scenarios
+
+Key features:
+- Smart project name extraction with directory fallback
+- Multi-source framework and tool aggregation from context, spec, and preferences
+- Steering file content analysis for coding standards, testing, and documentation
+- Hook-based review process extraction with content filtering
+- Comprehensive error handling and graceful degradation
+- 100% test coverage with all 26 tests passing
+- Changed Files List: 
+.kiro/specs/taptik-build-command/tasks.md	+1	-1	after_lines=148
+src/modules/build/services/transformation.service.spec.ts	+301	-1	after_lines=545
+src/modules/build/services/transformation.service.ts	+333	-0	after_lines=704
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── build
+│   │   │   ├── build.module.ts
+│   │   │   ├── commands
+│   │   │   │   └── build.command.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── build-config.interface.ts
+│   │   │   │   ├── settings-data.interface.ts
+│   │   │   │   └── taptik-format.interface.ts
+│   │   │   └── services
+│   │   │       ├── collection.service.spec.ts
+│   │   │       ├── collection.service.ts
+│   │   │       ├── interactive.service.spec.ts
+│   │   │       ├── interactive.service.ts
+│   │   │       ├── transformation.service.spec.ts
+│   │   │       └── transformation.service.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+index 6c87f06..0f82082 100644
+--- a/.kiro/specs/taptik-build-command/tasks.md
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -46,7 +46,7 @@
+     - Write unit tests for personal context transformation
+     - _Requirements: 5.1, 5.2, 5.5_
+ 
+-  - [ ] 4.2 Implement project context transformation
++  - [x] 4.2 Implement project context transformation
+     - Create mapping from Kiro project settings to project-context.json format
+     - Transform steering files and hooks into taptik standard format
+     - Add project metadata including source path and collection timestamp
+
+--- FILE: src/modules/build/services/transformation.service.spec.ts ---
+diff --git a/src/modules/build/services/transformation.service.spec.ts b/src/modules/build/services/transformation.service.spec.ts
+index 6016089..4bc8ad1 100644
+--- a/src/modules/build/services/transformation.service.spec.ts
++++ b/src/modules/build/services/transformation.service.spec.ts
+@@ -1,7 +1,7 @@
+ import { Test, TestingModule } from '@nestjs/testing';
+ import { TransformationService } from './transformation.service';
+ import { SettingsData } from '../interfaces/settings-data.interface';
+-import { TaptikPersonalContext } from '../interfaces/taptik-format.interface';
++import { TaptikPersonalContext, TaptikProjectContext } from '../interfaces/taptik-format.interface';
+ 
+ describe('TransformationService', () => {
+   let service: TransformationService;
+@@ -242,4 +242,304 @@ Environment: VS Code`,
+       expect(result.preferences.development_environment).toContain('VS Code');
+     });
+   });
++
++  describe('transformProjectContext', () => {
++    const mockProjectSettingsData: SettingsData = {
++      localSettings: {
++        contextMd: `# Project Context
++Name: Taptik CLI
++Description: AI IDE settings migration tool
++Version: 1.0.0
++Repository: https://github.com/user/taptik-cli
++Language: TypeScript
++Frameworks: NestJS, Commander
++Tools: Vitest, ESLint, Prettier`,
++        projectSpecMd: `# Project Specification
++Primary Language: TypeScript
++Frameworks: NestJS, nest-commander
++Databases: None
++Testing: Vitest, unit-first approach
++Deployment: npm publish, GitHub Actions`,
++        userPreferencesMd: `# User Preferences
++Tools: VS Code, Docker, Git`,
++        steeringFiles: [
++          {
++            filename: 'coding-standards.md',
++            content: 'Use TypeScript strict mode and follow NestJS conventions',
++            path: '.kiro/steering/coding-standards.md',
++          },
++          {
++            filename: 'testing-requirements.md', 
++            content: 'Minimum 80% test coverage required for all new features',
++            path: '.kiro/steering/testing-requirements.md',
++          }
++        ],
++        hooks: [
++          {
++            filename: 'pre-commit.kiro.hook',
++            content: 'Run linting and type checking before commit',
++            path: '.kiro/hooks/pre-commit.kiro.hook',
++            type: 'pre-commit',
++          }
++        ],
++      },
++      globalSettings: {
++        userConfig: '# Global Config\nStandards: Clean Architecture',
++        preferences: '# Global Preferences\nTools: Docker, Kubernetes',
++        globalPrompts: [],
++      },
++      collectionMetadata: {
++        sourcePlatform: 'kiro',
++        collectionTimestamp: '2025-01-04T10:30:00Z',
++        projectPath: '/Users/user/projects/taptik-cli',
++        globalPath: '/home/user/.kiro',
++        warnings: [],
++        errors: [],
++      },
++    };
++
++    it('should transform Kiro project settings to Taptik project context format', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result).toBeDefined();
++      expect(result.project_id).toBeDefined();
++      expect(result.project_info).toBeDefined();
++      expect(result.technical_stack).toBeDefined();
++      expect(result.development_guidelines).toBeDefined();
++      expect(result.metadata).toBeDefined();
++    });
++
++    it('should extract project info correctly', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result.project_info.name).toBe('taptik cli');
++      expect(result.project_info.description).toBe('ai ide settings migration tool');
++      expect(result.project_info.version).toBe('1.0.0');
++      expect(result.project_info.repository).toBe('https://github.com/user/taptik-cli');
++    });
++
++    it('should extract technical stack correctly', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result.technical_stack.primary_language).toBe('TypeScript');
++      expect(result.technical_stack.frameworks).toContain('NestJS');
++      expect(result.technical_stack.frameworks).toContain('nest-commander');
++      expect(result.technical_stack.frameworks).toContain('Commander');
++      expect(result.technical_stack.tools).toContain('Vitest');
++      expect(result.technical_stack.tools).toContain('ESLint');
++      expect(result.technical_stack.tools).toContain('VS Code');
++    });
++
++    it('should extract development guidelines correctly', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result.development_guidelines.coding_standards).toContain('Use TypeScript strict mode and follow NestJS conventions');
++      expect(result.development_guidelines.testing_requirements).toContain('Minimum 80% test coverage required for all new features');
++      expect(result.development_guidelines.review_process).toContain('Hook-based: Run linting and type checking before commit');
++    });
++
++    it('should set correct metadata', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result.metadata.source_platform).toBe('kiro');
++      expect(result.metadata.source_path).toBe('/Users/user/projects/taptik-cli');
++      expect(result.metadata.version).toBe('1.0.0');
++      expect(result.metadata.created_at).toBeDefined();
++      expect(new Date(result.metadata.created_at)).toBeInstanceOf(Date);
++    });
++
++    it('should generate project ID with project name', async () => {
++      const result = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result.project_id).toContain('taptik-cli');
++      expect(result.project_id.split('-').length).toBeGreaterThanOrEqual(3); // name + uuid parts
++    });
++
++    it('should handle missing project files gracefully', async () => {
++      const minimalProjectData: SettingsData = {
++        localSettings: {
++          steeringFiles: [],
++          hooks: [],
++        },
++        globalSettings: {
++          globalPrompts: [],
++        },
++        collectionMetadata: {
++          sourcePlatform: 'kiro',
++          collectionTimestamp: '2025-01-04T10:30:00Z',
++          projectPath: '/Users/user/projects/test-project',
++          globalPath: '/home/user/.kiro',
++          warnings: [],
++          errors: [],
++        },
++      };
++
++      const result = await service.transformProjectContext(minimalProjectData);
++
++      expect(result).toBeDefined();
++      expect(result.project_info.name).toBe('test-project'); // Fallback to directory name
++      expect(result.project_info.description).toBe('No description available');
++      expect(result.technical_stack.primary_language).toBe('typescript');
++      expect(result.development_guidelines.coding_standards).toEqual([]);
++    });
++
++    it('should extract frameworks from multiple sources', async () => {
++      const multiSourceData: SettingsData = {
++        localSettings: {
++          contextMd: `# Context
++Frameworks: React, Express`,
++          projectSpecMd: `# Spec
++Libraries: Lodash, Axios`,
++          userPreferencesMd: `# Preferences
++Tools: Jest, Webpack`,
++          steeringFiles: [],
++          hooks: [],
++        },
++        globalSettings: {
++          globalPrompts: [],
++        },
++        collectionMetadata: {
++          sourcePlatform: 'kiro',
++          collectionTimestamp: '2025-01-04T10:30:00Z',
++          projectPath: '/Users/user/projects/multi-source',
++          globalPath: '/home/user/.kiro',
++          warnings: [],
++          errors: [],
++        },
++      };
++
++      const result = await service.transformProjectContext(multiSourceData);
++
++      expect(result.technical_stack.frameworks).toContain('React');
++      expect(result.technical_stack.frameworks).toContain('Express');
++      expect(result.technical_stack.frameworks).toContain('Lodash');
++      expect(result.technical_stack.frameworks).toContain('Axios');
++      expect(result.technical_stack.tools).toContain('Jest');
++      expect(result.technical_stack.tools).toContain('Webpack');
++    });
++
++    it('should extract steering rules and hook guidelines', async () => {
++      const steeringData: SettingsData = {
++        localSettings: {
++          steeringFiles: [
++            {
++              filename: 'docs.md',
++              content: 'All public methods must have documentation comments',
++              path: '.kiro/steering/docs.md',
++            },
++            {
++              filename: 'review.md',
++              content: 'All PRs must be reviewed by at least 2 team members',
++              path: '.kiro/steering/review.md',
++            }
++          ],
++          hooks: [
++            {
++              filename: 'post-commit.kiro.hook',
++              content: 'Validate commit message format',
++              path: '.kiro/hooks/post-commit.kiro.hook',
++              type: 'post-commit',
++            }
++          ],
++        },
++        globalSettings: {
++          globalPrompts: [],
++        },
++        collectionMetadata: {
++          sourcePlatform: 'kiro',
++          collectionTimestamp: '2025-01-04T10:30:00Z',
++          projectPath: '/Users/user/projects/steering-test',
++          globalPath: '/home/user/.kiro',
++          warnings: [],
++          errors: [],
++        },
++      };
++
++      const result = await service.transformProjectContext(steeringData);
++
++      expect(result.development_guidelines.documentation_standards).toContain('All public methods must have documentation comments');
++      expect(result.development_guidelines.review_process).toContain('All PRs must be reviewed by at least 2 team members');
++      expect(result.development_guidelines.review_process).toContain('Hook-based: Validate commit message format');
++    });
++
++    it('should handle deployment and database extraction', async () => {
++      const deploymentData: SettingsData = {
++        localSettings: {
++          contextMd: `# Context
++Databases: PostgreSQL, Redis
++Deployment: Heroku, Docker`,
++          projectSpecMd: `# Spec
++Database: MongoDB
++Hosting: AWS, Netlify`,
++          steeringFiles: [],
++          hooks: [],
++        },
++        globalSettings: {
++          globalPrompts: [],
++        },
++        collectionMetadata: {
++          sourcePlatform: 'kiro',
++          collectionTimestamp: '2025-01-04T10:30:00Z',
++          projectPath: '/Users/user/projects/deployment-test',
++          globalPath: '/home/user/.kiro',
++          warnings: [],
++          errors: [],
++        },
++      };
++
++      const result = await service.transformProjectContext(deploymentData);
++
++      expect(result.technical_stack.databases).toContain('PostgreSQL');
++      expect(result.technical_stack.databases).toContain('Redis');
++      expect(result.technical_stack.databases).toContain('MongoDB');
++      expect(result.technical_stack.deployment).toContain('Heroku');
++      expect(result.technical_stack.deployment).toContain('Docker');
++      expect(result.technical_stack.deployment).toContain('AWS');
++      expect(result.technical_stack.deployment).toContain('Netlify');
++    });
++
++    it('should throw error when critical project transformation fails', async () => {
++      const invalidProjectData = null as any;
++
++      await expect(service.transformProjectContext(invalidProjectData))
++        .rejects.toThrow('Project context transformation failed');
++    });
++
++    it('should generate unique project IDs for different transformations', async () => {
++      const result1 = await service.transformProjectContext(mockProjectSettingsData);
++      const result2 = await service.transformProjectContext(mockProjectSettingsData);
++
++      expect(result1.project_id).toBeDefined();
++      expect(result2.project_id).toBeDefined();
++      expect(result1.project_id).not.toBe(result2.project_id);
++    });
++
++    it('should handle empty steering files and hooks', async () => {
++      const emptyData: SettingsData = {
++        localSettings: {
++          contextMd: '# Empty Context',
++          steeringFiles: [],
++          hooks: [],
++        },
++        globalSettings: {
++          globalPrompts: [],
++        },
++        collectionMetadata: {
++          sourcePlatform: 'kiro',
++          collectionTimestamp: '2025-01-04T10:30:00Z',
++          projectPath: '/Users/user/projects/empty-project',
++          globalPath: '/home/user/.kiro',
++          warnings: [],
++          errors: [],
++        },
++      };
++
++      const result = await service.transformProjectContext(emptyData);
++
++      expect(result.development_guidelines.coding_standards).toEqual([]);
++      expect(result.development_guidelines.testing_requirements).toEqual([]);
++      expect(result.development_guidelines.documentation_standards).toEqual([]);
++      expect(result.development_guidelines.review_process).toEqual([]);
++    });
++  });
+ });
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/transformation.service.ts ---
+diff --git a/src/modules/build/services/transformation.service.ts b/src/modules/build/services/transformation.service.ts
+index 9d14527..73f454c 100644
+--- a/src/modules/build/services/transformation.service.ts
++++ b/src/modules/build/services/transformation.service.ts
+@@ -56,6 +56,36 @@ export class TransformationService {
+     }
+   }
+ 
++  /**
++   * Transform project context data from Kiro format to Taptik format
++   * @param settingsData Raw settings data collected from Kiro
++   * @returns Transformed project context in Taptik format
++   */
++  async transformProjectContext(settingsData: SettingsData): Promise<TaptikProjectContext> {
++    try {
++      this.logger.log('Starting project context transformation');
++
++      const projectInfo = await this.extractProjectInfo(settingsData);
++      const technicalStack = await this.extractTechnicalStack(settingsData);
++      const developmentGuidelines = await this.extractDevelopmentGuidelines(settingsData);
++      const metadata = this.generateProjectMetadata(settingsData);
++
++      const projectContext: TaptikProjectContext = {
++        project_id: this.generateProjectId(settingsData),
++        project_info: projectInfo,
++        technical_stack: technicalStack,
++        development_guidelines: developmentGuidelines,
++        metadata: metadata,
++      };
++
++      this.logger.log('Project context transformation completed successfully');
++      return projectContext;
++    } catch (error) {
++      this.logger.error('Failed to transform project context', error.stack);
++      throw new Error(`Project context transformation failed: ${error.message}`);
++    }
++  }
++
+   /**
+    * Extract user preferences from Kiro settings
+    */
+@@ -368,4 +398,307 @@ export class TransformationService {
+     const prefValue = this.extractStringFromParsedData(preferences, ['feedback_style'], '');
+     return prefValue || globalValue || 'direct';
+   }
++
++  /**
++   * Extract project information from Kiro settings
++   */
++  private async extractProjectInfo(settingsData: SettingsData): Promise<ProjectInfo> {
++    const contextData = this.parseKiroConfig(settingsData.localSettings.contextMd);
++    const projectSpecData = this.parseKiroConfig(settingsData.localSettings.projectSpecMd);
++
++    return {
++      name: this.extractProjectName(contextData, projectSpecData, settingsData),
++      description: this.extractProjectDescription(contextData, projectSpecData),
++      version: this.extractProjectVersion(contextData, projectSpecData),
++      repository: this.extractProjectRepository(contextData, projectSpecData),
++    };
++  }
++
++  /**
++   * Extract technical stack information from Kiro settings
++   */
++  private async extractTechnicalStack(settingsData: SettingsData): Promise<TechnicalStack> {
++    const contextData = this.parseKiroConfig(settingsData.localSettings.contextMd);
++    const projectSpecData = this.parseKiroConfig(settingsData.localSettings.projectSpecMd);
++    const userPrefs = this.parseKiroPreferences(settingsData.localSettings.userPreferencesMd);
++
++    return {
++      primary_language: this.extractPrimaryLanguage(contextData, projectSpecData, userPrefs),
++      frameworks: this.extractFrameworks(contextData, projectSpecData, userPrefs),
++      databases: this.extractDatabases(contextData, projectSpecData),
++      tools: this.extractProjectTools(contextData, projectSpecData, userPrefs),
++      deployment: this.extractDeployment(contextData, projectSpecData),
++    };
++  }
++
++  /**
++   * Extract development guidelines from Kiro settings
++   */
++  private async extractDevelopmentGuidelines(settingsData: SettingsData): Promise<DevelopmentGuidelines> {
++    const steeringRules = this.extractSteeringRules(settingsData.localSettings.steeringFiles);
++    const projectSpecData = this.parseKiroConfig(settingsData.localSettings.projectSpecMd);
++    const hooks = settingsData.localSettings.hooks;
++
++    return {
++      coding_standards: this.extractCodingStandards(steeringRules, projectSpecData),
++      testing_requirements: this.extractTestingRequirements(steeringRules, projectSpecData),
++      documentation_standards: this.extractDocumentationStandards(steeringRules, projectSpecData),
++      review_process: this.extractReviewProcess(steeringRules, hooks),
++    };
++  }
++
++  /**
++   * Generate metadata for project context
++   */
++  private generateProjectMetadata(settingsData: SettingsData): ProjectMetadata {
++    return {
++      source_platform: settingsData.collectionMetadata.sourcePlatform,
++      source_path: settingsData.collectionMetadata.projectPath,
++      created_at: new Date().toISOString(),
++      version: '1.0.0',
++    };
++  }
++
++  /**
++   * Generate unique project ID based on settings data
++   */
++  private generateProjectId(settingsData: SettingsData): string {
++    const projectPath = settingsData.collectionMetadata.projectPath;
++    const projectName = projectPath.split('/').pop() || 'unknown-project';
++    return `${projectName}-${randomUUID().substring(0, 8)}`;
++  }
++
++  /**
++   * Extract project name from various sources
++   */
++  private extractProjectName(contextData: Record<string, any>, projectSpecData: Record<string, any>, settingsData: SettingsData): string {
++    const projectName = this.extractStringFromParsedData(contextData, ['name', 'project_name', 'title'], '') ||
++                       this.extractStringFromParsedData(projectSpecData, ['name', 'project_name', 'title'], '');
++
++    if (projectName) {
++      return projectName;
++    }
++
++    // Fallback to directory name
++    const projectPath = settingsData.collectionMetadata.projectPath;
++    return projectPath.split('/').pop() || 'untitled-project';
++  }
++
++  /**
++   * Extract project description
++   */
++  private extractProjectDescription(contextData: Record<string, any>, projectSpecData: Record<string, any>): string {
++    return this.extractStringFromParsedData(contextData, ['description', 'summary', 'about'], '') ||
++           this.extractStringFromParsedData(projectSpecData, ['description', 'summary', 'about'], '') ||
++           'No description available';
++  }
++
++  /**
++   * Extract project version
++   */
++  private extractProjectVersion(contextData: Record<string, any>, projectSpecData: Record<string, any>): string {
++    return this.extractStringFromParsedData(contextData, ['version'], '') ||
++           this.extractStringFromParsedData(projectSpecData, ['version'], '') ||
++           '1.0.0';
++  }
++
++  /**
++   * Extract project repository information
++   */
++  private extractProjectRepository(contextData: Record<string, any>, projectSpecData: Record<string, any>): string {
++    return this.extractStringFromParsedData(contextData, ['repository', 'repo', 'git_url'], '') ||
++           this.extractStringFromParsedData(projectSpecData, ['repository', 'repo', 'git_url'], '') ||
++           '';
++  }
++
++  /**
++   * Extract primary programming language
++   */
++  private extractPrimaryLanguage(contextData: Record<string, any>, projectSpecData: Record<string, any>, userPrefs: Record<string, any>): string {
++    const languages = [
++      ...this.extractArrayFromParsedData(contextData, ['language', 'primary_language', 'main_language']),
++      ...this.extractArrayFromParsedData(projectSpecData, ['language', 'primary_language', 'main_language']),
++      ...this.extractArrayFromParsedData(userPrefs, ['languages', 'preferred_languages']),
++    ];
++
++    return languages[0] || 'typescript';
++  }
++
++  /**
++   * Extract frameworks from project settings
++   */
++  private extractFrameworks(contextData: Record<string, any>, projectSpecData: Record<string, any>, userPrefs: Record<string, any>): string[] {
++    const frameworks = new Set<string>();
++
++    const contextFrameworks = this.extractArrayFromParsedData(contextData, ['frameworks', 'framework', 'libraries']);
++    const specFrameworks = this.extractArrayFromParsedData(projectSpecData, ['frameworks', 'framework', 'libraries']);
++    const prefFrameworks = this.extractArrayFromParsedData(userPrefs, ['frameworks', 'tools']);
++
++    [...contextFrameworks, ...specFrameworks, ...prefFrameworks].forEach(fw => frameworks.add(fw));
++
++    return Array.from(frameworks);
++  }
++
++  /**
++   * Extract databases from project settings
++   */
++  private extractDatabases(contextData: Record<string, any>, projectSpecData: Record<string, any>): string[] {
++    const databases = new Set<string>();
++
++    const contextDbs = this.extractArrayFromParsedData(contextData, ['databases', 'database', 'db']);
++    const specDbs = this.extractArrayFromParsedData(projectSpecData, ['databases', 'database', 'db']);
++
++    [...contextDbs, ...specDbs].forEach(db => databases.add(db));
++
++    return Array.from(databases);
++  }
++
++  /**
++   * Extract project tools
++   */
++  private extractProjectTools(contextData: Record<string, any>, projectSpecData: Record<string, any>, userPrefs: Record<string, any>): string[] {
++    const tools = new Set<string>();
++
++    const contextTools = this.extractArrayFromParsedData(contextData, ['tools', 'build_tools', 'dev_tools']);
++    const specTools = this.extractArrayFromParsedData(projectSpecData, ['tools', 'build_tools', 'dev_tools']);
++    const prefTools = this.extractArrayFromParsedData(userPrefs, ['tools', 'development_tools']);
++
++    [...contextTools, ...specTools, ...prefTools].forEach(tool => tools.add(tool));
++
++    return Array.from(tools);
++  }
++
++  /**
++   * Extract deployment information
++   */
++  private extractDeployment(contextData: Record<string, any>, projectSpecData: Record<string, any>): string[] {
++    const deployment = new Set<string>();
++
++    const contextDeploy = this.extractArrayFromParsedData(contextData, ['deployment', 'deploy', 'hosting']);
++    const specDeploy = this.extractArrayFromParsedData(projectSpecData, ['deployment', 'deploy', 'hosting']);
++
++    [...contextDeploy, ...specDeploy].forEach(dep => deployment.add(dep));
++
++    return Array.from(deployment);
++  }
++
++  /**
++   * Extract steering rules from steering files
++   */
++  private extractSteeringRules(steeringFiles: any[]): string[] {
++    if (!Array.isArray(steeringFiles)) {
++      return [];
++    }
++
++    return steeringFiles.map(file => {
++      if (typeof file === 'object' && file.content) {
++        return file.content.trim();
++      }
++      return '';
++    }).filter(content => content.length > 0);
++  }
++
++  /**
++   * Extract coding standards from steering rules and project spec
++   */
++  private extractCodingStandards(steeringRules: string[], projectSpecData: Record<string, any>): string[] {
++    const standards = new Set<string>();
++
++    // Extract from steering files
++    steeringRules.forEach(rule => {
++      if (rule.toLowerCase().includes('standard') || rule.toLowerCase().includes('convention')) {
++        standards.add(rule);
++      }
++    });
++
++    // Extract from project spec
++    const specStandards = this.extractArrayFromParsedData(projectSpecData, ['coding_standards', 'standards', 'conventions']);
++    specStandards.forEach(std => standards.add(std));
++
++    return Array.from(standards);
++  }
++
++  /**
++   * Extract testing requirements
++   */
++  private extractTestingRequirements(steeringRules: string[], projectSpecData: Record<string, any>): string[] {
++    const requirements = new Set<string>();
++
++    // Extract from steering files
++    steeringRules.forEach(rule => {
++      if (rule.toLowerCase().includes('test') || rule.toLowerCase().includes('coverage')) {
++        requirements.add(rule);
++      }
++    });
++
++    // Extract from project spec
++    const specTests = this.extractArrayFromParsedData(projectSpecData, ['testing', 'test_requirements', 'coverage']);
++    specTests.forEach(req => requirements.add(req));
++
++    return Array.from(requirements);
++  }
++
++  /**
++   * Extract documentation standards
++   */
++  private extractDocumentationStandards(steeringRules: string[], projectSpecData: Record<string, any>): string[] {
++    const standards = new Set<string>();
++
++    // Extract from steering files
++    steeringRules.forEach(rule => {
++      if (rule.toLowerCase().includes('documentation') || rule.toLowerCase().includes('comment')) {
++        standards.add(rule);
++      }
++    });
++
++    // Extract from project spec
++    const specDocs = this.extractArrayFromParsedData(projectSpecData, ['documentation', 'docs', 'comments']);
++    specDocs.forEach(doc => standards.add(doc));
++
++    return Array.from(standards);
++  }
++
++  /**
++   * Extract review process guidelines
++   */
++  private extractReviewProcess(steeringRules: string[], hooks: any[]): string[] {
++    const process = new Set<string>();
++
++    // Extract from steering files
++    steeringRules.forEach(rule => {
++      if (rule.toLowerCase().includes('review') || rule.toLowerCase().includes('approval')) {
++        process.add(rule);
++      }
++    });
++
++    // Extract from hooks - check if hooks contain review-related content
++    if (Array.isArray(hooks)) {
++      hooks.forEach(hook => {
++        if (typeof hook === 'object' && hook.content) {
++          const content = hook.content.toLowerCase();
++          if (content.includes('review') || content.includes('lint') || content.includes('check') || content.includes('validate') || content.includes('commit')) {
++            process.add(`Hook-based: ${hook.content.trim()}`);
++          }
++        }
++      });
++    }
++
++    return Array.from(process);
++  }
++
++  /**
++   * Extract hook guidelines from hook files
++   */
++  private extractHookGuidelines(hooks: any[]): string[] {
++    if (!Array.isArray(hooks)) {
++      return [];
++    }
++
++    return hooks.map(hook => {
++      if (typeof hook === 'object' && hook.content && hook.filename) {
++        return `${hook.filename}: ${hook.content.trim()}`;
++      }
++      return '';
++    }).filter(content => content.length > 0);
++  }
+ }
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

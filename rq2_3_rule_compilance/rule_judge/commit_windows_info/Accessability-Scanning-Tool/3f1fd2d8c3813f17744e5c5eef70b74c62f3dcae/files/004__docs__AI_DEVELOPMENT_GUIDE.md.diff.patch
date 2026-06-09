@@ -1,0 +1,96 @@
+diff --git a/docs/AI_DEVELOPMENT_GUIDE.md b/docs/AI_DEVELOPMENT_GUIDE.md
+index af84cbe..19f2334 100644
+--- a/docs/AI_DEVELOPMENT_GUIDE.md
++++ b/docs/AI_DEVELOPMENT_GUIDE.md
+@@ -112,13 +112,30 @@ npm test
+ npm run test:coverage
+ 
+ // ✅ ALWAYS follow testing patterns from TESTING_ROADMAP.md
+-// - Use Jest for unit testing
++// - Use Jest for unit testing (70% of tests)
++// - Use Jest for integration testing (20% of tests)
++// - Use Playwright for E2E testing (5% of tests)
+ // - Mock external dependencies with `any` types
+ // - Test public interfaces, not implementation details
+ // - Follow singleton pattern verification
++// - Use test utilities for cleanup (createTempDir, cleanupTempHtmlFiles)
++
++// ✅ Test Cleanup
++// - Use (global as any).testUtils.createTempDir() for test directories
++// - Use (global as any).testUtils.cleanupTempHtmlFiles() for HTML cleanup
++// - Temporary files are automatically cleaned up after tests
++// - Jest timeout issues resolved with proper clearTimeout calls
++// - All 292 tests pass without worker process errors
++
++// ✅ E2E Testing Commands
++npm run test:e2e          # Run all E2E tests
++npm run test:e2e:ui       # Interactive E2E testing
++npm run test:e2e:headed   # Headed mode E2E testing
+ 
+ // ❌ NEVER break existing tests without fixing them
+ // ❌ NEVER ignore TypeScript compilation errors in tests
++// ❌ NEVER leave temporary files behind (HTML files, test directories)
++// ❌ NEVER leave setTimeout calls without proper cleanup
+ ```
+ 
+ ## 🔍 Pre-Change Checklist
+@@ -135,9 +152,10 @@ Before making ANY changes, verify:
+ - [ ] `src/core/types/common.ts` - Are types being modified?
+ - [ ] `src/utils/services/error-handler-service.ts` - Is error handling affected?
+ - [ ] `src/utils/services/configuration-service.ts` - Is configuration involved?
+-- [ ] `src/cli/accessibility-test-cli.ts` - Is CLI functionality affected?
++- [ ] `src/web/server.ts` - Is web interface functionality affected?
+ - [ ] `tests/` directory - Are tests being modified or added?
+ - [ ] `jest.config.js` - Is testing configuration affected?
++- [ ] `playwright.config.ts` - Is E2E testing configuration affected?
+ 
+ ### 3. Verify Import Patterns
+ - [ ] Are imports using correct patterns (`@/` vs `../`)?
+@@ -297,10 +315,47 @@ npm test
+ npm run test:coverage
+ 
+ # CLI functionality test
++npm run test:e2e          # E2E functionality test
+ npm run cli
+ 
+ # Build verification
+ npm run build
++
++# Storybook component testing
++npm run storybook          # Start Storybook development server
++npm run build-storybook    # Build Storybook for production
++npm run test-storybook     # Run Storybook tests
++```
++
++## 🧪 Testing Framework
++
++### Testing Pyramid (Current Status)
++```typescript
++// ✅ Unit Tests (70% - 214 tests)
++npm run test:unit          # Core services, types, processors, runners
++
++// ✅ Integration Tests (20% - 47 tests)  
++npm run test:integration   # Service integration, API, WebSocket
++
++// ✅ Component Tests (5% - 9 tests)
++npm run storybook          # Storybook with accessibility validation
++
++// 🔄 E2E Tests (5% - Ready for implementation)
++npm run test:e2e          # Playwright E2E testing
++```
++
++### Test Cleanup & Stability
++```typescript
++// ✅ Jest timeout issues resolved
++// - Proper clearTimeout calls in Pa11yTestRunner, ErrorHandlerService, ParallelAnalyzer
++// - Global test setup with comprehensive timer cleanup
++// - All 301 tests pass without worker process errors
++
++// ✅ Component Testing with Storybook
++// - 4 component stories: Header, ScanOptions, ProgressSection, WebInterface
++// - WCAG 2.1 AA accessibility validation
++// - Responsive design testing (Mobile, Tablet, Desktop)
++// - Visual regression testing with viewport configurations
+ ```
+ 
+ ## 🎯 Key Principles for AI Development

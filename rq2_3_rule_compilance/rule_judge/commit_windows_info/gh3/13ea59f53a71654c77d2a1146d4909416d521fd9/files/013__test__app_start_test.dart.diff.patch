@@ -1,0 +1,38 @@
+diff --git a/test/app_start_test.dart b/test/app_start_test.dart
+index f9c2d2b..d89d39c 100644
+--- a/test/app_start_test.dart
++++ b/test/app_start_test.dart
+@@ -51,6 +51,7 @@ void main() {
+ 
+     when(mockAuthService.isLoggedIn).thenReturn(true);
+     when(mockAuthService.init()).thenAnswer((_) async {});
++    // Ferry client still registered for other parts of the app that may need it
+     when(
+       mockFerryClient.request<GGetFollowingData, GGetFollowingVars>(any),
+     ).thenAnswer((_) => const Stream.empty());
+@@ -61,7 +62,7 @@ void main() {
+         path: '/',
+         builder: (context, state) => HomeScreen(
+           authViewModel: AuthViewModel(mockAuthService),
+-          homeViewModel: HomeViewModel(mockFerryClient),
++          homeViewModel: HomeViewModel(mockAuthService),
+         ),
+       ),
+       GoRoute(
+@@ -119,6 +120,7 @@ void main() {
+ 
+     when(mockAuthService.isLoggedIn).thenReturn(false);
+     when(mockAuthService.init()).thenAnswer((_) async {});
++    // Ferry client still registered for other parts of the app that may need it
+     // ignore: argument_type_not_assignable, avoid_redundant_argument_values
+     when(
+       mockFerryClient.request<GGetFollowingData, GGetFollowingVars>(captureAny),
+@@ -130,7 +132,7 @@ void main() {
+         path: '/',
+         builder: (context, state) => HomeScreen(
+           authViewModel: AuthViewModel(mockAuthService),
+-          homeViewModel: HomeViewModel(mockFerryClient),
++          homeViewModel: HomeViewModel(mockAuthService),
+         ),
+       ),
+       GoRoute(

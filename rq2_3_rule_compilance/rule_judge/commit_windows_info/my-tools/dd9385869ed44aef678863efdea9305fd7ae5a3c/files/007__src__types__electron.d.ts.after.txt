@@ -1,0 +1,128 @@
+export interface ElectronAPI {
+  // PDF合并
+  mergePdfs: (options: {
+    filePaths: string[];
+    outputPath: string;
+    outputFileName: string;
+  }) => Promise<{
+    success: boolean;
+    outputPath?: string;
+    message?: string;
+    error?: string;
+  }>;
+  
+  // 监听合并进度
+  onMergeProgress: (callback: (progress: {
+    current: number;
+    total: number;
+    currentFile: string;
+    progress: number;
+  }) => void) => () => void;
+  
+  // 选择保存位置
+  selectSavePath: () => Promise<{
+    filePath: string;
+    directory: string;
+    fileName: string;
+  } | null>;
+  
+  // 获取默认下载目录
+  getDownloadsPath: () => Promise<string>;
+  
+  // 选择PDF文件
+  selectPdfFiles: () => Promise<{
+    path: string;
+    name: string;
+    size: number;
+  }[] | null>;
+  
+  // 打开文件位置
+  openFileLocation: (filePath: string) => Promise<void>;
+  
+  // 历史记录相关
+  getOperationHistory: () => Promise<HistoryRecord[]>;
+  clearOperationHistory: () => Promise<{ success: boolean; error?: string }>;
+  deleteHistoryRecord: (id: string) => Promise<{ success: boolean; error?: string }>;
+  
+  // 配置相关
+  getAppConfig: () => Promise<AppConfig>;
+  updateAppConfig: (config: Partial<AppConfig>) => Promise<{ success: boolean; error?: string }>;
+  resetAppConfig: () => Promise<{ success: boolean; error?: string }>;
+  
+  // 图片压缩相关
+  selectImages: () => Promise<{
+    success: boolean;
+    files?: {
+      name: string;
+      path: string;
+      size: number;
+    }[];
+    error?: string;
+  }>;
+  
+  selectSaveLocation: () => Promise<{
+    success: boolean;
+    path?: string;
+    error?: string;
+  }>;
+  
+  compressImages: (
+    filePaths: string[],
+    settings: {
+      method: string;
+      quality?: number;
+      targetSize?: number;
+      maxDimension?: number;
+      outputFormat?: string;
+      namingSuffix?: string;
+      saveLocation?: string;
+    }
+  ) => Promise<{
+    success: boolean;
+    processedCount?: number;
+    error?: string;
+  }>;
+  
+  onCompressionProgress: (callback: (progress: {
+    currentFile: string;
+    currentIndex: number;
+    totalFiles: number;
+    percentage: number;
+  }) => void) => () => void;
+  
+  removeCompressionProgressListener: () => void;
+}
+
+// 历史记录类型定义
+export interface HistoryRecord {
+  id: string;
+  type: 'pdf-merge' | 'image-compress';
+  timestamp: number;
+  files: {
+    name: string;
+    size: number;
+    path: string;
+  }[];
+  output: {
+    name: string;
+    path: string;
+    size?: number;
+  };
+  settings: Record<string, unknown>;
+  duration?: number;
+  success: boolean;
+  error?: string;
+}
+
+// 应用配置类型定义
+export interface AppConfig {
+  autoNumberDuplicateFiles: boolean;
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
+
+export {}; 

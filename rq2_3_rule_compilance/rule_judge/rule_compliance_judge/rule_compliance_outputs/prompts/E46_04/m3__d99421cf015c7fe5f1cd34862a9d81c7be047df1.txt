@@ -1,0 +1,885 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- **AWS SDK:** AWS SDK for JavaScript v3
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency manifest files (e.g., package.json, package-lock.json, yarn.lock) and source code files (import statements).
+- Suggested Logic: 1. Scan 'package.json' for dependencies to ensure they use the modular v3 namespace (e.g., packages starting with '@aws-sdk/'). 
+2. Verify the absence of the monolithic 'aws-sdk' package (which corresponds to v2).
+3. Optionally, scan source code files for import statements to ensure they reference '@aws-sdk/...' rather than 'aws-sdk'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Saving progress on Cognito so far
+- Changed Files List: 
+docker-compose.yml	+3	-2	after_lines=103
+scripts/deploy-cognito.sh	+71	-0	after_lines=71
+server/bun.lock	+131	-0	after_lines=470
+server/config.ts	+6	-0	after_lines=67
+server/handlers/signin.ts	+37	-11	after_lines=74
+server/handlers/signup.ts	+27	-11	after_lines=63
+server/iac/cognito.yml	+74	-0	after_lines=74
+server/iac/deploy.sh	+20	-3	after_lines=213
+server/iac/fargate.yml	+12	-0	after_lines=465
+server/package.json	+1	-0	after_lines=32
+
+- Project Directory Tree (Snapshot after commit):
+├── .amazonq
+│   └── rules
+│       └── scope.md
+├── .dockerignore
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── update-docs-hook.kiro.hook
+│   ├── plans
+│   │   └── player-trail-effect
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── bun.lock
+├── client
+│   ├── .dockerignore
+│   ├── .editorconfig
+│   ├── .gitattributes
+│   ├── .gitignore
+│   ├── .prettierrc.json
+│   ├── Dockerfile
+│   ├── bun.lock
+│   ├── env.d.ts
+│   ├── eslint.config.ts
+│   ├── iac
+│   │   ├── deploy.sh
+│   │   └── web.yaml
+│   ├── index.html
+│   ├── package.json
+│   ├── public
+│   │   └── favicon.ico
+│   ├── src
+│   │   ├── App.vue
+│   │   ├── assets
+│   │   │   ├── appraising.png
+│   │   │   ├── background-old.png
+│   │   │   ├── background.png
+│   │   │   ├── base.css
+│   │   │   ├── chest-open.png
+│   │   │   ├── chest.png
+│   │   │   ├── chute.png
+│   │   │   ├── computer-zoom.png
+│   │   │   ├── computer.png
+│   │   │   ├── dispenser.png
+│   │   │   ├── garbage.png
+│   │   │   ├── generic.png
+│   │   │   ├── happy.png
+│   │   │   ├── index.ts
+│   │   │   ├── kiro-ghost
+│   │   │   │   ├── east.png
+│   │   │   │   ├── north.png
+│   │   │   │   ├── northeast.png
+│   │   │   │   ├── south.png
+│   │   │   │   └── southwest.png
+│   │   │   ├── lever.png
+│   │   │   ├── logo.svg
+│   │   │   ├── main.css
+│   │   │   ├── neutral.png
+│   │   │   ├── panel-background.png
+│   │   │   ├── sell-table.png
+│   │   │   ├── shelf.png
+│   │   │   ├── unhappy.png
+│   │   │   ├── workbench-zoom.png
+│   │   │   └── workbench.png
+│   │   ├── components
+│   │   │   ├── Banner.vue
+│   │   │   ├── BuyPreview.vue
+│   │   │   ├── Chest.vue
+│   │   │   ├── ChestFullscreen.vue
+│   │   │   ├── Computer.vue
+│   │   │   ├── ComputerFullscreen.vue
+│   │   │   ├── DiscardDialog.vue
+│   │   │   ├── Dispenser.vue
+│   │   │   ├── GameGrid.vue
+│   │   │   ├── GameItem.vue
+│   │   │   ├── GameObjects.vue
+│   │   │   ├── Garbage.vue
+│   │   │   ├── HUD.vue
+│   │   │   ├── HintDisplay.vue
+│   │   │   ├── ItemDialog.vue
+│   │   │   ├── ItemPreview.vue
+│   │   │   ├── LoadingScreen.vue
+│   │   │   ├── PlayerCharacter.vue
+│   │   │   ├── PullLever.vue
+│   │   │   ├── RandomChat.vue
+│   │   │   ├── SellDialog.vue
+│   │   │   ├── Shelf.vue
+│   │   │   ├── SkillResultDialog.vue
+│   │   │   ├── Wall.vue
+│   │   │   ├── Workbench.vue
+│   │   │   └── WorkbenchFullscreen.vue
+│   │   ├── main.ts
+│   │   ├── router
+│   │   │   └── index.ts
+│   │   ├── stores
+│   │   │   └── game.ts
+│   │   ├── systems
+│   │   │   ├── game-object-system.ts
+│   │   │   ├── inventory-system.ts
+│   │   │   ├── item-system.ts
+│   │   │   ├── persona-system.ts
+│   │   │   ├── physics-system.ts
+│   │   │   ├── preloader-system.ts
+│   │   │   └── socket-system.ts
+│   │   ├── utils
+│   │   │   ├── init-world.ts
+│   │   │   ├── items.ts
+│   │   │   └── physics.ts
+│   │   └── views
+│   │       ├── AuthView.vue
+│   │       ├── GameView.vue
+│   │       └── HomeView.vue
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── tsconfig.vitest.json
+│   ├── vite.config.ts
+│   └── vitest.config.ts
+├── docker-compose.yml
+├── docs
+│   ├── CHALLENGE.md
+│   ├── ROADMAP.md
+│   ├── appsec-overview.md
+│   ├── architecture.md
+│   ├── client-events.md
+│   ├── guiding-principles.md
+│   ├── local-deploy.md
+│   ├── remote-deploy.md
+│   └── server-messages.md
+├── item-images
+│   ├── .dockerignore
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── bun.lock
+│   ├── config.ts
+│   ├── handlers
+│   │   └── image-handler.ts
+│   ├── iac
+│   │   ├── deploy.sh
+│   │   ├── distribution.yml
+│   │   ├── fargate.yml
+│   │   ├── images-s3.yml
+│   │   └── memorydb.yml
+│   ├── lib
+│   │   └── item-image.ts
+│   ├── local.env
+│   ├── package.json
+│   ├── prod.env
+│   ├── scripts
+│   │   └── generate-random-images.js
+│   ├── server.ts
+│   └── state
+│       ├── redis-client.ts
+│       └── vector-store.ts
+├── launch.ts
+├── package-lock.json
+├── package.json
+├── scripts
+│   ├── bootstrap-local-dynamodb.js
+│   ├── check-dependencies.sh
+│   ├── deploy-cognito.sh
+│   └── prod-deploy.sh
+└── server
+    ├── .dockerignore
+    ├── Dockerfile
+    ├── README.md
+    ├── __tests__
+    │   ├── server.test.ts
+    │   ├── setup.ts
+    │   ├── util.ts
+    │   └── ws.d.ts
+    ├── bun.lock
+    ├── bunfig.toml
+    ├── config.ts
+    ├── devfile.yaml
+    ├── handlers
+    │   ├── __tests__
+    │   │   ├── discard-item.test.ts
+    │   │   ├── list-inventory.test.ts
+    │   │   ├── ping.test.ts
+    │   │   ├── pull-item.test.ts
+    │   │   ├── signin.test.ts
+    │   │   └── signup.test.ts
+    │   ├── buy-discarded.ts
+    │   ├── discard-item.ts
+    │   ├── fetch-persona.ts
+    │   ├── list-inventory.ts
+    │   ├── move-item.ts
+    │   ├── peek-discarded.ts
+    │   ├── ping.ts
+    │   ├── pull-item.ts
+    │   ├── sell-item.ts
+    │   ├── signin.ts
+    │   ├── signup.ts
+    │   └── use-skill.ts
+    ├── iac
+    │   ├── cognito.yml
+    │   ├── deploy.sh
+    │   ├── dynamodb.yml
+    │   └── fargate.yml
+    ├── llm
+    │   ├── model.ts
+    │   ├── prompts.ts
+    │   └── word-lists
+    │       ├── accessories.js
+    │       ├── adhesives.js
+    │       ├── car-parts.js
+    │       ├── clothing.js
+    │       ├── containers.js
+    │       ├── cooking-items.js
+    │       ├── food-ingredients.js
+    │       ├── household-items.js
+    │       ├── index.js
+    │       ├── liquids.js
+    │       ├── magical.js
+    │       ├── themes.js
+    │       ├── tools.js
+    │       └── toys.js
+    ├── mocks
+    │   ├── describe-equipment.json
+    │   └── pull-item.json
+    ├── package.json
+    ├── server.ts
+    ├── state
+    │   ├── item-store.ts
+    │   └── user-store.ts
+    ├── types.ts
+    └── utils
+        ├── __tests__
+        │   └── password.test.ts
+        ├── message.ts
+        └── password.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: docker-compose.yml ---
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 32edb87..b7ebf45 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -56,9 +56,10 @@ services:
+         condition: service_started
+       ecs-local-endpoints:
+         condition: service_started
+-
++    env_file:
++      - dev.env
+     environment:
+-      AWS_REGION: us-east-1
++      AWS_REGION: us-west-2
+       DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+       # This ENV VAR enables credentials
+       # Set it to "/creds" or "/role/<role name>"
+
+--- FILE: scripts/deploy-cognito.sh ---
+diff --git a/scripts/deploy-cognito.sh b/scripts/deploy-cognito.sh
+new file mode 100755
+index 0000000..ff04be8
+--- /dev/null
++++ b/scripts/deploy-cognito.sh
+@@ -0,0 +1,71 @@
++#!/bin/bash
++
++# Exit on error
++set -e
++
++# Store the original directory
++ORIGINAL_DIR=$(pwd)
++
++# Check if stack name is provided
++if [ -z "$1" ]; then
++  echo "Usage: $0 <stack-name>"
++  echo "Example: $0 game"
++  exit 1
++fi
++
++STACK_PREFIX=$1
++COGNITO_STACK_NAME="${STACK_PREFIX}-cognito"
++REGION=${AWS_REGION:-us-west-2}
++
++echo "Deploying Cognito resources for stack: $COGNITO_STACK_NAME"
++echo "Region: $REGION"
++
++# Change to the iac directory
++cd "$(dirname "$0")/../server/iac"
++
++# Deploy the Cognito stack
++echo "Deploying Cognito stack..."
++aws cloudformation deploy \
++  --template-file cognito.yml \
++  --stack-name $COGNITO_STACK_NAME \
++  --capabilities CAPABILITY_IAM \
++  --region $REGION
++
++# Get Cognito outputs
++echo "Getting Cognito outputs..."
++COGNITO_USER_POOL_ID=$(aws cloudformation describe-stacks \
++  --stack-name $COGNITO_STACK_NAME \
++  --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" \
++  --output text \
++  --region $REGION)
++
++COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks \
++  --stack-name $COGNITO_STACK_NAME \
++  --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" \
++  --output text \
++  --region $REGION)
++
++COGNITO_USER_POOL_ARN=$(aws cloudformation describe-stacks \
++  --stack-name $COGNITO_STACK_NAME \
++  --query "Stacks[0].Outputs[?OutputKey=='UserPoolArn'].OutputValue" \
++  --output text \
++  --region $REGION)
++
++echo "Deployment completed successfully!"
++echo "Cognito User Pool ID: $COGNITO_USER_POOL_ID"
++echo "Cognito Client ID: $COGNITO_CLIENT_ID"
++echo "Cognito User Pool ARN: $COGNITO_USER_POOL_ARN"
++
++# Return to original directory before creating .env file
++cd "$ORIGINAL_DIR"
++
++# Create a .env file with the Cognito configuration
++echo "Creating .env file with Cognito configuration..."
++cat > dev.env << EOL
++COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID
++COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID
++COGNITO_USER_POOL_ARN=$COGNITO_USER_POOL_ARN
++EOL
++
++echo "Created .env file with Cognito configuration"
++echo "You can now use these values in your application" 
+\ No newline at end of file
+
+--- FILE: server/bun.lock ---
+diff --git a/server/bun.lock b/server/bun.lock
+index 10e5e3e..e4fe91a 100644
+--- a/server/bun.lock
++++ b/server/bun.lock
+@@ -5,6 +5,7 @@
+       "name": "websocket-server",
+       "dependencies": {
+         "@aws-sdk/client-bedrock-runtime": "^3.0.0",
++        "@aws-sdk/client-cognito-identity-provider": "^3.825.0",
+         "@aws-sdk/client-dynamodb": "^3.0.0",
+         "@aws-sdk/client-s3": "^3.0.0",
+         "@aws-sdk/lib-dynamodb": "^3.0.0",
+@@ -36,6 +37,8 @@
+ 
+     "@aws-sdk/client-bedrock-runtime": ["@aws-sdk/client-bedrock-runtime@3.804.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.804.0", "@aws-sdk/credential-provider-node": "3.804.0", "@aws-sdk/eventstream-handler-node": "3.804.0", "@aws-sdk/middleware-eventstream": "3.804.0", "@aws-sdk/middleware-host-header": "3.804.0", "@aws-sdk/middleware-logger": "3.804.0", "@aws-sdk/middleware-recursion-detection": "3.804.0", "@aws-sdk/middleware-user-agent": "3.804.0", "@aws-sdk/region-config-resolver": "3.804.0", "@aws-sdk/types": "3.804.0", "@aws-sdk/util-endpoints": "3.804.0", "@aws-sdk/util-user-agent-browser": "3.804.0", "@aws-sdk/util-user-agent-node": "3.804.0", "@smithy/config-resolver": "^4.1.0", "@smithy/core": "^3.3.1", "@smithy/eventstream-serde-browser": "^4.0.2", "@smithy/eventstream-serde-config-resolver": "^4.1.0", "@smithy/eventstream-serde-node": "^4.0.2", "@smithy/fetch-http-handler": "^5.0.2", "@smithy/hash-node": "^4.0.2", "@smithy/invalid-dependency": "^4.0.2", "@smithy/middleware-content-length": "^4.0.2", "@smithy/middleware-endpoint": "^4.1.2", "@smithy/middleware-retry": "^4.1.3", "@smithy/middleware-serde": "^4.0.3", "@smithy/middleware-stack": "^4.0.2", "@smithy/node-config-provider": "^4.0.2", "@smithy/node-http-handler": "^4.0.4", "@smithy/protocol-http": "^5.1.0", "@smithy/smithy-client": "^4.2.2", "@smithy/types": "^4.2.0", "@smithy/url-parser": "^4.0.2", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.10", "@smithy/util-defaults-mode-node": "^4.0.10", "@smithy/util-endpoints": "^3.0.2", "@smithy/util-middleware": "^4.0.2", "@smithy/util-retry": "^4.0.3", "@smithy/util-stream": "^4.2.0", "@smithy/util-utf8": "^4.0.0", "@types/uuid": "^9.0.1", "tslib": "^2.6.2", "uuid": "^9.0.1" } }, "sha512-xO5iQoYf2e5HL7PSSVEVNCpAYb4SICAOQHRB3fWlLi2ZyDgH21Te2Z3YEkCHRAkp7nJbSasWKY3pVJ2sjlEwPQ=="],
+ 
++    "@aws-sdk/client-cognito-identity-provider": ["@aws-sdk/client-cognito-identity-provider@3.825.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/credential-provider-node": "3.825.0", "@aws-sdk/middleware-host-header": "3.821.0", "@aws-sdk/middleware-logger": "3.821.0", "@aws-sdk/middleware-recursion-detection": "3.821.0", "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/region-config-resolver": "3.821.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@aws-sdk/util-user-agent-browser": "3.821.0", "@aws-sdk/util-user-agent-node": "3.825.0", "@smithy/config-resolver": "^4.1.4", "@smithy/core": "^3.5.2", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/hash-node": "^4.0.4", "@smithy/invalid-dependency": "^4.0.4", "@smithy/middleware-content-length": "^4.0.4", "@smithy/middleware-endpoint": "^4.1.10", "@smithy/middleware-retry": "^4.1.11", "@smithy/middleware-serde": "^4.0.8", "@smithy/middleware-stack": "^4.0.4", "@smithy/node-config-provider": "^4.1.3", "@smithy/node-http-handler": "^4.0.6", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.18", "@smithy/util-defaults-mode-node": "^4.0.18", "@smithy/util-endpoints": "^3.0.6", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-9j+Y4MECLIKBfjtTKMbpnuxS1+A57CASClWHWCSREmN1l86FDoX4dCtJGiN4wzpTtyW2+/5TrdTaRdW75dfGIQ=="],
++
+     "@aws-sdk/client-dynamodb": ["@aws-sdk/client-dynamodb@3.804.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.804.0", "@aws-sdk/credential-provider-node": "3.804.0", "@aws-sdk/middleware-endpoint-discovery": "3.804.0", "@aws-sdk/middleware-host-header": "3.804.0", "@aws-sdk/middleware-logger": "3.804.0", "@aws-sdk/middleware-recursion-detection": "3.804.0", "@aws-sdk/middleware-user-agent": "3.804.0", "@aws-sdk/region-config-resolver": "3.804.0", "@aws-sdk/types": "3.804.0", "@aws-sdk/util-endpoints": "3.804.0", "@aws-sdk/util-user-agent-browser": "3.804.0", "@aws-sdk/util-user-agent-node": "3.804.0", "@smithy/config-resolver": "^4.1.0", "@smithy/core": "^3.3.1", "@smithy/fetch-http-handler": "^5.0.2", "@smithy/hash-node": "^4.0.2", "@smithy/invalid-dependency": "^4.0.2", "@smithy/middleware-content-length": "^4.0.2", "@smithy/middleware-endpoint": "^4.1.2", "@smithy/middleware-retry": "^4.1.3", "@smithy/middleware-serde": "^4.0.3", "@smithy/middleware-stack": "^4.0.2", "@smithy/node-config-provider": "^4.0.2", "@smithy/node-http-handler": "^4.0.4", "@smithy/protocol-http": "^5.1.0", "@smithy/smithy-client": "^4.2.2", "@smithy/types": "^4.2.0", "@smithy/url-parser": "^4.0.2", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.10", "@smithy/util-defaults-mode-node": "^4.0.10", "@smithy/util-endpoints": "^3.0.2", "@smithy/util-middleware": "^4.0.2", "@smithy/util-retry": "^4.0.3", "@smithy/util-utf8": "^4.0.0", "@smithy/util-waiter": "^4.0.3", "@types/uuid": "^9.0.1", "tslib": "^2.6.2", "uuid": "^9.0.1" } }, "sha512-ptjRZD2yAhCcq2GDvotuaEF/9DrnbKTIejH5cTHLopG+ve7UVgrLF3NT/5cpZW+Iu3w8ixVFDRfOGA8P4PzLgA=="],
+ 
+     "@aws-sdk/client-s3": ["@aws-sdk/client-s3@3.804.0", "", { "dependencies": { "@aws-crypto/sha1-browser": "5.2.0", "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.804.0", "@aws-sdk/credential-provider-node": "3.804.0", "@aws-sdk/middleware-bucket-endpoint": "3.804.0", "@aws-sdk/middleware-expect-continue": "3.804.0", "@aws-sdk/middleware-flexible-checksums": "3.804.0", "@aws-sdk/middleware-host-header": "3.804.0", "@aws-sdk/middleware-location-constraint": "3.804.0", "@aws-sdk/middleware-logger": "3.804.0", "@aws-sdk/middleware-recursion-detection": "3.804.0", "@aws-sdk/middleware-sdk-s3": "3.804.0", "@aws-sdk/middleware-ssec": "3.804.0", "@aws-sdk/middleware-user-agent": "3.804.0", "@aws-sdk/region-config-resolver": "3.804.0", "@aws-sdk/signature-v4-multi-region": "3.804.0", "@aws-sdk/types": "3.804.0", "@aws-sdk/util-endpoints": "3.804.0", "@aws-sdk/util-user-agent-browser": "3.804.0", "@aws-sdk/util-user-agent-node": "3.804.0", "@aws-sdk/xml-builder": "3.804.0", "@smithy/config-resolver": "^4.1.0", "@smithy/core": "^3.3.1", "@smithy/eventstream-serde-browser": "^4.0.2", "@smithy/eventstream-serde-config-resolver": "^4.1.0", "@smithy/eventstream-serde-node": "^4.0.2", "@smithy/fetch-http-handler": "^5.0.2", "@smithy/hash-blob-browser": "^4.0.2", "@smithy/hash-node": "^4.0.2", "@smithy/hash-stream-node": "^4.0.2", "@smithy/invalid-dependency": "^4.0.2", "@smithy/md5-js": "^4.0.2", "@smithy/middleware-content-length": "^4.0.2", "@smithy/middleware-endpoint": "^4.1.2", "@smithy/middleware-retry": "^4.1.3", "@smithy/middleware-serde": "^4.0.3", "@smithy/middleware-stack": "^4.0.2", "@smithy/node-config-provider": "^4.0.2", "@smithy/node-http-handler": "^4.0.4", "@smithy/protocol-http": "^5.1.0", "@smithy/smithy-client": "^4.2.2", "@smithy/types": "^4.2.0", "@smithy/url-parser": "^4.0.2", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.10", "@smithy/util-defaults-mode-node": "^4.0.10", "@smithy/util-endpoints": "^3.0.2", "@smithy/util-middleware": "^4.0.2", "@smithy/util-retry": "^4.0.3", "@smithy/util-stream": "^4.2.0", "@smithy/util-utf8": "^4.0.0", "@smithy/util-waiter": "^4.0.3", "tslib": "^2.6.2" } }, "sha512-oLBCq/wOzMEv4HhEDxttl5km0KGuptqnl4MlzzDcxPpsDmXjQU7egZdfQtwKRlB7748F+/uTcYc7khFvX2I1DA=="],
+@@ -324,16 +327,144 @@
+ 
+     "@aws-crypto/util/@smithy/util-utf8": ["@smithy/util-utf8@2.3.0", "", { "dependencies": { "@smithy/util-buffer-from": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-R8Rdn8Hy72KKcebgLiv8jQcQkXoLMOGGv5uI1/k0l+snqkOzQ1R0ChUBCxWMlBsFMekWjq0wRudIweFs7sKT5A=="],
+ 
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/core": ["@aws-sdk/core@3.825.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@aws-sdk/xml-builder": "3.821.0", "@smithy/core": "^3.5.2", "@smithy/node-config-provider": "^4.1.3", "@smithy/property-provider": "^4.0.4", "@smithy/protocol-http": "^5.1.2", "@smithy/signature-v4": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-middleware": "^4.0.4", "@smithy/util-utf8": "^4.0.0", "fast-xml-parser": "4.4.1", "tslib": "^2.6.2" } }, "sha512-UsdK6l62skh6mqY/La4xvehNj5sUl/eZ2N+8mNTHZKW4U+tiRESdrw1t/Z3r/NUAu7Tbmp+DHbUu+5K1BBY6YQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node": ["@aws-sdk/credential-provider-node@3.825.0", "", { "dependencies": { "@aws-sdk/credential-provider-env": "3.825.0", "@aws-sdk/credential-provider-http": "3.825.0", "@aws-sdk/credential-provider-ini": "3.825.0", "@aws-sdk/credential-provider-process": "3.825.0", "@aws-sdk/credential-provider-sso": "3.825.0", "@aws-sdk/credential-provider-web-identity": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/credential-provider-imds": "^4.0.6", "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qWMrrUgWFQN7nkMdQYzWF/Z/fhUctCjwTQQD/qNSs42qt3sxmC00SZcqwPn9N8S9R/hLmu5z6fefVF4o20nGng=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/middleware-host-header": ["@aws-sdk/middleware-host-header@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-xSMR+sopSeWGx5/4pAGhhfMvGBHioVBbqGvDs6pG64xfNwM5vq5s5v6D04e2i+uSTj4qGa71dLUs5I0UzAK3sw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/middleware-logger": ["@aws-sdk/middleware-logger@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-0cvI0ipf2tGx7fXYEEN5fBeZDz2RnHyb9xftSgUsEq7NBxjV0yTZfLJw6Za5rjE6snC80dRN8+bTNR1tuG89zA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/middleware-recursion-detection": ["@aws-sdk/middleware-recursion-detection@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-efmaifbhBoqKG3bAoEfDdcM8hn1psF+4qa7ykWuYmfmah59JBeqHLfz5W9m9JoTwoKPkFcVLWZxnyZzAnVBOIg=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/middleware-user-agent": ["@aws-sdk/middleware-user-agent@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@smithy/core": "^3.5.2", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-3ZZOPU3GE5cqKl6VFDwiL8KIvlrrQJ4rgYkeiF+m5kA0eXV2xFOwoLgm3AmPB+6kfo9HQ0N74KKJV0teS5nO6Q=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/region-config-resolver": ["@aws-sdk/region-config-resolver@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/node-config-provider": "^4.1.3", "@smithy/types": "^4.3.1", "@smithy/util-config-provider": "^4.0.0", "@smithy/util-middleware": "^4.0.4", "tslib": "^2.6.2" } }, "sha512-t8og+lRCIIy5nlId0bScNpCkif8sc0LhmtaKsbm0ZPm3sCa/WhCbSZibjbZ28FNjVCV+p0D9RYZx0VDDbtWyjw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/types": ["@aws-sdk/types@3.821.0", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-Znroqdai1a90TlxGaJ+FK1lwC0fHpo97Xjsp5UKGR5JODYm7f9+/fF17ebO1KdoBr/Rm0UIFiF5VmI8ts9F1eA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/util-endpoints": ["@aws-sdk/util-endpoints@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/types": "^4.3.1", "@smithy/util-endpoints": "^3.0.6", "tslib": "^2.6.2" } }, "sha512-Uknt/zUZnLE76zaAAPEayOeF5/4IZ2puTFXvcSCWHsi9m3tqbb9UozlnlVqvCZLCRWfQryZQoG2W4XSS3qgk5A=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/util-user-agent-browser": ["@aws-sdk/util-user-agent-browser@3.821.0", "", { "dependencies": { "@aws-sdk/types": "3.821.0", "@smithy/types": "^4.3.1", "bowser": "^2.11.0", "tslib": "^2.6.2" } }, "sha512-irWZHyM0Jr1xhC+38OuZ7JB6OXMLPZlj48thElpsO1ZSLRkLZx5+I7VV6k3sp2yZ7BYbKz/G2ojSv4wdm7XTLw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/util-user-agent-node": ["@aws-sdk/util-user-agent-node@3.825.0", "", { "dependencies": { "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/node-config-provider": "^4.1.3", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" }, "peerDependencies": { "aws-crt": ">=1.0.0" }, "optionalPeers": ["aws-crt"] }, "sha512-RfB0w9YJSsFGsbrzOQ1VE2O4NwR6gxelUvmz8PzuerPCg4iD4JW7hSCmnoAEi51Xnq0bNeCsnhzXJzIlPe04jA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/config-resolver": ["@smithy/config-resolver@4.1.4", "", { "dependencies": { "@smithy/node-config-provider": "^4.1.3", "@smithy/types": "^4.3.1", "@smithy/util-config-provider": "^4.0.0", "@smithy/util-middleware": "^4.0.4", "tslib": "^2.6.2" } }, "sha512-prmU+rDddxHOH0oNcwemL+SwnzcG65sBF2yXRO7aeXIn/xTlq2pX7JLVbkBnVLowHLg4/OL4+jBmv9hVrVGS+w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/core": ["@smithy/core@3.5.3", "", { "dependencies": { "@smithy/middleware-serde": "^4.0.8", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-middleware": "^4.0.4", "@smithy/util-stream": "^4.2.2", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-xa5byV9fEguZNofCclv6v9ra0FYh5FATQW/da7FQUVTic94DfrN/NvmKZjrMyzbpqfot9ZjBaO8U1UeTbmSLuA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/fetch-http-handler": ["@smithy/fetch-http-handler@5.0.4", "", { "dependencies": { "@smithy/protocol-http": "^5.1.2", "@smithy/querystring-builder": "^4.0.4", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-AMtBR5pHppYMVD7z7G+OlHHAcgAN7v0kVKEpHuTO4Gb199Gowh0taYi9oDStFeUhetkeP55JLSVlTW1n9rFtUw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/hash-node": ["@smithy/hash-node@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "@smithy/util-buffer-from": "^4.0.0", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-qnbTPUhCVnCgBp4z4BUJUhOEkVwxiEi1cyFM+Zj6o+aY8OFGxUQleKWq8ltgp3dujuhXojIvJWdoqpm6dVO3lQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/invalid-dependency": ["@smithy/invalid-dependency@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-bNYMi7WKTJHu0gn26wg8OscncTt1t2b8KcsZxvOv56XA6cyXtOAAAaNP7+m45xfppXfOatXF3Sb1MNsLUgVLTw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-content-length": ["@smithy/middleware-content-length@4.0.4", "", { "dependencies": { "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-F7gDyfI2BB1Kc+4M6rpuOLne5LOcEknH1n6UQB69qv+HucXBR1rkzXBnQTB2q46sFy1PM/zuSJOB532yc8bg3w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-endpoint": ["@smithy/middleware-endpoint@4.1.11", "", { "dependencies": { "@smithy/core": "^3.5.3", "@smithy/middleware-serde": "^4.0.8", "@smithy/node-config-provider": "^4.1.3", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-middleware": "^4.0.4", "tslib": "^2.6.2" } }, "sha512-zDogwtRLzKl58lVS8wPcARevFZNBOOqnmzWWxVe9XiaXU2CADFjvJ9XfNibgkOWs08sxLuSr81NrpY4mgp9OwQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-retry": ["@smithy/middleware-retry@4.1.12", "", { "dependencies": { "@smithy/node-config-provider": "^4.1.3", "@smithy/protocol-http": "^5.1.2", "@smithy/service-error-classification": "^4.0.5", "@smithy/smithy-client": "^4.4.3", "@smithy/types": "^4.3.1", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "tslib": "^2.6.2", "uuid": "^9.0.1" } }, "sha512-wvIH70c4e91NtRxdaLZF+mbLZ/HcC6yg7ySKUiufL6ESp6zJUSnJucZ309AvG9nqCFHSRB5I6T3Ez1Q9wCh0Ww=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-serde": ["@smithy/middleware-serde@4.0.8", "", { "dependencies": { "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-iSSl7HJoJaGyMIoNn2B7czghOVwJ9nD7TMvLhMWeSB5vt0TnEYyRRqPJu/TqW76WScaNvYYB8nRoiBHR9S1Ddw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-stack": ["@smithy/middleware-stack@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-kagK5ggDrBUCCzI93ft6DjteNSfY8Ulr83UtySog/h09lTIOAJ/xUSObutanlPT0nhoHAkpmW9V5K8oPyLh+QA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-config-provider": ["@smithy/node-config-provider@4.1.3", "", { "dependencies": { "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-HGHQr2s59qaU1lrVH6MbLlmOBxadtzTsoO4c+bF5asdgVik3I8o7JIOzoeqWc5MjVa+vD36/LWE0iXKpNqooRw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-http-handler": ["@smithy/node-http-handler@4.0.6", "", { "dependencies": { "@smithy/abort-controller": "^4.0.4", "@smithy/protocol-http": "^5.1.2", "@smithy/querystring-builder": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-NqbmSz7AW2rvw4kXhKGrYTiJVDHnMsFnX4i+/FzcZAfbOBauPYs2ekuECkSbtqaxETLLTu9Rl/ex6+I2BKErPA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/protocol-http": ["@smithy/protocol-http@5.1.2", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-rOG5cNLBXovxIrICSBm95dLqzfvxjEmuZx4KK3hWwPFHGdW3lxY0fZNXfv2zebfRO7sJZ5pKJYHScsqopeIWtQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/smithy-client": ["@smithy/smithy-client@4.4.3", "", { "dependencies": { "@smithy/core": "^3.5.3", "@smithy/middleware-endpoint": "^4.1.11", "@smithy/middleware-stack": "^4.0.4", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "@smithy/util-stream": "^4.2.2", "tslib": "^2.6.2" } }, "sha512-xxzNYgA0HD6ETCe5QJubsxP0hQH3QK3kbpJz3QrosBCuIWyEXLR/CO5hFb2OeawEKUxMNhz3a1nuJNN2np2RMA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/types": ["@smithy/types@4.3.1", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-UqKOQBL2x6+HWl3P+3QqFD4ncKq0I8Nuz9QItGv5WuKuMHuuwlhvqcZCoXGfc+P1QmfJE7VieykoYYmrOoFJxA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/url-parser": ["@smithy/url-parser@4.0.4", "", { "dependencies": { "@smithy/querystring-parser": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-eMkc144MuN7B0TDA4U2fKs+BqczVbk3W+qIvcoCY6D1JY3hnAdCuhCZODC+GAeaxj0p6Jroz4+XMUn3PCxQQeQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-defaults-mode-browser": ["@smithy/util-defaults-mode-browser@4.0.19", "", { "dependencies": { "@smithy/property-provider": "^4.0.4", "@smithy/smithy-client": "^4.4.3", "@smithy/types": "^4.3.1", "bowser": "^2.11.0", "tslib": "^2.6.2" } }, "sha512-mvLMh87xSmQrV5XqnUYEPoiFFeEGYeAKIDDKdhE2ahqitm8OHM3aSvhqL6rrK6wm1brIk90JhxDf5lf2hbrLbQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-defaults-mode-node": ["@smithy/util-defaults-mode-node@4.0.19", "", { "dependencies": { "@smithy/config-resolver": "^4.1.4", "@smithy/credential-provider-imds": "^4.0.6", "@smithy/node-config-provider": "^4.1.3", "@smithy/property-provider": "^4.0.4", "@smithy/smithy-client": "^4.4.3", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-8tYnx+LUfj6m+zkUUIrIQJxPM1xVxfRBvoGHua7R/i6qAxOMjqR6CpEpDwKoIs1o0+hOjGvkKE23CafKL0vJ9w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-endpoints": ["@smithy/util-endpoints@3.0.6", "", { "dependencies": { "@smithy/node-config-provider": "^4.1.3", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-YARl3tFL3WgPuLzljRUnrS2ngLiUtkwhQtj8PAL13XZSyUiNLQxwG3fBBq3QXFqGFUXepIN73pINp3y8c2nBmA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-middleware": ["@smithy/util-middleware@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-9MLKmkBmf4PRb0ONJikCbCwORACcil6gUWojwARCClT7RmLzF04hUR4WdRprIXal7XVyrddadYNfp2eF3nrvtQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-retry": ["@smithy/util-retry@4.0.5", "", { "dependencies": { "@smithy/service-error-classification": "^4.0.5", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-V7MSjVDTlEt/plmOFBn1762Dyu5uqMrV2Pl2X0dYk4XvWfdWJNe9Bs5Bzb56wkCuiWjSfClVMGcsuKrGj7S/yg=="],
++
+     "@aws-crypto/sha1-browser/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
+ 
+     "@aws-crypto/sha256-browser/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
+ 
+     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
+ 
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/core/@aws-sdk/xml-builder": ["@aws-sdk/xml-builder@3.821.0", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-DIIotRnefVL6DiaHtO6/21DhJ4JZnnIwdNbpwiAhdt/AVbttcE4yw925gsjur0OGv5BTYXQXU3YnANBYnZjuQA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/core/@smithy/property-provider": ["@smithy/property-provider@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qHJ2sSgu4FqF4U/5UUp4DhXNmdTrgmoAai6oQiM+c5RZ/sbDwJ12qxB1M6FnP+Tn/ggkPZf9ccn4jqKSINaquw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/core/@smithy/signature-v4": ["@smithy/signature-v4@5.1.2", "", { "dependencies": { "@smithy/is-array-buffer": "^4.0.0", "@smithy/protocol-http": "^5.1.2", "@smithy/types": "^4.3.1", "@smithy/util-hex-encoding": "^4.0.0", "@smithy/util-middleware": "^4.0.4", "@smithy/util-uri-escape": "^4.0.0", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-d3+U/VpX7a60seHziWnVZOHuEgJlclufjkS6zhXvxcJgkJq4UWdH5eOBLzHRMx6gXjsdT9h6lfpmLzbrdupHgQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-env": ["@aws-sdk/credential-provider-env@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/property-provider": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-Ptkbhj4K1un+GIz5fmTLVCFtWv9rcbaCLgdZszudo/ZqLP0QzAoACADGYFFkPGYr2o51COKkgKPhHWl7FNEq6A=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-http": ["@aws-sdk/credential-provider-http@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/node-http-handler": "^4.0.6", "@smithy/property-provider": "^4.0.4", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/util-stream": "^4.2.2", "tslib": "^2.6.2" } }, "sha512-r0V0rlNCjnFLfYfUqP6TlwAo+YgWxIkrgUb/K6mV2XCBElbFZlc9oPzMOJCmHF/+D6S60FLlMC9AnFopnEZ3/A=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-ini": ["@aws-sdk/credential-provider-ini@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/credential-provider-env": "3.825.0", "@aws-sdk/credential-provider-http": "3.825.0", "@aws-sdk/credential-provider-process": "3.825.0", "@aws-sdk/credential-provider-sso": "3.825.0", "@aws-sdk/credential-provider-web-identity": "3.825.0", "@aws-sdk/nested-clients": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/credential-provider-imds": "^4.0.6", "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-HDYopAiIGTLLhybI8jEuKGWdVUnKkkotwXHwvu8ttL5qgs13A6a/iWiREe71fmYH2fGT2URJE9+xeHa2oxohyQ=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-process": ["@aws-sdk/credential-provider-process@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-QQoOBQAXuBfD6BCg61Hl5EkdrLyFSQCNRHVLjAO5WYQGyiPb9iTZPqo9sPwyOnCMpZE1k2EOwQ+FsnZh0xSa3Q=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-sso": ["@aws-sdk/credential-provider-sso@3.825.0", "", { "dependencies": { "@aws-sdk/client-sso": "3.825.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/token-providers": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-ppwsN8tuwwJKvNnllkrhIx7AQv4r5uiNf5FTIkyeJ+3p67wgJeJye+0SP64IEkdmG7YxCaU2YkdSvyHud+D5og=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-web-identity": ["@aws-sdk/credential-provider-web-identity@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/nested-clients": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/property-provider": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-cyL5xHqtvBUpflkmdQSkvjD/t+Dl/ZSXvPnc9KF79xDpuraZ5tFP1l0B6rIEu7dUzUh8XG+7m2CZ6TEs6QU33Q=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@smithy/credential-provider-imds": ["@smithy/credential-provider-imds@4.0.6", "", { "dependencies": { "@smithy/node-config-provider": "^4.1.3", "@smithy/property-provider": "^4.0.4", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "tslib": "^2.6.2" } }, "sha512-hKMWcANhUiNbCJouYkZ9V3+/Qf9pteR1dnwgdyzR09R4ODEYx8BbUysHwRSyex4rZ9zapddZhLFTnT4ZijR4pw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@smithy/property-provider": ["@smithy/property-provider@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qHJ2sSgu4FqF4U/5UUp4DhXNmdTrgmoAai6oQiM+c5RZ/sbDwJ12qxB1M6FnP+Tn/ggkPZf9ccn4jqKSINaquw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@smithy/shared-ini-file-loader": ["@smithy/shared-ini-file-loader@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-63X0260LoFBjrHifPDs+nM9tV0VMkOTl4JRMYNuKh/f5PauSjowTfvF3LogfkWdcPoxsA9UjqEOgjeYIbhb7Nw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/core/@smithy/util-stream": ["@smithy/util-stream@4.2.2", "", { "dependencies": { "@smithy/fetch-http-handler": "^5.0.4", "@smithy/node-http-handler": "^4.0.6", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "@smithy/util-buffer-from": "^4.0.0", "@smithy/util-hex-encoding": "^4.0.0", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-aI+GLi7MJoVxg24/3J1ipwLoYzgkB4kUfogZfnslcYlynj3xsQ0e7vk4TnTro9hhsS5PvX1mwmkRqqHQjwcU7w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/fetch-http-handler/@smithy/querystring-builder": ["@smithy/querystring-builder@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "@smithy/util-uri-escape": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-SwREZcDnEYoh9tLNgMbpop+UTGq44Hl9tdj3rf+yeLcfH7+J8OXEBaMc2kDxtyRHu8BhSg9ADEx0gFHvpJgU8w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-endpoint/@smithy/shared-ini-file-loader": ["@smithy/shared-ini-file-loader@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-63X0260LoFBjrHifPDs+nM9tV0VMkOTl4JRMYNuKh/f5PauSjowTfvF3LogfkWdcPoxsA9UjqEOgjeYIbhb7Nw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/middleware-retry/@smithy/service-error-classification": ["@smithy/service-error-classification@4.0.5", "", { "dependencies": { "@smithy/types": "^4.3.1" } }, "sha512-LvcfhrnCBvCmTee81pRlh1F39yTS/+kYleVeLCwNtkY8wtGg8V/ca9rbZZvYIl8OjlMtL6KIjaiL/lgVqHD2nA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-config-provider/@smithy/property-provider": ["@smithy/property-provider@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qHJ2sSgu4FqF4U/5UUp4DhXNmdTrgmoAai6oQiM+c5RZ/sbDwJ12qxB1M6FnP+Tn/ggkPZf9ccn4jqKSINaquw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-config-provider/@smithy/shared-ini-file-loader": ["@smithy/shared-ini-file-loader@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-63X0260LoFBjrHifPDs+nM9tV0VMkOTl4JRMYNuKh/f5PauSjowTfvF3LogfkWdcPoxsA9UjqEOgjeYIbhb7Nw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-http-handler/@smithy/abort-controller": ["@smithy/abort-controller@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-gJnEjZMvigPDQWHrW3oPrFhQtkrgqBkyjj3pCIdF3A5M6vsZODG93KNlfJprv6bp4245bdT32fsHK4kkH3KYDA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/node-http-handler/@smithy/querystring-builder": ["@smithy/querystring-builder@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "@smithy/util-uri-escape": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-SwREZcDnEYoh9tLNgMbpop+UTGq44Hl9tdj3rf+yeLcfH7+J8OXEBaMc2kDxtyRHu8BhSg9ADEx0gFHvpJgU8w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/smithy-client/@smithy/util-stream": ["@smithy/util-stream@4.2.2", "", { "dependencies": { "@smithy/fetch-http-handler": "^5.0.4", "@smithy/node-http-handler": "^4.0.6", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "@smithy/util-buffer-from": "^4.0.0", "@smithy/util-hex-encoding": "^4.0.0", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-aI+GLi7MJoVxg24/3J1ipwLoYzgkB4kUfogZfnslcYlynj3xsQ0e7vk4TnTro9hhsS5PvX1mwmkRqqHQjwcU7w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/url-parser/@smithy/querystring-parser": ["@smithy/querystring-parser@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-6yZf53i/qB8gRHH/l2ZwUG5xgkPgQF15/KxH0DdXMDHjesA9MeZje/853ifkSY0x4m5S+dfDZ+c4x439PF0M2w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-defaults-mode-browser/@smithy/property-provider": ["@smithy/property-provider@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qHJ2sSgu4FqF4U/5UUp4DhXNmdTrgmoAai6oQiM+c5RZ/sbDwJ12qxB1M6FnP+Tn/ggkPZf9ccn4jqKSINaquw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-defaults-mode-node/@smithy/credential-provider-imds": ["@smithy/credential-provider-imds@4.0.6", "", { "dependencies": { "@smithy/node-config-provider": "^4.1.3", "@smithy/property-provider": "^4.0.4", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "tslib": "^2.6.2" } }, "sha512-hKMWcANhUiNbCJouYkZ9V3+/Qf9pteR1dnwgdyzR09R4ODEYx8BbUysHwRSyex4rZ9zapddZhLFTnT4ZijR4pw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-defaults-mode-node/@smithy/property-provider": ["@smithy/property-provider@4.0.4", "", { "dependencies": { "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-qHJ2sSgu4FqF4U/5UUp4DhXNmdTrgmoAai6oQiM+c5RZ/sbDwJ12qxB1M6FnP+Tn/ggkPZf9ccn4jqKSINaquw=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@smithy/util-retry/@smithy/service-error-classification": ["@smithy/service-error-classification@4.0.5", "", { "dependencies": { "@smithy/types": "^4.3.1" } }, "sha512-LvcfhrnCBvCmTee81pRlh1F39yTS/+kYleVeLCwNtkY8wtGg8V/ca9rbZZvYIl8OjlMtL6KIjaiL/lgVqHD2nA=="],
++
+     "@aws-crypto/sha1-browser/@smithy/util-utf8/@smithy/util-buffer-from/@smithy/is-array-buffer": ["@smithy/is-array-buffer@2.2.0", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-GGP3O9QFD24uGeAXYUjwSTXARoqpZykHadOmA8G5vfJPK0/DC67qa//0qvqrJzL1xc8WQWX7/yc7fwudjPHPhA=="],
+ 
+     "@aws-crypto/sha256-browser/@smithy/util-utf8/@smithy/util-buffer-from/@smithy/is-array-buffer": ["@smithy/is-array-buffer@2.2.0", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-GGP3O9QFD24uGeAXYUjwSTXARoqpZykHadOmA8G5vfJPK0/DC67qa//0qvqrJzL1xc8WQWX7/yc7fwudjPHPhA=="],
+ 
+     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from/@smithy/is-array-buffer": ["@smithy/is-array-buffer@2.2.0", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-GGP3O9QFD24uGeAXYUjwSTXARoqpZykHadOmA8G5vfJPK0/DC67qa//0qvqrJzL1xc8WQWX7/yc7fwudjPHPhA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-http/@smithy/util-stream": ["@smithy/util-stream@4.2.2", "", { "dependencies": { "@smithy/fetch-http-handler": "^5.0.4", "@smithy/node-http-handler": "^4.0.6", "@smithy/types": "^4.3.1", "@smithy/util-base64": "^4.0.0", "@smithy/util-buffer-from": "^4.0.0", "@smithy/util-hex-encoding": "^4.0.0", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-aI+GLi7MJoVxg24/3J1ipwLoYzgkB4kUfogZfnslcYlynj3xsQ0e7vk4TnTro9hhsS5PvX1mwmkRqqHQjwcU7w=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-ini/@aws-sdk/nested-clients": ["@aws-sdk/nested-clients@3.825.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/middleware-host-header": "3.821.0", "@aws-sdk/middleware-logger": "3.821.0", "@aws-sdk/middleware-recursion-detection": "3.821.0", "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/region-config-resolver": "3.821.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@aws-sdk/util-user-agent-browser": "3.821.0", "@aws-sdk/util-user-agent-node": "3.825.0", "@smithy/config-resolver": "^4.1.4", "@smithy/core": "^3.5.2", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/hash-node": "^4.0.4", "@smithy/invalid-dependency": "^4.0.4", "@smithy/middleware-content-length": "^4.0.4", "@smithy/middleware-endpoint": "^4.1.10", "@smithy/middleware-retry": "^4.1.11", "@smithy/middleware-serde": "^4.0.8", "@smithy/middleware-stack": "^4.0.4", "@smithy/node-config-provider": "^4.1.3", "@smithy/node-http-handler": "^4.0.6", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.18", "@smithy/util-defaults-mode-node": "^4.0.18", "@smithy/util-endpoints": "^3.0.6", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-OuV2pypFAv52Lty8eXWVWyyOywVmMAsgH6Gq3SA06pHEtcE+ghVIW9ByegecyfMRUpedAiovARKNy0pfGX05Pg=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-sso/@aws-sdk/client-sso": ["@aws-sdk/client-sso@3.825.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/middleware-host-header": "3.821.0", "@aws-sdk/middleware-logger": "3.821.0", "@aws-sdk/middleware-recursion-detection": "3.821.0", "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/region-config-resolver": "3.821.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@aws-sdk/util-user-agent-browser": "3.821.0", "@aws-sdk/util-user-agent-node": "3.825.0", "@smithy/config-resolver": "^4.1.4", "@smithy/core": "^3.5.2", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/hash-node": "^4.0.4", "@smithy/invalid-dependency": "^4.0.4", "@smithy/middleware-content-length": "^4.0.4", "@smithy/middleware-endpoint": "^4.1.10", "@smithy/middleware-retry": "^4.1.11", "@smithy/middleware-serde": "^4.0.8", "@smithy/middleware-stack": "^4.0.4", "@smithy/node-config-provider": "^4.1.3", "@smithy/node-http-handler": "^4.0.6", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.18", "@smithy/util-defaults-mode-node": "^4.0.18", "@smithy/util-endpoints": "^3.0.6", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-U0J2RQUsxiin+uEYR8atMByojuvhtWvvEVSD2MhSUUnCa7BSu/H+4SbREBvnGDJ2nezrYh59bkSQBlp9c3Z9gg=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-sso/@aws-sdk/token-providers": ["@aws-sdk/token-providers@3.825.0", "", { "dependencies": { "@aws-sdk/core": "3.825.0", "@aws-sdk/nested-clients": "3.825.0", "@aws-sdk/types": "3.821.0", "@smithy/property-provider": "^4.0.4", "@smithy/shared-ini-file-loader": "^4.0.4", "@smithy/types": "^4.3.1", "tslib": "^2.6.2" } }, "sha512-a3HbF6h1Gq2vA+mGlxFe3op65wNK6dBRmp3GFwsPVQ+OFTbZJi86FCljMfBrv+BGYUkp503/IPC49wuRHOdcZA=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-web-identity/@aws-sdk/nested-clients": ["@aws-sdk/nested-clients@3.825.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/middleware-host-header": "3.821.0", "@aws-sdk/middleware-logger": "3.821.0", "@aws-sdk/middleware-recursion-detection": "3.821.0", "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/region-config-resolver": "3.821.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@aws-sdk/util-user-agent-browser": "3.821.0", "@aws-sdk/util-user-agent-node": "3.825.0", "@smithy/config-resolver": "^4.1.4", "@smithy/core": "^3.5.2", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/hash-node": "^4.0.4", "@smithy/invalid-dependency": "^4.0.4", "@smithy/middleware-content-length": "^4.0.4", "@smithy/middleware-endpoint": "^4.1.10", "@smithy/middleware-retry": "^4.1.11", "@smithy/middleware-serde": "^4.0.8", "@smithy/middleware-stack": "^4.0.4", "@smithy/node-config-provider": "^4.1.3", "@smithy/node-http-handler": "^4.0.6", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.18", "@smithy/util-defaults-mode-node": "^4.0.18", "@smithy/util-endpoints": "^3.0.6", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-OuV2pypFAv52Lty8eXWVWyyOywVmMAsgH6Gq3SA06pHEtcE+ghVIW9ByegecyfMRUpedAiovARKNy0pfGX05Pg=="],
++
++    "@aws-sdk/client-cognito-identity-provider/@aws-sdk/credential-provider-node/@aws-sdk/credential-provider-sso/@aws-sdk/token-providers/@aws-sdk/nested-clients": ["@aws-sdk/nested-clients@3.825.0", "", { "dependencies": { "@aws-crypto/sha256-browser": "5.2.0", "@aws-crypto/sha256-js": "5.2.0", "@aws-sdk/core": "3.825.0", "@aws-sdk/middleware-host-header": "3.821.0", "@aws-sdk/middleware-logger": "3.821.0", "@aws-sdk/middleware-recursion-detection": "3.821.0", "@aws-sdk/middleware-user-agent": "3.825.0", "@aws-sdk/region-config-resolver": "3.821.0", "@aws-sdk/types": "3.821.0", "@aws-sdk/util-endpoints": "3.821.0", "@aws-sdk/util-user-agent-browser": "3.821.0", "@aws-sdk/util-user-agent-node": "3.825.0", "@smithy/config-resolver": "^4.1.4", "@smithy/core": "^3.5.2", "@smithy/fetch-http-handler": "^5.0.4", "@smithy/hash-node": "^4.0.4", "@smithy/invalid-dependency": "^4.0.4", "@smithy/middleware-content-length": "^4.0.4", "@smithy/middleware-endpoint": "^4.1.10", "@smithy/middleware-retry": "^4.1.11", "@smithy/middleware-serde": "^4.0.8", "@smithy/middleware-stack": "^4.0.4", "@smithy/node-config-provider": "^4.1.3", "@smithy/node-http-handler": "^4.0.6", "@smithy/protocol-http": "^5.1.2", "@smithy/smithy-client": "^4.4.2", "@smithy/types": "^4.3.1", "@smithy/url-parser": "^4.0.4", "@smithy/util-base64": "^4.0.0", "@smithy/util-body-length-browser": "^4.0.0", "@smithy/util-body-length-node": "^4.0.0", "@smithy/util-defaults-mode-browser": "^4.0.18", "@smithy/util-defaults-mode-node": "^4.0.18", "@smithy/util-endpoints": "^3.0.6", "@smithy/util-middleware": "^4.0.4", "@smithy/util-retry": "^4.0.5", "@smithy/util-utf8": "^4.0.0", "tslib": "^2.6.2" } }, "sha512-OuV2pypFAv52Lty8eXWVWyyOywVmMAsgH6Gq3SA06pHEtcE+ghVIW9ByegecyfMRUpedAiovARKNy0pfGX05Pg=="],
+   }
+ }
+
+--- FILE: server/config.ts ---
+diff --git a/server/config.ts b/server/config.ts
+index bd6a04b..f42148f 100644
+--- a/server/config.ts
++++ b/server/config.ts
+@@ -58,4 +58,10 @@ export const REDIS_CONFIG = {
+ 
+ export const ITEM_IMAGES_SERVICE_CONFIG = {
+   url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'https://item-images.nathanpeck.gg',
++};
++
++export const COGNITO_CONFIG = {
++  userPoolId: getEnv('COGNITO_USER_POOL_ID') || '',
++  clientId: getEnv('COGNITO_CLIENT_ID') || '',
++  region: getEnv('AWS_REGION') || 'us-west-2'
+ };
+\ No newline at end of file
+
+--- FILE: server/handlers/signin.ts ---
+diff --git a/server/handlers/signin.ts b/server/handlers/signin.ts
+index 9fc713c..ce445e7 100644
+--- a/server/handlers/signin.ts
++++ b/server/handlers/signin.ts
+@@ -1,6 +1,10 @@
+-import { verifyPassword } from '../utils/password';
+ import { SigninMessage, ConnectionState } from '../types';
+-import { getUser } from '../state/user-store';
++import { COGNITO_CONFIG } from '../config';
++import { InitiateAuthCommand, GetUserCommand, CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
++
++const cognitoClient = new CognitoIdentityProviderClient({
++  region: COGNITO_CONFIG.region
++});
+ 
+ interface SigninResponse {
+   type: string;
+@@ -25,21 +29,43 @@ export default async function handleSignin(state: ConnectionState, data: SigninM
+       };
+     }
+ 
+-    const user = await getUser(username);
+-    if (!user || !(await verifyPassword(password, user.password))) {
+-      return {
+-        type: "signin_failure",
+-        body: "Invalid username or password"
+-      };
++    // Authenticate with Cognito
++    const authCommand = new InitiateAuthCommand({
++      AuthFlow: 'USER_PASSWORD_AUTH',
++      ClientId: COGNITO_CONFIG.clientId,
++      AuthParameters: {
++        USERNAME: username,
++        PASSWORD: password
++      }
++    });
++
++    const authResult = await cognitoClient.send(authCommand);
++
++    // Get user details
++    const userCommand = new GetUserCommand({
++      AccessToken: authResult.AuthenticationResult?.AccessToken
++    });
++
++    const userResult = await cognitoClient.send(userCommand);
++
++    // Get the user's sub (unique ID) from the attributes
++    const subAttribute = userResult.UserAttributes?.find(attr => attr.Name === 'sub');
++    if (!subAttribute?.Value) {
++      throw new Error('Could not get user ID');
+     }
+ 
+-    state.userId = user.userId;
++    state.userId = subAttribute.Value;
+     state.username = username;
++
+     return {
+       type: "signin_success",
+-      body: { username, userId: user.userId }
++      body: { 
++        username, 
++        userId: subAttribute.Value
++      }
+     };
+-  } catch (error) {
++  } catch (error: any) {
++    console.error('Signin error:', error);
+     return {
+       type: "signin_failure",
+       body: error.message
+
+--- FILE: server/handlers/signup.ts ---
+diff --git a/server/handlers/signup.ts b/server/handlers/signup.ts
+index 3ce5dd6..1648605 100644
+--- a/server/handlers/signup.ts
++++ b/server/handlers/signup.ts
+@@ -1,6 +1,10 @@
+-import { hashPassword } from '../utils/password';
+ import { SignupMessage, ConnectionState } from '../types';
+-import { createUser } from '../state/user-store';
++import { COGNITO_CONFIG } from '../config';
++import { SignUpCommand, CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
++
++const cognitoClient = new CognitoIdentityProviderClient({
++  region: COGNITO_CONFIG.region
++});
+ 
+ interface SignupResponse {
+   type: string;
+@@ -25,20 +29,32 @@ export default async function handleSignup(state: ConnectionState, data: SignupM
+   }
+ 
+   try {
+-    const hashedPassword = await hashPassword(password);
+-    // Generate a GUID for the item
+-    const id = crypto.randomUUID();
+-
+-    const result = await createUser(id, username, hashedPassword);
+-
+-    state.userId = result.userId;
++    const command = new SignUpCommand({
++      ClientId: COGNITO_CONFIG.clientId,
++      Username: username,
++      Password: password,
++      UserAttributes: [
++        {
++          Name: 'preferred_username',
++          Value: username
++        }
++      ]
++    });
++
++    const result = await cognitoClient.send(command);
++
++    state.userId = result.UserSub;
+     state.username = username;
+ 
+     return {
+       type: "signup_success",
+-      body: { username, userId: result.userId }
++      body: { 
++        username, 
++        userId: result.UserSub,
++        userConfirmed: result.UserConfirmed
++      }
+     };
+-  } catch (error) {
++  } catch (error: any) {
+     return {
+       type: "signup_failure",
+       body: error.message
+
+--- FILE: server/iac/cognito.yml ---
+diff --git a/server/iac/cognito.yml b/server/iac/cognito.yml
+new file mode 100644
+index 0000000..09426d2
+--- /dev/null
++++ b/server/iac/cognito.yml
+@@ -0,0 +1,74 @@
++AWSTemplateFormatVersion: '2010-09-09'
++Description: Creates Cognito User Pool and App Client for the game authentication
++
++Parameters:
++  Environment:
++    Type: String
++    Description: Environment name (e.g., dev, prod)
++    Default: dev
++
++Resources:
++  # Cognito User Pool
++  UserPool:
++    Type: AWS::Cognito::UserPool
++    Properties:
++      UserPoolName: !Sub "${AWS::StackName}-user-pool"
++      AutoVerifiedAttributes:
++        - email
++      Policies:
++        PasswordPolicy:
++          MinimumLength: 8
++          RequireLowercase: true
++          RequireNumbers: true
++          RequireSymbols: true
++          RequireUppercase: true
++      Schema:
++        - Name: email
++          AttributeDataType: String
++          Required: true
++          Mutable: true
++        - Name: preferred_username
++          AttributeDataType: String
++          Required: true
++          Mutable: true
++      UsernameAttributes:
++        - email
++      UsernameConfiguration:
++        CaseSensitive: false
++
++  # Cognito App Client
++  UserPoolClient:
++    Type: AWS::Cognito::UserPoolClient
++    Properties:
++      UserPoolId: !Ref UserPool
++      ClientName: !Sub "${AWS::StackName}-client"
++      GenerateSecret: false
++      PreventUserExistenceErrors: ENABLED
++      ExplicitAuthFlows:
++        - USER_PASSWORD_AUTH
++      AccessTokenValidity: 1
++      IdTokenValidity: 1
++      RefreshTokenValidity: 30
++      TokenValidityUnits:
++        AccessToken: hours
++        IdToken: hours
++        RefreshToken: days
++
++Outputs:
++  UserPoolId:
++    Description: ID of the Cognito User Pool
++    Value: !Ref UserPool
++    Export:
++      Name: !Sub "${AWS::StackName}-UserPoolId"
++
++  UserPoolClientId:
++    Description: ID of the Cognito App Client
++    Value: !Ref UserPoolClient
++    Export:
++      Name: !Sub "${AWS::StackName}-UserPoolClientId"
++
++  UserPoolArn:
++    Description: ARN of the Cognito User Pool
++    Value: !GetAtt UserPool.Arn
++    Export:
++      Name: !Sub "${AWS::StackName}-UserPoolArn" 
+\ No newline at end of file
+
+--- FILE: server/iac/deploy.sh ---
+diff --git a/server/iac/deploy.sh b/server/iac/deploy.sh
+index 8f21daf..32f1c05 100755
+--- a/server/iac/deploy.sh
++++ b/server/iac/deploy.sh
+@@ -10,6 +10,7 @@ fi
+ 
+ STACK_PREFIX=$1
+ DYNAMODB_STACK_NAME="${STACK_PREFIX}-dynamodb"
++COGNITO_STACK_NAME="${STACK_PREFIX}-cognito"
+ FARGATE_STACK_NAME="${STACK_PREFIX}"
+ ECR_REPOSITORY_NAME="${STACK_PREFIX}"
+ 
+@@ -133,6 +134,18 @@ echo "Successfully pushed Docker images to ECR with tag: $IMAGE_TAG"
+ # Return to the iac directory
+ cd iac
+ 
++# Deploy the Cognito stack
++echo "Deploying Cognito stack: $COGNITO_STACK_NAME"
++aws cloudformation deploy \
++  --template-file cognito.yml \
++  --stack-name $COGNITO_STACK_NAME \
++  --capabilities CAPABILITY_IAM
++
++# Get Cognito outputs
++echo "Getting Cognito outputs..."
++COGNITO_USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
++COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" --output text)
++
+ # Deploy the Fargate stack
+ echo "Deploying Fargate stack: $FARGATE_STACK_NAME"
+ 
+@@ -155,7 +168,7 @@ fi
+ echo "Public subnets: $PUBLIC_SUBNET_IDS"
+ echo "Private subnets: $PRIVATE_SUBNET_IDS"
+ 
+-# Deploy the Fargate stack
++# Deploy the Fargate stack with Cognito parameters
+ aws cloudformation deploy \
+   --template-file fargate.yml \
+   --stack-name $FARGATE_STACK_NAME \
+@@ -180,7 +193,9 @@ aws cloudformation deploy \
+     PersonaTableName=$PERSONA_TABLE_NAME \
+     PersonaTableArn=$PERSONA_TABLE_ARN \
+     DomainName="game-server.nathanpeck.gg" \
+-    CertificateArn="arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e" 
++    CertificateArn="arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e" \
++    CognitoUserPoolId=$COGNITO_USER_POOL_ID \
++    CognitoClientId=$COGNITO_CLIENT_ID
+ 
+ # Check if deployment was successful
+ if [ $? -ne 0 ]; then
+@@ -193,4 +208,6 @@ echo "Getting outputs from Fargate stack"
+ LOAD_BALANCER_DNS=$(aws cloudformation describe-stacks --stack-name $FARGATE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNS'].OutputValue" --output text)
+ 
+ echo "Deployment completed successfully!"
+-echo "Load Balancer DNS: $LOAD_BALANCER_DNS" 
+\ No newline at end of file
++echo "Load Balancer DNS: $LOAD_BALANCER_DNS"
++echo "Cognito User Pool ID: $COGNITO_USER_POOL_ID"
++echo "Cognito Client ID: $COGNITO_CLIENT_ID" 
+\ No newline at end of file
+
+--- FILE: server/iac/fargate.yml ---
+diff --git a/server/iac/fargate.yml b/server/iac/fargate.yml
+index f2df955..2353330 100644
+--- a/server/iac/fargate.yml
++++ b/server/iac/fargate.yml
+@@ -114,6 +114,14 @@ Parameters:
+     Default: arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e
+     Description: ARN of the ACM certificate
+ 
++  CognitoUserPoolId:
++    Type: String
++    Description: ID of the Cognito User Pool
++
++  CognitoClientId:
++    Type: String
++    Description: ID of the Cognito App Client
++
+ Resources:
+   # ECS Cluster
+   ECSCluster:
+@@ -251,6 +259,10 @@ Resources:
+               Value: !Ref UsernamesTableName
+             - Name: DYNAMODB_TABLE_PERSONA
+               Value: !Ref PersonaTableName
++            - Name: COGNITO_USER_POOL_ID
++              Value: !Ref CognitoUserPoolId
++            - Name: COGNITO_CLIENT_ID
++              Value: !Ref CognitoClientId
+           LogConfiguration:
+             LogDriver: awslogs
+             Options:
+
+--- FILE: server/package.json ---
+diff --git a/server/package.json b/server/package.json
+index 53933a5..0a8d75d 100644
+--- a/server/package.json
++++ b/server/package.json
+@@ -10,6 +10,7 @@
+   },
+   "dependencies": {
+     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
++    "@aws-sdk/client-cognito-identity-provider": "^3.825.0",
+     "@aws-sdk/client-dynamodb": "^3.0.0",
+     "@aws-sdk/client-s3": "^3.0.0",
+     "@aws-sdk/lib-dynamodb": "^3.0.0",
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

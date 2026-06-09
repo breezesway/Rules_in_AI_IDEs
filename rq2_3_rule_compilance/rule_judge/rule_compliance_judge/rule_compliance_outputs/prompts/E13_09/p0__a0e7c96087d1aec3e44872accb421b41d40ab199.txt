@@ -1,0 +1,191 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .cursor/rules/01-project-overview.mdc
+- Change Type: modified
+- Target Rule Content:
+-├── package.json
+-├── README.md
+-├── slides.md
+-└── yarn.lock
++├── package.json          # Project configuration and dependencies
++├── README.md            # Project documentation
++├── slides/              # Presentation source files
++│   └── index.md        # Main presentation content
++├── .node-version        # Node.js version specification for fnm
++└── yarn.lock            # Yarn dependency lock file
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project file directory structure.
+- Suggested Logic: Check for the existence of specific files and directories at the project root: 'package.json', 'README.md', '.node-version', 'yarn.lock', and a directory named 'slides/'. Within the 'slides/' directory, verify the existence of 'index.md'. Also, verify that 'slides.md' no longer exists in the root directory if it was previously there.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: feat: Update Node.js version management
+
+- Add fnm for Node.js version management via .node-version
+
+- Update GitHub Actions to use .node-version file
+
+- Update project overview with Node.js management details
+
+- Add build outputs section to documentation
+- Changed Files List: 
+.cursor/rules/01-project-overview.mdc	+37	-23	after_lines=95
+.github/workflows/deploy.yml	+2	-2	after_lines=53
+.node-version	+1	-0	after_lines=1
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── 01-project-overview.mdc
+│       ├── 02-learning-new-cursor-rules.mdc
+│       └── registry
+│           ├── changeset-creation.mdc
+│           ├── cheerful-tone.mdc
+│           ├── git-commit-messages.mdc
+│           ├── package-json-management.mdc
+│           └── rule-creation.mdc
+├── .editorconfig
+├── .gitattributes
+├── .github
+│   └── workflows
+│       └── deploy.yml
+├── .gitignore
+├── .node-version
+├── README.md
+├── package.json
+├── slides
+│   └── index.md
+├── slides.html
+├── slides.pdf
+└── yarn.lock
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/01-project-overview.mdc ---
+diff --git a/.cursor/rules/01-project-overview.mdc b/.cursor/rules/01-project-overview.mdc
+index 2bfcb26..06a1572 100644
+--- a/.cursor/rules/01-project-overview.mdc
++++ b/.cursor/rules/01-project-overview.mdc
+@@ -5,24 +5,31 @@ alwaysApply: true
+ ---
+ # Project Overview: cursor-primer, a marp presentation about the cursor app and leveraging cursor self-learning
+ 
+-## Project Structure
++## Context
++This project is a Marp-based presentation that explains the features and capabilities of the Cursor IDE, with a particular focus on its self-learning capabilities.
+ 
++## Project Structure
+ Marp (also known as the Markdown Presentation Ecosystem) provides an intuitive experience for creating beautiful slide decks. You only have to focus on writing your story in a Markdown document.
+ 
+-## Technology Stack
++The presentation source is organized in the `slides` directory, with the main content in `index.md`.
+ 
+-- `marp` for slide generation.
+-- `yarn` for task orchestration and node package management.
+-- `eslint` and `npmpkgjsonlint` for linting.
+-- GitHub Actions for CI/CD
+-- GitHub Pages for deployment
++## Technology Stack
++- `marp` for slide generation and presentation creation
++- `yarn` for task orchestration and node package management
++- `fnm` for Node.js version management via `.node-version` file
++- `eslint` and `npmpkgjsonlint` for code quality and package.json linting
++- GitHub Actions for CI/CD pipeline
++- GitHub Pages for hosting the deployed presentation
+ 
+ ## Repository Organization
+-
+-├── package.json
+-├── README.md
+-├── slides.md
+-└── yarn.lock
++```
++├── package.json          # Project configuration and dependencies
++├── README.md            # Project documentation
++├── slides/              # Presentation source files
++│   └── index.md        # Main presentation content
++├── .node-version        # Node.js version specification for fnm
++└── yarn.lock            # Yarn dependency lock file
++```
+ 
+ ## Example Slides
+ 
+@@ -35,7 +42,7 @@ backgroundColor: #fff
+ backgroundImage: url('https://marp.app/assets/hero-background.svg')
+ ---
+ 
+-![bg left:40% 80%](https://marp.app/assets/marp.svg)
++![bg left:40% 80%](mdc:https:/marp.app/assets/marp.svg)
+ 
+ # **Marp**
+ 
+@@ -63,19 +70,26 @@ foobar
+ ````
+ 
+ ## Development Workflow
+-
+-1. Develop new code.
+-2. If appropriate, write tests.
+-3. Run tests locally.
+-4. Run linter, run in -fix mode if issues, manually resolve any remaining issues.
+-5. Commit changes if tests and linters pass.
+-6. CI/CD pipelines run tests and linters and manage deployments.
+-
++1. Develop new slides in `slides/index.md`
++2. Use `yarn dev` for live preview while editing
++3. Run linters to ensure code quality
++4. Commit changes if linters pass
++5. CI/CD pipelines automatically build and deploy to GitHub Pages
++
++## Build Outputs
++The build process generates multiple formats:
++- HTML (primary format for web deployment)
++- PDF (for offline viewing/printing)
++- PPTX (for PowerPoint compatibility)
+ 
+ ## Collaboration Guidelines
+-
+ - Use descriptive branch names
+ - Create focused PRs with clear descriptions
+-- Follow the established code style
++- Follow the established markdown style
+ - Update documentation as needed
+ 
++## Version Management
++- Node.js versions are managed via fnm using `.node-version`
++- Run `fnm use` in the project directory to automatically switch to the correct version
++- The project currently uses Node.js 22
++
+
+--- FILE: .github/workflows/deploy.yml ---
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+index fdd66b9..8ab0d27 100644
+--- a/.github/workflows/deploy.yml
++++ b/.github/workflows/deploy.yml
+@@ -21,10 +21,10 @@ jobs:
+     steps:
+       - uses: actions/checkout@v4
+ 
+-      - name: Setup Node.js
++      - name: Setup Node
+         uses: actions/setup-node@v4
+         with:
+-          node-version: "18"
++          node-version-file: ".node-version"
+           cache: "yarn"
+ 
+       - name: Install dependencies
+
+--- FILE: .node-version ---
+diff --git a/.node-version b/.node-version
+new file mode 100644
+index 0000000..8fdd954
+--- /dev/null
++++ b/.node-version
+@@ -0,0 +1 @@
++22
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

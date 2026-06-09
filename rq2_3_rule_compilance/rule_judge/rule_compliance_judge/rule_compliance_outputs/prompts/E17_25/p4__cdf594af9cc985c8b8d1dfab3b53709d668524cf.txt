@@ -1,0 +1,69 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+   - In table-driven tests, use "test" instead of "tt" for the test case variable
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically test files (e.g., *_test.go in Go or similar test files in other languages).
+- Suggested Logic: Scan test files for table-driven test patterns (typically loops iterating over a collection of test cases, such as 'for ... range' in Go). Use Abstract Syntax Tree (AST) parsing to identify the variable name assigned to the individual test case within these loops. Flag instances where the variable is named 'tt' and verify if it is named 'test'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: go mod tidy
+- Changed Files List: 
+go.mod	+2	-1	after_lines=11
+go.sum	+1	-0	after_lines=10
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── go.sum
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: go.mod ---
+diff --git a/go.mod b/go.mod
+index a55562c..22bce12 100644
+--- a/go.mod
++++ b/go.mod
+@@ -2,9 +2,10 @@ module tictactoe
+ 
+ go 1.24.0
+ 
++require github.com/stretchr/testify v1.10.0
++
+ require (
+ 	github.com/davecgh/go-spew v1.1.1 // indirect
+ 	github.com/pmezard/go-difflib v1.0.0 // indirect
+-	github.com/stretchr/testify v1.10.0 // indirect
+ 	gopkg.in/yaml.v3 v3.0.1 // indirect
+ )
+
+--- FILE: go.sum ---
+diff --git a/go.sum b/go.sum
+index fe99d71..713a0b4 100644
+--- a/go.sum
++++ b/go.sum
+@@ -4,6 +4,7 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
+ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+ github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
+ github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
++gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
+ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

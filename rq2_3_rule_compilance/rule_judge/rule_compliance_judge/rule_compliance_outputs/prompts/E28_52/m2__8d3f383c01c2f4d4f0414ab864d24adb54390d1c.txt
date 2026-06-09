@@ -1,0 +1,282 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- dependency-cruiser.service.ts: Background dependency scanning integration
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and source code files (specifically 'dependency-cruiser.service.ts').
+- Suggested Logic: Verify that the file 'dependency-cruiser.service.ts' exists in the file system and perform a simple text search or AST check within that file to confirm it imports or references 'dependency-cruiser' logic.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: Implement basic graph view preparing for cystoscape
+- Changed Files List: 
+package.json	+2	-1	after_lines=93
+src/extension.ts	+40	-0	after_lines=140
+src/side-panel-view-provider.ts	+8	-1	after_lines=63
+webview-ui/src/components/App.tsx	+9	-12	after_lines=13
+webview-ui/src/views/GraphView.tsx	+9	-0	after_lines=9
+webview-ui/src/views/SidePanelView.tsx	+19	-0	after_lines=19
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   ├── styles
+    │   │   └── global.css
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index eabbd32..b239f06 100644
+--- a/package.json
++++ b/package.json
+@@ -31,7 +31,8 @@
+     "commands": [
+       { "command": "constellation.selfTest", "title": "Constellation: Self-test MCP server" },
+       { "command": "constellation.openUserMcpConfig", "title": "Constellation: Open user MCP config" },
+-      { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" }
++      { "command": "constellation.scanDependencies", "title": "Constellation: Scan Dependencies" },
++      { "command": "constellation.openGraphView", "title": "Constellation: Open Graph View" }
+     ],
+     "configuration": {
+       "title": "Constellation",
+
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index 5f287d1..08190b3 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -4,6 +4,7 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
+ import { isNodeVersionSupported } from "./services/node-version.service.js";
+ import { SidePanelViewProvider } from "./side-panel-view-provider.js";
+ import { runScan } from "./services/dependency-cruiser.service.js";
++import * as path from "node:path";
+ 
+ export async function activate(context: vscode.ExtensionContext) {
+   try {
+@@ -86,6 +87,45 @@ export async function activate(context: vscode.ExtensionContext) {
+               console.error('Manual dependency scan failed:', err?.message ?? String(err));
+               void vscode.window.showErrorMessage(`Dependency scan failed: ${err?.message ?? String(err)}`);
+             }
++          }),
++          vscode.commands.registerCommand("constellation.openGraphView", async () => {
++            // Open a new editor tab with a webview that renders GraphView
++            const panel = vscode.window.createWebviewPanel(
++              'constellation.graph',
++              'Constellation Graph',
++              vscode.ViewColumn.Active,
++              {
++                enableScripts: true,
++                localResourceRoots: [
++                  vscode.Uri.joinPath(context.extensionUri, 'out'),
++                  vscode.Uri.joinPath(context.extensionUri, 'out', 'ui'),
++                ],
++              }
++            );
++
++            const scriptUri = panel.webview.asWebviewUri(
++              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'main.js')
++            );
++            const styleUri = panel.webview.asWebviewUri(
++              vscode.Uri.joinPath(context.extensionUri, 'out', 'ui', 'style.css')
++            );
++            const nonce = Math.random().toString(36).slice(2);
++
++            panel.webview.html = `<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8" />
++  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} https:; style-src 'unsafe-inline' ${panel.webview.cspSource}; script-src 'nonce-${nonce}' ${panel.webview.cspSource};" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++  <link rel="stylesheet" href="${styleUri}" />
++  <title>Constellation Graph</title>
++  <style>body,html{margin:0;padding:0}#root{padding:8px;font-family: var(--vscode-font-family); color: var(--vscode-foreground);}</style>
++</head>
++<body>
++  <div id="root" data-view="graph"></div>
++  <script nonce="${nonce}" src="${scriptUri}"></script>
++</body>
++</html>`;
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: src/side-panel-view-provider.ts ---
+diff --git a/src/side-panel-view-provider.ts b/src/side-panel-view-provider.ts
+index 2842867..2b0c5ac 100644
+--- a/src/side-panel-view-provider.ts
++++ b/src/side-panel-view-provider.ts
+@@ -7,6 +7,13 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+ 
+   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
+     const { webview } = webviewView;
++
++    // Handle messages from the webview (e.g., open Graph View)
++    webview.onDidReceiveMessage((msg) => {
++      if (msg?.type === 'open-graph-view') {
++        void vscode.commands.executeCommand('constellation.openGraphView');
++      }
++    });
+     webview.options = {
+       enableScripts: true,
+       localResourceRoots: [
+@@ -39,7 +46,7 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+   </style>
+ </head>
+ <body>
+-  <div id="root">Hello world</div>
++  <div id="root" data-view="sidepanel"></div>
+   <script nonce="${nonce}" src="${scriptUri}"></script>
+ </body>
+ </html>`;
+
+--- FILE: webview-ui/src/components/App.tsx ---
+diff --git a/webview-ui/src/components/App.tsx b/webview-ui/src/components/App.tsx
+index ba93817..687c9ce 100644
+--- a/webview-ui/src/components/App.tsx
++++ b/webview-ui/src/components/App.tsx
+@@ -1,16 +1,13 @@
+-import { GraphDashboard } from './GraphDashboard'
+-import { Button } from './Button'
++import { SidePanelView } from '../views/SidePanelView'
++import { GraphView } from '../views/GraphView'
+ 
+ export function App() {
+-  return (
+-    <div>
+-      <h1>Hello world</h1>
+-      <p>Welcome to Kiro Constellationsss.</p>
+-      <GraphDashboard />
+-      <div style={{ marginTop: 8 }}>
+-        <Button onClick={() => console.log('clicked')}>Sample Button</Button>
+-      </div>
+-    </div>
+-  )
++  const root = document.getElementById('root') as HTMLElement | null
++  const view = root?.dataset.view ?? 'sidepanel'
++
++  if (view === 'graph') {
++    return <GraphView />
++  }
++  return <SidePanelView />
+ }
+
+--- FILE: webview-ui/src/views/GraphView.tsx ---
+diff --git a/webview-ui/src/views/GraphView.tsx b/webview-ui/src/views/GraphView.tsx
+new file mode 100644
+index 0000000..979864b
+--- /dev/null
++++ b/webview-ui/src/views/GraphView.tsx
+@@ -0,0 +1,9 @@
++export function GraphView() {
++  return (
++    <div>
++      <h1>Graph View</h1>
++      <p>Placeholder for future dependency graph.</p>
++    </div>
++  )
++}
++
+
+--- FILE: webview-ui/src/views/SidePanelView.tsx ---
+diff --git a/webview-ui/src/views/SidePanelView.tsx b/webview-ui/src/views/SidePanelView.tsx
+new file mode 100644
+index 0000000..21fdf71
+--- /dev/null
++++ b/webview-ui/src/views/SidePanelView.tsx
+@@ -0,0 +1,19 @@
++import { Button } from '../components/Button'
++
++// Simple event service for cross-view communication
++const vscodeApi = acquireVsCodeApi?.() as any | undefined
++
++export function SidePanelView() {
++  const openGraph = () => {
++    // Ask extension to open the graph view webview tab
++    vscodeApi?.postMessage?.({ type: 'open-graph-view' })
++  }
++  return (
++    <div>
++      <h1>Constellation</h1>
++      <p>Side Panel</p>
++      <Button onClick={openGraph}>Ossspen Graph View</Button>
++    </div>
++  )
++}
++
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

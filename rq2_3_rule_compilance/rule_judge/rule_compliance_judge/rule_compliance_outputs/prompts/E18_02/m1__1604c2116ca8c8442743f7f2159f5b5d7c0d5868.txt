@@ -1,0 +1,201 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Deepgram
+ - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
+ - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code content within specific files (src/app/api/deepgram/transcribe-audio/route.ts and src/lib/contexts/DeepgramContext.tsx).
+- Suggested Logic: 1. Verify the existence of the file path 'src/app/api/deepgram/transcribe-audio/route.ts'.
+2. Verify the existence of the file path 'src/lib/contexts/DeepgramContext.tsx'.
+3. Perform a static analysis (regex or AST) on 'DeepgramContext.tsx' to ensure it defines or exports a hook named 'useDeepgram'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: make sign in simpler
+- Changed Files List: 
+src/components/SignInWithGoogle.tsx	+8	-40	after_lines=17
+src/lib/contexts/AuthContext.tsx	+24	-2	after_lines=59
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .eslintrc.json
+├── .gitignore
+├── .replit
+├── README.md
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── paths
+│   ├── chat.md
+│   ├── image-generation.md
+│   ├── social-media.md
+│   └── voice-notes.md
+├── postcss.config.mjs
+├── public
+│   ├── next.svg
+│   └── vercel.svg
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── anthropic
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   ├── deepgram
+│   │   │   │   └── route.ts
+│   │   │   ├── openai
+│   │   │   │   ├── chat
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── transcribe
+│   │   │   │       └── route.ts
+│   │   │   └── replicate
+│   │   │       └── generate-image
+│   │   │           └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── ImageUpload.tsx
+│   │   ├── SignInWithGoogle.tsx
+│   │   └── VoiceRecorder.tsx
+│   └── lib
+│       ├── contexts
+│       │   ├── AuthContext.tsx
+│       │   └── DeepgramContext.tsx
+│       ├── firebase
+│       │   ├── firebase.ts
+│       │   └── firebaseUtils.ts
+│       └── hooks
+│           └── useAuth.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/components/SignInWithGoogle.tsx ---
+diff --git a/src/components/SignInWithGoogle.tsx b/src/components/SignInWithGoogle.tsx
+index cb371ce..cb7a313 100644
+--- a/src/components/SignInWithGoogle.tsx
++++ b/src/components/SignInWithGoogle.tsx
+@@ -1,49 +1,17 @@
+ "use client";
+ 
+-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+-import { auth } from "../lib/firebase/firebase";
++import { useAuth } from '../lib/hooks/useAuth';
+ 
+ export default function SignInWithGoogle() {
+-  const signIn = () => {
+-    const provider = new GoogleAuthProvider();
+-    signInWithPopup(auth, provider);
+-  };
++  const { signInWithGoogle } = useAuth();
+ 
+   return (
+-    <button onClick={signIn} className="gsi-material-button">
+-      <div className="gsi-material-button-state"></div>
+-      <div className="gsi-material-button-content-wrapper">
+-        <div className="gsi-material-button-icon">
+-          <svg
+-            version="1.1"
+-            xmlns="http://www.w3.org/2000/svg"
+-            viewBox="0 0 48 48"
+-            style={{ display: "block" }}
+-          >
+-            <path
+-              fill="#EA4335"
+-              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+-            ></path>
+-            <path
+-              fill="#4285F4"
+-              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+-            ></path>
+-            <path
+-              fill="#FBBC05"
+-              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+-            ></path>
+-            <path
+-              fill="#34A853"
+-              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+-            ></path>
+-            <path fill="none" d="M0 0h48v48H0z"></path>
+-          </svg>
+-        </div>
+-        <span className="gsi-material-button-contents">
+-          Sign in with Google
+-        </span>
+-        <span style={{ display: "none" }}>Sign in with Google</span>
+-      </div>
++    <button
++      onClick={signInWithGoogle}
++      className="flex items-center justify-center bg-white text-gray-700 font-semibold py-2 px-4 rounded-full border border-gray-300 hover:bg-gray-100 transition duration-300 ease-in-out"
++    >
++      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" className="w-6 h-6 mr-2" />
++      Sign in with Google
+     </button>
+   );
+ }
+
+--- FILE: src/lib/contexts/AuthContext.tsx ---
+diff --git a/src/lib/contexts/AuthContext.tsx b/src/lib/contexts/AuthContext.tsx
+index 6f917e9..c4b9273 100644
+--- a/src/lib/contexts/AuthContext.tsx
++++ b/src/lib/contexts/AuthContext.tsx
+@@ -1,17 +1,22 @@
+ "use client";
+ 
+ import React, { createContext, useEffect, useState } from "react";
+-import { auth } from "../firebase/firebase";
++import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth";
+ import { User } from "firebase/auth";
++import { auth } from "../firebase/firebase";
+ 
+ interface AuthContextType {
+   user: User | null;
+   loading: boolean;
++  signInWithGoogle: () => Promise<void>;
++  signOut: () => Promise<void>;
+ }
+ 
+ const AuthContext = createContext<AuthContextType>({
+   user: null,
+   loading: true,
++  signInWithGoogle: async () => {},
++  signOut: async () => {},
+ });
+ 
+ export function AuthProvider({ children }: { children: React.ReactNode }) {
+@@ -27,8 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
+     return () => unsubscribe();
+   }, []);
+ 
++  const signInWithGoogle = async () => {
++    const provider = new GoogleAuthProvider();
++    try {
++      await signInWithPopup(auth, provider);
++    } catch (error) {
++      console.error("Error signing in with Google", error);
++    }
++  };
++
++  const signOutUser = async () => {
++    try {
++      await firebaseSignOut(auth);
++    } catch (error) {
++      console.error("Error signing out", error);
++    }
++  };
++
+   return (
+-    <AuthContext.Provider value={{ user, loading }}>
++    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut: signOutUser }}>
+       {children}
+     </AuthContext.Provider>
+   );
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

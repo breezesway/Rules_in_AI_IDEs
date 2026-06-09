@@ -1,0 +1,144 @@
+diff --git a/playwright/tests/utils/page-list-cache.ts b/playwright/tests/utils/page-list-cache.ts
+index e6d6e23..d475ef3 100644
+--- a/playwright/tests/utils/page-list-cache.ts
++++ b/playwright/tests/utils/page-list-cache.ts
+@@ -16,10 +16,18 @@ export interface CachedPageList {
+     depth: number;
+     foundOn: string;
+   }>;
++  excludedPages?: Array<{
++    url: string;
++    title: string;
++    status: number;
++    depth: number;
++    foundOn: string;
++  }>;
+   summary: {
+     totalPages: number;
+     pagesByDepth: Record<number, number>;
+     crawlDuration: number;
++    excludedPages?: number;
+   };
+ }
+ 
+@@ -45,7 +53,7 @@ export class PageListCache {
+     console.log(`✅ Page list cached: ${cachedPageList.pages.length} pages saved`);
+   }
+ 
+-  static loadPageList(): CachedPageList | null {
++  static loadPageList(targetUrl?: string): CachedPageList | null {
+     if (!existsSync(PageListCache.CACHE_FILE)) {
+       console.log('⚠️  No cached page list found');
+       return null;
+@@ -53,8 +61,34 @@ export class PageListCache {
+ 
+     try {
+       const cached = JSON.parse(readFileSync(PageListCache.CACHE_FILE, 'utf8'));
++
++      // Validate that cached URL matches target URL if provided
++      if (targetUrl && cached.siteUrl) {
++        const normalizeUrl = (url: string): string => {
++          // Remove trailing slashes and normalize protocol
++          return url
++            .replace(/\/+$/, '')
++            .replace(/^https?:\/\//, '')
++            .toLowerCase();
++        };
++
++        const cachedUrlNormalized = normalizeUrl(cached.siteUrl);
++        const targetUrlNormalized = normalizeUrl(targetUrl);
++
++        if (cachedUrlNormalized !== targetUrlNormalized) {
++          console.log(`❌ Cache URL mismatch:`);
++          console.log(`   📋 Cached:  ${cached.siteUrl}`);
++          console.log(`   🎯 Target:  ${targetUrl}`);
++          console.log(`   🔄 Cache will be regenerated for the new URL`);
++          return null;
++        }
++      }
++
+       console.log(`✅ Loaded cached page list: ${cached.pages.length} pages`);
+       console.log(`📅 Cache created: ${new Date(cached.timestamp).toLocaleString()}`);
++      if (cached.siteUrl) {
++        console.log(`🌐 Site URL: ${cached.siteUrl}`);
++      }
+       return cached;
+     } catch (error) {
+       console.warn('⚠️  Failed to load cached page list:', error);
+@@ -62,8 +96,8 @@ export class PageListCache {
+     }
+   }
+ 
+-  static isCacheValid(maxAgeMinutes: number = 60): boolean {
+-    const cached = PageListCache.loadPageList();
++  static isCacheValid(maxAgeMinutes: number = 60, targetUrl?: string): boolean {
++    const cached = PageListCache.loadPageList(targetUrl);
+     if (!cached) return false;
+ 
+     const cacheAge = Date.now() - new Date(cached.timestamp).getTime();
+@@ -96,6 +130,64 @@ export class PageListCache {
+     if (!cached) return 'Cache corrupted';
+ 
+     const age = Math.round((Date.now() - new Date(cached.timestamp).getTime()) / 1000 / 60);
+-    return `${cached.pages.length} pages, ${age} minutes old`;
++    const excludedCount = cached.excludedPages?.length || 0;
++    const activeCount = cached.pages.length;
++    const totalCount = activeCount + excludedCount;
++
++    if (excludedCount > 0) {
++      return `${totalCount} total pages (${activeCount} active, ${excludedCount} excluded), ${age} minutes old`;
++    } else {
++      return `${activeCount} pages, ${age} minutes old`;
++    }
++  }
++
++  /**
++   * Get only the active (non-excluded) pages from the cache
++   * @returns {Array|null} Array of active pages or null if no cache exists
++   */
++  static getActivePages(): Array<{
++    url: string;
++    title: string;
++    status: number;
++    depth: number;
++    foundOn: string;
++  }> | null {
++    const cached = PageListCache.loadPageList();
++    if (!cached) return null;
++
++    // The 'pages' array in cache should already be filtered to exclude excluded pages
++    // but we return it explicitly for clarity
++    return cached.pages || [];
++  }
++
++  /**
++   * Get the excluded pages from the cache
++   * @returns {Array|null} Array of excluded pages or null if no cache exists
++   */
++  static getExcludedPages(): Array<{
++    url: string;
++    title: string;
++    status: number;
++    depth: number;
++    foundOn: string;
++  }> | null {
++    const cached = PageListCache.loadPageList();
++    if (!cached) return null;
++
++    return cached.excludedPages || [];
++  }
++
++  /**
++   * Get both active and excluded pages from the cache
++   * @returns {Object|null} Object with active and excluded pages or null if no cache exists
++   */
++  static getAllPages(): { active: Array<any>; excluded: Array<any> } | null {
++    const cached = PageListCache.loadPageList();
++    if (!cached) return null;
++
++    return {
++      active: cached.pages || [],
++      excluded: cached.excludedPages || [],
++    };
+   }
+ }

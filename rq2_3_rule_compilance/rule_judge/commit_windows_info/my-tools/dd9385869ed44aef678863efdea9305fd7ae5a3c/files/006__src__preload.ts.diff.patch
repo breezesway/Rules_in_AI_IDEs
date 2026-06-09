@@ -1,0 +1,40 @@
+diff --git a/src/preload.ts b/src/preload.ts
+index a22f1f7..0868a20 100644
+--- a/src/preload.ts
++++ b/src/preload.ts
+@@ -50,4 +50,35 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   getAppConfig: () => ipcRenderer.invoke('get-app-config'),
+   updateAppConfig: (config: Record<string, unknown>) => ipcRenderer.invoke('update-app-config', config),
+   resetAppConfig: () => ipcRenderer.invoke('reset-app-config'),
++  
++  // 图片压缩相关API
++  selectImages: () => ipcRenderer.invoke('select-images'),
++  selectSaveLocation: () => ipcRenderer.invoke('select-save-location'),
++  compressImages: (filePaths: string[], settings: Record<string, unknown>) => 
++    ipcRenderer.invoke('compress-images', filePaths, settings),
++  
++  // 监听压缩进度
++  onCompressionProgress: (callback: (progress: {
++    currentFile: string;
++    currentIndex: number;
++    totalFiles: number;
++    percentage: number;
++  }) => void) => {
++    const listener = (_event: unknown, progress: {
++      currentFile: string;
++      currentIndex: number;
++      totalFiles: number;
++      percentage: number;
++    }) => callback(progress);
++    ipcRenderer.on('compression-progress', listener);
++    
++    // 返回清理函数
++    return () => {
++      ipcRenderer.removeListener('compression-progress', listener);
++    };
++  },
++  
++  removeCompressionProgressListener: () => {
++    ipcRenderer.removeAllListeners('compression-progress');
++  },
+ });

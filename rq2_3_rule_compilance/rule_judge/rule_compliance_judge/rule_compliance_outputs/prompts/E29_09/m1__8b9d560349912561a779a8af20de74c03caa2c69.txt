@@ -1,0 +1,1268 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursor/rules/tech-stack.mdc
+- Change Type: added
+- Target Rule Content:
+- playwright
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, pyproject.toml, requirements.txt, Gemfile) and source code import statements.
+- Suggested Logic: Check if 'playwright' is listed as a dependency in the project's manifest files or if it is being imported in source code files (e.g., searching for 'import ... from "@playwright/test"' or similar).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: ESLint 설정 추가 및 컴포넌트 구조 개선: ESLint 및 관련 플러그인 설치, Flat Config 방식으로 설정 파일 작성. 새로운 UI 컴포넌트(shadcn-ui) 추가 및 라우트 구조 확장. GNB 컴포넌트 생성 및 페이지 라우팅 기능 구현. 기존 Button 컴포넌트 삭제.
+- Changed Files List: 
+components.json	+3	-3	after_lines=21
+docs/eslint-setup.md	+157	-0	after_lines=157
+eslint.config.js	+70	-0	after_lines=70
+package.json	+35	-20	after_lines=76
+pnpm-lock.yaml	+3416	-542	after_lines=7348
+prettier.config.js	+1	-1	after_lines=11
+src/app/main.tsx	+2	-5	after_lines=36
+src/app/routes/__root.tsx	+13	-4	after_lines=24
+src/app/routes/about.tsx	+9	-0	after_lines=9
+src/app/routes/index.tsx	+7	-1	after_lines=15
+src/app/routes/posts.$postId.tsx	+16	-0	after_lines=16
+src/app/routes/posts.tsx	+9	-0	after_lines=9
+src/app/routes/tags.tsx	+9	-0	after_lines=9
+src/shared/components/shadcn-ui/badge.tsx	+37	-0	after_lines=37
+src/shared/components/shadcn-ui/card.tsx	+56	-0	after_lines=56
+src/shared/components/shadcn-ui/navigation-menu.tsx	+143	-0	after_lines=143
+src/shared/components/shadcn-ui/sonner.tsx	+25	-0	after_lines=25
+src/shared/components/shadcn-ui/switch.tsx	+27	-0	after_lines=27
+src/shared/components/shadcn-ui/typography.tsx	+29	-0	after_lines=29
+src/shared/components/ui/Button.test.tsx	+0	-15	after_lines=0
+src/shared/components/ui/button.tsx	+0	-44	after_lines=0
+src/shared/utils/router/routeTree.gen.ts	+102	-51	after_lines=139
+src/shared/utils/style/shadcn.ts	+3	-0	after_lines=3
+src/shared/utils/style/utils.ts	+0	-3	after_lines=0
+src/widgets/gnb.tsx	+37	-0	after_lines=37
+*(Note: The following files are filtered due to large per-file changes (>1000 lines): pnpm-lock.yaml.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── folder-structure.mdc
+│       └── tech-stack.mdc
+├── .gitignore
+├── components.json
+├── docs
+│   └── eslint-setup.md
+├── eslint.config.js
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── prettier.config.js
+├── src
+│   ├── app
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── routes
+│   │       ├── __root.tsx
+│   │       ├── about.tsx
+│   │       ├── index.tsx
+│   │       ├── posts.$postId.tsx
+│   │       ├── posts.tsx
+│   │       └── tags.tsx
+│   ├── shared
+│   │   ├── components
+│   │   │   └── shadcn-ui
+│   │   │       ├── badge.tsx
+│   │   │       ├── card.tsx
+│   │   │       ├── navigation-menu.tsx
+│   │   │       ├── sonner.tsx
+│   │   │       ├── switch.tsx
+│   │   │       └── typography.tsx
+│   │   └── utils
+│   │       ├── router
+│   │       │   └── routeTree.gen.ts
+│   │       └── style
+│   │           └── shadcn.ts
+│   ├── vite-env.d.ts
+│   └── widgets
+│       └── gnb.tsx
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: components.json ---
+diff --git a/components.json b/components.json
+index 4714ad2..af59afa 100644
+--- a/components.json
++++ b/components.json
+@@ -12,9 +12,9 @@
+   },
+   "aliases": {
+     "components": "@/shared/components",
+-    "utils": "@/shared/style/utils",
+-    "ui": "@/shared/components/ui",
+-    "lib": "@/shared/style",
++    "utils": "@/shared/utils/style/shadcn",
++    "ui": "@/shared/components/shadcn-ui",
++    "lib": "@/shared/utils/style",
+     "hooks": "@/shared/hooks"
+   },
+   "iconLibrary": "lucide"
+
+--- FILE: docs/eslint-setup.md ---
+diff --git a/docs/eslint-setup.md b/docs/eslint-setup.md
+new file mode 100644
+index 0000000..de2a722
+--- /dev/null
++++ b/docs/eslint-setup.md
+@@ -0,0 +1,157 @@
++# ESLint 설정 완료 문서
++
++## 📝 개발 완료 결과
++
++### ✅ 설치된 패키지
++
++- `eslint` (v9.29.0)
++- `@eslint/js` (v9.29.0)
++- `@typescript-eslint/eslint-plugin` (v8.34.0)
++- `@typescript-eslint/parser` (v8.34.0)
++- `eslint-plugin-react` (v7.37.5)
++- `eslint-plugin-react-hooks` (v5.2.0)
++- `eslint-plugin-import` (v2.31.0)
++- `eslint-config-prettier` (v10.1.5)
++- `eslint-import-resolver-typescript` (v4.4.3)
++- `prettier` (v3.5.3)
++- `prettier-plugin-tailwindcss` (v0.6.12)
++- `globals` (v16.2.0)
++
++### 🔧 설정 파일
++
++#### `eslint.config.js` (Flat Config)
++
++```js
++import js from '@eslint/js';
++import tsPlugin from '@typescript-eslint/eslint-plugin';
++import tsParser from '@typescript-eslint/parser';
++import reactPlugin from 'eslint-plugin-react';
++import reactHooksPlugin from 'eslint-plugin-react-hooks';
++import importPlugin from 'eslint-plugin-import';
++import prettierConfig from 'eslint-config-prettier/flat';
++import globals from 'globals';
++
++export default [
++  {
++    ignores: ['dist', 'build', '**/*.gen.ts', '**/*.d.ts', '**/node_modules/**', '**/.*/**'],
++  },
++  {
++    files: ['**/*.{js,jsx,ts,tsx}'],
++    languageOptions: {
++      parser: tsParser,
++      ecmaVersion: 2022,
++      sourceType: 'module',
++      globals: {
++        ...globals.browser,
++        ...globals.node,
++      },
++    },
++    plugins: {
++      '@typescript-eslint': tsPlugin,
++      react: reactPlugin,
++      'react-hooks': reactHooksPlugin,
++      import: importPlugin,
++    },
++    rules: {
++      ...js.configs.recommended.rules,
++      ...tsPlugin.configs.recommended.rules,
++      ...reactPlugin.configs.recommended.rules,
++      ...reactHooksPlugin.configs.recommended.rules,
++      // import/order 설정
++      'import/order': [
++        'warn',
++        {
++          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
++          pathGroups: [
++            { pattern: 'react', group: 'external', position: 'before' },
++            { pattern: '@/**', group: 'internal' },
++          ],
++          pathGroupsExcludedImportTypes: ['builtin'],
++          alphabetize: { order: 'asc', caseInsensitive: true },
++          'newlines-between': 'always',
++        },
++      ],
++      // react
++      'react/react-in-jsx-scope': 'off',
++      'react/jsx-pascal-case': 'warn',
++      // typescript
++      '@typescript-eslint/no-unused-vars': 'warn',
++      '@typescript-eslint/no-shadow': 'warn',
++      // 기타
++      'no-console': 'warn',
++      'no-unused-vars': 'warn',
++    },
++    settings: {
++      react: { version: 'detect' },
++      'import/resolver': {
++        typescript: {
++          project: './tsconfig.json',
++        },
++      },
++    },
++  },
++  prettierConfig, // 마지막에 위치해야 prettier와 충돌 방지
++];
++```
++
++#### `.vscode/settings.json`
++
++```json
++{
++  "eslint.experimental.useFlatConfig": true,
++  "editor.codeActionsOnSave": {
++    "source.fixAll.eslint": true
++  },
++  "editor.formatOnSave": true,
++  "editor.defaultFormatter": "esbenp.prettier-vscode"
++}
++```
++
++### 📦 package.json 스크립트
++
++```json
++{
++  "scripts": {
++    "lint": "eslint .",
++    "lint:fix": "eslint . --fix"
++  }
++}
++```
++
++### 🚨 해결한 문제들
++
++#### 1. TailwindCSS v4 호환성 문제
++
++- **문제**: `eslint-plugin-tailwindcss`가 TailwindCSS v3.4.0만 지원
++- **해결**: TailwindCSS ESLint 플러그인 제거 (Prettier로 클래스 정렬 처리)
++
++#### 2. TypeScript import resolver 문제
++
++- **문제**: `import/order`에서 typescript resolver 오류
++- **해결**: `eslint-import-resolver-typescript` 패키지 추가
++
++#### 3. React JSX 인코딩 문제
++
++- **문제**: `react/no-unescaped-entities` 오류
++- **해결**: JSX 내 따옴표 문자 수정
++
++### ✨ 주요 특징
++
++1. **2025년 표준 Flat Config 방식** 적용
++2. **TypeScript + React + TailwindCSS + Prettier** 완벽 지원
++3. **Import 정렬** 자동화 (그룹별, 알파벳순)
++4. **저장 시 자동 포맷팅** 및 **ESLint 자동 수정**
++5. **TDD 개발 환경** 준비 완료
++
++### 🎯 다음 단계
++
++- TDD 기반 테스트 코드 작성 시작
++- Vitest + Testing Library + MSW 환경에서 테스트 개발
++- 기능 구현 전 테스트 코드 우선 작성
++
++---
++
++**📅 작성일**: 2025년 1월 14일  
++**🔧 ESLint 버전**: 9.29.0 (Flat Config)  
++**⚛️ React 버전**: 19.1.0  
++**🎨 TailwindCSS 버전**: 4.1.10
+
+--- FILE: eslint.config.js ---
+diff --git a/eslint.config.js b/eslint.config.js
+new file mode 100644
+index 0000000..08818ed
+--- /dev/null
++++ b/eslint.config.js
+@@ -0,0 +1,70 @@
++import js from '@eslint/js';
++import tsPlugin from '@typescript-eslint/eslint-plugin';
++import tsParser from '@typescript-eslint/parser';
++import prettierConfig from 'eslint-config-prettier/flat';
++import importPlugin from 'eslint-plugin-import';
++import reactPlugin from 'eslint-plugin-react';
++import reactHooksPlugin from 'eslint-plugin-react-hooks';
++import globals from 'globals';
++
++export default [
++  {
++    ignores: ['dist', 'build', '**/*.gen.ts', '**/*.d.ts', '**/node_modules/**', '**/.*/**'],
++  },
++  {
++    files: ['**/*.{js,jsx,ts,tsx}'],
++    languageOptions: {
++      parser: tsParser,
++      ecmaVersion: 2022,
++      sourceType: 'module',
++      globals: {
++        ...globals.browser,
++        ...globals.node,
++      },
++    },
++    plugins: {
++      '@typescript-eslint': tsPlugin,
++      react: reactPlugin,
++      'react-hooks': reactHooksPlugin,
++      import: importPlugin,
++    },
++    rules: {
++      ...js.configs.recommended.rules,
++      ...tsPlugin.configs.recommended.rules,
++      ...reactPlugin.configs.recommended.rules,
++      ...reactHooksPlugin.configs.recommended.rules,
++      // import/order 예시
++      'import/order': [
++        'warn',
++        {
++          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
++          pathGroups: [
++            { pattern: 'react', group: 'external', position: 'before' },
++            { pattern: '@/**', group: 'internal' },
++          ],
++          pathGroupsExcludedImportTypes: ['builtin'],
++          alphabetize: { order: 'asc', caseInsensitive: true },
++          'newlines-between': 'always',
++        },
++      ],
++      // react
++      'react/react-in-jsx-scope': 'off',
++      'react/jsx-pascal-case': 'warn',
++      // typescript
++      '@typescript-eslint/no-unused-vars': 'warn',
++      '@typescript-eslint/no-shadow': 'warn',
++      // 기타
++      'no-console': 'warn',
++      'no-unused-vars': 'warn',
++    },
++    settings: {
++      react: { version: 'detect' },
++      'import/resolver': {
++        typescript: {
++          project: './tsconfig.json',
++        },
++      },
++    },
++  },
++  prettierConfig, // 마지막에 위치해야 prettier와 충돌 방지
++];
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 5856d45..efb11d2 100644
+--- a/package.json
++++ b/package.json
+@@ -6,52 +6,67 @@
+   "scripts": {
+     "dev": "vite",
+     "build": "tsc -b && vite build",
+-    "format": "prettier --write ."
++    "format": "prettier --write .",
++    "lint": "eslint .",
++    "lint:fix": "eslint . --fix"
+   },
+   "dependencies": {
++    "@radix-ui/react-navigation-menu": "^1.2.13",
+     "@radix-ui/react-slot": "^1.2.3",
++    "@radix-ui/react-switch": "^1.2.5",
+     "@shadcn/ui": "^0.0.4",
+-    "@tailwindcss/vite": "^4.1.8",
++    "@tailwindcss/vite": "^4.1.10",
+     "@tanstack/query-devtools": "^5.80.0",
+-    "@tanstack/react-query": "^5.80.2",
+-    "@tanstack/react-query-devtools": "^5.80.3",
+-    "@tanstack/react-router": "^1.120.15",
+-    "@tanstack/react-router-devtools": "^1.120.15",
++    "@tanstack/react-query": "^5.80.7",
++    "@tanstack/react-query-devtools": "^5.80.7",
++    "@tanstack/react-router": "^1.121.16",
++    "@tanstack/react-router-devtools": "^1.121.16",
+     "autoprefixer": "^10.4.21",
+-    "axios": "^1.9.0",
++    "axios": "^1.10.0",
+     "class-variance-authority": "^0.7.1",
+     "clsx": "^2.1.1",
+     "lucide-react": "^0.511.0",
+-    "motion": "^12.16.0",
++    "motion": "^12.18.1",
++    "next-themes": "^0.4.6",
+     "react": "19.1.0",
+     "react-dom": "19.1.0",
+-    "tailwind-merge": "^3.3.0",
+-    "tailwindcss": "^4.1.8",
++    "sonner": "^2.0.5",
++    "tailwind-merge": "^3.3.1",
++    "tailwindcss": "^4.1.10",
+     "tailwindcss-animate": "^1.0.7",
+     "vite-tsconfig-paths": "^5.1.4",
+-    "zod": "^3.25.49",
++    "zod": "^3.25.64",
+     "zustand": "^5.0.5"
+   },
+   "devDependencies": {
+-    "@tanstack/router-plugin": "^1.120.15",
++    "@eslint/js": "^9.29.0",
++    "@tanstack/router-plugin": "^1.121.16",
+     "@testing-library/jest-dom": "^6.6.3",
+     "@testing-library/react": "^16.3.0",
+     "@testing-library/user-event": "^14.6.1",
+     "@types/react": "19.1.6",
+     "@types/react-dom": "19.1.5",
+-    "@vitejs/plugin-react": "^4.4.1",
+-    "@vitest/browser": "^3.2.0",
+-    "@vitest/coverage-v8": "^3.2.0",
+-    "globals": "^16.0.0",
++    "@typescript-eslint/eslint-plugin": "^8.34.0",
++    "@typescript-eslint/parser": "^8.34.0",
++    "@vitejs/plugin-react": "^4.5.2",
++    "@vitest/browser": "^3.2.3",
++    "@vitest/coverage-v8": "^3.2.3",
++    "eslint": "^9.29.0",
++    "eslint-config-prettier": "^10.1.5",
++    "eslint-import-resolver-typescript": "^4.4.3",
++    "eslint-plugin-import": "^2.31.0",
++    "eslint-plugin-react": "^7.37.5",
++    "eslint-plugin-react-hooks": "^5.2.0",
++    "globals": "^16.2.0",
+     "jsdom": "^26.1.0",
+-    "msw": "^2.9.0",
+-    "playwright": "^1.52.0",
++    "msw": "^2.10.2",
++    "playwright": "^1.53.0",
+     "prettier": "^3.5.3",
+     "prettier-plugin-tailwindcss": "^0.6.12",
+-    "tw-animate-css": "^1.3.3",
++    "tw-animate-css": "^1.3.4",
+     "typescript": "~5.8.3",
+     "vite": "^6.3.5",
+-    "vitest": "^3.2.0"
++    "vitest": "^3.2.3"
+   },
+   "vitest": {
+     "test": {
+
+--- FILE: prettier.config.js ---
+diff --git a/prettier.config.js b/prettier.config.js
+index 5244457..7b9959a 100644
+--- a/prettier.config.js
++++ b/prettier.config.js
+@@ -5,7 +5,7 @@ export default {
+   semi: true,
+   trailingComma: 'es5',
+   singleQuote: true,
+-  printWidth: 120,
++  printWidth: 150,
+   tabWidth: 2,
+   plugins: ['prettier-plugin-tailwindcss'],
+ };
+
+--- FILE: src/app/main.tsx ---
+diff --git a/src/app/main.tsx b/src/app/main.tsx
+index b836356..73ef21c 100644
+--- a/src/app/main.tsx
++++ b/src/app/main.tsx
+@@ -1,24 +1,21 @@
++import { StrictMode } from 'react';
++
+ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+ import { RouterProvider, createRouter } from '@tanstack/react-router';
+-import { StrictMode } from 'react';
+ import { createRoot } from 'react-dom/client';
+ import './index.css';
+ 
+ const queryClient = new QueryClient();
+ 
+-// Import the generated route tree
+ import { routeTree } from '@/shared/utils/router/routeTree.gen';
+ 
+-// Create a new router instance
+ const router = createRouter({
+   routeTree,
+   context: {
+     queryClient,
+   },
+   defaultPreload: 'intent',
+-  // Since we're using React Query, we don't want loader calls to ever be stale
+-  // This will ensure that the loader is always called when the route is preloaded or visited
+   defaultPreloadStaleTime: 0,
+   scrollRestoration: true,
+ });
+
+--- FILE: src/app/routes/about.tsx ---
+diff --git a/src/app/routes/about.tsx b/src/app/routes/about.tsx
+new file mode 100644
+index 0000000..d50bf97
+--- /dev/null
++++ b/src/app/routes/about.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router';
++
++export const Route = createFileRoute('/about')({
++  component: RouteComponent,
++});
++
++function RouteComponent() {
++  return <div>Hello /about!</div>;
++}
+
+--- FILE: src/app/routes/index.tsx ---
+diff --git a/src/app/routes/index.tsx b/src/app/routes/index.tsx
+index 918bbf0..26c02e7 100644
+--- a/src/app/routes/index.tsx
++++ b/src/app/routes/index.tsx
+@@ -1,9 +1,15 @@
+ import { createFileRoute } from '@tanstack/react-router';
+ 
++import { TypographyH4 } from '@/shared/components/shadcn-ui/typography';
++
+ export const Route = createFileRoute('/')({
+   component: RouteComponent,
+ });
+ 
+ function RouteComponent() {
+-  return <div>Hello "/"!</div>;
++  return (
++    <div>
++      <TypographyH4>Home</TypographyH4>
++    </div>
++  );
+ }
+
+--- FILE: src/app/routes/posts.tsx ---
+diff --git a/src/app/routes/posts.tsx b/src/app/routes/posts.tsx
+new file mode 100644
+index 0000000..609aa37
+--- /dev/null
++++ b/src/app/routes/posts.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router';
++
++export const Route = createFileRoute('/posts')({
++  component: RouteComponent,
++});
++
++function RouteComponent() {
++  return <div>Hello posts!</div>;
++}
+
+--- FILE: src/app/routes/tags.tsx ---
+diff --git a/src/app/routes/tags.tsx b/src/app/routes/tags.tsx
+new file mode 100644
+index 0000000..f4fc9c4
+--- /dev/null
++++ b/src/app/routes/tags.tsx
+@@ -0,0 +1,9 @@
++import { createFileRoute } from '@tanstack/react-router';
++
++export const Route = createFileRoute('/tags')({
++  component: RouteComponent,
++});
++
++function RouteComponent() {
++  return <div>Hello /tags!</div>;
++}
+
+--- FILE: src/shared/components/shadcn-ui/badge.tsx ---
+diff --git a/src/shared/components/shadcn-ui/badge.tsx b/src/shared/components/shadcn-ui/badge.tsx
+new file mode 100644
+index 0000000..bb88943
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/badge.tsx
+@@ -0,0 +1,37 @@
++import * as React from 'react';
++
++import { Slot } from '@radix-ui/react-slot';
++import { cva, type VariantProps } from 'class-variance-authority';
++
++import { cn } from '@/shared/utils/style/shadcn';
++
++const badgeVariants = cva(
++  'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden',
++  {
++    variants: {
++      variant: {
++        default: 'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
++        secondary: 'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
++        destructive:
++          'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
++        outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
++      },
++    },
++    defaultVariants: {
++      variant: 'default',
++    },
++  }
++);
++
++function Badge({
++  className,
++  variant,
++  asChild = false,
++  ...props
++}: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
++  const Comp = asChild ? Slot : 'span';
++
++  return <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props} />;
++}
++
++export { Badge, badgeVariants };
+
+--- FILE: src/shared/components/shadcn-ui/card.tsx ---
+diff --git a/src/shared/components/shadcn-ui/card.tsx b/src/shared/components/shadcn-ui/card.tsx
+new file mode 100644
+index 0000000..dcc811f
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/card.tsx
+@@ -0,0 +1,56 @@
++import * as React from 'react';
++
++import { cn } from '@/shared/utils/style/shadcn';
++
++function Card({ className, ...props }: React.ComponentProps<'div'>) {
++  return (
++    <div
++      data-slot="card"
++      className={cn('bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm', className)}
++      {...props}
++    />
++  );
++}
++
++function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
++  return (
++    <div
++      data-slot="card-header"
++      className={cn(
++        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
++        className
++      )}
++      {...props}
++    />
++  );
++}
++
++function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
++  return <div data-slot="card-title" className={cn('leading-none font-semibold', className)} {...props} />;
++}
++
++function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
++  return <div data-slot="card-description" className={cn('text-muted-foreground text-sm', className)} {...props} />;
++}
++
++function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
++  return (
++    <div
++      data-slot="card-action"
++      className={cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', className)}
++      {...props}
++    />
++  );
++}
++
++function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
++  return <div data-slot="card-content" className={cn('px-6', className)} {...props} />;
++}
++
++function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
++  return (
++    <div data-slot="card-footer" className={cn('flex items-center px-6 [.border-t]:pt-6', className)} {...props} />
++  );
++}
++
++export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+
+--- FILE: src/shared/components/shadcn-ui/navigation-menu.tsx ---
+diff --git a/src/shared/components/shadcn-ui/navigation-menu.tsx b/src/shared/components/shadcn-ui/navigation-menu.tsx
+new file mode 100644
+index 0000000..954085e
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/navigation-menu.tsx
+@@ -0,0 +1,143 @@
++import * as React from 'react';
++
++import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
++import { cva } from 'class-variance-authority';
++import { ChevronDownIcon } from 'lucide-react';
++
++import { cn } from '@/shared/utils/style/shadcn';
++
++function NavigationMenu({
++  className,
++  children,
++  viewport = true,
++  ...props
++}: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
++  viewport?: boolean;
++}) {
++  return (
++    <NavigationMenuPrimitive.Root
++      data-slot="navigation-menu"
++      data-viewport={viewport}
++      className={cn('group/navigation-menu relative flex max-w-max flex-1 items-center justify-center', className)}
++      {...props}
++    >
++      {children}
++      {viewport && <NavigationMenuViewport />}
++    </NavigationMenuPrimitive.Root>
++  );
++}
++
++function NavigationMenuList({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
++  return (
++    <NavigationMenuPrimitive.List
++      data-slot="navigation-menu-list"
++      className={cn('group flex flex-1 list-none items-center justify-center gap-1', className)}
++      {...props}
++    />
++  );
++}
++
++function NavigationMenuItem({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
++  return (
++    <NavigationMenuPrimitive.Item data-slot="navigation-menu-item" className={cn('relative', className)} {...props} />
++  );
++}
++
++const navigationMenuTriggerStyle = cva(
++  'group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1'
++);
++
++function NavigationMenuTrigger({
++  className,
++  children,
++  ...props
++}: React.ComponentProps<typeof NavigationMenuPrimitive.Trigger>) {
++  return (
++    <NavigationMenuPrimitive.Trigger
++      data-slot="navigation-menu-trigger"
++      className={cn(navigationMenuTriggerStyle(), 'group', className)}
++      {...props}
++    >
++      {children}{' '}
++      <ChevronDownIcon
++        className="relative top-[1px] ml-1 size-3 transition duration-300 group-data-[state=open]:rotate-180"
++        aria-hidden="true"
++      />
++    </NavigationMenuPrimitive.Trigger>
++  );
++}
++
++function NavigationMenuContent({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
++  return (
++    <NavigationMenuPrimitive.Content
++      data-slot="navigation-menu-content"
++      className={cn(
++        'data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 top-0 left-0 w-full p-2 pr-2.5 md:absolute md:w-auto',
++        'group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:data-[state=open]:animate-in group-data-[viewport=false]/navigation-menu:data-[state=closed]:animate-out group-data-[viewport=false]/navigation-menu:data-[state=closed]:zoom-out-95 group-data-[viewport=false]/navigation-menu:data-[state=open]:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-[state=open]:fade-in-0 group-data-[viewport=false]/navigation-menu:data-[state=closed]:fade-out-0 group-data-[viewport=false]/navigation-menu:top-full group-data-[viewport=false]/navigation-menu:mt-1.5 group-data-[viewport=false]/navigation-menu:overflow-hidden group-data-[viewport=false]/navigation-menu:rounded-md group-data-[viewport=false]/navigation-menu:border group-data-[viewport=false]/navigation-menu:shadow group-data-[viewport=false]/navigation-menu:duration-200 **:data-[slot=navigation-menu-link]:focus:ring-0 **:data-[slot=navigation-menu-link]:focus:outline-none',
++        className
++      )}
++      {...props}
++    />
++  );
++}
++
++function NavigationMenuViewport({
++  className,
++  ...props
++}: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
++  return (
++    <div className={cn('absolute top-full left-0 isolate z-50 flex justify-center')}>
++      <NavigationMenuPrimitive.Viewport
++        data-slot="navigation-menu-viewport"
++        className={cn(
++          'origin-top-center bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-md border shadow md:w-[var(--radix-navigation-menu-viewport-width)]',
++          className
++        )}
++        {...props}
++      />
++    </div>
++  );
++}
++
++function NavigationMenuLink({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
++  return (
++    <NavigationMenuPrimitive.Link
++      data-slot="navigation-menu-link"
++      className={cn(
++        "data-[active=true]:focus:bg-accent data-[active=true]:hover:bg-accent data-[active=true]:bg-accent/50 data-[active=true]:text-accent-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-ring/50 [&_svg:not([class*='text-'])]:text-muted-foreground flex flex-col gap-1 rounded-sm p-2 text-sm transition-all outline-none focus-visible:ring-[3px] focus-visible:outline-1 [&_svg:not([class*='size-'])]:size-4",
++        className
++      )}
++      {...props}
++    />
++  );
++}
++
++function NavigationMenuIndicator({
++  className,
++  ...props
++}: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
++  return (
++    <NavigationMenuPrimitive.Indicator
++      data-slot="navigation-menu-indicator"
++      className={cn(
++        'data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-[1] flex h-1.5 items-end justify-center overflow-hidden',
++        className
++      )}
++      {...props}
++    >
++      <div className="bg-border relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm shadow-md" />
++    </NavigationMenuPrimitive.Indicator>
++  );
++}
++
++export {
++  NavigationMenu,
++  NavigationMenuContent,
++  NavigationMenuIndicator,
++  NavigationMenuItem,
++  NavigationMenuLink,
++  NavigationMenuList,
++  NavigationMenuTrigger,
++  navigationMenuTriggerStyle,
++  NavigationMenuViewport,
++};
+
+--- FILE: src/shared/components/shadcn-ui/sonner.tsx ---
+diff --git a/src/shared/components/shadcn-ui/sonner.tsx b/src/shared/components/shadcn-ui/sonner.tsx
+new file mode 100644
+index 0000000..cdc8813
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/sonner.tsx
+@@ -0,0 +1,25 @@
++import { type CSSProperties } from 'react';
++
++import { useTheme } from 'next-themes';
++import { Toaster as Sonner, type ToasterProps } from 'sonner';
++
++const Toaster = ({ ...props }: ToasterProps) => {
++  const { theme = 'system' } = useTheme();
++
++  return (
++    <Sonner
++      theme={theme as ToasterProps['theme']}
++      className="toaster group"
++      style={
++        {
++          '--normal-bg': 'var(--popover)',
++          '--normal-text': 'var(--popover-foreground)',
++          '--normal-border': 'var(--border)',
++        } as CSSProperties
++      }
++      {...props}
++    />
++  );
++};
++
++export { Toaster };
+
+--- FILE: src/shared/components/shadcn-ui/switch.tsx ---
+diff --git a/src/shared/components/shadcn-ui/switch.tsx b/src/shared/components/shadcn-ui/switch.tsx
+new file mode 100644
+index 0000000..934db5c
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/switch.tsx
+@@ -0,0 +1,27 @@
++import * as React from 'react';
++
++import * as SwitchPrimitive from '@radix-ui/react-switch';
++
++import { cn } from '@/shared/utils/style/shadcn';
++
++function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
++  return (
++    <SwitchPrimitive.Root
++      data-slot="switch"
++      className={cn(
++        'peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
++        className
++      )}
++      {...props}
++    >
++      <SwitchPrimitive.Thumb
++        data-slot="switch-thumb"
++        className={cn(
++          'bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0'
++        )}
++      />
++    </SwitchPrimitive.Root>
++  );
++}
++
++export { Switch };
+
+--- FILE: src/shared/components/shadcn-ui/typography.tsx ---
+diff --git a/src/shared/components/shadcn-ui/typography.tsx b/src/shared/components/shadcn-ui/typography.tsx
+new file mode 100644
+index 0000000..fb15f18
+--- /dev/null
++++ b/src/shared/components/shadcn-ui/typography.tsx
+@@ -0,0 +1,29 @@
++import { type ReactNode } from 'react';
++
++import { cn } from '@/shared/utils/style/shadcn';
++
++export function TypographyH1({ children, className }: { children: ReactNode; className?: string }) {
++  return (
++    <h1 className={cn('scroll-m-20 text-center text-4xl font-extrabold tracking-tight', className)}>{children}</h1>
++  );
++}
++
++export function TypographyH2({ children, className }: { children: ReactNode; className?: string }) {
++  return (
++    <h2 className={cn('scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0', className)}>
++      {children}
++    </h2>
++  );
++}
++
++export function TypographyH3({ children, className }: { children: ReactNode; className?: string }) {
++  return <h3 className={cn('scroll-m-20 text-2xl font-semibold tracking-tight', className)}>{children}</h3>;
++}
++
++export function TypographyH4({ children, className }: { children: ReactNode; className?: string }) {
++  return <h4 className={cn('scroll-m-20 text-xl font-semibold tracking-tight', className)}>{children}</h4>;
++}
++
++export function TypographyP({ children, className }: { children: ReactNode; className?: string }) {
++  return <p className={cn('leading-7 [&:not(:first-child)]:mt-6', className)}>{children}</p>;
++}
+
+--- FILE: src/shared/components/ui/Button.test.tsx ---
+diff --git a/src/shared/components/ui/Button.test.tsx b/src/shared/components/ui/Button.test.tsx
+deleted file mode 100644
+index 66d16de..0000000
+--- a/src/shared/components/ui/Button.test.tsx
++++ /dev/null
+@@ -1,15 +0,0 @@
+-import '@testing-library/jest-dom';
+-import { fireEvent, render, screen } from '@testing-library/react';
+-import { describe, expect, it, vi } from 'vitest';
+-import { Button } from './button';
+-
+-describe('Button', () => {
+-  it('렌더링 및 클릭 이벤트 동작', () => {
+-    const handleClick = vi.fn();
+-    render(<Button onClick={handleClick}>클릭</Button>);
+-    const btn = screen.getByRole('button', { name: '클릭' });
+-    expect(btn).toBeInTheDocument();
+-    fireEvent.click(btn);
+-    expect(handleClick).toHaveBeenCalledTimes(1);
+-  });
+-});
+
+--- FILE: src/shared/components/ui/button.tsx ---
+diff --git a/src/shared/components/ui/button.tsx b/src/shared/components/ui/button.tsx
+deleted file mode 100644
+index f38da91..0000000
+--- a/src/shared/components/ui/button.tsx
++++ /dev/null
+@@ -1,44 +0,0 @@
+-import { Slot } from '@radix-ui/react-slot';
+-import { cva, type VariantProps } from 'class-variance-authority';
+-import { cn } from '../../utils/style/utils';
+-
+-const buttonVariants = cva(
+-  'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+-  {
+-    variants: {
+-      variant: {
+-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+-        link: 'underline-offset-4 hover:underline text-primary',
+-      },
+-      size: {
+-        default: 'h-10 px-4 py-2',
+-        sm: 'h-9 rounded-md px-3',
+-        lg: 'h-11 rounded-md px-8',
+-        icon: 'h-10 w-10',
+-      },
+-    },
+-    defaultVariants: {
+-      variant: 'default',
+-      size: 'default',
+-    },
+-  }
+-);
+-
+-export interface ButtonProps
+-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+-    VariantProps<typeof buttonVariants> {
+-  asChild?: boolean;
+-}
+-
+-const Button = ({ className, variant, size, asChild = false, ...props }: ButtonProps) => {
+-  const Comp = asChild ? Slot : 'button';
+-  return <Comp className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+-};
+-
+-Button.displayName = 'Button';
+-
+-export { Button, buttonVariants };
+
+--- FILE: src/shared/utils/router/routeTree.gen.ts ---
+diff --git a/src/shared/utils/router/routeTree.gen.ts b/src/shared/utils/router/routeTree.gen.ts
+index af36641..39546f6 100644
+--- a/src/shared/utils/router/routeTree.gen.ts
++++ b/src/shared/utils/router/routeTree.gen.ts
+@@ -8,81 +8,132 @@
+ // You should NOT make any changes in this file as it will be overwritten.
+ // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
+ 
+-// Import Routes
+-
+-import { Route as rootRoute } from './../../../app/routes/__root'
+-import { Route as IndexImport } from './../../../app/routes/index'
+-
+-// Create/Update Routes
+-
+-const IndexRoute = IndexImport.update({
++import { Route as rootRouteImport } from './../../../app/routes/__root'
++import { Route as TagsRouteImport } from './../../../app/routes/tags'
++import { Route as PostsRouteImport } from './../../../app/routes/posts'
++import { Route as AboutRouteImport } from './../../../app/routes/about'
++import { Route as IndexRouteImport } from './../../../app/routes/index'
++import { Route as PostsPostIdRouteImport } from './../../../app/routes/posts.$postId'
++
++const TagsRoute = TagsRouteImport.update({
++  id: '/tags',
++  path: '/tags',
++  getParentRoute: () => rootRouteImport,
++} as any)
++const PostsRoute = PostsRouteImport.update({
++  id: '/posts',
++  path: '/posts',
++  getParentRoute: () => rootRouteImport,
++} as any)
++const AboutRoute = AboutRouteImport.update({
++  id: '/about',
++  path: '/about',
++  getParentRoute: () => rootRouteImport,
++} as any)
++const IndexRoute = IndexRouteImport.update({
+   id: '/',
+   path: '/',
+-  getParentRoute: () => rootRoute,
++  getParentRoute: () => rootRouteImport,
++} as any)
++const PostsPostIdRoute = PostsPostIdRouteImport.update({
++  id: '/$postId',
++  path: '/$postId',
++  getParentRoute: () => PostsRoute,
+ } as any)
+-
+-// Populate the FileRoutesByPath interface
+-
+-declare module '@tanstack/react-router' {
+-  interface FileRoutesByPath {
+-    '/': {
+-      id: '/'
+-      path: '/'
+-      fullPath: '/'
+-      preLoaderRoute: typeof IndexImport
+-      parentRoute: typeof rootRoute
+-    }
+-  }
+-}
+-
+-// Create and export the route tree
+ 
+ export interface FileRoutesByFullPath {
+   '/': typeof IndexRoute
++  '/about': typeof AboutRoute
++  '/posts': typeof PostsRouteWithChildren
++  '/tags': typeof TagsRoute
++  '/posts/$postId': typeof PostsPostIdRoute
+ }
+-
+ export interface FileRoutesByTo {
+   '/': typeof IndexRoute
++  '/about': typeof AboutRoute
++  '/posts': typeof PostsRouteWithChildren
++  '/tags': typeof TagsRoute
++  '/posts/$postId': typeof PostsPostIdRoute
+ }
+-
+ export interface FileRoutesById {
+-  __root__: typeof rootRoute
++  __root__: typeof rootRouteImport
+   '/': typeof IndexRoute
++  '/about': typeof AboutRoute
++  '/posts': typeof PostsRouteWithChildren
++  '/tags': typeof TagsRoute
++  '/posts/$postId': typeof PostsPostIdRoute
+ }
+-
+ export interface FileRouteTypes {
+   fileRoutesByFullPath: FileRoutesByFullPath
+-  fullPaths: '/'
++  fullPaths: '/' | '/about' | '/posts' | '/tags' | '/posts/$postId'
+   fileRoutesByTo: FileRoutesByTo
+-  to: '/'
+-  id: '__root__' | '/'
++  to: '/' | '/about' | '/posts' | '/tags' | '/posts/$postId'
++  id: '__root__' | '/' | '/about' | '/posts' | '/tags' | '/posts/$postId'
+   fileRoutesById: FileRoutesById
+ }
+-
+ export interface RootRouteChildren {
+   IndexRoute: typeof IndexRoute
++  AboutRoute: typeof AboutRoute
++  PostsRoute: typeof PostsRouteWithChildren
++  TagsRoute: typeof TagsRoute
+ }
+ 
++declare module '@tanstack/react-router' {
++  interface FileRoutesByPath {
++    '/tags': {
++      id: '/tags'
++      path: '/tags'
++      fullPath: '/tags'
++      preLoaderRoute: typeof TagsRouteImport
++      parentRoute: typeof rootRouteImport
++    }
++    '/posts': {
++      id: '/posts'
++      path: '/posts'
++      fullPath: '/posts'
++      preLoaderRoute: typeof PostsRouteImport
++      parentRoute: typeof rootRouteImport
++    }
++    '/about': {
++      id: '/about'
++      path: '/about'
++      fullPath: '/about'
++      preLoaderRoute: typeof AboutRouteImport
++      parentRoute: typeof rootRouteImport
++    }
++    '/': {
++      id: '/'
++      path: '/'
++      fullPath: '/'
++      preLoaderRoute: typeof IndexRouteImport
++      parentRoute: typeof rootRouteImport
++    }
++    '/posts/$postId': {
++      id: '/posts/$postId'
++      path: '/$postId'
++      fullPath: '/posts/$postId'
++      preLoaderRoute: typeof PostsPostIdRouteImport
++      parentRoute: typeof PostsRoute
++    }
++  }
++}
++
++interface PostsRouteChildren {
++  PostsPostIdRoute: typeof PostsPostIdRoute
++}
++
++const PostsRouteChildren: PostsRouteChildren = {
++  PostsPostIdRoute: PostsPostIdRoute,
++}
++
++const PostsRouteWithChildren = PostsRoute._addFileChildren(PostsRouteChildren)
++
+ const rootRouteChildren: RootRouteChildren = {
+   IndexRoute: IndexRoute,
++  AboutRoute: AboutRoute,
++  PostsRoute: PostsRouteWithChildren,
++  TagsRoute: TagsRoute,
+ }
+-
+-export const routeTree = rootRoute
++export const routeTree = rootRouteImport
+   ._addFileChildren(rootRouteChildren)
+   ._addFileTypes<FileRouteTypes>()
+-
+-/* ROUTE_MANIFEST_START
+-{
+-  "routes": {
+-    "__root__": {
+-      "filePath": "__root.tsx",
+-      "children": [
+-        "/"
+-      ]
+-    },
+-    "/": {
+-      "filePath": "index.tsx"
+-    }
+-  }
+-}
+-ROUTE_MANIFEST_END */
+
+--- FILE: src/shared/utils/style/shadcn.ts ---
+diff --git a/src/shared/utils/style/shadcn.ts b/src/shared/utils/style/shadcn.ts
+new file mode 100644
+index 0000000..7c07139
+--- /dev/null
++++ b/src/shared/utils/style/shadcn.ts
+@@ -0,0 +1,3 @@
++export function cn(...classes: (string | undefined | null | false)[]): string {
++  return classes.filter(Boolean).join(' ');
++}
+
+--- FILE: src/shared/utils/style/utils.ts ---
+diff --git a/src/shared/utils/style/utils.ts b/src/shared/utils/style/utils.ts
+deleted file mode 100644
+index 7c07139..0000000
+--- a/src/shared/utils/style/utils.ts
++++ /dev/null
+@@ -1,3 +0,0 @@
+-export function cn(...classes: (string | undefined | null | false)[]): string {
+-  return classes.filter(Boolean).join(' ');
+-}
+
+--- FILE: src/widgets/gnb.tsx ---
+diff --git a/src/widgets/gnb.tsx b/src/widgets/gnb.tsx
+new file mode 100644
+index 0000000..9d265f4
+--- /dev/null
++++ b/src/widgets/gnb.tsx
+@@ -0,0 +1,37 @@
++import { Link } from '@tanstack/react-router';
++
++import {
++  NavigationMenu,
++  NavigationMenuItem,
++  NavigationMenuLink,
++  NavigationMenuList,
++  navigationMenuTriggerStyle,
++} from '@/shared/components/shadcn-ui/navigation-menu';
++import { TypographyH4 } from '@/shared/components/shadcn-ui/typography';
++
++export function GNB() {
++  return (
++    <div className="flex w-full justify-between">
++      <TypographyH4>TITLE</TypographyH4>
++      <NavigationMenu>
++        <NavigationMenuList>
++          <NavigationMenuItem>
++            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
++              <Link to="/posts">Posts</Link>
++            </NavigationMenuLink>
++          </NavigationMenuItem>
++          <NavigationMenuItem>
++            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
++              <Link to="/tags">Tags</Link>
++            </NavigationMenuLink>
++          </NavigationMenuItem>
++          <NavigationMenuItem>
++            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
++              <Link to="/about">About</Link>
++            </NavigationMenuLink>
++          </NavigationMenuItem>
++        </NavigationMenuList>
++      </NavigationMenu>
++    </div>
++  );
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

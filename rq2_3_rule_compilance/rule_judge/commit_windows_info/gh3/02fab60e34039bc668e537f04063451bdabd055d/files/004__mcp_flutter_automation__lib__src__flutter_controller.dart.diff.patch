@@ -1,0 +1,254 @@
+diff --git a/mcp_flutter_automation/lib/src/flutter_controller.dart b/mcp_flutter_automation/lib/src/flutter_controller.dart
+index 445cacd..71a1184 100644
+--- a/mcp_flutter_automation/lib/src/flutter_controller.dart
++++ b/mcp_flutter_automation/lib/src/flutter_controller.dart
+@@ -8,20 +8,90 @@ import 'models/flutter_app.dart';
+ 
+ class FlutterController {
+   final _logger = Logger('FlutterController');
++
++  // Instance-based registry for child processes
+   final Map<String, FlutterApp> _apps = {};
++  static bool _exitHandlerRegistered = false;
++  static final List<FlutterController> _allControllers = [];
+ 
+   FlutterController() {
+-    // Enable detailed logging
+-    Logger.root.level = Level.ALL;
+-    Logger.root.onRecord.listen((record) {
+-      print('${record.level.name}: ${record.time}: ${record.message}');
+-      if (record.error != null) {
+-        print('ERROR: ${record.error}');
+-      }
+-      if (record.stackTrace != null) {
+-        print('STACK: ${record.stackTrace}');
+-      }
++    // Minimal logging for MCP compatibility
++    if (Logger.root.level == Level.ALL) {
++      Logger.root.level = Level.WARNING;
++    }
++
++    // Register this controller for cleanup
++    _allControllers.add(this);
++
++    // Register exit handler once to cleanup all Flutter processes
++    if (!_exitHandlerRegistered) {
++      _registerExitHandler();
++      _exitHandlerRegistered = true;
++    }
++  }
++
++  void _registerExitHandler() {
++    // Handle SIGTERM (normal termination)
++    ProcessSignal.sigterm.watch().listen((_) {
++      _logger.info('SIGTERM received - cleaning up Flutter processes');
++      _cleanupAllProcesses();
++      exit(0);
++    });
++
++    // Handle SIGINT (Ctrl+C)
++    ProcessSignal.sigint.watch().listen((_) {
++      _logger.info('SIGINT received - cleaning up Flutter processes');
++      _cleanupAllProcesses();
++      exit(0);
+     });
++
++    _logger.info('Exit handlers registered for process cleanup');
++  }
++
++  static void _cleanupAllProcesses() {
++    final logger = Logger('FlutterController.cleanup');
++    int totalApps = 0;
++
++    for (final controller in _allControllers) {
++      totalApps += controller._apps.length;
++    }
++
++    logger.info(
++        'Cleaning up $totalApps Flutter processes across ${_allControllers.length} controllers');
++
++    for (final controller in _allControllers) {
++      for (final entry in controller._apps.entries) {
++        final appId = entry.key;
++        final app = entry.value;
++
++        try {
++          logger.info('Stopping Flutter app: $appId');
++
++          if (app.process != null) {
++            // Kill the process group to ensure all child processes are terminated
++            Process.killPid(app.process!.pid, ProcessSignal.sigterm);
++
++            // Brief delay for graceful termination (synchronous)
++            sleep(Duration(milliseconds: 500));
++
++            // Force kill if still running
++            if (!app.process!.kill(ProcessSignal.sigkill)) {
++              Process.killPid(app.process!.pid, ProcessSignal.sigkill);
++            }
++          }
++
++          app.vmService?.dispose();
++          logger.info('Successfully stopped app: $appId');
++        } catch (e) {
++          logger.warning('Failed to stop app $appId: $e');
++        }
++      }
++
++      controller._apps.clear();
++    }
++
++    _allControllers.clear();
++    logger.info('All Flutter processes cleaned up');
+   }
+ 
+   Future<FlutterApp> launchApp({
+@@ -74,14 +144,17 @@ class FlutterController {
+ 
+       _logger.info('Launching Flutter app: ${command.join(' ')}');
+ 
+-      // Start the process
++      // Start the process as a child process that will be killed when parent exits
+       final process = await Process.start(
+         command.first,
+         command.skip(1).toList(),
+         workingDirectory: projectPath,
+         mode: ProcessStartMode.normal,
++        runInShell: false, // Ensure direct process control
+       );
+ 
++      _logger.info('Flutter process started with PID: ${process.pid}');
++
+       app.process = process;
+ 
+       // Listen to stdout
+@@ -281,7 +354,8 @@ class FlutterController {
+   Future<String?> captureScreenshot(String appId) async {
+     final app = _apps[appId];
+     if (app == null) {
+-      throw Exception('App $appId not found');
++      throw Exception(
++          'App $appId not found. Use launch_app first to start the Flutter app.');
+     }
+ 
+     _logger.info('=== SCREENSHOT DEBUG START ===');
+@@ -337,66 +411,64 @@ class FlutterController {
+         _logger.info('Response type: ${response.json.runtimeType}');
+         _logger.info('Response keys: ${response.json?.keys.toList()}');
+ 
+-        if (response.json != null && response.json!.containsKey('result')) {
+-          final result = response.json!['result'];
+-          _logger.info('Result type: ${result.runtimeType}');
+-          _logger.info(
+-              'Result content preview: ${result.toString().substring(0, 100)}...');
++        // Handle both response formats: wrapped in 'result' or direct
++        Map<String, dynamic>? responseData;
+ 
+-          // Handle different response formats
+-          String? resultString;
+-          if (result is String) {
+-            resultString = result;
+-            _logger
+-                .info('Got result as string, length: ${resultString.length}');
+-          } else if (result != null) {
+-            resultString = json.encode(result);
+-            _logger.info(
+-                'Encoded result to string, length: ${resultString.length}');
++        if (response.json != null) {
++          if (response.json!.containsKey('result')) {
++            // Format 1: {"result": "{\"success\":true,...}"}
++            final result = response.json!['result'];
++            if (result is String) {
++              try {
++                responseData = json.decode(result) as Map<String, dynamic>;
++                _logger.info('Parsed wrapped result format');
++              } catch (e) {
++                _logger.warning('Failed to decode wrapped result: $e');
++              }
++            } else if (result is Map<String, dynamic>) {
++              responseData = result;
++              _logger.info('Got direct result format');
++            }
++          } else if (response.json!.containsKey('success')) {
++            // Format 2: {"success": true, "screenshot": "...", ...}
++            responseData = response.json!;
++            _logger.info('Got direct response format');
+           }
++        }
+ 
+-          if (resultString != null) {
+-            try {
+-              final responseData = json.decode(resultString);
+-              _logger
+-                  .info('Decoded response data: ${responseData.keys.toList()}');
+-              if (responseData['success'] == true &&
+-                  responseData['screenshot'] != null) {
+-                final base64Data = responseData['screenshot'] as String;
+-                _logger.info(
+-                    'Screenshot captured via custom gh3 extension, size: ${base64Data.length}');
+-
+-                // Save screenshot to file
+-                try {
+-                  final bytes = base64Decode(base64Data);
+-                  final timestamp = DateTime.now().millisecondsSinceEpoch;
+-                  final fileName = 'screenshot_${timestamp}.png';
+-                  final filePath = '${app.projectPath}/$fileName';
+-                  final file = File(filePath);
+-                  await file.writeAsBytes(bytes);
+-                  _logger.info(
+-                      'Screenshot saved to: $filePath (${bytes.length} bytes)');
+-
+-                  // Also save as latest screenshot
+-                  final latestPath = '${app.projectPath}/latest_screenshot.png';
+-                  final latestFile = File(latestPath);
+-                  await latestFile.writeAsBytes(bytes);
+-                  _logger.info('Latest screenshot saved to: $latestPath');
+-                } catch (e) {
+-                  _logger.warning('Failed to save screenshot to file: $e');
+-                }
++        if (responseData != null &&
++            responseData['success'] == true &&
++            responseData['screenshot'] != null) {
++          final base64Data = responseData['screenshot'] as String;
++          _logger.info(
++              'Screenshot captured via custom gh3 extension, size: ${base64Data.length}');
++          _logger.info('Format: ${responseData['format']}');
++          _logger.info('Method: ${responseData['method']}');
+ 
+-                return base64Data;
+-              } else {
+-                _logger.warning(
+-                    'Response data missing success or screenshot field');
+-              }
+-            } catch (e) {
+-              _logger.severe('Failed to decode result string: $e');
+-            }
+-          } else {
+-            _logger.warning('Could not extract result string');
++          // Save screenshot to file
++          try {
++            final bytes = base64Decode(base64Data);
++            final timestamp = DateTime.now().millisecondsSinceEpoch;
++            final fileName = 'screenshot_${timestamp}.png';
++            final filePath = '${app.projectPath}/$fileName';
++            final file = File(filePath);
++            await file.writeAsBytes(bytes);
++            _logger
++                .info('Screenshot saved to: $filePath (${bytes.length} bytes)');
++
++            // Also save as latest screenshot
++            final latestPath = '${app.projectPath}/latest_screenshot.png';
++            final latestFile = File(latestPath);
++            await latestFile.writeAsBytes(bytes);
++            _logger.info('Latest screenshot saved to: $latestPath');
++          } catch (e) {
++            _logger.warning('Failed to save screenshot to file: $e');
+           }
++
++          return base64Data;
++        } else {
++          _logger.warning(
++              'Response missing success or screenshot field: ${response.json}');
+         }
+       } catch (e) {
+         _logger.severe('=== ext.gh3.screenshot FAILED ===');

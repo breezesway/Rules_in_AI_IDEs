@@ -1,0 +1,1413 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Business Logic
+- Rule File Path: .kiro/steering/project-development-guide.md
+- Change Type: added
+- Target Rule Content:
+Working Libraries: sqlite3 - Database operations
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, requirements.txt, pyproject.toml, go.mod, Cargo.toml) and source code import statements.
+- Suggested Logic: Scan the project's dependency manifests to ensure 'sqlite3' is listed. Additionally, check source code files for import statements referencing the 'sqlite3' library to confirm its use for database operations.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Fix locker selection issue with proper RFID session management
+- Changed Files List: 
+.kiro/steering/development-environment.md	+100	-0	after_lines=100
+.kiro/steering/project-development-guide.md	+319	-0	after_lines=319
+DEVELOPMENT_ENVIRONMENT_SETUP.md	+178	-0	after_lines=178
+app/kiosk/src/controllers/ui-controller.ts	+94	-4	after_lines=458
+app/kiosk/src/ui/static/app.js	+5	-1	after_lines=653
+test-rfid.html	+108	-0	after_lines=108
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitattributes
+├── .github
+│   └── workflows
+│       └── e2e-tests.yml
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── admin-panel-relay-control
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eform-locker-system
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── errors.md
+│   │   └── raspberry-pi-auto-setup
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── development-environment.md
+│       └── project-development-guide.md
+├── .nvmrc
+├── COMMAND_QUEUE_DATABASE_PATH_ISSUE_REPORT.md
+├── CROSS_PLATFORM_IMPROVEMENTS.md
+├── DEPLOYMENT.md
+├── DEVELOPMENT_ENVIRONMENT_SETUP.md
+├── DIRECT_RELAY_TROUBLESHOOTING_REPORT.md
+├── LICENSE
+├── PRODUCTION_READY_SUMMARY.md
+├── RASPBERRY_PI_ENVIRONMENT_SETUP.md
+├── RASPBERRY_PI_MIGRATION_FIX.md
+├── README.md
+├── app
+│   ├── agent
+│   │   ├── README.md
+│   │   ├── eform-agent.service
+│   │   ├── jest.config.js
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   └── setup.ts
+│   │   │   ├── index.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── update-agent.test.js
+│   │   │   │   │   └── update-agent.test.ts
+│   │   │   │   ├── update-agent.js
+│   │   │   │   └── update-agent.ts
+│   │   │   └── types
+│   │   │       └── update-types.ts
+│   │   ├── test-build.js
+│   │   └── tsconfig.json
+│   ├── gateway
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   ├── failure-scenarios
+│   │   │   │   │   └── system-resilience.test.ts
+│   │   │   │   ├── integration
+│   │   │   │   │   ├── database-test.test.ts
+│   │   │   │   │   ├── full-system-integration.test.ts
+│   │   │   │   │   ├── multi-room-coordination.test.ts
+│   │   │   │   │   └── multi-service-integration.test.ts
+│   │   │   │   └── validation
+│   │   │   │       ├── comprehensive-performance-validation.test.ts
+│   │   │   │       ├── comprehensive-system-validation.test.ts
+│   │   │   │       ├── power-interruption-validation.test.ts
+│   │   │   │       └── system-validation.test.ts
+│   │   │   ├── controllers
+│   │   │   │   ├── configuration.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   ├── index.ts
+│   │   │   ├── routes
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── heartbeat.test.ts
+│   │   │   │   ├── admin.ts
+│   │   │   │   ├── configuration.ts
+│   │   │   │   ├── heartbeat.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── locker-coordination.test.ts
+│   │   │   │   ├── configuration.ts
+│   │   │   │   ├── locker-coordination.ts
+│   │   │   │   └── provisioning.ts
+│   │   │   └── utils
+│   │   │       ├── config-test.ts
+│   │   │       └── provision.ts
+│   │   └── tsconfig.json
+│   ├── kiosk
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── __tests__
+│   │   │   │   ├── e2e
+│   │   │   │   │   └── complete-user-flows.test.ts
+│   │   │   │   ├── heartbeat-commands-vip.test.ts
+│   │   │   │   ├── integration
+│   │   │   │   │   └── rfid-qr-integration.test.ts
+│   │   │   │   ├── master-pin.test.ts
+│   │   │   │   ├── qr-security.test.ts
+│   │   │   │   ├── rfid-integration.test.ts
+│   │   │   │   ├── soak
+│   │   │   │   │   ├── hardware-endurance.test.ts
+│   │   │   │   │   └── simple-test.test.ts
+│   │   │   │   ├── ui-controller.test.ts
+│   │   │   │   └── validation
+│   │   │   │       ├── actual-hardware-validation.test.ts
+│   │   │   │       └── hardware-integration-validation.test.ts
+│   │   │   ├── controllers
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── i18n-controller.test.ts
+│   │   │   │   │   ├── qr-handler-vip.test.ts
+│   │   │   │   │   └── qr-handler.test.ts
+│   │   │   │   ├── i18n-controller.ts
+│   │   │   │   ├── qr-handler.ts
+│   │   │   │   └── ui-controller.ts
+│   │   │   ├── hardware
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── modbus-controller.test.ts
+│   │   │   │   │   ├── modbus-error-handling.test.ts
+│   │   │   │   │   ├── rfid-handler.test.ts
+│   │   │   │   │   └── rs485-diagnostics.test.ts
+│   │   │   │   ├── modbus-controller.ts
+│   │   │   │   ├── rfid-handler.ts
+│   │   │   │   └── rs485-diagnostics.ts
+│   │   │   ├── index.ts
+│   │   │   ├── middleware
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── security-middleware.test.ts
+│   │   │   │   └── security-middleware.ts
+│   │   │   ├── services
+│   │   │   │   ├── __tests__
+│   │   │   │   │   ├── heartbeat-client.test.ts
+│   │   │   │   │   ├── rate-limiter.test.ts
+│   │   │   │   │   ├── rfid-user-flow-vip.test.ts
+│   │   │   │   │   └── rfid-user-flow.test.ts
+│   │   │   │   ├── heartbeat-client.ts
+│   │   │   │   ├── rate-limiter.ts
+│   │   │   │   └── rfid-user-flow.ts
+│   │   │   ├── types
+│   │   │   │   └── node-hid.d.ts
+│   │   │   └── ui
+│   │   │       ├── index.html
+│   │   │       └── static
+│   │   │           ├── app.js
+│   │   │           ├── i18n.js
+│   │   │           └── styles.css
+│   │   ├── tsconfig.json
+│   │   └── vitest.config.ts
+│   └── panel
+│       ├── config
+│       │   └── system.json
+│       ├── package.json
+│       ├── src
+│       │   ├── __tests__
+│       │   │   ├── auth-middleware.test.ts
+│       │   │   ├── auth-service.test.ts
+│       │   │   ├── command-status.test.ts
+│       │   │   ├── integration
+│       │   │   │   └── vip-workflow-integration.test.ts
+│       │   │   ├── locker-routes-vip.test.ts
+│       │   │   ├── performance
+│       │   │   │   └── panel-performance.test.ts
+│       │   │   ├── permission-service.test.ts
+│       │   │   ├── session-manager.test.ts
+│       │   │   ├── setup.ts
+│       │   │   ├── validation
+│       │   │   │   └── end-of-day-csv-validation.test.ts
+│       │   │   └── vip-routes.test.ts
+│       │   ├── controllers
+│       │   │   ├── __tests__
+│       │   │   │   └── i18n-controller.test.ts
+│       │   │   ├── config-controller.ts
+│       │   │   └── i18n-controller.ts
+│       │   ├── index.ts
+│       │   ├── middleware
+│       │   │   ├── __tests__
+│       │   │   │   └── security-middleware.test.ts
+│       │   │   ├── auth-middleware.ts
+│       │   │   └── security-middleware.ts
+│       │   ├── routes
+│       │   │   ├── auth-routes.ts
+│       │   │   ├── locker-routes.ts
+│       │   │   ├── relay-routes.ts
+│       │   │   └── vip-routes.ts
+│       │   ├── services
+│       │   │   ├── __tests__
+│       │   │   │   └── authorization-service.test.ts
+│       │   │   ├── auth-service.ts
+│       │   │   ├── authorization-service.ts
+│       │   │   ├── permission-service.ts
+│       │   │   ├── pin-rotation-service.ts
+│       │   │   └── session-manager.ts
+│       │   ├── types
+│       │   │   └── fastify.d.ts
+│       │   ├── validation
+│       │   │   ├── simple-validation.js
+│       │   │   ├── task-8.4-implementation-summary.md
+│       │   │   └── vip-transfer-validation.ts
+│       │   └── views
+│       │       ├── config.html
+│       │       ├── configuration-panel.html
+│       │       ├── csp-test.html
+│       │       ├── dashboard.html
+│       │       ├── lockers.html
+│       │       ├── login.html
+│       │       ├── relay.html
+│       │       ├── static
+│       │       │   └── i18n.js
+│       │       └── vip.html
+│       ├── tsconfig.json
+│       └── vitest.config.ts
+├── assets
+│   ├── index-D_ryMEPs.js
+│   └── index-X8b7Z_4p.css
+├── config
+│   ├── README.md
+│   ├── development.json
+│   ├── production-final.json
+│   ├── production.json
+│   └── system.json
+├── docs
+│   ├── configuration-system.md
+│   ├── kiosk-startup-troubleshooting.md
+│   ├── operational-runbook.md
+│   ├── project-structure.md
+│   ├── raspberry-pi-deployment-guide.md
+│   └── raspberry-pi-setup-guide.md
+├── favicon.ico
+├── favicon.svg
+├── migrations
+│   ├── 001_initial_schema.sql
+│   ├── 002_provisioning_and_config.sql
+│   ├── 003_complete_schema.sql
+│   ├── 004_staff_users.sql
+│   ├── 005_vip_transfer_audit.sql
+│   ├── 006_pin_rotation_system.sql
+│   ├── 007_soak_testing_tables.sql
+│   ├── 008_clean_default_users.sql
+│   └── 015_add_command_duration.sql
+├── package-lock.json
+├── package.json
+├── scripts
+│   ├── README.md
+│   ├── backup.sh
+│   ├── canary-deploy.sh
+│   ├── check-command-status-remote.js
+│   ├── check-javascript-error.js
+│   ├── check-rfid-devices.js
+│   ├── create-test-command.js
+│   ├── debug-database-paths.js
+│   ├── debug-hardware-communication.js
+│   ├── debug-pi-commands.sh
+│   ├── debug-relay-behavior.js
+│   ├── deploy-to-pi.sh
+│   ├── deploy.sh
+│   ├── deployment-monitor.sh
+│   ├── diagnose-modbus-issue.js
+│   ├── e2e-admin-panel-relay-test.js
+│   ├── e2e-hardware-validation.js
+│   ├── e2e-production-checklist.js
+│   ├── e2e-setup-report.json
+│   ├── e2e-smoke-tests.js
+│   ├── e2e-test-completion-summary.md
+│   ├── e2e-test-documentation.md
+│   ├── emergency-close-relay-direct.js
+│   ├── emergency-close-relay.js
+│   ├── emergency-relay-reset.js
+│   ├── final-e2e-validation.js
+│   ├── fix-database-path.js
+│   ├── fix-duplicate-migrations.js
+│   ├── fix-kiosk-startup.sh
+│   ├── fix-migration-checksums.js
+│   ├── fix-panel-port.sh
+│   ├── hardware-diagnostics.js
+│   ├── hardware-validation-summary.md
+│   ├── health-check.sh
+│   ├── init-database-manual.sh
+│   ├── install-production.sh
+│   ├── install.sh
+│   ├── migrate.ts
+│   ├── package.sh
+│   ├── pi-database-fix.sh
+│   ├── pre-e2e-validation.js
+│   ├── prepare-release.sh
+│   ├── production-startup.js
+│   ├── quick-fix-validation.sh
+│   ├── reset-users.js
+│   ├── resolve-serial-port.js
+│   ├── restore-auth.js
+│   ├── restore.sh
+│   ├── run-comprehensive-tests.ps1
+│   ├── run-comprehensive-tests.sh
+│   ├── run-cookie-diagnostics.sh
+│   ├── run-e2e-admin-panel-tests.js
+│   ├── run-integration-tests.ps1
+│   ├── run-system-validation.ps1
+│   ├── run-system-validation.sh
+│   ├── setup-config.js
+│   ├── setup-database.sh
+│   ├── setup-logs-dir.sh
+│   ├── setup-pi-environment.sh
+│   ├── sign-package.sh
+│   ├── simple-relay-test.js
+│   ├── start-all-clean.sh
+│   ├── start-all-services.sh
+│   ├── start-all.js
+│   ├── start-kiosk-clean.sh
+│   ├── start-services-properly.sh
+│   ├── systemd
+│   │   ├── eform-agent.service
+│   │   ├── eform-gateway.service
+│   │   ├── eform-kiosk.service
+│   │   └── eform-panel.service
+│   ├── task-8-verification-summary.md
+│   ├── test-admin-panel-e2e.ps1
+│   ├── test-admin-panel-e2e.sh
+│   ├── test-basic-relay-control.js
+│   ├── test-command-processing.js
+│   ├── test-command-queue-direct.js
+│   ├── test-command-status-polling.js
+│   ├── test-command-status-simple.js
+│   ├── test-direct-relay-only.js
+│   ├── test-hardware-simple.js
+│   ├── test-kiosk-modbus.js
+│   ├── test-locker-mapping.js
+│   ├── test-modbus-config-validation.js
+│   ├── test-modbus-controller-mapping.js
+│   ├── test-modbus-direct.js
+│   ├── test-modbus-simple.js
+│   ├── test-modbus-standalone.js
+│   ├── test-panel-access.js
+│   ├── test-panel-port-config.js
+│   ├── test-queue-vs-direct.js
+│   ├── test-relay-10-control.js
+│   ├── test-relay-activation.js
+│   ├── test-relay-off-variations.js
+│   ├── test-relays-1-8.js
+│   ├── test-rfid-simple.js
+│   ├── test-serial-basic.js
+│   ├── test-services-quick.js
+│   ├── test-services-startup.js
+│   ├── uninstall.sh
+│   ├── upgrade-nodejs.ps1
+│   ├── upgrade-nodejs.sh
+│   ├── validate-e2e-setup.js
+│   ├── validate-hardware-integration.js
+│   ├── validate-integration.js
+│   ├── validate-nodejs20-compatibility.js
+│   ├── validate-system-requirements.js
+│   ├── validate-ui-feedback.js
+│   ├── validate-waveshare-hardware.js
+│   ├── verify-panel-config.js
+│   └── verify-task-7-implementation.js
+├── shared
+│   ├── controllers
+│   │   ├── __tests__
+│   │   │   └── health-controller.test.ts
+│   │   └── health-controller.ts
+│   ├── database
+│   │   ├── __tests__
+│   │   │   ├── command-queue-repository.test.ts
+│   │   │   ├── database-manager.test.ts
+│   │   │   └── locker-repository.test.ts
+│   │   ├── base-repository.ts
+│   │   ├── command-queue-repository.ts
+│   │   ├── connection.ts
+│   │   ├── database-manager.ts
+│   │   ├── event-repository.ts
+│   │   ├── index.ts
+│   │   ├── kiosk-heartbeat-repository.ts
+│   │   ├── locker-repository.ts
+│   │   ├── migration-runner.ts
+│   │   ├── repository-factory.ts
+│   │   ├── schema.sql
+│   │   ├── vip-contract-repository.ts
+│   │   ├── vip-history-repository.ts
+│   │   ├── vip-transfer-repository.ts
+│   │   └── vitest.config.ts
+│   ├── package.json
+│   ├── services
+│   │   ├── __tests__
+│   │   │   ├── command-queue-manager.test.ts
+│   │   │   ├── config-manager.test.ts
+│   │   │   ├── event-logger.test.ts
+│   │   │   ├── hardware-soak-tester.test.ts
+│   │   │   ├── health-monitor.test.ts
+│   │   │   ├── i18n-regression.test.ts
+│   │   │   ├── i18n-service.test.ts
+│   │   │   ├── locker-assignment-release.test.ts
+│   │   │   ├── locker-state-manager-simple.test.ts
+│   │   │   ├── locker-state-manager.test.ts
+│   │   │   ├── log-retention-manager.test.ts
+│   │   │   ├── rate-limiter.test.ts
+│   │   │   └── security-validation.test.ts
+│   │   ├── command-queue-manager.ts
+│   │   ├── config-manager.ts
+│   │   ├── cookie-cleanup-service.ts
+│   │   ├── cookie-manager.ts
+│   │   ├── event-logger.ts
+│   │   ├── hardware-soak-tester.ts
+│   │   ├── health-monitor.ts
+│   │   ├── heartbeat-manager.ts
+│   │   ├── i18n-service.ts
+│   │   ├── locker-state-manager.ts
+│   │   ├── log-retention-manager.ts
+│   │   ├── rate-limiter.ts
+│   │   ├── security-validation.ts
+│   │   └── session-conflict-detector.ts
+│   ├── tsconfig.json
+│   └── types
+│       ├── core-entities.ts
+│       ├── index.ts
+│       └── system-config.ts
+├── src
+│   ├── cli
+│   │   ├── config-test.ts
+│   │   └── provision.ts
+│   ├── controllers
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── database
+│   │   ├── connection.ts
+│   │   └── schema.sql
+│   ├── index.ts
+│   ├── routes
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── services
+│   │   ├── __tests__
+│   │   │   ├── configuration.test.ts
+│   │   │   └── provisioning.test.ts
+│   │   ├── configuration.ts
+│   │   └── provisioning.ts
+│   ├── types
+│   │   ├── core-entities.d.ts
+│   │   ├── core-entities.d.ts.map
+│   │   ├── core-entities.js
+│   │   ├── core-entities.js.map
+│   │   ├── core-entities.ts
+│   │   └── index.ts
+│   └── views
+│       └── configuration-panel.html
+├── test-rfid.html
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/development-environment.md ---
+diff --git a/.kiro/steering/development-environment.md b/.kiro/steering/development-environment.md
+new file mode 100644
+index 0000000..1eda3b1
+--- /dev/null
++++ b/.kiro/steering/development-environment.md
+@@ -0,0 +1,100 @@
++---
++inclusion: always
++---
++
++# Development Environment Context
++
++## 🏗️ **Project Setup**
++This is an **eForm Locker System** with distributed development:
++- **Development**: Windows PC with Kiro AI Assistant
++- **Production**: Raspberry Pi with hardware relay control
++- **Communication**: SSH, Git, and API testing tools
++
++## 🖥️ **Development Machine (Windows PC)**
++- **OS**: Windows with PowerShell
++- **Role**: Code development, building, and Git management
++- **Tools Available**:
++  - Kiro AI for code development
++  - Postman for API testing
++  - PowerShell with SSH access to Pi
++  - Git repository with push access to main
++
++## 🔧 **Target Hardware (Raspberry Pi)**
++- **SSH Access**: `ssh pi@pi-eform-locker` (passwordless)
++- **IP Address**: `192.168.1.8`
++- **Services Running**:
++  - Gateway: Port 3000 (`http://192.168.1.8:3000`)
++  - Panel: Port 3001 (`http://192.168.1.8:3001`)
++  - Kiosk: Port 3002 (`http://192.168.1.8:3002`)
++- **Hardware**: USB-RS485 adapter with relay control cards
++- **Project Path**: `/home/pi/eform-locker`
++
++## 🔄 **Kiro Workflow Options**
++
++### **Option 1: Push & Deploy (Recommended)**
++1. Make code changes on Windows PC using file tools
++2. Build and validate: `npm run build:all`
++3. Commit and push: `git push origin main`
++4. Provide Pi deployment instructions to user
++
++### **Option 2: Direct SSH Guidance**
++Guide user to connect: `ssh pi@pi-eform-locker`
++Then provide commands to run on Pi
++
++### **Option 3: Remote PowerShell Commands**
++User can execute: `ssh pi@pi-eform-locker "command"`
++
++## 🛠️ **Available Testing Tools**
++
++### **Postman API Endpoints**
++- **Gateway Admin**: `POST http://192.168.1.8:3000/api/admin/lockers/1/open`
++- **Kiosk Direct**: `POST http://192.168.1.8:3002/api/locker/open`
++- **Panel Relay**: `POST http://192.168.1.8:3001/api/relay/activate`
++- **Health Checks**: `GET http://192.168.1.8:300X/health`
++
++### **Common Pi Commands**
++```bash
++# Deploy latest changes
++git pull origin main && npm run build:all
++
++# Restart services
++sudo pkill -f "node.*" && sleep 3
++npm run start:gateway & npm run start:kiosk & npm run start:panel &
++
++# Test system
++node scripts/test-queue-vs-direct.js
++```
++
++## 🎯 **Key System Information**
++- **Architecture**: Gateway → Kiosk → ModbusController → Hardware
++- **Port Conflict**: Direct relay disabled when Kiosk runs (by design)
++- **Auto-Close**: Relays automatically close after activation
++- **Queue-based**: Preferred method for locker control
++- **Remote Control**: Full API access from any network device
++
++## 🚫 **Terminal Management**
++**IMPORTANT**: Services like `npm run start` block the terminal. Use these strategies:
++
++### **For Windows PC Development**
++- **New PowerShell Window**: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run start:gateway"`
++- **Background Process**: `Start-Job -ScriptBlock { npm run start:gateway }`
++- **Detached Process**: `npm run start:gateway &` (in Git Bash)
++
++### **For Raspberry Pi Services**
++- **Background with &**: `npm run start:gateway &`
++- **Screen/Tmux**: `screen -S gateway` then `npm run start:gateway`
++- **PM2 Process Manager**: `pm2 start "npm run start:gateway" --name gateway`
++
++### **Kiro Best Practices**
++1. **Never run blocking commands** directly in Kiro terminal
++2. **Use PowerShell Start-Process** for new windows when needed
++3. **Prefer background processes** with `&` on Pi
++4. **Test with curl/Postman** instead of starting services in Kiro
++5. **Guide user to open new terminals** for service management
++
++## 📋 **Quick Actions**
++- **Connect to Pi**: `ssh pi@pi-eform-locker`
++- **Test API**: Use Postman with provided endpoints
++- **Deploy**: Push to main, then pull on Pi
++- **Debug**: Check service logs and hardware connections
++- **Start Services**: Guide user to use new terminal/background processes
+\ No newline at end of file
+
+--- FILE: .kiro/steering/project-development-guide.md ---
+diff --git a/.kiro/steering/project-development-guide.md b/.kiro/steering/project-development-guide.md
+new file mode 100644
+index 0000000..acad91f
+--- /dev/null
++++ b/.kiro/steering/project-development-guide.md
+@@ -0,0 +1,319 @@
++# eForm Locker System - Development Guide
++
++## 🏗️ **Project Architecture Overview**
++
++This is a **distributed eForm Locker System** with hardware relay control:
++
++### **Services Architecture**
++- **Gateway** (Port 3000): Main API coordinator, handles admin requests
++- **Kiosk** (Port 3002): Hardware control service, manages Modbus communication
++- **Panel** (Port 3001): Admin web interface, direct relay control
++
++### **Hardware Setup**
++- **Target**: Raspberry Pi with USB-RS485 adapter
++- **Relays**: Waveshare relay control cards via Modbus RTU
++- **Serial Port**: `/dev/ttyUSB0` (9600 baud, 8N1)
++- **Protocol**: Modbus RTU with custom CRC16 calculation
++
++## 🚀 **Quick Development Commands**
++
++### **Start Services (Raspberry Pi)**
++```bash
++# Clean start all services
++./scripts/start-all-clean.sh
++
++# Start individual services
++npm run start:gateway &
++npm run start:kiosk &
++npm run start:panel &
++
++# Check service status
++ps aux | grep node
++curl http://localhost:3000/health  # Gateway
++curl http://localhost:3002/health  # Kiosk
++curl http://localhost:3001/health  # Panel (may need auth)
++```
++
++### **Build Commands (Windows PC)**
++```powershell
++# Build all services
++npm run build:gateway
++npm run build:kiosk
++npm run build:panel
++
++# Deploy to Pi (after git push)
++ssh pi@pi-eform-locker "cd /home/pi/eform-locker && git pull origin main"
++```
++
++### **Testing Commands**
++```bash
++# Test hardware directly
++node scripts/test-basic-relay-control.js
++node scripts/test-relays-1-8.js
++
++# Test API endpoints
++curl -X POST http://192.168.1.8:3002/api/locker/open \
++  -H "Content-Type: application/json" \
++  -d '{"locker_id": 5, "staff_user": "test", "reason": "testing"}'
++
++# Test relay control
++curl -X POST http://192.168.1.8:3001/api/relay/activate \
++  -H "Content-Type: application/json" \
++  -d '{"relay_number": 5, "staff_user": "test", "reason": "testing"}'
++```
++
++### **Log Monitoring**
++```bash
++# View logs
++tail -f logs/gateway.log
++tail -f logs/kiosk.log
++tail -f logs/panel.log
++
++# Clear logs
++rm logs/*.log
++```
++
++## ⚡ **Critical Technical Knowledge**
++
++### **🔧 Modbus Communication - WHAT WORKS**
++
++**✅ WORKING METHOD (Use This!):**
++- **Function Code**: `0x05` (Write Single Coil)
++- **ON Command**: `01 05 00 04 FF 00 [CRC]` (for relay 5)
++- **OFF Command**: `01 05 00 04 00 00 [CRC]` (for relay 5)
++- **CRC Calculation**: Custom implementation (see below)
++
++**❌ BROKEN METHODS (Avoid These!):**
++- Waveshare timed pulse commands (`01 05 02 00 ...`)
++- ModbusRTU library `writeCoil()` method
++- `writeUInt16BE()` for command building
++- Standard Modbus libraries (they don't work with this hardware)
++
++### **🔧 Working CRC16 Implementation**
++```javascript
++function calculateCRC16(data) {
++  let crc = 0xFFFF;
++  
++  for (let i = 0; i < data.length; i++) {
++    crc ^= data[i];
++    
++    for (let j = 0; j < 8; j++) {
++      if (crc & 0x0001) {
++        crc = (crc >> 1) ^ 0xA001;
++      } else {
++        crc = crc >> 1;
++      }
++    }
++  }
++  
++  return crc;
++}
++```
++
++### **🔧 Working Command Builder**
++```javascript
++function buildModbusCommand(slaveId, functionCode, startAddress, value) {
++  const buffer = Buffer.alloc(8);
++  
++  buffer[0] = slaveId;
++  buffer[1] = functionCode;
++  buffer[2] = (startAddress >> 8) & 0xFF;  // Address high
++  buffer[3] = startAddress & 0xFF;         // Address low
++  buffer[4] = (value >> 8) & 0xFF;         // Value high
++  buffer[5] = value & 0xFF;                // Value low
++  
++  const crc = calculateCRC16(buffer.subarray(0, 6));
++  buffer[6] = crc & 0xFF;                  // CRC low
++  buffer[7] = (crc >> 8) & 0xFF;           // CRC high
++  
++  return buffer;
++}
++```
++
++### **🔧 Locker to Hardware Mapping**
++```javascript
++// Convert locker ID to hardware addresses
++const cardId = Math.ceil(lockerNumber / 16);      // Card 1, 2, 3...
++const relayId = ((lockerNumber - 1) % 16) + 1;   // Relay 1-16 on card
++const coilAddress = relayId - 1;                  // 0-based coil address
++
++// Examples:
++// Locker 1  -> Card 1, Relay 1,  Coil 0
++// Locker 5  -> Card 1, Relay 5,  Coil 4
++// Locker 16 -> Card 1, Relay 16, Coil 15
++// Locker 17 -> Card 2, Relay 1,  Coil 0
++```
++
++## 🛠️ **Development Workflow**
++
++### **1. Making Code Changes (Windows PC)**
++```powershell
++# Edit code in Kiro
++# Build the service
++npm run build:kiosk  # or build:gateway, build:panel
++
++# Commit and push
++git add .
++git commit -m "Description of changes"
++git push origin main
++```
++
++### **2. Deploy to Raspberry Pi**
++```bash
++# SSH to Pi and update
++ssh pi@pi-eform-locker
++cd /home/pi/eform-locker
++git pull origin main
++
++# Restart services
++sudo killall node
++./scripts/start-all-clean.sh
++```
++
++### **3. Test Changes**
++```bash
++# Test hardware
++node scripts/test-basic-relay-control.js
++
++# Test API
++curl -X POST http://192.168.1.8:3002/api/locker/open \
++  -H "Content-Type: application/json" \
++  -d '{"locker_id": 5, "staff_user": "test", "reason": "testing"}'
++```
++
++## 🚨 **Common Issues & Solutions**
++
++### **Port Conflicts**
++**Problem**: `Resource temporarily unavailable` or `EBUSY`
++**Solution**: Only ONE service can use `/dev/ttyUSB0` at a time
++```bash
++# Check what's using the port
++sudo lsof /dev/ttyUSB0
++
++# Kill conflicting processes
++sudo killall node
++```
++
++### **Relay Not Clicking**
++**Problem**: API returns success but no relay activation
++**Solutions**:
++1. Check if using Waveshare commands (broken) vs basic ON/OFF (working)
++2. Verify CRC calculation method
++3. Test with working script: `node scripts/test-basic-relay-control.js`
++
++### **Service Won't Start**
++**Problem**: Service fails to start or crashes
++**Solutions**:
++```bash
++# Check logs for errors
++tail -20 logs/kiosk.log
++
++# Verify port availability
++ls -la /dev/ttyUSB*
++
++# Check service health
++curl http://localhost:3002/health
++```
++
++### **Build Failures**
++**Problem**: TypeScript or build errors
++**Solutions**:
++```powershell
++# Clean build
++rm -rf app/*/dist
++npm run build:all
++
++# Check for syntax errors
++npm run lint  # if available
++```
++
++## 📋 **Useful Test Scripts**
++
++### **Hardware Testing**
++- `scripts/test-basic-relay-control.js` - Test basic relay ON/OFF
++- `scripts/test-relays-1-8.js` - Test multiple relays
++- `scripts/emergency-close-relay.js` - Emergency relay shutdown
++
++### **API Testing**
++- `scripts/test-services-quick.js` - Quick service health check
++- `scripts/test-command-processing.js` - Test command queue
++- `scripts/debug-hardware-communication.js` - Debug Modbus issues
++
++### **Service Management**
++- `scripts/start-all-clean.sh` - Clean start all services
++- `scripts/start-services-properly.sh` - Alternative startup
++- `scripts/emergency-relay-reset.js` - Reset stuck relays
++
++## 🔍 **Debugging Tips**
++
++### **Enable Debug Logging**
++Add to service code:
++```javascript
++console.log(`🔧 Debug: ${JSON.stringify(data)}`);
++console.log(`📡 Command: ${buffer.toString('hex').toUpperCase()}`);
++```
++
++### **Monitor Serial Communication**
++```bash
++# Install serial monitor
++sudo apt install minicom
++
++# Monitor port (stop services first!)
++sudo minicom -D /dev/ttyUSB0 -b 9600
++```
++
++### **Check Hardware Connections**
++```bash
++# List USB devices
++lsusb
++
++# Check serial ports
++ls -la /dev/ttyUSB*
++
++# Test port permissions
++sudo chmod 666 /dev/ttyUSB0
++```
++
++## 🎯 **API Endpoints Reference**
++
++### **Kiosk Service (Port 3002)**
++- `POST /api/locker/open` - Open locker (queue-based, RECOMMENDED)
++- `GET /health` - Service health check
++
++### **Gateway Service (Port 3000)**
++- `POST /api/admin/lockers/{id}/open` - Admin locker control
++- `GET /health` - Service health check
++
++### **Panel Service (Port 3001)**
++- `POST /api/relay/activate` - Direct relay control
++- `GET /api/relay/status` - Relay service status
++- `GET /lockers` - Locker management page
++- `GET /relay` - Direct relay control page
++
++## 🔐 **Authentication Notes**
++
++- Panel service requires authentication for web pages
++- API endpoints may bypass auth for testing
++- Default credentials in environment or config files
++
++## 📦 **Dependencies & Libraries**
++
++### **Working Libraries**
++- `serialport` - Direct serial communication ✅
++- `fastify` - Web server framework ✅
++- `sqlite3` - Database operations ✅
++
++### **Problematic Libraries**
++- `modbus-serial` - Doesn't work with this hardware ❌
++- `node-modbus` - CRC calculation issues ❌
++
++## 🚀 **Performance Tips**
++
++- Use queue-based locker control (Kiosk service) for reliability
++- Avoid direct relay control when Kiosk service is running
++- Keep relay pulse duration around 500ms for best results
++- Always turn relay OFF after activation to prevent stuck relays
++
++---
++
++**Remember**: When in doubt, use the working test scripts to verify hardware functionality before debugging software issues!
+\ No newline at end of file
+
+--- FILE: DEVELOPMENT_ENVIRONMENT_SETUP.md ---
+diff --git a/DEVELOPMENT_ENVIRONMENT_SETUP.md b/DEVELOPMENT_ENVIRONMENT_SETUP.md
+new file mode 100644
+index 0000000..daff9fd
+--- /dev/null
++++ b/DEVELOPMENT_ENVIRONMENT_SETUP.md
+@@ -0,0 +1,178 @@
++# Development Environment Setup
++
++## 🏗️ **Development Architecture**
++
++This project uses a **distributed development setup** where code development happens on a Windows PC and deployment/testing occurs on a Raspberry Pi hardware target.
++
++### **Development Machine (Windows PC)**
++- **Role**: Primary development environment
++- **OS**: Windows 11/10 with PowerShell
++- **IDE**: Kiro AI Assistant for code development
++- **Git**: Local repository with push access to main branch
++- **Tools**: 
++  - Node.js for building and testing
++  - Postman for API testing
++  - PowerShell for remote SSH access
++
++### **Target Hardware (Raspberry Pi)**
++- **Role**: Production runtime environment
++- **Device**: Raspberry Pi with hardware relay control
++- **OS**: Raspberry Pi OS (Linux)
++- **Location**: `pi@pi-eform-locker` (passwordless SSH access)
++- **Services**: Gateway, Panel, and Kiosk services with hardware integration
++- **Hardware**: USB-RS485 adapter connected to relay control cards
++
++## 🔄 **Development Workflow**
++
++### **For Kiro AI Assistant:**
++
++When making changes to the system, you have several options:
++
++#### **Option 1: Push and Deploy (Recommended)**
++```bash
++# 1. Make code changes on Windows PC
++# 2. Build and test locally
++npm run build:all
++
++# 3. Commit and push to main
++git add .
++git commit -m "Description of changes"
++git push origin main
++
++# 4. Instruct user to deploy on Raspberry Pi
++```
++
++#### **Option 2: Direct SSH Commands**
++```powershell
++# Connect to Raspberry Pi via PowerShell
++ssh pi@pi-eform-locker
++
++# Then run commands on the Pi
++git pull origin main
++npm run build:all
++# restart services as needed
++```
++
++#### **Option 3: PowerShell Remote Execution**
++```powershell
++# Execute commands remotely from Windows PC
++ssh pi@pi-eform-locker "git pull origin main && npm run build:gateway"
++```
++
++### **For Testing and Validation:**
++
++#### **API Testing with Postman**
++- **Gateway Admin API**: `http://192.168.1.8:3000/api/admin/lockers/1/open`
++- **Panel UI**: `http://192.168.1.8:3001`
++- **Kiosk API**: `http://192.168.1.8:3002/api/locker/open`
++- **Health Checks**: All services have `/health` endpoints
++
++#### **Service Management on Raspberry Pi**
++```bash
++# Start all services
++npm run start:gateway &
++npm run start:kiosk &
++npm run start:panel &
++
++# Check service status
++ps aux | grep node
++
++# Test complete system
++node scripts/test-queue-vs-direct.js
++```
++
++## 🛠️ **Available Tools and Access**
++
++### **SSH Access**
++- **Connection**: `ssh pi@pi-eform-locker`
++- **Authentication**: Passwordless (SSH key-based)
++- **From**: Windows PowerShell or any SSH client
++
++### **API Testing Tools**
++- **Postman**: Full REST API testing capability
++- **Browser**: Direct access to Panel UI
++- **cURL**: Command-line API testing
++- **Custom Scripts**: Node.js test scripts in `/scripts` directory
++
++### **Development Commands**
++
++#### **On Windows PC (Development)**
++```powershell
++# Build services locally
++npm run build:gateway
++npm run build:kiosk  
++npm run build:panel
++
++# Run tests
++npm test
++
++# Push changes
++git push origin main
++```
++
++#### **On Raspberry Pi (Deployment)**
++```bash
++# Pull latest changes
++git pull origin main
++
++# Rebuild services
++npm run build:all
++
++# Restart services
++sudo pkill -f "node.*"
++npm run start:gateway &
++npm run start:kiosk &
++npm run start:panel &
++
++# Test system
++node scripts/test-queue-vs-direct.js
++```
++
++## 🎯 **Kiro AI Workflow Recommendations**
++
++### **When Making Code Changes:**
++
++1. **Develop on Windows PC** - Use file tools to modify code
++2. **Build and validate** - Run build commands to check for errors
++3. **Push to main** - Commit and push changes to GitHub
++4. **Deploy instructions** - Provide clear deployment steps for Raspberry Pi
++5. **Test remotely** - Use Postman or provide test commands
++
++### **When Debugging Issues:**
++
++1. **SSH into Pi** - Use PowerShell to connect directly
++2. **Check service logs** - View real-time service output
++3. **Test APIs** - Use Postman for endpoint validation
++4. **Hardware validation** - Run hardware-specific test scripts
++
++### **When Adding Features:**
++
++1. **Code on Windows** - Develop using Kiro's file tools
++2. **Test locally** - Build and validate syntax
++3. **Push changes** - Deploy to main branch
++4. **Remote testing** - Guide user through Pi deployment and testing
++5. **API documentation** - Update Postman collections as needed
++
++## 📋 **Quick Reference Commands**
++
++### **Connect to Raspberry Pi**
++```powershell
++ssh pi@pi-eform-locker
++```
++
++### **Deploy Latest Changes**
++```bash
++git pull origin main && npm run build:all
++```
++
++### **Restart All Services**
++```bash
++sudo pkill -f "node.*" && sleep 3 && npm run start:gateway & npm run start:kiosk & npm run start:panel &
++```
++
++### **Test System Health**
++```bash
++curl http://localhost:3000/health && curl http://localhost:3001/health && curl http://localhost:3002/health
++```
++
++This setup enables efficient distributed development with real hardware testing capabilities while maintaining clean separation between development and production environments.
+\ No newline at end of file
+
+--- FILE: app/kiosk/src/controllers/ui-controller.ts ---
+diff --git a/app/kiosk/src/controllers/ui-controller.ts b/app/kiosk/src/controllers/ui-controller.ts
+index 0e80f07..f2804d7 100644
+--- a/app/kiosk/src/controllers/ui-controller.ts
++++ b/app/kiosk/src/controllers/ui-controller.ts
+@@ -16,6 +16,10 @@ export class UiController {
+   private pinAttempts: Map<string, { count: number; lockoutEnd?: number }> = new Map();
+   private readonly maxAttempts = 5;
+   private readonly lockoutMinutes = 5;
++  
++  // Session management for RFID card selection
++  private cardSessions: Map<string, { cardId: string; timestamp: number }> = new Map();
++  private readonly sessionTimeoutMs = 5 * 60 * 1000; // 5 minutes
+ 
+   constructor(
+     lockerStateManager: LockerStateManager,
+@@ -132,6 +136,9 @@ export class UiController {
+           return { error: 'failed_open' };
+         }
+       } else {
++        // Create a session for this card selection
++        const sessionId = this.createCardSession(kiosk_id, card_id);
++        
+         // Get available lockers for selection
+         const availableLockers = await this.lockerStateManager.getAvailableLockers(kiosk_id);
+         
+@@ -141,6 +148,7 @@ export class UiController {
+ 
+         return {
+           action: 'show_lockers',
++          session_id: sessionId,
+           lockers: availableLockers.map(locker => ({
+             id: locker.id,
+             status: locker.status
+@@ -204,16 +212,26 @@ export class UiController {
+ 
+   private async selectLocker(request: FastifyRequest, reply: FastifyReply) {
+     try {
+-      const { locker_id, kiosk_id } = request.body as { locker_id: number; kiosk_id: string };
++      const { locker_id, kiosk_id, session_id } = request.body as { 
++        locker_id: number; 
++        kiosk_id: string; 
++        session_id?: string 
++      };
+       
+       if (!locker_id || !kiosk_id) {
+         reply.code(400);
+         return { error: 'locker_id and kiosk_id are required' };
+       }
+ 
+-      // TODO: Get the current card ID from session or context
+-      // For now, we'll use a placeholder
+-      const cardId = 'temp-card-id';
++      // Get card ID from session
++      const cardId = this.getCardFromSession(session_id);
++      
++      if (!cardId) {
++        reply.code(400);
++        return { error: 'Invalid or expired session. Please scan your card again.' };
++      }
++
++      console.log(`🎯 Selecting locker ${locker_id} for card ${cardId} on kiosk ${kiosk_id}`);
+ 
+       // Assign and open the locker
+       const assigned = await this.lockerStateManager.assignLocker(kiosk_id, locker_id, 'rfid', cardId);
+@@ -227,6 +245,11 @@ export class UiController {
+       if (opened) {
+         // Update status to Owned after successful opening
+         await this.lockerStateManager.confirmOwnership(kiosk_id, locker_id);
++        
++        // Clear the session after successful selection
++        this.clearCardSession(session_id);
++        
++        console.log(`✅ Locker ${locker_id} successfully assigned to card ${cardId}`);
+         return { success: true, locker_id };
+       } else {
+         // Release the locker if opening failed
+@@ -365,4 +388,71 @@ export class UiController {
+     
+     console.log('Master Action Event:', JSON.stringify(logEntry));
+   }
++
++  private createCardSession(kioskId: string, cardId: string): string {
++    // Clean up expired sessions first
++    this.cleanupExpiredSessions();
++    
++    // Create unique session ID
++    const sessionId = `${kioskId}-${cardId}-${Date.now()}`;
++    
++    // Store session
++    this.cardSessions.set(sessionId, {
++      cardId: cardId,
++      timestamp: Date.now()
++    });
++    
++    console.log(`🔑 Created session ${sessionId} for card ${cardId}`);
++    return sessionId;
++  }
++
++  private getCardFromSession(sessionId?: string): string | null {
++    if (!sessionId) {
++      console.log('❌ No session ID provided');
++      return null;
++    }
++    
++    const session = this.cardSessions.get(sessionId);
++    
++    if (!session) {
++      console.log(`❌ Session ${sessionId} not found`);
++      return null;
++    }
++    
++    // Check if session has expired
++    if (Date.now() - session.timestamp > this.sessionTimeoutMs) {
++      console.log(`⏰ Session ${sessionId} expired`);
++      this.cardSessions.delete(sessionId);
++      return null;
++    }
++    
++    console.log(`✅ Retrieved card ${session.cardId} from session ${sessionId}`);
++    return session.cardId;
++  }
++
++  private clearCardSession(sessionId?: string): void {
++    if (sessionId && this.cardSessions.has(sessionId)) {
++      this.cardSessions.delete(sessionId);
++      console.log(`🗑️ Cleared session ${sessionId}`);
++    }
++  }
++
++  private cleanupExpiredSessions(): void {
++    const now = Date.now();
++    const expiredSessions: string[] = [];
++    
++    for (const [sessionId, session] of this.cardSessions.entries()) {
++      if (now - session.timestamp > this.sessionTimeoutMs) {
++        expiredSessions.push(sessionId);
++      }
++    }
++    
++    expiredSessions.forEach(sessionId => {
++      this.cardSessions.delete(sessionId);
++    });
++    
++    if (expiredSessions.length > 0) {
++      console.log(`🧹 Cleaned up ${expiredSessions.length} expired sessions`);
++    }
++  }
+ }
+
+--- FILE: app/kiosk/src/ui/static/app.js ---
+diff --git a/app/kiosk/src/ui/static/app.js b/app/kiosk/src/ui/static/app.js
+index 37de974..1f9e31e 100644
+--- a/app/kiosk/src/ui/static/app.js
++++ b/app/kiosk/src/ui/static/app.js
+@@ -11,6 +11,7 @@ class KioskApp {
+         this.lockoutEndTime = null;
+         this.availableLockers = [];
+         this.allLockers = [];
++        this.currentSessionId = null; // Track current RFID session
+         
+         this.init();
+     }
+@@ -478,6 +479,7 @@ class KioskApp {
+             
+             if (result.action === 'show_lockers') {
+                 this.availableLockers = result.lockers;
++                this.currentSessionId = result.session_id; // Store session ID
+                 this.renderLockerGrid();
+                 this.showScreen('locker-selection-screen');
+             } else if (result.action === 'open_locker') {
+@@ -585,7 +587,8 @@ class KioskApp {
+                 },
+                 body: JSON.stringify({
+                     locker_id: lockerId,
+-                    kiosk_id: this.kioskId
++                    kiosk_id: this.kioskId,
++                    session_id: this.currentSessionId // Include session ID
+                 })
+             });
+             
+@@ -594,6 +597,7 @@ class KioskApp {
+             
+             if (result.success) {
+                 this.showStatusMessage('opening', { id: lockerId }, 'info');
++                this.currentSessionId = null; // Clear session after use
+                 this.showScreen('main-screen');
+             } else {
+                 this.showStatusMessage(result.error || 'error_unknown', {}, 'error');
+
+--- FILE: test-rfid.html ---
+diff --git a/test-rfid.html b/test-rfid.html
+new file mode 100644
+index 0000000..6dfb2cb
+--- /dev/null
++++ b/test-rfid.html
+@@ -0,0 +1,108 @@
++<!DOCTYPE html>
++<html>
++<head>
++    <title>RFID Test</title>
++    <style>
++        body { font-family: Arial, sans-serif; padding: 20px; }
++        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
++        .info { background: #e3f2fd; border: 1px solid #2196f3; }
++        .success { background: #e8f5e8; border: 1px solid #4caf50; }
++        .error { background: #ffebee; border: 1px solid #f44336; }
++        #output { background: #f5f5f5; padding: 10px; border: 1px solid #ccc; min-height: 200px; font-family: monospace; }
++    </style>
++</head>
++<body>
++    <h1>🔍 RFID Reader Test</h1>
++    <div class="status info">
++        <strong>Instructions:</strong>
++        <ol>
++            <li>Click in the text area below to focus it</li>
++            <li>Scan your RFID card</li>
++            <li>Watch the output for detected input</li>
++        </ol>
++    </div>
++    
++    <div class="status" id="status">Ready for RFID input...</div>
++    
++    <h3>RFID Input Area (click here first):</h3>
++    <textarea id="rfidInput" placeholder="Click here and scan your RFID card..." style="width: 100%; height: 100px; font-size: 16px;"></textarea>
++    
++    <h3>Debug Output:</h3>
++    <div id="output"></div>
++    
++    <script>
++        let rfidBuffer = '';
++        let rfidTimeout = null;
++        const output = document.getElementById('output');
++        const status = document.getElementById('status');
++        const rfidInput = document.getElementById('rfidInput');
++        
++        function log(message) {
++            const timestamp = new Date().toLocaleTimeString();
++            output.innerHTML += `[${timestamp}] ${message}<br>`;
++            output.scrollTop = output.scrollHeight;
++            console.log(message);
++        }
++        
++        function updateStatus(message, type = 'info') {
++            status.textContent = message;
++            status.className = `status ${type}`;
++        }
++        
++        log('🔧 RFID Test initialized');
++        updateStatus('Ready - Click in text area and scan RFID card');
++        
++        // Listen for all keyboard events
++        document.addEventListener('keydown', (event) => {
++            log(`🔍 Key detected: "${event.key}" (code: ${event.code})`);
++            
++            // Handle Enter key (end of RFID scan)
++            if (event.key === 'Enter') {
++                if (rfidBuffer.length > 0) {
++                    log(`🎯 RFID Card Detected: "${rfidBuffer}"`);
++                    updateStatus(`RFID Card: ${rfidBuffer}`, 'success');
++                    rfidBuffer = '';
++                } else {
++                    log('⚠️ Enter pressed but no RFID buffer');
++                }
++                
++                if (rfidTimeout) {
++                    clearTimeout(rfidTimeout);
++                    rfidTimeout = null;
++                }
++                return;
++            }
++            
++            // Handle numeric and alphanumeric input
++            if (event.key.length === 1 && /[A-Za-z0-9]/.test(event.key)) {
++                rfidBuffer += event.key;
++                log(`📝 Buffer: "${rfidBuffer}"`);
++                updateStatus(`Reading card... (${rfidBuffer.length} chars)`, 'info');
++                
++                // Clear buffer after 3 seconds if no Enter received
++                if (rfidTimeout) {
++                    clearTimeout(rfidTimeout);
++                }
++                
++                rfidTimeout = setTimeout(() => {
++                    log('⏰ RFID input timeout - clearing buffer');
++                    rfidBuffer = '';
++                    updateStatus('Timeout - Ready for next scan', 'error');
++                    rfidTimeout = null;
++                }, 3000);
++            }
++        });
++        
++        // Also monitor the text area for input
++        rfidInput.addEventListener('input', (event) => {
++            log(`📄 Text area input: "${event.target.value}"`);
++        });
++        
++        rfidInput.addEventListener('keydown', (event) => {
++            log(`📄 Text area key: "${event.key}"`);
++        });
++        
++        log('✅ Event listeners ready');
++    </script>
++</body>
++</html>
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

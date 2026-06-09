@@ -1,0 +1,63 @@
+diff --git a/app/panel/src/index.ts b/app/panel/src/index.ts
+index 65592e8..ee06f3d 100644
+--- a/app/panel/src/index.ts
++++ b/app/panel/src/index.ts
+@@ -178,6 +178,18 @@ async function startPanelService() {
+       auditLogger,
+     });
+ 
++    // Register locker naming routes
++    try {
++      const { lockerNamingRoutes } = await import('./routes/locker-naming-routes');
++      await fastify.register(lockerNamingRoutes, {
++        prefix: "/api/locker-naming",
++        dbManager,
++      });
++      console.log('✅ Locker naming routes registered successfully');
++    } catch (error) {
++      console.error('❌ Failed to register locker naming routes:', error);
++    }
++
+     // Register relay control routes
+     try {
+       const { registerRelayRoutes } = await import('./routes/relay-routes');
+@@ -187,6 +199,15 @@ async function startPanelService() {
+       console.error('❌ Failed to register relay routes:', error);
+     }
+ 
++    // Register performance monitoring routes
++    try {
++      const { performanceRoutes } = await import('./routes/performance-routes');
++      await fastify.register(performanceRoutes);
++      console.log('✅ Performance monitoring routes registered successfully');
++    } catch (error) {
++      console.error('❌ Failed to register performance routes:', error);
++    }
++
+     // Proxy heartbeat requests to Gateway service
+     fastify.register(async function (fastify) {
+       // Proxy all heartbeat routes
+@@ -288,6 +309,11 @@ async function startPanelService() {
+       return reply.sendFile("relay.html");
+     });
+ 
++    // Locker naming route
++    fastify.get("/locker-naming", async (_request, reply) => {
++      return reply.sendFile("locker-naming.html");
++    });
++
+     // Configuration route
+     fastify.get("/config", async (_request, reply) => {
+       return reply.sendFile("config.html");
+@@ -298,6 +324,11 @@ async function startPanelService() {
+       return reply.sendFile("csp-test.html");
+     });
+ 
++    // Performance dashboard route
++    fastify.get("/performance", async (_request, reply) => {
++      return reply.sendFile("performance-dashboard.html");
++    });
++
+     
+     // Clear cookies endpoint (fix browser conflicts)
+     fastify.get("/clear-cookies", async (request, reply) => {

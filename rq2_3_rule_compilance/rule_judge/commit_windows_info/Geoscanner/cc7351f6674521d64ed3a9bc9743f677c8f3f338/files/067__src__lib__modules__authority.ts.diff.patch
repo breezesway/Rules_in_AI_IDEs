@@ -1,0 +1,320 @@
+diff --git a/src/lib/modules/authority.ts b/src/lib/modules/authority.ts
+index 3032cf2..0c99620 100644
+--- a/src/lib/modules/authority.ts
++++ b/src/lib/modules/authority.ts
+@@ -27,9 +27,7 @@ export interface AuthorityResult {
+   }>;
+ }
+ 
+-export function analyzeAuthority(
+-  htmlSnapshot: HtmlSnapshot | null
+-): AuthorityResult {
++export function analyzeAuthority(htmlSnapshot: HtmlSnapshot | null): AuthorityResult {
+   const result: AuthorityResult = {
+     score: 0,
+     maxScore: 15,
+@@ -38,19 +36,19 @@ export function analyzeAuthority(
+       authorBio: {
+         present: false,
+         hasExpertiseIndicators: false,
+-        authorName: null
++        authorName: null,
+       },
+       outboundLinks: {
+         totalCount: 0,
+         authorityDomainsCount: 0,
+-        domains: []
++        domains: [],
+       },
+       licenseInfo: {
+         present: false,
+-        type: null
+-      }
++        type: null,
++      },
+     },
+-    fixes: []
++    fixes: [],
+   };
+ 
+   if (!htmlSnapshot) {
+@@ -60,46 +58,46 @@ export function analyzeAuthority(
+         {
+           impact: 'high',
+           description: 'Geen HTML snapshot beschikbaar',
+-          fix: 'Controleer of de URL correct is en de pagina toegankelijk is'
+-        }
+-      ]
++          fix: 'Controleer of de URL correct is en de pagina toegankelijk is',
++        },
++      ],
+     };
+   }
+ 
+   const html = htmlSnapshot.content;
+-  
++
+   // 1. Auteur bio analyse
+   const authorAnalysis = analyzeAuthorBio(html);
+   result.details.authorBio = authorAnalysis;
+-  
++
+   if (authorAnalysis.present) {
+     result.score += 3;
+-    
++
+     if (authorAnalysis.hasExpertiseIndicators) {
+       result.score += 3;
+     } else {
+       result.fixes.push({
+         impact: 'medium',
+         description: 'Auteur bio bevat geen expertise-indicatoren',
+-        fix: 'Voeg professionele kwalificaties, ervaring, certificeringen of andere expertise-indicatoren toe aan de auteur bio'
++        fix: 'Voeg professionele kwalificaties, ervaring, certificeringen of andere expertise-indicatoren toe aan de auteur bio',
+       });
+     }
+   } else {
+     result.fixes.push({
+       impact: 'high',
+       description: 'Geen auteur bio gevonden',
+-      fix: 'Voeg een auteur bio toe met naam, functie, en expertise. Gebruik schema.org Person markup voor betere AI-zichtbaarheid'
++      fix: 'Voeg een auteur bio toe met naam, functie, en expertise. Gebruik schema.org Person markup voor betere AI-zichtbaarheid',
+     });
+   }
+-  
++
+   // 2. Outbound links analyse
+   const linksAnalysis = analyzeOutboundLinks(html);
+   result.details.outboundLinks = linksAnalysis;
+-  
++
+   if (linksAnalysis.totalCount > 0) {
+     // Basis score voor het hebben van outbound links
+     result.score += 1;
+-    
++
+     // Extra punten voor links naar autoriteitsdomeinen
+     if (linksAnalysis.authorityDomainsCount >= 5) {
+       result.score += 4;
+@@ -108,34 +106,34 @@ export function analyzeAuthority(
+       result.fixes.push({
+         impact: 'medium',
+         description: 'Beperkt aantal links naar autoriteitsdomeinen',
+-        fix: 'Voeg meer links toe naar gerenommeerde bronnen zoals academische journals, Wikipedia, of industrie-autoriteiten'
++        fix: 'Voeg meer links toe naar gerenommeerde bronnen zoals academische journals, Wikipedia, of industrie-autoriteiten',
+       });
+     } else {
+       result.fixes.push({
+         impact: 'high',
+         description: 'Weinig tot geen links naar autoriteitsdomeinen',
+-        fix: 'Voeg links toe naar minstens 3-5 gerenommeerde bronnen om je content met betrouwbare bronnen te onderbouwen'
++        fix: 'Voeg links toe naar minstens 3-5 gerenommeerde bronnen om je content met betrouwbare bronnen te onderbouwen',
+       });
+     }
+   } else {
+     result.fixes.push({
+       impact: 'high',
+       description: 'Geen outbound links gevonden',
+-      fix: 'Voeg links toe naar externe, gezaghebbende bronnen om je content te onderbouwen'
++      fix: 'Voeg links toe naar externe, gezaghebbende bronnen om je content te onderbouwen',
+     });
+   }
+-  
++
+   // 3. Licentie informatie analyse
+   const licenseAnalysis = analyzeLicenseInfo(html);
+   result.details.licenseInfo = licenseAnalysis;
+-  
++
+   if (licenseAnalysis.present) {
+     result.score += 3;
+   } else {
+     result.fixes.push({
+       impact: 'low',
+       description: 'Geen licentie informatie gevonden',
+-      fix: 'Voeg copyright of Creative Commons licentie-informatie toe aan de footer van je site'
++      fix: 'Voeg copyright of Creative Commons licentie-informatie toe aan de footer van je site',
+     });
+   }
+ 
+@@ -157,46 +155,46 @@ function analyzeAuthorBio(html: string): AuthorityResult['details']['authorBio']
+   const result = {
+     present: false,
+     hasExpertiseIndicators: false,
+-    authorName: null as string | null
++    authorName: null as string | null,
+   };
+-  
++
+   // Zoek naar auteur informatie in HTML
+-  
++
+   // 1. Schema.org Person markup
+   const schemaPersonMatch = html.match(/"@type"\s*:\s*"Person".*?"name"\s*:\s*"([^"]*)"/s);
+   const hasSchemaAuthor = !!schemaPersonMatch;
+-  
++
+   // 2. Traditionele auteur bio secties
+   const authorDivPattern = /<div[^>]*class="[^"]*author[^"]*"[^>]*>/i;
+   const hasAuthorDiv = authorDivPattern.test(html);
+-  
++
+   // 3. Autheurinformatie in meta tags
+   const metaAuthorPattern = /<meta[^>]*name="author"[^>]*content="([^"]*)"[^>]*>/i;
+   const metaAuthorMatch = html.match(metaAuthorPattern);
+-  
++
+   // 4. Byline patronen
+   const bylinePattern = /<p[^>]*class="[^"]*byline[^"]*"[^>]*>.*?<\/p>/i;
+   const hasByline = bylinePattern.test(html);
+-  
++
+   result.present = hasSchemaAuthor || hasAuthorDiv || !!metaAuthorMatch || hasByline;
+-  
++
+   // Als we een auteur hebben gevonden, zoek naar de naam
+   if (schemaPersonMatch) {
+     result.authorName = schemaPersonMatch[1];
+   } else if (metaAuthorMatch) {
+     result.authorName = metaAuthorMatch[1];
+   }
+-  
++
+   // Zoek naar expertise-indicatoren
+   const expertiseIndicators = [
+     /(?:dr\.|professor|prof\.|phd|certified|expert|specialist|\d+ jaar ervaring|\d+ years? experience)/i,
+     /diploma|degree|master|bachelor|doctorandus|ingenieur|drs\.|ir\.|mr\.|certified|gecertificeerd/i,
+-    /researcher|onderzoeker|journalist|author|auteur|professional|consultant|adviseur|specialist/i
++    /researcher|onderzoeker|journalist|author|auteur|professional|consultant|adviseur|specialist/i,
+   ];
+-  
++
+   const expertiseCheck = expertiseIndicators.some(pattern => pattern.test(html));
+   result.hasExpertiseIndicators = expertiseCheck;
+-  
++
+   return result;
+ }
+ 
+@@ -204,39 +202,39 @@ function analyzeOutboundLinks(html: string): AuthorityResult['details']['outboun
+   const result = {
+     totalCount: 0,
+     authorityDomainsCount: 0,
+-    domains: [] as string[]
++    domains: [] as string[],
+   };
+-  
++
+   // Extraheer alle outbound links
+   const linkPattern = /<a[^>]*href="(https?:\/\/[^"]*)"[^>]*>/g;
+   const matches = [...html.matchAll(linkPattern)];
+-  
++
+   // Filter op unieke domeinen en niet-sociale media links
+   const domains = new Set<string>();
+   const authorityDomains = new Set<string>();
+-  
++
+   for (const match of matches) {
+     try {
+       const url = new URL(match[1]);
+       const domain = url.hostname;
+-      
++
+       // Filter out sociale media en niet-inhoudelijke sites
+       const socialMediaPatterns = [
+-        /facebook\.com/i, 
+-        /twitter\.com/i, 
+-        /linkedin\.com/i, 
++        /facebook\.com/i,
++        /twitter\.com/i,
++        /linkedin\.com/i,
+         /instagram\.com/i,
+         /youtube\.com/i,
+         /pinterest\.com/i,
+         /tiktok\.com/i,
+-        /google\.com/i
++        /google\.com/i,
+       ];
+-      
++
+       const isSocialMedia = socialMediaPatterns.some(pattern => pattern.test(domain));
+-      
++
+       if (!isSocialMedia) {
+         domains.add(domain);
+-        
++
+         // Check of het een autoriteitsdomein is
+         const authorityPatterns = [
+           /wikipedia\.org/i,
+@@ -258,9 +256,9 @@ function analyzeOutboundLinks(html: string): AuthorityResult['details']['outboun
+           /theguardian\.com/i,
+           /who\.int/i,
+           /rijksoverheid\.nl/i,
+-          /cbs\.nl/i
++          /cbs\.nl/i,
+         ];
+-        
++
+         const isAuthority = authorityPatterns.some(pattern => pattern.test(domain));
+         if (isAuthority) {
+           authorityDomains.add(domain);
+@@ -270,36 +268,37 @@ function analyzeOutboundLinks(html: string): AuthorityResult['details']['outboun
+       // Ongeldige URL, negeren
+     }
+   }
+-  
++
+   result.totalCount = domains.size;
+   result.authorityDomainsCount = authorityDomains.size;
+   result.domains = [...authorityDomains];
+-  
++
+   return result;
+ }
+ 
+ function analyzeLicenseInfo(html: string): AuthorityResult['details']['licenseInfo'] {
+   const result = {
+     present: false,
+-    type: null as string | null
++    type: null as string | null,
+   };
+-  
++
+   // Zoek naar verschillende soorten licentie-informatie
+-  
++
+   // 1. Copyright notice
+   const copyrightPattern = /(?:©|&copy;|copyright)\s*(?:\d{4}|2\d{3})/i;
+   const hasCopyright = copyrightPattern.test(html);
+-  
++
+   // 2. Creative Commons licenties
+   const ccPattern = /creative\s+commons|CC\s+BY(?:-(?:NC|SA|ND|NC-SA|NC-ND))?/i;
+   const hasCC = ccPattern.test(html);
+-  
++
+   // 3. Algemene voorwaarden en privacybeleid
+-  const termsPattern = /(?:terms\s+(?:of\s+(?:use|service))|gebruiksvoorwaarden|algemene\s+voorwaarden)/i;
++  const termsPattern =
++    /(?:terms\s+(?:of\s+(?:use|service))|gebruiksvoorwaarden|algemene\s+voorwaarden)/i;
+   const hasTerms = termsPattern.test(html);
+-  
++
+   result.present = hasCopyright || hasCC || hasTerms;
+-  
++
+   // Bepaal het type licentie
+   if (hasCC) {
+     // Extract CC licentie type
+@@ -310,6 +309,6 @@ function analyzeLicenseInfo(html: string): AuthorityResult['details']['licenseIn
+   } else if (hasTerms) {
+     result.type = 'Terms of Use';
+   }
+-  
++
+   return result;
+-} 
+\ No newline at end of file
++}

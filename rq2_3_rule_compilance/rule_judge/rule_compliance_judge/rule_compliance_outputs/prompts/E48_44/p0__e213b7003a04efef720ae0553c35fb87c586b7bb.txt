@@ -1,0 +1,413 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Production start: npm run start:prod
++ Production start: pnpm run start:prod
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json), CI/CD pipeline definitions (e.g., .github/workflows/*.yml, Jenkinsfile, gitlab-ci.yml), containerization files (Dockerfile), and lock files (pnpm-lock.yaml).
+- Suggested Logic: 1. Verify the existence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' or 'yarn.lock'.
+2. Check 'package.json' to ensure the 'scripts' section contains 'start:prod'.
+3. Scan CI/CD configuration files and Dockerfiles to ensure that the command executed for production deployment/startup is 'pnpm run start:prod' and NOT 'npm run start:prod'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: ✨ Enhance interactive service with multi-select category interface
+
+Implement comprehensive category selection functionality:
+- Add multi-select interface with spacebar toggle and 'a' key for toggle all
+- Include clear instructions for user interaction
+- Add validation to prevent empty category selection
+- Expand test coverage with 10 comprehensive test cases
+- Update tasks.md to mark 2.2 as complete
+
+Category options: Personal Context, Project Context, Prompt Templates
+- Changed Files List: 
+.kiro/specs/taptik-build-command/tasks.md	+2	-2	after_lines=148
+.kiro/steering/project-context.md	+5	-5	after_lines=38
+src/modules/build/services/interactive.service.spec.ts	+57	-1	after_lines=190
+src/modules/build/services/interactive.service.ts	+2	-0	after_lines=89
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── build
+│   │   │   ├── build.module.ts
+│   │   │   ├── commands
+│   │   │   │   └── build.command.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── build-config.interface.ts
+│   │   │   │   ├── settings-data.interface.ts
+│   │   │   │   └── taptik-format.interface.ts
+│   │   │   └── services
+│   │   │       ├── interactive.service.spec.ts
+│   │   │       └── interactive.service.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+index 5e08ca4..f5579aa 100644
+--- a/.kiro/specs/taptik-build-command/tasks.md
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -6,7 +6,7 @@
+   - Set up module registration and dependency injection
+   - _Requirements: 1.1, 2.1_
+ 
+-- [ ] 2. Implement interactive user interface service
++- [x] 2. Implement interactive user interface service
+   - [x] 2.1 Create InteractiveService with platform selection functionality
+     - Implement platform selection menu with "Kiro", "Cursor", "Claude Code" options
+     - Add timeout handling for 30-second inactivity
+@@ -14,7 +14,7 @@
+     - Write unit tests for platform selection logic
+     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+ 
+-  - [ ] 2.2 Implement category selection with multi-select interface
++  - [x] 2.2 Implement category selection with multi-select interface
+     - Create multi-select menu for "Personal Context", "Project Context", "Prompt Templates"
+     - Add spacebar toggle functionality and 'a' key for toggle all
+     - Implement validation to prevent empty category selection
+
+--- FILE: .kiro/steering/project-context.md ---
+diff --git a/.kiro/steering/project-context.md b/.kiro/steering/project-context.md
+index 0a6b900..bbf50cd 100644
+--- a/.kiro/steering/project-context.md
++++ b/.kiro/steering/project-context.md
+@@ -19,9 +19,9 @@ inclusion: always
+ 
+ ## Development Workflow
+ 
+-- Use `npm run start:dev` for development
+-- Run `npm run test` before committing
+-- Use `npm run lint` to check code style
++- Use `pnpm run start:dev` for development
++- Run `pnpm run test` before committing
++- Use `pnpm run lint` to check code style
+ - Health check available at `/health` endpoint
+ 
+ ## Key Dependencies
+@@ -33,6 +33,6 @@ inclusion: always
+ 
+ ## Build & Deployment
+ 
+-- Build command: `npm run build`
+-- Production start: `npm run start:prod`
++- Build command: `pnpm run build`
++- Production start: `pnpm run start:prod`
+ - Application runs on port 3000 by default
+
+--- FILE: src/modules/build/services/interactive.service.spec.ts ---
+diff --git a/src/modules/build/services/interactive.service.spec.ts b/src/modules/build/services/interactive.service.spec.ts
+index adaecb4..39b3fac 100644
+--- a/src/modules/build/services/interactive.service.spec.ts
++++ b/src/modules/build/services/interactive.service.spec.ts
+@@ -91,7 +91,7 @@ describe('InteractiveService', () => {
+       expect(result[1].enabled).toBe(true);
+     });
+ 
+-    it('should call checkbox with correct configuration', async () => {
++    it('should call checkbox with correct configuration including multi-select instructions', async () => {
+       const { checkbox } = await import('@inquirer/prompts');
+       (checkbox as any).mockResolvedValue([BuildCategoryName.PERSONAL_CONTEXT]);
+ 
+@@ -99,6 +99,7 @@ describe('InteractiveService', () => {
+ 
+       expect(checkbox).toHaveBeenCalledWith({
+         message: '📁 Select categories to include in your build:',
++        instructions: 'Use spacebar to select, arrow keys to navigate, \'a\' to toggle all, enter to confirm',
+         choices: expect.arrayContaining([
+           expect.objectContaining({ 
+             value: BuildCategoryName.PERSONAL_CONTEXT,
+@@ -130,5 +131,60 @@ describe('InteractiveService', () => {
+       expect(validateFn([])).toBe('At least one category must be selected.');
+       expect(validateFn([BuildCategoryName.PERSONAL_CONTEXT])).toBe(true);
+     });
++
++    it('should handle selection of all categories', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      const allCategories = [
++        BuildCategoryName.PERSONAL_CONTEXT,
++        BuildCategoryName.PROJECT_CONTEXT,
++        BuildCategoryName.PROMPT_TEMPLATES
++      ];
++      (checkbox as any).mockResolvedValue(allCategories);
++      
++      const result = await service.selectCategories();
++
++      expect(result).toHaveLength(3);
++      expect(result.map(cat => cat.name)).toEqual(allCategories);
++      expect(result.every(cat => cat.enabled)).toBe(true);
++    });
++
++    it('should handle single category selection', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      (checkbox as any).mockResolvedValue([BuildCategoryName.PROMPT_TEMPLATES]);
++      
++      const result = await service.selectCategories();
++
++      expect(result).toHaveLength(1);
++      expect(result[0].name).toBe(BuildCategoryName.PROMPT_TEMPLATES);
++      expect(result[0].enabled).toBe(true);
++    });
++
++    it('should include descriptions for each category choice', async () => {
++      const { checkbox } = await import('@inquirer/prompts');
++      (checkbox as any).mockResolvedValue([BuildCategoryName.PERSONAL_CONTEXT]);
++
++      await service.selectCategories();
++
++      const checkboxCall = (checkbox as any).mock.calls[0][0];
++      const choices = checkboxCall.choices;
++      
++      expect(choices).toEqual(expect.arrayContaining([
++        expect.objectContaining({
++          name: 'Personal Context',
++          value: BuildCategoryName.PERSONAL_CONTEXT,
++          description: 'User preferences, work style, and communication settings'
++        }),
++        expect.objectContaining({
++          name: 'Project Context',
++          value: BuildCategoryName.PROJECT_CONTEXT,
++          description: 'Project information, technical stack, and development guidelines'
++        }),
++        expect.objectContaining({
++          name: 'Prompt Templates',
++          value: BuildCategoryName.PROMPT_TEMPLATES,
++          description: 'Reusable prompt templates for AI interactions'
++        })
++      ]));
++    });
+   });
+ });
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/interactive.service.ts ---
+diff --git a/src/modules/build/services/interactive.service.ts b/src/modules/build/services/interactive.service.ts
+index 7ded675..907ecfd 100644
+--- a/src/modules/build/services/interactive.service.ts
++++ b/src/modules/build/services/interactive.service.ts
+@@ -46,12 +46,14 @@ export class InteractiveService {
+ 
+   /**
+    * Prompts user to select categories to include in the build
++   * Uses multi-select interface with spacebar toggle and 'a' key for toggle all
+    * @returns Promise resolving to array of selected categories
+    * @throws Error if timeout occurs or no categories selected
+    */
+   async selectCategories(): Promise<BuildCategory[]> {
+     const selectedCategoryNames = await checkbox<BuildCategoryName>({
+       message: '📁 Select categories to include in your build:',
++      instructions: 'Use spacebar to select, arrow keys to navigate, \'a\' to toggle all, enter to confirm',
+       choices: [
+         {
+           name: 'Personal Context',
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

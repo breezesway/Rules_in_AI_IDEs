@@ -1,0 +1,1305 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .cursor/rules/angular-developer.mdc
+- Change Type: added
+- Target Rule Content:
+NEVER USE - NgClass and NgStyle
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically Angular HTML templates (*.html) and TypeScript files (*.ts) containing component templates.
+- Suggested Logic: Scan the source code for the presence of the Angular directives 'ngClass', '[ngClass]', 'ngStyle', or '[ngStyle]'. This can be achieved using a simple regex or a template parser to identify these specific attributes in HTML tags.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: feat: enhance Kanban board with animations and code improvements
+
+- Added provideAnimations to app configuration for improved UI transitions.
+- Refactored HTML structure in Kanban board component for better readability and maintainability.
+- Updated TypeScript component to include new drag-and-drop features and improved performance metrics.
+- Enhanced task service with better error handling and data integrity checks.
+
+Related to ongoing improvements in task management functionality.
+- Changed Files List: 
+src/app/app.config.ts	+6	-1	after_lines=13
+src/app/components/kanban-board/kanban-board.component.html	+74	-71	after_lines=84
+src/app/components/kanban-board/kanban-board.component.ts	+169	-101	after_lines=741
+src/app/services/task.service.ts	+73	-65	after_lines=711
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── angular-developer.mdc
+│       ├── dart-developer.mdc
+│       ├── generate-task-list.mdc
+│       ├── process-task-list.mdc
+│       ├── product-manager.mdc
+│       └── typescript-developer.mdc
+├── .editorconfig
+├── .gitignore
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   └── tasks.json
+├── README.md
+├── angular.json
+├── package-lock.json
+├── package.json
+├── public
+│   └── favicon.ico
+├── src
+│   ├── app
+│   │   ├── app.component.css
+│   │   ├── app.component.html
+│   │   ├── app.component.spec.ts
+│   │   ├── app.component.ts
+│   │   ├── app.config.ts
+│   │   ├── app.routes.ts
+│   │   ├── components
+│   │   │   ├── kanban-board
+│   │   │   │   ├── TESTING.md
+│   │   │   │   ├── drag-drop-test-runner.ts
+│   │   │   │   ├── kanban-board.component.css
+│   │   │   │   ├── kanban-board.component.html
+│   │   │   │   ├── kanban-board.component.spec.ts
+│   │   │   │   ├── kanban-board.component.ts
+│   │   │   │   ├── kanban-board.integration.spec.ts
+│   │   │   │   └── kanban-board.performance.spec.ts
+│   │   │   └── task-card
+│   │   │       ├── task-card.component.spec.ts
+│   │   │       └── task-card.component.ts
+│   │   ├── models
+│   │   │   ├── task-status.model.ts
+│   │   │   └── task.model.ts
+│   │   └── services
+│   │       ├── task.service.spec.ts
+│   │       ├── task.service.ts
+│   │       ├── toast.service.spec.ts
+│   │       └── toast.service.ts
+│   ├── index.html
+│   ├── main.ts
+│   └── styles.css
+├── tasks
+│   ├── prd-todo-list-app.md
+│   └── tasks-prd-todo-list-app.md
+├── tsconfig.app.json
+├── tsconfig.json
+└── tsconfig.spec.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/app.config.ts ---
+diff --git a/src/app/app.config.ts b/src/app/app.config.ts
+index a1e7d6f..0196c34 100644
+--- a/src/app/app.config.ts
++++ b/src/app/app.config.ts
+@@ -1,8 +1,13 @@
+ import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+ import { provideRouter } from '@angular/router';
++import { provideAnimations } from '@angular/platform-browser/animations';
+ 
+ import { routes } from './app.routes';
+ 
+ export const appConfig: ApplicationConfig = {
+-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes)]
++  providers: [
++    provideZoneChangeDetection({ eventCoalescing: true }),
++    provideRouter(routes),
++    provideAnimations()
++  ]
+ };
+
+--- FILE: src/app/components/kanban-board/kanban-board.component.html ---
+diff --git a/src/app/components/kanban-board/kanban-board.component.html b/src/app/components/kanban-board/kanban-board.component.html
+index 158a370..e4216e5 100644
+--- a/src/app/components/kanban-board/kanban-board.component.html
++++ b/src/app/components/kanban-board/kanban-board.component.html
+@@ -1,81 +1,84 @@
+-<div class="kanban-board" 
+-     cdkDropListGroup
+-     [class.is-dragging]="isDragging()">
++<div class="kanban-board" cdkDropListGroup [class.is-dragging]="isDragging()">
+   <div class="kanban-columns">
+     @for (column of columns; track column.id) {
+-      <div class="kanban-column"
+-           [class.drag-source]="isSourceColumn(column.id)"
+-           [class.drag-over]="isDragOverColumn(column.id)">
+-        <div class="column-header">
+-          <h3 class="column-title">{{ column.title }}</h3>
+-          <span class="task-count">{{ getTasksForColumn(column.id).length }}</span>
+-          @if (isDragging() && !isSourceColumn(column.id)) {
+-            <div class="drop-indicator">
+-              <span class="drop-hint">Drop here</span>
+-            </div>
+-          }
++    <div
++      class="kanban-column"
++      [class.drag-source]="isSourceColumn(column.id)"
++      [class.drag-over]="isDragOverColumn(column.id)"
++    >
++      <div class="column-header">
++        <h3 class="column-title">{{ column.title }}</h3>
++        <span class="task-count">{{
++          getTasksForColumn(column.id).length
++        }}</span>
++        @if (isDragging() && !isSourceColumn(column.id)) {
++        <div class="drop-indicator">
++          <span class="drop-hint">Drop here</span>
+         </div>
+-        <p class="column-description">{{ column.description }}</p>
+-        
+-        <div class="column-content">
+-          <div 
+-            class="task-list"
+-            cdkDropList
+-            [id]="getDropListId(column.id)"
+-            [cdkDropListData]="getTasksForColumn(column.id)"
+-            (cdkDropListDropped)="onDrop($event)"
+-            (cdkDropListEntered)="onDragEnter($event)"
+-            (cdkDropListExited)="onDragExit($event)">
+-            @if (getTasksForColumn(column.id).length === 0) {
+-              <div class="empty-column"
+-                   [class.highlight-drop]="isDragging() && isDragOverColumn(column.id)">
+-                @if (isDragging()) {
+-                  <div class="empty-drop-zone">
+-                    <div class="drop-zone-icon">📋</div>
+-                    <p>Drop your task here</p>
+-                  </div>
+-                } @else {
+-                  <p>No tasks in {{ column.title.toLowerCase() }}</p>
+-                }
+-              </div>
++        }
++      </div>
++      <p class="column-description">{{ column.description }}</p>
++
++      <div class="column-content">
++        <div
++          class="task-list"
++          cdkDropList
++          [id]="getDropListId(column.id)"
++          [cdkDropListData]="getTasksForColumn(column.id)"
++          (cdkDropListDropped)="onDrop($event)"
++          (cdkDropListEntered)="onDragEnter($event)"
++          (cdkDropListExited)="onDragExit($event)"
++        >
++          @if (getTasksForColumn(column.id).length === 0) {
++          <div
++            class="empty-column"
++            [class.highlight-drop]="isDragging() && isDragOverColumn(column.id)"
++          >
++            @if (isDragging()) {
++            <div class="empty-drop-zone">
++              <div class="drop-zone-icon">📋</div>
++              <p>Drop your task here</p>
++            </div>
+             } @else {
+-              @for (task of getTasksForColumn(column.id); track task.id) {
+-                <div cdkDrag 
+-                     class="task-item"
+-                     [cdkDragData]="task"
+-                     (cdkDragStarted)="onDragStart($event)"
+-                     (cdkDragEnded)="onDragEnd($event)">
+-                  <app-task-card 
+-                    [task]="task"
+-                    (deleteTask)="onDeleteTask($event)" />
+-                  
+-                  <!-- Custom drag preview -->
+-                  <div *cdkDragPreview class="drag-preview">
+-                    <div class="preview-card">
+-                      <div class="preview-status">{{ column.title }}</div>
+-                      <h4>{{ task.title }}</h4>
+-                      @if (task.description) {
+-                        <p>{{ task.description }}</p>
+-                      }
+-                      <div class="preview-timestamp">
+-                        Created {{ task.createdAt | date:'short' }}
+-                      </div>
+-                    </div>
+-                  </div>
+-                  
+-                  <!-- Drag placeholder -->
+-                  <div *cdkDragPlaceholder class="drag-placeholder">
+-                    <div class="placeholder-content">
+-                      <div class="placeholder-icon">⬇️</div>
+-                      <span>Drop task here</span>
+-                    </div>
+-                  </div>
+-                </div>
+-              }
++            <p>No tasks in {{ column.title.toLowerCase() }}</p>
+             }
+           </div>
++          } @else { @for (task of getTasksForColumn(column.id); track task.id) {
++          <div
++            cdkDrag
++            class="task-item"
++            [cdkDragData]="task"
++            (cdkDragStarted)="onDragStart($event)"
++            (cdkDragEnded)="onDragEnd($event)"
++          >
++            <app-task-card [task]="task" (deleteTask)="onDeleteTask($event)" />
++
++            <!-- Custom drag preview -->
++            <div *cdkDragPreview class="drag-preview">
++              <div class="preview-card">
++                <div class="preview-status">{{ column.title }}</div>
++                <h4>{{ task.title }}</h4>
++                @if (task.description) {
++                <p>{{ task.description }}</p>
++                }
++                <div class="preview-timestamp">
++                  Created {{ task.createdAt | date : "short" }}
++                </div>
++              </div>
++            </div>
++
++            <!-- Drag placeholder -->
++            <div *cdkDragPlaceholder class="drag-placeholder">
++              <div class="placeholder-content">
++                <div class="placeholder-icon">⬇️</div>
++                <span>Drop task here</span>
++              </div>
++            </div>
++          </div>
++          } }
+         </div>
+       </div>
++    </div>
+     }
+   </div>
+-</div>
+\ No newline at end of file
++</div>
+
+--- FILE: src/app/components/kanban-board/kanban-board.component.ts ---
+diff --git a/src/app/components/kanban-board/kanban-board.component.ts b/src/app/components/kanban-board/kanban-board.component.ts
+index 739f7de..33e7097 100644
+--- a/src/app/components/kanban-board/kanban-board.component.ts
++++ b/src/app/components/kanban-board/kanban-board.component.ts
+@@ -1,6 +1,26 @@
+-import { Component, ChangeDetectionStrategy, inject, computed, signal, ElementRef } from '@angular/core';
++import {
++  Component,
++  ChangeDetectionStrategy,
++  inject,
++  computed,
++  signal,
++  ElementRef,
++} from '@angular/core';
+ import { CommonModule } from '@angular/common';
+-import { CdkDragDrop, CdkDrag, CdkDropList, CdkDropListGroup, moveItemInArray, transferArrayItem, CdkDragStart, CdkDragEnd, CdkDragEnter, CdkDragExit } from '@angular/cdk/drag-drop';
++import {
++  CdkDragDrop,
++  CdkDrag,
++  CdkDropList,
++  CdkDropListGroup,
++  CdkDragPlaceholder,
++  CdkDragPreview,
++  moveItemInArray,
++  transferArrayItem,
++  CdkDragStart,
++  CdkDragEnd,
++  CdkDragEnter,
++  CdkDragExit,
++} from '@angular/cdk/drag-drop';
+ import { TaskCardComponent } from '../task-card/task-card.component';
+ import { TaskService } from '../../services/task.service';
+ import { Task } from '../../models/task.model';
+@@ -9,15 +29,23 @@ import { DragDropTestRunner } from './drag-drop-test-runner';
+ 
+ @Component({
+   selector: 'app-kanban-board',
+-  imports: [CommonModule, TaskCardComponent, CdkDropListGroup, CdkDropList, CdkDrag],
++  imports: [
++    CommonModule,
++    TaskCardComponent,
++    CdkDropListGroup,
++    CdkDropList,
++    CdkDrag,
++    CdkDragPlaceholder,
++    CdkDragPreview,
++  ],
+   templateUrl: './kanban-board.component.html',
+   styleUrl: './kanban-board.component.css',
+-  changeDetection: ChangeDetectionStrategy.OnPush
++  changeDetection: ChangeDetectionStrategy.OnPush,
+ })
+ export class KanbanBoardComponent {
+   private taskService = inject(TaskService);
+   private elementRef = inject(ElementRef);
+-  
++
+   // Visual feedback signals
+   isDragging = signal(false);
+   dragSourceColumn = signal<string | null>(null);
+@@ -29,54 +57,54 @@ export class KanbanBoardComponent {
+   constructor() {
+     // Validate data integrity on component initialization
+     this.validateDataIntegrityOnInit();
+-    
++
+     // Initialize test runner
+     this.testRunner = new DragDropTestRunner(this, this.taskService);
+-    
++
+     // Expose to global scope for browser console access
+     if (typeof window !== 'undefined') {
+       window.dragDropTestRunner = this.testRunner;
+     }
+   }
+-  
++
+   // Column definitions
+   readonly columns = [
+-    { 
++    {
+       id: TaskStatus.BACKLOG,
+       title: 'Backlog',
+-      description: 'Tasks to be started'
++      description: 'Tasks to be started',
+     },
+-    { 
++    {
+       id: TaskStatus.IN_PROGRESS,
+-      title: 'In Progress', 
+-      description: 'Tasks currently being worked on'
++      title: 'In Progress',
++      description: 'Tasks currently being worked on',
+     },
+-    { 
++    {
+       id: TaskStatus.DONE,
+       title: 'Done',
+-      description: 'Completed tasks'
+-    }
++      description: 'Completed tasks',
++    },
+   ];
+ 
+   // Get all tasks from service
+   allTasks = this.taskService.allTasks;
+ 
+   // Computed signals for tasks grouped by status
+-  backlogTasks = computed(() => 
++  backlogTasks = computed(() =>
+     this.allTasks()
+-      .filter(task => task.status === TaskStatus.BACKLOG)
++      .filter((task) => task.status === TaskStatus.BACKLOG)
+       .sort((a, b) => a.order - b.order)
+   );
+ 
+-  inProgressTasks = computed(() => 
++  inProgressTasks = computed(() =>
+     this.allTasks()
+-      .filter(task => task.status === TaskStatus.IN_PROGRESS)
++      .filter((task) => task.status === TaskStatus.IN_PROGRESS)
+       .sort((a, b) => a.order - b.order)
+   );
+ 
+-  doneTasks = computed(() => 
++  doneTasks = computed(() =>
+     this.allTasks()
+-      .filter(task => task.status === TaskStatus.DONE)
++      .filter((task) => task.status === TaskStatus.DONE)
+       .sort((a, b) => a.order - b.order)
+   );
+ 
+@@ -104,11 +132,11 @@ export class KanbanBoardComponent {
+     if (!task) {
+       return;
+     }
+-    
++
+     const confirmed = confirm(
+       `Are you sure you want to delete the task "${task.title}"?\n\nThis action cannot be undone.`
+     );
+-    
++
+     if (confirmed) {
+       const success = this.taskService.deleteTask(taskId);
+       if (success) {
+@@ -127,7 +155,7 @@ export class KanbanBoardComponent {
+   onDrop(event: CdkDragDrop<Task[]>): void {
+     // Show loading state (optional)
+     const draggedTask = event.previousContainer.data[event.previousIndex];
+-    
++
+     if (event.previousContainer === event.container) {
+       // Reordering within the same column
+       this.handleReorderOperation(event, draggedTask);
+@@ -140,17 +168,20 @@ export class KanbanBoardComponent {
+   /**
+    * Handles reordering tasks within the same column
+    */
+-  private handleReorderOperation(event: CdkDragDrop<Task[]>, draggedTask: Task): void {
++  private handleReorderOperation(
++    event: CdkDragDrop<Task[]>,
++    draggedTask: Task
++  ): void {
+     const tasks = [...event.container.data];
+     const status = this.getStatusFromContainerId(event.container.id);
+-    
++
+     // Optimistically update the UI
+     moveItemInArray(tasks, event.previousIndex, event.currentIndex);
+-    
++
+     // Calculate affected tasks for atomic update
+     const affectedTasks = tasks.map((task, index) => ({
+       id: task.id,
+-      newOrder: index
++      newOrder: index,
+     }));
+ 
+     // Perform atomic persistence
+@@ -158,7 +189,7 @@ export class KanbanBoardComponent {
+       type: 'reorder',
+       taskId: draggedTask.id,
+       newOrder: event.currentIndex,
+-      affectedTasks
++      affectedTasks,
+     });
+ 
+     if (!result.success) {
+@@ -166,19 +197,26 @@ export class KanbanBoardComponent {
+       this.revertDropOperation();
+       this.showErrorMessage(`Failed to reorder task: ${result.error}`);
+     } else {
+-      this.showSuccessMessage(`Task "${draggedTask.title}" reordered successfully`);
++      this.showSuccessMessage(
++        `Task "${draggedTask.title}" reordered successfully`
++      );
+     }
+   }
+ 
+   /**
+    * Handles moving tasks between different columns
+    */
+-  private handleMoveOperation(event: CdkDragDrop<Task[]>, draggedTask: Task): void {
++  private handleMoveOperation(
++    event: CdkDragDrop<Task[]>,
++    draggedTask: Task
++  ): void {
+     const previousTasks = [...event.previousContainer.data];
+     const currentTasks = [...event.container.data];
+     const newStatus = this.getStatusFromContainerId(event.container.id);
+-    const previousStatus = this.getStatusFromContainerId(event.previousContainer.id);
+-    
++    const previousStatus = this.getStatusFromContainerId(
++      event.previousContainer.id
++    );
++
+     // Optimistically update the UI
+     transferArrayItem(
+       previousTasks,
+@@ -189,12 +227,12 @@ export class KanbanBoardComponent {
+ 
+     // Calculate all affected tasks for atomic update
+     const affectedTasks: Array<{ id: string; newOrder: number }> = [];
+-    
++
+     // Add affected tasks from current column
+     currentTasks.forEach((task, index) => {
+       affectedTasks.push({ id: task.id, newOrder: index });
+     });
+-    
++
+     // Add affected tasks from previous column
+     previousTasks.forEach((task, index) => {
+       affectedTasks.push({ id: task.id, newOrder: index });
+@@ -206,7 +244,7 @@ export class KanbanBoardComponent {
+       taskId: draggedTask.id,
+       newStatus,
+       newOrder: event.currentIndex,
+-      affectedTasks
++      affectedTasks,
+     });
+ 
+     if (!result.success) {
+@@ -217,7 +255,7 @@ export class KanbanBoardComponent {
+       const statusNames = {
+         [TaskStatus.BACKLOG]: 'Backlog',
+         [TaskStatus.IN_PROGRESS]: 'In Progress',
+-        [TaskStatus.DONE]: 'Done'
++        [TaskStatus.DONE]: 'Done',
+       };
+       this.showSuccessMessage(
+         `Task "${draggedTask.title}" moved to ${statusNames[newStatus]} successfully`
+@@ -242,13 +280,17 @@ export class KanbanBoardComponent {
+     const validation = this.taskService.validateTaskIntegrity();
+     if (!validation.isValid) {
+       console.warn('Data integrity issues detected:', validation.errors);
+-      
++
+       // Attempt to repair automatically
+       const repaired = this.taskService.repairTaskIntegrity();
+       if (repaired) {
+-        this.showSuccessMessage('Data integrity issues were automatically repaired');
++        this.showSuccessMessage(
++          'Data integrity issues were automatically repaired'
++        );
+       } else {
+-        this.showErrorMessage('Critical data integrity issues detected. Please refresh the page.');
++        this.showErrorMessage(
++          'Critical data integrity issues detected. Please refresh the page.'
++        );
+       }
+     }
+   }
+@@ -267,7 +309,7 @@ export class KanbanBoardComponent {
+   private showErrorMessage(message: string): void {
+     console.error('Error:', message);
+     // TODO: Integrate with ToastService when implemented
+-    
++
+     // For now, show a simple alert for critical errors
+     if (message.includes('Critical')) {
+       alert(message);
+@@ -281,12 +323,17 @@ export class KanbanBoardComponent {
+     try {
+       const validation = this.taskService.validateTaskIntegrity();
+       if (!validation.isValid) {
+-        console.warn('Data integrity issues found on initialization:', validation.errors);
+-        
++        console.warn(
++          'Data integrity issues found on initialization:',
++          validation.errors
++        );
++
+         // Attempt automatic repair
+         const repaired = this.taskService.repairTaskIntegrity();
+         if (repaired) {
+-          console.log('Data integrity issues automatically repaired on startup');
++          console.log(
++            'Data integrity issues automatically repaired on startup'
++          );
+         } else {
+           console.error('Failed to repair data integrity issues on startup');
+         }
+@@ -310,13 +357,13 @@ export class KanbanBoardComponent {
+     const tasksByStatus = {
+       [TaskStatus.BACKLOG]: this.backlogTasks().length,
+       [TaskStatus.IN_PROGRESS]: this.inProgressTasks().length,
+-      [TaskStatus.DONE]: this.doneTasks().length
++      [TaskStatus.DONE]: this.doneTasks().length,
+     };
+ 
+     return {
+       totalTasks: allTasks.length,
+       tasksByStatus,
+-      lastUpdateTime: new Date().toISOString()
++      lastUpdateTime: new Date().toISOString(),
+     };
+   }
+ 
+@@ -330,7 +377,7 @@ export class KanbanBoardComponent {
+       metrics: this.getDragDropMetrics(),
+       integrity: this.taskService.validateTaskIntegrity(),
+       storage: this.taskService.getStorageInfo(),
+-      timestamp: new Date().toISOString()
++      timestamp: new Date().toISOString(),
+     };
+ 
+     return JSON.stringify(state, null, 2);
+@@ -342,39 +389,39 @@ export class KanbanBoardComponent {
+    */
+   testPersistence(): void {
+     console.group('🧪 Testing Kanban Persistence & State Management');
+-    
++
+     try {
+       // Test 1: Data Integrity Validation
+       console.log('📋 Test 1: Data Integrity Validation');
+       const integrity = this.taskService.validateTaskIntegrity();
+       console.log('Integrity check:', integrity);
+-      
++
+       // Test 2: Storage Information
+       console.log('💾 Test 2: Storage Information');
+       const storage = this.taskService.getStorageInfo();
+       console.log('Storage info:', storage);
+-      
++
+       // Test 3: Export Current State
+       console.log('📤 Test 3: Export Current State');
+       const state = this.exportKanbanState();
+       console.log('Current state exported (check next log)');
+       console.log(JSON.parse(state));
+-      
++
+       // Test 4: Metrics
+       console.log('📊 Test 4: Performance Metrics');
+       const metrics = this.getDragDropMetrics();
+       console.log('Drag & Drop Metrics:', metrics);
+-      
++
+       // Test 5: Performance Monitoring
+       console.log('⚡ Test 5: Performance Monitoring');
+       const performance = this.taskService.getPerformanceMetrics();
+       console.log('Performance Metrics:', performance);
+-      
++
+       console.log('✅ All persistence tests completed successfully');
+     } catch (error) {
+       console.error('❌ Persistence test failed:', error);
+     }
+-    
++
+     console.groupEnd();
+   }
+ 
+@@ -383,22 +430,22 @@ export class KanbanBoardComponent {
+    */
+   simulateErrorScenarios(): void {
+     console.group('🚨 Testing Error Scenarios');
+-    
++
+     console.warn('This will test error handling - some errors are expected');
+-    
++
+     try {
+       // Test invalid task operations
+       console.log('Testing invalid operations...');
+-      
++
+       // These should be handled gracefully
+       this.showErrorMessage('Test error message');
+       this.showSuccessMessage('Test success message');
+-      
++
+       console.log('✅ Error scenario testing completed');
+     } catch (error) {
+       console.error('❌ Error scenario test failed:', error);
+     }
+-    
++
+     console.groupEnd();
+   }
+ 
+@@ -415,56 +462,68 @@ export class KanbanBoardComponent {
+    */
+   quickDragDropTest(): void {
+     console.group('🚀 Quick Drag & Drop Smoke Test');
+-    
++
+     try {
+       // Test 1: Basic component state
+       console.log('1. Testing component state...');
+       const hasCorrectColumns = this.columns.length === 3;
+       console.log(`✅ Columns: ${hasCorrectColumns ? 'OK' : 'FAIL'}`);
+-      
++
+       // Test 2: Task distribution
+       console.log('2. Testing task distribution...');
+       const backlogCount = this.getTasksForColumn(TaskStatus.BACKLOG).length;
+-      const inProgressCount = this.getTasksForColumn(TaskStatus.IN_PROGRESS).length;
++      const inProgressCount = this.getTasksForColumn(
++        TaskStatus.IN_PROGRESS
++      ).length;
+       const doneCount = this.getTasksForColumn(TaskStatus.DONE).length;
+-      console.log(`   Backlog: ${backlogCount}, In Progress: ${inProgressCount}, Done: ${doneCount}`);
+-      
++      console.log(
++        `   Backlog: ${backlogCount}, In Progress: ${inProgressCount}, Done: ${doneCount}`
++      );
++
+       // Test 3: Visual feedback state
+       console.log('3. Testing visual feedback...');
+       const initialDragState = this.isDragging();
+       this.isDragging.set(true);
+       const updatedDragState = this.isDragging();
+       this.isDragging.set(false);
+-      console.log(`✅ Visual feedback: ${!initialDragState && updatedDragState ? 'OK' : 'FAIL'}`);
+-      
++      console.log(
++        `✅ Visual feedback: ${
++          !initialDragState && updatedDragState ? 'OK' : 'FAIL'
++        }`
++      );
++
+       // Test 4: Status mapping
+       console.log('4. Testing status mapping...');
+-      const mappingCorrect = this.getDropListId(TaskStatus.BACKLOG) === 'backlog-list' &&
+-                            this.getDropListId(TaskStatus.IN_PROGRESS) === 'in-progress-list' &&
+-                            this.getDropListId(TaskStatus.DONE) === 'done-list';
++      const mappingCorrect =
++        this.getDropListId(TaskStatus.BACKLOG) === 'backlog-list' &&
++        this.getDropListId(TaskStatus.IN_PROGRESS) === 'in-progress-list' &&
++        this.getDropListId(TaskStatus.DONE) === 'done-list';
+       console.log(`✅ Status mapping: ${mappingCorrect ? 'OK' : 'FAIL'}`);
+-      
++
+       // Test 5: Service integration
+       console.log('5. Testing service integration...');
+       const integrity = this.taskService.validateTaskIntegrity();
+-      console.log(`✅ Data integrity: ${integrity.isValid ? 'OK' : 'ISSUES DETECTED'}`);
++      console.log(
++        `✅ Data integrity: ${integrity.isValid ? 'OK' : 'ISSUES DETECTED'}`
++      );
+       if (!integrity.isValid) {
+         console.warn('Integrity issues:', integrity.errors);
+       }
+-      
++
+       // Test 6: Performance metrics
+       console.log('6. Testing performance metrics...');
+       const metrics = this.taskService.getPerformanceMetrics();
+       console.log(`   Operations: ${JSON.stringify(metrics.operations)}`);
+       console.log(`   Success rate: ${metrics.successRate}%`);
+-      
++
+       console.log('\n🎉 Quick smoke test completed successfully!');
+-      console.log('💡 For comprehensive testing, run: window.dragDropTestRunner.runAllTests()');
+-      
++      console.log(
++        '💡 For comprehensive testing, run: window.dragDropTestRunner.runAllTests()'
++      );
+     } catch (error) {
+       console.error('❌ Quick test failed:', error);
+     }
+-    
++
+     console.groupEnd();
+   }
+ 
+@@ -473,7 +532,7 @@ export class KanbanBoardComponent {
+    */
+   createTestTasks(count: number = 6): void {
+     console.log(`🏗️ Creating ${count} test tasks...`);
+-    
++
+     const taskNames = [
+       'Implement user authentication',
+       'Design dashboard layout',
+@@ -484,9 +543,9 @@ export class KanbanBoardComponent {
+       'Fix responsive design issues',
+       'Add error logging',
+       'Implement caching layer',
+-      'Review security protocols'
++      'Review security protocols',
+     ];
+-    
++
+     const descriptions = [
+       'Set up JWT authentication with refresh tokens',
+       'Create modern, responsive dashboard interface',
+@@ -497,25 +556,31 @@ export class KanbanBoardComponent {
+       'Fix mobile responsiveness issues',
+       'Implement centralized error logging',
+       'Add Redis caching for performance',
+-      'Audit and improve security measures'
++      'Audit and improve security measures',
+     ];
+-    
++
+     for (let i = 0; i < Math.min(count, taskNames.length); i++) {
+       this.taskService.createTask(taskNames[i], descriptions[i]);
+     }
+-    
++
+     console.log(`✅ Created ${Math.min(count, taskNames.length)} test tasks`);
+-    
++
+     // Distribute some tasks to different columns for testing
+     if (count >= 3) {
+       const allTasks = this.taskService.allTasks();
+       if (allTasks.length >= 3) {
+         // Move some tasks to in-progress
+-        this.taskService.updateTaskStatus(allTasks[1].id, TaskStatus.IN_PROGRESS);
++        this.taskService.updateTaskStatus(
++          allTasks[1].id,
++          TaskStatus.IN_PROGRESS
++        );
+         if (allTasks.length >= 4) {
+-          this.taskService.updateTaskStatus(allTasks[3].id, TaskStatus.IN_PROGRESS);
++          this.taskService.updateTaskStatus(
++            allTasks[3].id,
++            TaskStatus.IN_PROGRESS
++          );
+         }
+-        
++
+         // Move some tasks to done
+         if (allTasks.length >= 2) {
+           this.taskService.updateTaskStatus(allTasks[2].id, TaskStatus.DONE);
+@@ -523,7 +588,7 @@ export class KanbanBoardComponent {
+         if (allTasks.length >= 5) {
+           this.taskService.updateTaskStatus(allTasks[4].id, TaskStatus.DONE);
+         }
+-        
++
+         console.log('📊 Tasks distributed across columns for testing');
+       }
+     }
+@@ -536,7 +601,7 @@ export class KanbanBoardComponent {
+     const confirmed = confirm('⚠️ This will delete ALL tasks. Are you sure?');
+     if (confirmed) {
+       const allTasks = this.taskService.allTasks();
+-      allTasks.forEach(task => {
++      allTasks.forEach((task) => {
+         this.taskService.deleteTask(task.id);
+       });
+       console.log('🗑️ All tasks cleared');
+@@ -580,16 +645,16 @@ export class KanbanBoardComponent {
+    */
+   onDragStart(event: CdkDragStart): void {
+     this.isDragging.set(true);
+-    
++
+     // Find the source column
+     const draggedTask = event.source.data;
+     if (draggedTask) {
+       this.dragSourceColumn.set(this.getDropListId(draggedTask.status));
+     }
+-    
++
+     // Add dragging class to the board
+     this.elementRef.nativeElement.classList.add('is-dragging');
+-    
++
+     // Add source column class
+     const sourceColumn = this.getColumnElement(this.dragSourceColumn());
+     if (sourceColumn) {
+@@ -604,12 +669,13 @@ export class KanbanBoardComponent {
+     this.isDragging.set(false);
+     this.dragSourceColumn.set(null);
+     this.dragOverColumn.set(null);
+-    
++
+     // Remove dragging class from the board
+     this.elementRef.nativeElement.classList.remove('is-dragging');
+-    
++
+     // Remove all drag-related classes from columns
+-    const columns = this.elementRef.nativeElement.querySelectorAll('.kanban-column');
++    const columns =
++      this.elementRef.nativeElement.querySelectorAll('.kanban-column');
+     columns.forEach((column: HTMLElement) => {
+       column.classList.remove('drag-source', 'drag-over');
+     });
+@@ -621,7 +687,7 @@ export class KanbanBoardComponent {
+   onDragEnter(event: CdkDragEnter): void {
+     const targetListId = event.container.id;
+     this.dragOverColumn.set(targetListId);
+-    
++
+     // Add drag-over class to the target column
+     const targetColumn = this.getColumnElement(targetListId);
+     if (targetColumn) {
+@@ -634,13 +700,13 @@ export class KanbanBoardComponent {
+    */
+   onDragExit(event: CdkDragExit): void {
+     const exitedListId = event.container.id;
+-    
++
+     // Remove drag-over class from the exited column
+     const exitedColumn = this.getColumnElement(exitedListId);
+     if (exitedColumn) {
+       exitedColumn.classList.remove('drag-over');
+     }
+-    
++
+     // Clear drag over column if it matches
+     if (this.dragOverColumn() === exitedListId) {
+       this.dragOverColumn.set(null);
+@@ -652,8 +718,10 @@ export class KanbanBoardComponent {
+    */
+   private getColumnElement(dropListId: string | null): HTMLElement | null {
+     if (!dropListId) return null;
+-    
+-    const dropList = this.elementRef.nativeElement.querySelector(`[id="${dropListId}"]`);
++
++    const dropList = this.elementRef.nativeElement.querySelector(
++      `[id="${dropListId}"]`
++    );
+     return dropList?.closest('.kanban-column') || null;
+   }
+ 
+@@ -670,4 +738,4 @@ export class KanbanBoardComponent {
+   isDragOverColumn(status: TaskStatusType): boolean {
+     return this.dragOverColumn() === this.getDropListId(status);
+   }
+-}
+\ No newline at end of file
++}
+
+--- FILE: src/app/services/task.service.ts ---
+diff --git a/src/app/services/task.service.ts b/src/app/services/task.service.ts
+index 058bc95..8204da9 100644
+--- a/src/app/services/task.service.ts
++++ b/src/app/services/task.service.ts
+@@ -11,10 +11,10 @@ import { TaskStatus, TaskStatusType } from '../models/task-status.model';
+ export class TaskService {
+   private readonly STORAGE_KEY = 'daily-tasks';
+   private readonly PERFORMANCE_KEY = 'daily-tasks-performance';
+-  
++
+   // Signal for all tasks
+   private _tasks = signal<Task[]>([]);
+-  
++
+   // Performance monitoring
+   private performanceMetrics = {
+     saveOperations: 0,
+@@ -25,23 +25,23 @@ export class TaskService {
+     lastOperationTime: 0,
+     errors: 0
+   };
+-  
++
+   // Computed signals for tasks by status
+-  readonly backlogTasks = computed(() => 
++  readonly backlogTasks = computed(() =>
+     this._tasks().filter(task => task.status === TaskStatus.BACKLOG)
+       .sort((a, b) => a.order - b.order)
+   );
+-  
+-  readonly inProgressTasks = computed(() => 
++
++  readonly inProgressTasks = computed(() =>
+     this._tasks().filter(task => task.status === TaskStatus.IN_PROGRESS)
+       .sort((a, b) => a.order - b.order)
+   );
+-  
+-  readonly doneTasks = computed(() => 
++
++  readonly doneTasks = computed(() =>
+     this._tasks().filter(task => task.status === TaskStatus.DONE)
+       .sort((a, b) => a.order - b.order)
+   );
+-  
++
+   readonly allTasks = computed(() => this._tasks());
+ 
+   constructor() {
+@@ -56,11 +56,11 @@ export class TaskService {
+     if (!title.trim()) {
+       throw new Error('Task title is required');
+     }
+-    
++
+     if (title.length > 128) {
+       throw new Error('Task title cannot exceed 128 characters');
+     }
+-    
++
+     if (description && description.length > 256) {
+       throw new Error('Task description cannot exceed 256 characters');
+     }
+@@ -76,7 +76,7 @@ export class TaskService {
+ 
+     this._tasks.update(tasks => [...tasks, newTask]);
+     this.saveTasks();
+-    
++
+     return newTask;
+   }
+ 
+@@ -109,14 +109,14 @@ export class TaskService {
+       throw new Error('Task description cannot exceed 256 characters');
+     }
+ 
+-    this._tasks.update(tasks => 
+-      tasks.map(t => 
+-        t.id === id 
++    this._tasks.update(tasks =>
++      tasks.map(t =>
++        t.id === id
+           ? { ...t, ...updates, title: updates.title?.trim() || t.title, description: updates.description?.trim() }
+           : t
+       )
+     );
+-    
++
+     this.saveTasks();
+     return this.getTask(id)!;
+   }
+@@ -127,12 +127,12 @@ export class TaskService {
+   deleteTask(id: string): boolean {
+     const initialLength = this._tasks().length;
+     this._tasks.update(tasks => tasks.filter(task => task.id !== id));
+-    
++
+     if (this._tasks().length < initialLength) {
+       this.saveTasks();
+       return true;
+     }
+-    
++
+     return false;
+   }
+ 
+@@ -150,25 +150,25 @@ export class TaskService {
+    */
+   private saveTasks(): void {
+     const startTime = performance.now();
+-    
++
+     try {
+       const tasksData = this._tasks().map(task => ({
+         ...task,
+         createdAt: task.createdAt.toISOString()
+       }));
+-      
++
+       const dataString = JSON.stringify(tasksData);
+-      
++
+       // Check localStorage quota before saving
+       if (this.checkStorageQuota(dataString)) {
+         localStorage.setItem(this.STORAGE_KEY, dataString);
+-        
++
+         // Update performance metrics
+         const duration = performance.now() - startTime;
+         this.performanceMetrics.saveOperations++;
+         this.performanceMetrics.totalPersistenceTime += duration;
+         this.performanceMetrics.lastOperationTime = Date.now();
+-        
++
+         console.log(`Successfully saved ${tasksData.length} tasks to localStorage in ${duration.toFixed(2)}ms`);
+       } else {
+         throw new Error('Insufficient localStorage space');
+@@ -176,7 +176,7 @@ export class TaskService {
+     } catch (error) {
+       this.performanceMetrics.errors++;
+       console.error('Failed to save tasks to localStorage:', error);
+-      
++
+       if (error instanceof Error) {
+         if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+           throw new Error('Storage quota exceeded. Please clear some browser data and try again.');
+@@ -184,7 +184,7 @@ export class TaskService {
+           throw new Error('Not enough storage space. Please free up some space and try again.');
+         }
+       }
+-      
++
+       throw new Error('Failed to save tasks. Please check your browser storage settings.');
+     }
+   }
+@@ -201,11 +201,11 @@ export class TaskService {
+           currentUsage += localStorage[key].length + key.length;
+         }
+       }
+-      
++
+       // Estimate available space (most browsers have ~5-10MB limit)
+       const estimatedLimit = 5 * 1024 * 1024; // 5MB in bytes
+       const dataSize = dataString.length * 2; // UTF-16 encoding
+-      
++
+       return (currentUsage + dataSize) < (estimatedLimit * 0.9); // Use 90% of estimated limit
+     } catch (error) {
+       console.warn('Could not check storage quota:', error);
+@@ -218,7 +218,7 @@ export class TaskService {
+    */
+   private loadTasks(): void {
+     const startTime = performance.now();
+-    
++
+     try {
+       const stored = localStorage.getItem(this.STORAGE_KEY);
+       if (stored) {
+@@ -228,12 +228,12 @@ export class TaskService {
+           createdAt: new Date(taskData.createdAt)
+         }));
+         this._tasks.set(tasks);
+-        
++
+         // Update performance metrics
+         const duration = performance.now() - startTime;
+         this.performanceMetrics.loadOperations++;
+         this.performanceMetrics.totalPersistenceTime += duration;
+-        
++
+         console.log(`Successfully loaded ${tasks.length} tasks from localStorage in ${duration.toFixed(2)}ms`);
+       }
+     } catch (error) {
+@@ -260,8 +260,8 @@ export class TaskService {
+       throw new Error('Task not found');
+     }
+ 
+-    const targetOrder = newOrder !== undefined 
+-      ? newOrder 
++    const targetOrder = newOrder !== undefined
++      ? newOrder
+       : this.getNextOrder(newStatus);
+ 
+     // If moving to a new status, reorder tasks in the target column
+@@ -318,9 +318,9 @@ export class TaskService {
+     // Update orders for tasks that need to be shifted
+     tasksInColumn.forEach(task => {
+       if (task.order >= insertOrder) {
+-        this._tasks.update(tasks => 
+-          tasks.map(t => 
+-            t.id === task.id 
++        this._tasks.update(tasks =>
++          tasks.map(t =>
++            t.id === task.id
+               ? { ...t, order: t.order + 1 }
+               : t
+           )
+@@ -338,9 +338,9 @@ export class TaskService {
+ 
+     tasksInColumn.forEach((task, index) => {
+       if (task.order !== index) {
+-        this._tasks.update(tasks => 
+-          tasks.map(t => 
+-            t.id === task.id 
++        this._tasks.update(tasks =>
++          tasks.map(t =>
++            t.id === task.id
+               ? { ...t, order: index }
+               : t
+           )
+@@ -379,7 +379,7 @@ export class TaskService {
+    */
+   batchUpdateTasks(updates: Array<{ id: string; updates: Partial<Omit<Task, 'id' | 'createdAt'>> }>): Task[] {
+     const startTime = performance.now();
+-    
++
+     // Validate all tasks exist first
+     const tasks = updates.map(update => {
+       const task = this.getTask(update.id);
+@@ -412,7 +412,7 @@ export class TaskService {
+       // Apply all updates
+       this._tasks.update(tasks => {
+         const updatedTasks = [...tasks];
+-        
++
+         updates.forEach(update => {
+           const taskIndex = updatedTasks.findIndex(t => t.id === update.id);
+           if (taskIndex !== -1) {
+@@ -424,7 +424,7 @@ export class TaskService {
+             };
+           }
+         });
+-        
++
+         return updatedTasks;
+       });
+ 
+@@ -435,7 +435,7 @@ export class TaskService {
+       const duration = performance.now() - startTime;
+       this.performanceMetrics.batchOperations++;
+       this.performanceMetrics.totalPersistenceTime += duration;
+-      
++
+       console.log(`Batch update of ${updates.length} tasks completed in ${duration.toFixed(2)}ms`);
+ 
+       // Return updated tasks
+@@ -460,7 +460,7 @@ export class TaskService {
+     affectedTasks: Array<{ id: string; newOrder: number }>;
+   }): { success: boolean; error?: string; duration?: number } {
+     const startTime = performance.now();
+-    
++
+     try {
+       const updates: Array<{ id: string; updates: Partial<Omit<Task, 'id' | 'createdAt'>> }> = [];
+ 
+@@ -493,8 +493,8 @@ export class TaskService {
+     } catch (error) {
+       this.performanceMetrics.errors++;
+       console.error('Drag and drop operation failed:', error);
+-      return { 
+-        success: false, 
++      return {
++        success: false,
+         error: error instanceof Error ? error.message : 'Unknown error occurred',
+         duration: performance.now() - startTime
+       };
+@@ -553,11 +553,11 @@ export class TaskService {
+   repairTaskIntegrity(): boolean {
+     try {
+       const tasks = [...this._tasks()];
+-      
++
+       // Remove tasks with missing required data
+-      const validTasks = tasks.filter(task => 
+-        task.id && 
+-        task.title && 
++      const validTasks = tasks.filter(task =>
++        task.id &&
++        task.title &&
+         task.title.trim().length > 0 &&
+         Object.values(TaskStatus).includes(task.status as TaskStatus)
+       );
+@@ -588,7 +588,7 @@ export class TaskService {
+       const validation = this.validateTaskIntegrity();
+       if (!validation.isValid) {
+         console.warn('TaskService: Data integrity issues found on initialization:', validation.errors);
+-        
++
+         // Attempt automatic repair
+         const repaired = this.repairTaskIntegrity();
+         if (repaired) {
+@@ -638,32 +638,40 @@ export class TaskService {
+    * Gets comprehensive performance metrics
+    */
+   getPerformanceMetrics(): {
+-    operations: typeof this.performanceMetrics;
++    operations: {
++      saveOperations: number;
++      loadOperations: number;
++      batchOperations: number;
++      dragDropOperations: number;
++      totalPersistenceTime: number;
++      lastOperationTime: number;
++      errors: number;
++    };
+     averagePersistenceTime: number;
+     operationsPerMinute: number;
+     successRate: number;
+     lastOperationAgo: number;
+   } {
+-    const totalOperations = this.performanceMetrics.saveOperations + 
+-                           this.performanceMetrics.loadOperations + 
+-                           this.performanceMetrics.batchOperations + 
++    const totalOperations = this.performanceMetrics.saveOperations +
++                           this.performanceMetrics.loadOperations +
++                           this.performanceMetrics.batchOperations +
+                            this.performanceMetrics.dragDropOperations;
+ 
+-    const averagePersistenceTime = totalOperations > 0 
+-      ? this.performanceMetrics.totalPersistenceTime / totalOperations 
++    const averagePersistenceTime = totalOperations > 0
++      ? this.performanceMetrics.totalPersistenceTime / totalOperations
+       : 0;
+ 
+-    const successRate = totalOperations > 0 
+-      ? ((totalOperations - this.performanceMetrics.errors) / totalOperations) * 100 
++    const successRate = totalOperations > 0
++      ? ((totalOperations - this.performanceMetrics.errors) / totalOperations) * 100
+       : 100;
+ 
+-    const lastOperationAgo = this.performanceMetrics.lastOperationTime > 0 
+-      ? Date.now() - this.performanceMetrics.lastOperationTime 
++    const lastOperationAgo = this.performanceMetrics.lastOperationTime > 0
++      ? Date.now() - this.performanceMetrics.lastOperationTime
+       : 0;
+ 
+     // Estimate operations per minute (rough calculation)
+-    const operationsPerMinute = totalOperations > 0 && lastOperationAgo > 0 
+-      ? (totalOperations / (lastOperationAgo / 60000)) 
++    const operationsPerMinute = totalOperations > 0 && lastOperationAgo > 0
++      ? (totalOperations / (lastOperationAgo / 60000))
+       : 0;
+ 
+     return {
+@@ -696,8 +704,8 @@ export class TaskService {
+    */
+   private getNextOrder(status: TaskStatusType): number {
+     const tasksInStatus = this.getTasksByStatus(status);
+-    return tasksInStatus.length > 0 
+-      ? Math.max(...tasksInStatus.map(t => t.order)) + 1 
++    return tasksInStatus.length > 0
++      ? Math.max(...tasksInStatus.map(t => t.order)) + 1
+       : 0;
+   }
+-}
+\ No newline at end of file
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

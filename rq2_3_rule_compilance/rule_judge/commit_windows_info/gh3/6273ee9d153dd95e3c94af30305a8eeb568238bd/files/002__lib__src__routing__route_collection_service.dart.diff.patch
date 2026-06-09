@@ -1,0 +1,63 @@
+diff --git a/lib/src/routing/route_collection_service.dart b/lib/src/routing/route_collection_service.dart
+index 3916463..62aafa6 100644
+--- a/lib/src/routing/route_collection_service.dart
++++ b/lib/src/routing/route_collection_service.dart
+@@ -15,7 +15,9 @@ class RouteCollectionService {
+   List<RouteBase> collectRoutes() {
+     try {
+       final routeProviders = GetIt.instance.getAll<RouteProvider>();
+-      final routes = routeProviders.map((provider) => provider.getRoute()).toList();
++      final routes = routeProviders
++          .map((provider) => provider.getRoute())
++          .toList();
+       return _sortRoutesBySpecificity(routes);
+     } catch (e) {
+       // If no route providers are registered yet, return empty list
+@@ -28,20 +30,20 @@ class RouteCollectionService {
+   /// More specific routes (fewer path parameters, more literal segments) come first.
+   List<RouteBase> _sortRoutesBySpecificity(List<RouteBase> routes) {
+     final List<RouteBase> sortedRoutes = List.from(routes);
+-    
++
+     sortedRoutes.sort((a, b) {
+       final pathA = _extractPath(a);
+       final pathB = _extractPath(b);
+-      
++
+       if (pathA == null || pathB == null) return 0;
+-      
++
+       final specificityA = _calculateSpecificity(pathA);
+       final specificityB = _calculateSpecificity(pathB);
+-      
++
+       // Higher specificity comes first (descending order)
+       return specificityB.compareTo(specificityA);
+     });
+-    
++
+     return sortedRoutes;
+   }
+ 
+@@ -58,7 +60,7 @@ class RouteCollectionService {
+   int _calculateSpecificity(String path) {
+     int score = 0;
+     final segments = path.split('/').where((s) => s.isNotEmpty);
+-    
++
+     for (final segment in segments) {
+       if (segment.startsWith(':')) {
+         // Parameter segment: lower specificity
+@@ -68,10 +70,10 @@ class RouteCollectionService {
+         score += 10;
+       }
+     }
+-    
++
+     // Longer paths with same segment types are more specific
+     score += segments.length;
+-    
++
+     return score;
+   }
+ }

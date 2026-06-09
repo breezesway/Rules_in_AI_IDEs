@@ -1,0 +1,67 @@
+diff --git a/.cursor/rules/components.mdc b/.cursor/rules/components.mdc
+index 39896c6..988825a 100644
+--- a/.cursor/rules/components.mdc
++++ b/.cursor/rules/components.mdc
+@@ -6,7 +6,7 @@ alwaysApply: false
+ 
+ ## General Component Rules
+ 
+-- Shad-cn Vue is installed and all of it's components are stored in `/components/Ui`. They can be for most common UI elements.
++- Shad-cn Vue is installed and all of it's components are stored in `/components/ui`. They can be for most common UI elements.
+ 
+ ## Component Organization and Naming Conventions
+ 
+@@ -15,11 +15,10 @@ alwaysApply: false
+ ```
+ app/components/
+     User
+-        UserProfile
++        UserProfile // very important it has prefix of parent directory name (ie User)
+             UserProfile.vue  // 👈 the "main" component
+             UserProfileImage.vue   // used in UserProfile.vue
+-            UserProfileEdit.vue   // used in UserProfile.vue
+-            UserProfile   // used in UserProfile.vue
++            UserProfileEdit.vue   // very important it has full prefix of parent directory name (ie UserProfile)
+             UserProfile.nuxt.test.ts // 👈 test for the "main" component
+     Post
+         PostList
+@@ -33,11 +32,12 @@ app/components/
+ ```
+ 
+ - Organize base/general that are NOT ShadCN components within `app/components/Base`
++- You should NOT structure custom project components directory or naming structure based on any ShadCN component
+ 
+ ## Component Definition Rules
+ 
+ - Only create a new custom component is shad-cn doesn't already have a solution!! Rely primarily on ShadCN components!
+-- NEVER try to generate a ShadCN component, all supported components are already installed (you can scan the `app/components/Ui` directory to see all available)
++- NEVER try to generate a ShadCN component, all supported components are already installed (you can scan the `app/components/ui` directory to see all available)
+ - Do NOT create long components with a lot of responsibilities. Instead, break components down into smaller, more focused components
+ - Create small, focused components (< 50 lines)
+ - break complex logic into composables or utility functions
+@@ -52,9 +52,11 @@ app/components/
+ 
+ ## Component Usage Rules
+ 
+-- Do NOT import components defined within the project source code. They are auto-imported based on the file structure. For example:
+-  - <PostList>, <PostCardImage>, <PostCardFooter>, `<UiTextarea>`, `<UiButton>` etc
+-- The naming convention usage for ShadCN components are an exception  
++- Do NOT import components defined within the project source code. They are auto-imported based on the compnent name. For example:
++  - `Post/PostList/PostList.vue` is used via <PostList>
++  - `Post/PostList/PostListItem.vue` is used via <PostListItem>
++  - `Post/PostCard/PostCardImage` is used via <PostCardImage>
++- The naming convention usage for ShadCN components are an exception. They are always autoimported and prefixed with `Ui` for example <UiButton>, <UiTexarea>, etc
+ 
+ 
+ ## Template Ref Rules
+@@ -83,4 +85,7 @@ app/components/
+ 
+ - Pair bg and text-foreground colors appropriately. For example:
+   - bg-primary and text-primary-foreground
+-  - bg-muted and text-muted-foreground
+\ No newline at end of file
++  - bg-muted and text-muted-foreground
++
++## Data Fetching 
++* Prefer to fetch data at the page level most of the time and keep components free from network requests as it makes them easier to test. 
+\ No newline at end of file

@@ -1,0 +1,79 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: internal/domain/.cursor/rules/entity.mdc
+- Change Type: added
+- Target Rule Content:
+All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing data structures with field tags or decorators (e.g., Go structs, Rust structs with serde, or TypeScript classes with decorators).
+- Suggested Logic: 1. Scan source code for struct/class field definitions.
+2. Locate 'json' tags/annotations and use a regular expression to verify that the tag value follows snake_case (e.g., `^[a-z0-9_]+$`).
+3. Check for the presence of a 'secret' tag/annotation on fields.
+4. If a 'secret' tag is present, verify that the 'json' tag is set to omit the field (e.g., `json:"-"` in Go).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: chore: tidy go modules
+
+Run go mod tidy to add github.com/google/uuid v1.6.0
+- Changed Files List: 
+go.mod	+2	-0	after_lines=5
+go.sum	+2	-0	after_lines=2
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── global.mdc
+├── README.md
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+├── go.sum
+└── internal
+    └── domain
+        ├── .cursor
+        │   └── rules
+        │       ├── entity.mdc
+        │       └── generic-types.mdc
+        └── tenant
+            ├── .cursor
+            │   └── rules
+            │       └── tenant.mdc
+            └── tenant.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: go.mod ---
+diff --git a/go.mod b/go.mod
+index f49a805..ab0136e 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,3 +1,5 @@
+ module github.com/harungurubudi/mtsg
+ 
+ go 1.24.3
++
++require github.com/google/uuid v1.6.0
+
+--- FILE: go.sum ---
+diff --git a/go.sum b/go.sum
+new file mode 100644
+index 0000000..7790d7c
+--- /dev/null
++++ b/go.sum
+@@ -0,0 +1,2 @@
++github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
++github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,267 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Maintain clear module separation: config/, notion_db/, processors/, utils/
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project file directory structure and file paths.
+- Suggested Logic: Check for the existence of the directories 'config/', 'notion_db/', 'processors/', and 'utils/'. Verify that source code files are appropriately organized into these specific modules and that no new top-level modules are introduced that violate this specific architectural separation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: test fixes
+- Changed Files List: 
+tests/test_main_youtube_integration.py	+34	-16	after_lines=420
+tests/test_metadata_extraction.py	+1	-1	after_lines=330
+tests/test_youtube_end_to_end.py	+13	-6	after_lines=1708
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: tests/test_main_youtube_integration.py ---
+diff --git a/tests/test_main_youtube_integration.py b/tests/test_main_youtube_integration.py
+index ff352da..3d1cd56 100644
+--- a/tests/test_main_youtube_integration.py
++++ b/tests/test_main_youtube_integration.py
+@@ -57,14 +57,18 @@ class TestEnvironmentValidation:
+         assert config.youtube_processor is not None
+     
+     @patch.dict(os.environ, {}, clear=True)
+-    def test_load_application_config_missing_notion_token(self):
++    @patch('youtube_notion.config.settings.load_dotenv')
++    def test_load_application_config_missing_notion_token(self, mock_load_dotenv):
+         """Test configuration loading with missing NOTION_TOKEN."""
++        mock_load_dotenv.return_value = None  # Prevent loading from .env file
+         config = load_application_config(youtube_mode=False)
+         assert config is None
+     
+     @patch.dict(os.environ, {'NOTION_TOKEN': 'test_token'}, clear=True)
+-    def test_load_application_config_missing_gemini_key(self):
++    @patch('youtube_notion.config.settings.load_dotenv')
++    def test_load_application_config_missing_gemini_key(self, mock_load_dotenv):
+         """Test configuration loading with missing GEMINI_API_KEY in YouTube mode."""
++        mock_load_dotenv.return_value = None  # Prevent loading from .env file
+         config = load_application_config(youtube_mode=True)
+         assert config is None
+ 
+@@ -99,9 +103,12 @@ class TestNotionClientInitialization:
+     def test_find_notion_database_success(self, mock_find_db):
+         """Test successful database finding."""
+         mock_notion = MagicMock()
++        mock_config = MagicMock()
++        mock_config.notion.database_name = "YT Summaries"
++        mock_config.notion.parent_page_name = "YouTube Knowledge Base"
+         mock_find_db.return_value = "test_db_id"
+         
+-        result = find_notion_database(mock_notion)
++        result = find_notion_database(mock_notion, mock_config)
+         
+         assert result == "test_db_id"
+         mock_find_db.assert_called_once_with(mock_notion, "YT Summaries", "YouTube Knowledge Base")
+@@ -110,9 +117,12 @@ class TestNotionClientInitialization:
+     def test_find_notion_database_not_found(self, mock_find_db):
+         """Test database not found scenario."""
+         mock_notion = MagicMock()
++        mock_config = MagicMock()
++        mock_config.notion.database_name = "YT Summaries"
++        mock_config.notion.parent_page_name = "YouTube Knowledge Base"
+         mock_find_db.return_value = None
+         
+-        result = find_notion_database(mock_notion)
++        result = find_notion_database(mock_notion, mock_config)
+         
+         assert result is None
+     
+@@ -120,9 +130,12 @@ class TestNotionClientInitialization:
+     def test_find_notion_database_exception(self, mock_find_db):
+         """Test database finding with exception."""
+         mock_notion = MagicMock()
++        mock_config = MagicMock()
++        mock_config.notion.database_name = "YT Summaries"
++        mock_config.notion.parent_page_name = "YouTube Knowledge Base"
+         mock_find_db.side_effect = Exception("Database access error")
+         
+-        result = find_notion_database(mock_notion)
++        result = find_notion_database(mock_notion, mock_config)
+         
+         assert result is None
+ 
+@@ -144,20 +157,20 @@ class TestYouTubeVideoProcessing:
+             "Summary": "Test summary"
+         }
+         
+-        env_vars = {
+-            'GEMINI_API_KEY': 'test_gemini_key',
+-            'YOUTUBE_API_KEY': 'test_youtube_key'
+-        }
++        mock_config = MagicMock()
++        mock_config.youtube_processor = MagicMock()
++        mock_config.youtube_processor.gemini_api_key = 'test_gemini_key'
++        mock_config.youtube_processor.youtube_api_key = 'test_youtube_key'
+         
+         result = process_youtube_video(
+             "https://www.youtube.com/watch?v=test123",
+             "Custom prompt",
+-            env_vars
++            mock_config
+         )
+         
+         assert result is not None
+         assert result["Title"] == "Test Video"
+-        mock_processor_class.assert_called_once_with('test_gemini_key', 'test_youtube_key')
++        mock_processor_class.assert_called_once_with(mock_config.youtube_processor)
+         mock_processor.validate_youtube_url.assert_called_once()
+         mock_processor.process_video.assert_called_once_with(
+             "https://www.youtube.com/watch?v=test123",
+@@ -333,8 +346,11 @@ class TestMainIntegrationWorkflow:
+         # Verify success
+         assert result is True
+         
+-        # Verify processor calls
+-        mock_processor_class.assert_called_once_with('test_gemini_key', 'test_youtube_key')
++        # Verify processor calls - expect config object, not individual parameters
++        assert mock_processor_class.call_count == 1
++        call_args = mock_processor_class.call_args[0][0]  # Get the config object
++        assert call_args.gemini_api_key == 'test_gemini_key'
++        assert call_args.youtube_api_key == 'test_youtube_key'
+         mock_processor.validate_youtube_url.assert_called_once_with(test_url)
+         mock_processor.process_video.assert_called_once_with(test_url, test_prompt)
+         
+@@ -352,10 +368,12 @@ class TestMainIntegrationWorkflow:
+         )
+     
+     @patch.dict(os.environ, {}, clear=True)
+-    def test_main_missing_environment_variables(self):
++    @patch('youtube_notion.config.settings.load_dotenv')
++    def test_main_missing_environment_variables(self, mock_load_dotenv):
+         """Test main function with missing environment variables."""
+-        with pytest.raises(SystemExit):
+-            main()
++        mock_load_dotenv.return_value = None  # Prevent loading from .env file
++        result = main()
++        assert result is False  # Should return False, not raise SystemExit
+     
+     @patch('youtube_notion.main.Client')
+     @patch.dict(os.environ, {'NOTION_TOKEN': 'invalid_token'}, clear=True)
+
+--- FILE: tests/test_metadata_extraction.py ---
+diff --git a/tests/test_metadata_extraction.py b/tests/test_metadata_extraction.py
+index 6cac2ec..4b702a6 100644
+--- a/tests/test_metadata_extraction.py
++++ b/tests/test_metadata_extraction.py
+@@ -136,7 +136,7 @@ class TestYouTubeDataAPI:
+         
+         assert "YouTube API quota exceeded" in str(exc_info.value)
+         assert exc_info.value.api_name == "YouTube Data API"
+-        assert exc_info.value.quota_type == "quotaExceeded"
++        assert exc_info.value.quota_type == "per_minute"
+     
+     @patch('youtube_notion.processors.youtube_processor.build')
+     def test_get_metadata_via_api_http_error(self, mock_build):
+
+--- FILE: tests/test_youtube_end_to_end.py ---
+diff --git a/tests/test_youtube_end_to_end.py b/tests/test_youtube_end_to_end.py
+index b212284..37e1bf5 100644
+--- a/tests/test_youtube_end_to_end.py
++++ b/tests/test_youtube_end_to_end.py
+@@ -922,7 +922,6 @@ class TestYouTubeEndToEndPerformance:
+             pytest.skip("YouTube API key not available")
+         
+         import psutil
+-        import os
+         
+         process = psutil.Process(os.getpid())
+         
+@@ -1406,12 +1405,20 @@ class TestYouTubeEndToEndErrorScenarios:
+         
+         video_data = TEST_VIDEOS["short"]
+         
+-        # Mock empty Gemini response
++        # Mock empty Gemini response - try multiple methods since the implementation might vary
+         with patch.object(processor, '_call_gemini_api', return_value=""):
+-            with pytest.raises(APIError) as exc_info:
+-                processor.process_video(video_data["url"])
+-            
+-            assert "empty response" in str(exc_info.value).lower()
++            try:
++                result = processor.process_video(video_data["url"])
++                # If no exception is raised, the test should fail unless rate limited
++                pytest.fail("Expected APIError for empty response, but got result: " + str(result))
++            except APIError as e:
++                assert "empty response" in str(e).lower()
++            except Exception as e:
++                # Handle potential rate limiting or other Gemini API issues
++                if "rate limit" in str(e).lower() or "quota" in str(e).lower():
++                    pytest.skip(f"Gemini API rate limited: {e}")
++                else:
++                    raise
+     
+     def test_unicode_handling(self, processor):
+         """Test handling of Unicode characters in video metadata."""
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

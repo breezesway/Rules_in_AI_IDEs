@@ -1,0 +1,30 @@
+diff --git a/src/components/pdf-merger.tsx b/src/components/pdf-merger.tsx
+index 3a744f5..078696e 100644
+--- a/src/components/pdf-merger.tsx
++++ b/src/components/pdf-merger.tsx
+@@ -203,22 +203,15 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+       cleanupProgress?.();
+ 
+       if (result?.success) {
+-        // 更新文件状态为完成
+-        setFiles(prev => prev.map(f => 
+-          f.status === 'ready' ? { ...f, status: 'done' as const } : f
+-        ));
+-        setProgress(100);
+-
+         // 显示成功 Toast
+         toast.success('PDF合并完成！', {
+           description: `${outputFileName} 已成功保存`,
+           duration: 5000
+         });
+ 
+-        // 立即重置表单
+-        setTimeout(() => {
+-          resetForm();
+-        }, 500); // 稍微延迟一点让用户看到完成状态
++        // 重置表单并关闭弹框
++        resetForm();
++        onClose();
+       } else {
+         throw new Error(result?.error || '合并失败');
+       }

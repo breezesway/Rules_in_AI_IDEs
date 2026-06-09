@@ -1,0 +1,353 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+- - Providers handle webview lifecycle, HTML generation, and message routing
++ - Providers use registerWebviewWithBus(id, webview) helper for lifecycle management
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (specifically those designated as 'Providers' by file path, naming convention, or class inheritance).
+- Suggested Logic: Scan source code for files identified as 'Providers' and verify the presence of a call to the helper function `registerWebviewWithBus(id, webview)`. This can be done using simple Regex or AST parsing to ensure the function is invoked.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: feat: add comprehensive documentation for product overview, project structure, and technology stack
+- Changed Files List: 
+.kiro/steering/product.md	+20	-0	after_lines=20
+.kiro/steering/structure.md	+78	-0	after_lines=78
+.kiro/steering/tech.md	+48	-0	after_lines=48
+docs/bundle-architecture.md	+40	-0	after_lines=150
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcpProvider.ts
+│   │   └── mcpStdioServer.ts
+│   ├── services
+│   │   └── messageBus.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+├── vsc-extension-quickstart.md
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── messageBus.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+new file mode 100644
+index 0000000..f534916
+--- /dev/null
++++ b/.kiro/steering/product.md
+@@ -0,0 +1,20 @@
++# Product Overview
++
++Kiro IDE Constellation is a VS Code extension that provides a custom Activity Bar container with sidebar and dashboard webviews. The extension serves as a foundation for building AI-powered development tools within VS Code.
++
++## Key Features
++
++- **Activity Bar Integration**: Custom "Kiro Constellation" container with branded icon
++- **Sidebar Webview**: Persistent sidebar panel for quick access to tools and controls
++- **Dashboard Webview**: Full-featured dashboard that opens as an editor tab
++- **MCP Integration**: Model Context Protocol support for AI tool integration
++- **Message Bus Architecture**: Type-safe communication between extension and webviews
++
++## Target Use Cases
++
++- AI-assisted development workflows
++- Custom development dashboards and tooling
++- Integration with external AI services via MCP
++- Enhanced VS Code UI experiences for specialized development tasks
++
++The extension is designed as a platform for building sophisticated AI-powered development tools while maintaining clean separation between the VS Code extension host and web-based UI components.
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+new file mode 100644
+index 0000000..24c2f45
+--- /dev/null
++++ b/.kiro/steering/structure.md
+@@ -0,0 +1,78 @@
++# Project Structure
++
++## Root Directory Organization
++
++```
++├── src/                    # Extension TypeScript source
++├── web/                    # Webview UI source (Preact)
++├── out/                    # Build output directory
++├── docs/                   # Developer documentation
++├── media/                  # Static assets (icons, CSS)
++└── scripts/                # Build and utility scripts
++```
++
++## Extension Code (`src/`)
++
++```
++src/
++├── extension.ts            # Main extension entry point
++├── mcp/                    # Model Context Protocol integration
++│   ├── mcpProvider.ts      # MCP server definition provider
++│   └── mcpStdioServer.ts   # MCP stdio server implementation
++├── services/               # Core extension services
++│   └── messageBus.ts       # Extension-side message bus
++├── shared/                 # Shared code between extension and web
++│   ├── commands.ts         # VS Code command definitions
++│   ├── events.ts           # Message bus event types
++│   └── utils/              # Utility functions
++├── types/                  # TypeScript type definitions
++├── ui-providers/           # Webview providers and panels
++│   ├── asset-manifest.ts   # Vite asset resolution helper
++│   ├── health-dashboard/   # Dashboard webview provider
++│   └── sidebar/            # Sidebar webview provider
++└── test/                   # Extension tests
++```
++
++## Web UI (`web/`)
++
++```
++web/
++├── src/
++│   ├── main-sidebar.tsx    # Sidebar entry point
++│   ├── main-dashboard.tsx  # Dashboard entry point
++│   ├── components/         # Reusable UI components
++│   ├── services/           # Web-side services
++│   │   └── messageBus.ts   # Webview message bus wrapper
++│   ├── types/              # Web-specific types
++│   ├── views/              # Main view components
++│   │   ├── HealthDashboard/
++│   │   └── Sidebar/
++│   └── vscode.ts           # VS Code API wrapper
++├── tsconfig.json           # Web TypeScript config
++└── vite.config.ts          # Vite build configuration
++```
++
++## Architecture Patterns
++
++### Message Bus Communication
++- **Shared Events**: `src/shared/events.ts` defines all message types
++- **Extension Bus**: `src/services/messageBus.ts` handles extension-side messaging
++- **Web Bus**: `web/src/services/messageBus.ts` wraps VS Code webview API
++- **Type Safety**: All messages are strongly typed with payload interfaces
++
++### UI Provider Pattern
++- Each webview has a dedicated provider in `src/ui-providers/`
++- Providers handle webview lifecycle, HTML generation, and message routing
++- Asset resolution via `asset-manifest.ts` for Vite-built resources
++
++### MCP Integration
++- MCP server bundled separately to `out/mcp/mcpStdioServer.cjs`
++- Provider registers with VS Code's MCP API when available
++- Fallback configuration written to `.kiro/settings/mcp.json`
++
++## Naming Conventions
++
++- **Files**: kebab-case for directories, camelCase for TypeScript files
++- **Components**: PascalCase for Preact components
++- **Events**: PascalCase constants in `Events` enum
++- **CSS Modules**: Component.module.css pattern for scoped styles
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+new file mode 100644
+index 0000000..7a04db5
+--- /dev/null
++++ b/.kiro/steering/tech.md
+@@ -0,0 +1,48 @@
++# Technology Stack
++
++## Core Technologies
++
++- **VS Code Extension API**: Built on VS Code ^1.100.3 with TypeScript
++- **Frontend Framework**: Preact with JSX for webview components
++- **Build System**: Vite for web assets, TypeScript compiler for extension code, esbuild for MCP bundling
++- **MCP Integration**: @modelcontextprotocol/sdk for AI tool connectivity
++
++## Project Structure
++
++- **Extension Code**: TypeScript in `src/` compiled to `out/` via tsc
++- **Web UI**: Preact components in `web/src/` built via Vite to `out/`
++- **MCP Server**: Bundled separately with esbuild to `out/mcp/mcpStdioServer.cjs`
++
++## Build Commands
++
++### Development
++```bash
++npm run watch          # Concurrent watch: Vite + tsc + MCP bundle
++npm run compile        # Full build: web + extension + MCP
++```
++
++### Production
++```bash
++npm run build          # Clean build of everything
++npm run package        # Create .vsix package
++```
++
++### Specific Tasks
++```bash
++npm run bundle:mcp     # Build MCP server bundle only
++npm run clean          # Remove out/ directory
++npm run clean:web      # Remove web build artifacts
++npm run lint           # ESLint on src/
++npm run test           # Run VS Code extension tests
++```
++
++## Configuration Files
++
++- `tsconfig.json`: Extension TypeScript config (Node16, ES2022)
++- `web/tsconfig.json`: Web UI TypeScript config (ESNext, Preact JSX)
++- `web/vite.config.ts`: Vite build with manifest generation
++- `eslint.config.mjs`: ESLint configuration
++
++## Asset Management
++
++Vite generates a manifest at `out/.vite/manifest.json` mapping entry points to built assets. The extension uses `src/ui-providers/asset-manifest.ts` to resolve correct script/CSS URIs for webviews, with fallbacks for development.
+\ No newline at end of file
+
+--- FILE: docs/bundle-architecture.md ---
+diff --git a/docs/bundle-architecture.md b/docs/bundle-architecture.md
+index 42effa0..f44a8b7 100644
+--- a/docs/bundle-architecture.md
++++ b/docs/bundle-architecture.md
+@@ -8,6 +8,7 @@ This document explains how the extension is built in development vs production,
+ - Extension code (TypeScript) is compiled by `tsc` into `out/`.
+ - MCP stdio server is bundled into a single CommonJS file with esbuild at `out/mcp/mcpStdioServer.cjs`.
+ - Dev watch builds all three in the background; packaged builds do a clean, one-shot compile.
++- If the VS Code MCP API isn’t available (e.g., in Kiro IDE), the extension falls back to writing a workspace config at `.kiro/settings/mcp.json` that points to the bundled server.
+ 
+ ## Source layout
+ 
+@@ -26,6 +27,33 @@ All build products go to `out/`:
+   - `out/dashboard.js`, `out/dashboard.css`
+   - Vite manifest: `out/.vite/manifest.json`
+ 
++## MCP setup (VS Code vs Kiro)
++
++The extension supports two ways to expose the MCP stdio server:
++
++- VS Code (with MCP API): Registers a provider using `vscode.lm.registerMcpServerDefinitionProvider` and `McpStdioServerDefinition`. The server is launched by the host using the resolved Node executable and the bundled entrypoint. Provider id: `kiro-constellation`.
++- Kiro IDE or missing MCP API: Falls back to writing a workspace-local config at `.kiro/settings/mcp.json`. Kiro reads this file and starts the MCP server directly.
++
++Example of the written `mcp.json`:
++
++```json
++{
++  "mcpServers": {
++    "kiro-constellation": {
++      "command": "/path/to/node",
++      "args": ["/path/to/workspace/out/mcp/mcpStdioServer.cjs"],
++      "disabled": false
++    }
++  }
++}
++```
++
++Notes:
++- Writes are idempotent: the file is only updated if `command`, first `args` entry (the script path), or `disabled` differ.
++- Logs are prefixed with `[Kiro MCP]` to make diagnosis easy.
++- The config directory can be overridden with `KIRO_MCP_CONFIG_DIR` (relative to the first workspace folder). Default: `.kiro/settings`.
++- The Node binary can be overridden with `KIRO_MCP_NODE`.
++
+ ## Development build (watch)
+ 
+ Command: `npm run watch`
+@@ -48,6 +76,8 @@ The provider (`src/mcp/mcpProvider.ts`) resolves the server script from these ca
+ 
+ This makes debug resilient even if you built the server a different way. During watch, the `.cjs` bundle is produced continuously, so option 1 should exist.
+ 
++The same resolution is used when writing the Kiro fallback `mcp.json` if the MCP API is unavailable.
++
+ ### Web assets in dev
+ 
+ - Vite also emits `out/.vite/manifest.json`. The helper `src/ui-providers/asset-manifest.ts` reads this to inject correct JS/CSS into the webviews.
+@@ -104,7 +134,17 @@ esbuild src/mcp/mcpStdioServer.ts \
+   - Make sure Vite watch is running (it’s part of `npm run watch`).
+   - If the manifest is missing on first run, the asset helper falls back to predictable names; a quick restart after the first Vite emit may help.
+ 
++- `mcp.json` is not created in Kiro:
++  - Ensure a workspace folder is open (the file is written under the first workspace root).
++  - Check the logs for `[Kiro MCP]` messages indicating why the write was skipped or failed.
++  - If you want a different location, set `KIRO_MCP_CONFIG_DIR` (e.g., `export KIRO_MCP_CONFIG_DIR=".kiro/settings"`).
++  - Verify write permissions in the workspace directory.
++
++- Kiro is launching Node from an unexpected path:
++  - Set `KIRO_MCP_NODE` to point to the desired Node binary (e.g., `/opt/homebrew/bin/node`).
++
+ ## Notes on Node targets
+ 
+ - Extension TS compiles to ES2022 with `module` set to `Node16` (see `tsconfig.json`).
+ - MCP server bundle targets Node 18 for broad compatibility with VS Code’s runtime, but works on newer versions as well. We use `--format=cjs` so it can be executed directly via the host Node (`process.execPath`).
++  - At runtime, the extension resolves Node in this order: `KIRO_MCP_NODE` env → `process.execPath` if it’s Node → common system paths → `node`.
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

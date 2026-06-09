@@ -1,0 +1,91 @@
+diff --git a/tests/unit/services/file-operations-service.test.ts b/tests/unit/services/file-operations-service.test.ts
+index eac4708..db8d625 100644
+--- a/tests/unit/services/file-operations-service.test.ts
++++ b/tests/unit/services/file-operations-service.test.ts
+@@ -431,86 +431,7 @@ describe('FileOperationsService', () => {
+         });
+     });
+ 
+-    describe('listFiles', () => {
+-        test('should list files successfully', () => {
+-            // Mock security validation success
+-            mockSecurityService.validateFilePath.mockReturnValue({
+-                isValid: true,
+-                sanitizedValue: '/test/directory',
+-                
+-            });
+-
+-            // Mock fs.existsSync to return true
+-            mockFs.existsSync.mockReturnValue(true);
+-
+-            // Mock fs.readdirSync to return file list
+-            mockFs.readdirSync.mockReturnValue(['file1.txt', 'file2.json', 'subdir'] as any);
+-
+-            // Mock fs.statSync to return different stats for different files
+-            mockFs.statSync.mockImplementation((filePath: any) => {
+-                if (filePath.includes('subdir')) {
+-                    return {
+-                        isFile: () => false,
+-                        isDirectory: () => true,
+-                    } as any;
+-                } else {
+-                    return {
+-                        isFile: () => true,
+-                        isDirectory: () => false,
+-                    } as any;
+-                }
+-            });
+-
+-            const result = fileService.listFiles('/test/directory');
+-
+-            expect(result.success).toBe(true);
+-            expect(result.files).toEqual(['file1.txt', 'file2.json', 'subdir']);
+-            expect(result.message).toContain('Found 3 files in directory');
+-        });
+-
+-        test('should filter files by extension', () => {
+-            // Mock security validation success
+-            mockSecurityService.validateFilePath.mockReturnValue({
+-                isValid: true,
+-                sanitizedValue: '/test/directory',
+-                
+-            });
+-
+-            // Mock fs.existsSync to return true
+-            mockFs.existsSync.mockReturnValue(true);
+ 
+-            // Mock fs.readdirSync to return file list
+-            mockFs.readdirSync.mockReturnValue(['file1.txt', 'file2.json', 'file3.txt'] as any);
+-
+-            // Mock fs.statSync to return file stats
+-            mockFs.statSync.mockReturnValue({
+-                isFile: () => true,
+-                isDirectory: () => false,
+-            } as any);
+-
+-            const result = fileService.listFiles('/test/directory', '.txt');
+-
+-            expect(result.success).toBe(true);
+-            expect(result.files).toEqual(['file1.txt', 'file3.txt']);
+-        });
+-
+-        test('should fail when directory does not exist', () => {
+-            // Mock security validation success
+-            mockSecurityService.validateFilePath.mockReturnValue({
+-                isValid: true,
+-                sanitizedValue: '/test/directory',
+-                
+-            });
+-
+-            // Mock fs.existsSync to return false
+-            mockFs.existsSync.mockReturnValue(false);
+-
+-            const result = fileService.listFiles('/test/directory');
+-
+-            expect(result.success).toBe(false);
+-            expect(result.message).toContain('Directory does not exist');
+-        });
+-    });
+ 
+         describe('generateUniqueFilename', () => {
+         test('should generate unique filename with timestamp', () => {

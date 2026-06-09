@@ -1,0 +1,1461 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Update docs
+- Changed Files List: 
+.kiro/specs/02-cytoscape-graph-visualization/cytoscape-graph-initial-prd.md	+128	-0	after_lines=128
+.kiro/specs/02-cytoscape-graph-visualization/design.md	+337	-0	after_lines=337
+.kiro/specs/02-cytoscape-graph-visualization/requirements.md	+87	-0	after_lines=87
+.kiro/specs/02-cytoscape-graph-visualization/tasks.md	+83	-0	after_lines=83
+.kiro/specs/cytoscape-graph-visualization/design.md	+0	-337	after_lines=0
+.kiro/specs/cytoscape-graph-visualization/requirements.md	+0	-87	after_lines=0
+.kiro/specs/cytoscape-graph-visualization/tasks.md	+0	-83	after_lines=0
+cytoscape-graph-initial-prd.md	+0	-128	after_lines=0
+
+- Project Directory Tree (Snapshot after commit):
+├── .constellation
+│   └── data
+│       └── codebase-dependencies.json
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── 02-cytoscape-graph-visualization
+│   │       ├── cytoscape-graph-initial-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   └── Button.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/02-cytoscape-graph-visualization/cytoscape-graph-initial-prd.md ---
+diff --git a/.kiro/specs/02-cytoscape-graph-visualization/cytoscape-graph-initial-prd.md b/.kiro/specs/02-cytoscape-graph-visualization/cytoscape-graph-initial-prd.md
+new file mode 100644
+index 0000000..7fb2d70
+--- /dev/null
++++ b/.kiro/specs/02-cytoscape-graph-visualization/cytoscape-graph-initial-prd.md
+@@ -0,0 +1,128 @@
++# Cytoscape Graph – initial implementation PRD
++
++Objective
++- Visualize the project dependency graph using Cytoscape.js in the GraphView tab.
++- Data source: ./.constellation/data/codebase-dependencies.json created by the dependency-cruiser scan.
++- If the file does not exist, trigger a scan, wait for completion, and then render.
++
++Non-goals (v1)
++- Fancy styling (file-type colors, status indicators) — we’ll stub hooks for later.
++- Layout persistence across reloads.
++- Live updates on file change — v1 is on-demand (scan → render).
++
++User stories
++1) As a user, when I open the GraphView, I see a graph representing files and their dependencies.
++2) If the dependency data is missing, the extension runs a scan; when done, the graph appears.
++3) I can pan/zoom the graph, click a node to see its path in a small details pane, and double-click to open the file in the editor (stretch goal within v1).
++
++Design overview
++- Data flow
++  - GraphView (webview UI) requests graph data from the extension via message ‘graph/load’.
++  - Extension reads ./.constellation/data/codebase-dependencies.json (or triggers scan and re-reads), transforms dependency-cruiser output to a normalized format (nodes[] and edges[]), and returns it to the webview via message reply ‘graph/data’.
++  - GraphView renders with Cytoscape and basic layout/styling.
++
++- Message contract
++  - From webview → extension
++    - { type: 'graph/load' }
++    - { type: 'graph/open-file', path: string } (double-click node)
++    - { type: 'graph/scan' } (optional manual re-scan)
++  - From extension → webview
++    - { type: 'graph/data', payload: { nodes: Node[], edges: Edge[], meta: Meta } }
++    - { type: 'graph/error', message: string }
++    - { type: 'graph/status', message: string }
++
++- Types (v1)
++  - Node: { id: string; label: string; path: string; language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other' }
++  - Edge: { id: string; source: string; target: string; kind?: 'import' | 'require' | 'dynamic' | 'unknown' }
++  - Meta: { generatedAt?: string; count: { nodes: number; edges: number } }
++
++- Transformation (dependency-cruiser → cytoscape)
++  - dependency-cruiser JSON (summary/graph) typically contains a modules array with source → dependencies[].
++  - Node id: absolute path (or workspace-relative unique path). Prefer workspace-relative to keep ids stable and readable.
++  - Node label: basename(file).
++  - Edge id: `${sourceId}->${targetId}` + optional index to ensure uniqueness.
++  - Edge kind: use dependency.dependencyTypes (e.g., esm, cjs, dynamic) → map to import/require/dynamic/unknown.
++
++- Rendering (Cytoscape)
++  - Use a basic layout: ‘cose’ or ‘cose-bilkent’ (if the plugin is available; otherwise cose).
++  - Styles (initial):
++    - Nodes: background-color: var(--vscode-charts-blue) or default; label: data(label); color based on filetype later.
++    - Edges: line-color: var(--vscode-foreground, #aaa); arrows: none in v1.
++  - Interactions:
++    - Pan/zoom default.
++    - Click node: show selection (bold label) and display node details in a sidebar area in the graph view.
++    - Double-click node: send ‘graph/open-file’ to extension.
++
++Detailed tasks
++1) Dependency additions (root)
++   - Add cytoscape to devDependencies (root; used in webview-ui bundle):
++     - "cytoscape": "^3.27.0"
++   - If using cose-bilkent later, add plugin; v1 can use builtin ‘cose’.
++
++2) Extension-side: graph data service
++   - File: src/services/graph-data.service.ts
++   - export async function loadGraphData(context: ExtensionContext): Promise<{ nodes: Node[]; edges: Edge[]; meta: Meta }>
++     - Determine workspace root (first folder). If none, return error.
++     - Compute path: <ws>/.constellation/data/codebase-dependencies.json.
++     - If missing: runScan(context) and poll the file until present or timeout (e.g., 30s). Emit status messages while waiting (optional).
++     - Read and parse JSON. Validate minimal shape (has depcruise.modules or similar).
++     - Transform to nodes/edges using helper transform function.
++   - export function transformDepCruise(dep: any, wsRoot: string): { nodes, edges, meta }
++
++3) Extension-side: webview messaging
++   - Extend centralized messenger handling (src/services/messenger.service.ts):
++     - Handle ‘graph/load’ → call loadGraphData → post ‘graph/data’ to the webview.
++     - Handle ‘graph/open-file’ → vscode.workspace.openTextDocument + showTextDocument.
++     - Optional ‘graph/scan’ → call runScan(context), then loadGraphData and reply.
++   - Wiring:
++     - Graph WebviewPanel setup (constellation.openGraphView) should attach onDidReceiveMessage and route to messenger.service.
++     - Side panel provider remains unchanged.
++
++4) Webview UI: GraphView implementation
++   - Install cytoscape in webview-ui project (already part of root devDependencies; Vite will bundle it into out/ui/main.js).
++   - webview-ui/src/views/GraphView.tsx
++     - On mount: messenger.post('graph/load'); listen for ‘graph/data’ and ‘graph/error’.
++     - Build Cytoscape instance in a container div; set elements from payload.
++     - Basic layout: cy.layout({ name: 'cose', fit: true }).run().
++     - Add event handlers:
++       - cy.on('tap', 'node', (e) => set selected node state + render details)
++       - cy.on('dbltap', 'node', (e) => messenger.post('graph/open-file', { path: node.data('path') }))
++     - Provide a small “Re-scan” button that posts ‘graph/scan’ (optional v1).
++
++5) UI plumbing and state
++   - Introduce a lightweight GraphView component state: { loading: boolean, error?: string, selected?: Node }
++   - Render states: loading spinner (text), error, graph + info panel.
++
++6) File path semantics
++   - Prefer workspace-relative ids for nodes and show absolute path in tooltip/details.
++   - When opening the file, pass vscode.Uri.file(absPath) from the extension handler.
++
++7) Timeouts and fallbacks
++   - If scan is triggered: show status "Scanning project..." with up to 30s timeout. On timeout, show error with suggestion to run ‘Constellation: Scan Dependencies’.
++
++8) Security/CSP
++   - No external resources — Cytoscape is bundled.
++   - Keep CSP as is; no eval needed.
++
++9) Testing
++   - Small repo with a handful of .ts files; run ping to open Graph tab; observe auto-load.
++   - Remove the JSON file; open Graph tab → triggers scan → graph appears.
++   - Double-click a node → underlying file opens.
++
++10) Future hooks (out of scope, leave TODO comments)
++   - Color nodes by file type.
++   - Hover metadata: size, #deps, cycles.
++   - Filtering: show only src/, only cycles, etc.
++   - Persist layout positions per workspace.
++
++Milestones
++- M1: Data layer complete (load/scan/transform) + minimal GraphView rendering.
++- M2: Interaction polish (open on double-click, details pane).
++- M3: Visual polish (colors per file type), optional filters.
++
++Acceptance criteria
++- Opening Graph tab loads and renders a Cytoscape graph from codebase-dependencies.json.
++- If the file is missing, the extension triggers a scan and then renders once available.
++- Double-clicking a node opens the corresponding file in the editor.
++- No blocking of the main activation path; all heavy work done in background.
++
+
+--- FILE: .kiro/specs/02-cytoscape-graph-visualization/design.md ---
+diff --git a/.kiro/specs/02-cytoscape-graph-visualization/design.md b/.kiro/specs/02-cytoscape-graph-visualization/design.md
+new file mode 100644
+index 0000000..8db25fb
+--- /dev/null
++++ b/.kiro/specs/02-cytoscape-graph-visualization/design.md
+@@ -0,0 +1,337 @@
++# Design Document
++
++## Overview
++
++The Cytoscape Graph Visualization feature extends the existing Kiro Constellation extension to provide interactive dependency graph visualization. The design leverages the existing messaging architecture, dependency scanning service, and webview infrastructure to create a seamless graph viewing experience within VS Code.
++
++The system follows a request-response pattern where the GraphView webview requests data from the extension, which either serves cached dependency data or triggers a scan to generate it. The graph is rendered using Cytoscape.js with automatic layout and basic interaction capabilities.
++
++## Architecture
++
++### High-Level Data Flow
++
++```mermaid
++sequenceDiagram
++    participant U as User
++    participant GV as GraphView (Webview)
++    participant M as Messenger Service
++    participant GDS as Graph Data Service
++    participant DCS as Dependency Cruiser Service
++    participant FS as File System
++
++    U->>GV: Opens Graph Tab
++    GV->>M: post('graph/load')
++    M->>GDS: loadGraphData()
++    
++    alt Dependency file exists
++        GDS->>FS: Read codebase-dependencies.json
++        FS->>GDS: Raw dependency data
++        GDS->>GDS: Transform to graph format
++        GDS->>M: Return {nodes, edges, meta}
++        M->>GV: 'graph/data' message
++    else No dependency file
++        GDS->>DCS: runScan()
++        DCS->>FS: Generate codebase-dependencies.json
++        GDS->>M: 'graph/status' (scanning...)
++        M->>GV: Show scanning status
++        DCS->>GDS: Scan complete
++        GDS->>FS: Read generated file
++        GDS->>GDS: Transform to graph format
++        GDS->>M: Return {nodes, edges, meta}
++        M->>GV: 'graph/data' message
++    end
++    
++    GV->>GV: Render Cytoscape graph
++    U->>GV: Double-click node
++    GV->>M: post('graph/open-file', {path})
++    M->>VS Code: Open file
++```
++
++### Component Architecture
++
++The implementation extends existing components and adds new services:
++
++**Existing Components (Extended):**
++- `src/services/messenger.service.ts` - Add graph message handlers
++- `webview-ui/src/services/messenger.ts` - Add graph message types
++- `src/extension.ts` - Wire graph panel message handling
++- `webview-ui/src/views/GraphView.tsx` - Replace placeholder with Cytoscape implementation
++
++**New Components:**
++- `src/services/graph-data.service.ts` - Data loading and transformation logic
++- Graph-specific message types and interfaces
++
++## Components and Interfaces
++
++### Message Protocol
++
++The messaging system extends the existing centralized messenger with graph-specific message types:
++
++**Webview → Extension Messages:**
++```typescript
++type GraphInboundMessage = 
++  | { type: 'graph/load' }
++  | { type: 'graph/open-file'; path: string }
++  | { type: 'graph/scan' }
++
++// Extended InboundMessage union in messenger.service.ts
++export type InboundMessage = 
++  | { type: 'open-graph-view' }
++  | { type: 'ping' }
++  | GraphInboundMessage
++```
++
++**Extension → Webview Messages:**
++```typescript
++type GraphOutboundMessage =
++  | { type: 'graph/data'; payload: GraphData }
++  | { type: 'graph/error'; message: string }
++  | { type: 'graph/status'; message: string }
++
++// Sent via webview.postMessage() from extension
++```
++
++### Data Models
++
++**Core Graph Types:**
++```typescript
++interface Node {
++  id: string;           // workspace-relative path
++  label: string;        // file basename
++  path: string;         // absolute path for file operations
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other';
++}
++
++interface Edge {
++  id: string;           // `${sourceId}->${targetId}` + optional index
++  source: string;       // node id
++  target: string;       // node id
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown';
++}
++
++interface Meta {
++  generatedAt?: string;
++  count: {
++    nodes: number;
++    edges: number;
++  };
++}
++
++interface GraphData {
++  nodes: Node[];
++  edges: Edge[];
++  meta: Meta;
++}
++```
++
++**Dependency Cruiser Input Format:**
++```typescript
++interface DepCruiseResult {
++  version: 1;
++  generatedAt: string;
++  workspaceRoot: string;
++  depcruise: {
++    modules: Array<{
++      source: string;           // file path
++      dependencies: Array<{
++        resolved: string;       // target file path
++        dependencyTypes: string[]; // ['esm', 'cjs', 'dynamic', etc.]
++      }>;
++    }>;
++  };
++}
++```
++
++### Graph Data Service
++
++**Primary Interface:**
++```typescript
++// src/services/graph-data.service.ts
++export async function loadGraphData(
++  context: vscode.ExtensionContext
++): Promise<GraphData>
++
++export function transformDepCruise(
++  depResult: DepCruiseResult, 
++  workspaceRoot: string
++): GraphData
++```
++
++**Implementation Strategy:**
++1. **Workspace Detection**: Use `vscode.workspace.workspaceFolders[0]` for workspace root
++2. **File Path Resolution**: Compute `.constellation/data/codebase-dependencies.json` path
++3. **Conditional Scanning**: If file missing, call existing `runScan()` and poll for completion
++4. **Data Transformation**: Convert dependency-cruiser modules array to nodes/edges format
++5. **Error Handling**: Return appropriate error messages for missing workspace, scan failures, etc.
++
++**Polling Strategy for Scan Completion:**
++```typescript
++// Poll every 500ms for up to 30 seconds
++const pollForFile = async (filePath: string, timeoutMs: number = 30000) => {
++  const startTime = Date.now();
++  while (Date.now() - startTime < timeoutMs) {
++    if (fs.existsSync(filePath)) return true;
++    await new Promise(resolve => setTimeout(resolve, 500));
++  }
++  return false;
++};
++```
++
++## Data Models
++
++### Path Handling Strategy
++
++**Node IDs**: Use workspace-relative paths for stability and readability
++- Input: `/Users/dev/project/src/components/Button.tsx`
++- Workspace: `/Users/dev/project`
++- Node ID: `src/components/Button.tsx`
++- Node Label: `Button.tsx`
++- Node Path: `/Users/dev/project/src/components/Button.tsx` (for file operations)
++
++**Edge IDs**: Deterministic generation to handle potential duplicates
++- Format: `${sourceId}->${targetId}`
++- Duplicates: Append index if multiple edges exist between same nodes
++- Example: `src/app.ts->src/utils.ts`, `src/app.ts->src/utils.ts-1`
++
++### Dependency Type Mapping
++
++Map dependency-cruiser `dependencyTypes` to simplified categories:
++```typescript
++const mapDependencyKind = (types: string[]): Edge['kind'] => {
++  if (types.includes('esm') || types.includes('es6')) return 'import';
++  if (types.includes('cjs') || types.includes('commonjs')) return 'require';
++  if (types.includes('dynamic')) return 'dynamic';
++  return 'unknown';
++};
++```
++
++## Error Handling
++
++### Graceful Degradation Strategy
++
++**No Workspace**: Return empty graph with appropriate message
++**Scan Timeout**: Show error with manual scan suggestion
++**Parse Errors**: Log details, show user-friendly error message
++**Large Files**: Show loading indicator for files > 5MB during processing
++
++### Error Message Types
++
++```typescript
++// Specific error scenarios
++const ERROR_MESSAGES = {
++  NO_WORKSPACE: 'No workspace folder open. Open a project to view dependencies.',
++  SCAN_TIMEOUT: 'Dependency scan timed out. Try running "Constellation: Scan Dependencies" manually.',
++  SCAN_FAILED: 'Dependency scan failed. Check the output console for details.',
++  PARSE_ERROR: 'Could not parse dependency data. Try re-scanning the project.',
++  FILE_TOO_LARGE: 'Dependency file is very large. Graph rendering may take a moment.',
++} as const;
++```
++
++## Testing Strategy
++
++### Manual Testing Checklist
++
++**Basic Functionality:**
++- [ ] Graph renders with nodes and edges
++- [ ] Pan and zoom work smoothly
++- [ ] Double-click opens correct files
++- [ ] Re-scan button triggers new scan
++
++**Performance:**
++- [ ] Small projects (< 50 files) render within 3 seconds
++- [ ] Large projects show loading indicator appropriately
++- [ ] No UI blocking during background scans
++
++**Error Scenarios:**
++- [ ] No workspace shows appropriate message
++- [ ] Corrupted data file recovers gracefully
++- [ ] Scan timeout shows helpful error message
++
++## Implementation Notes
++
++### Cytoscape Integration
++
++**Layout Configuration:**
++```typescript
++const layoutOptions = {
++  name: 'cose',
++  fit: true,
++  padding: 30,
++  nodeRepulsion: 400000,
++  idealEdgeLength: 100,
++  edgeElasticity: 100,
++  nestingFactor: 5,
++  gravity: 80,
++  numIter: 1000,
++  initialTemp: 200,
++  coolingFactor: 0.95,
++  minTemp: 1.0
++};
++```
++
++**Styling Strategy:**
++```typescript
++const styleSheet = [
++  {
++    selector: 'node',
++    style: {
++      'background-color': 'var(--vscode-charts-blue, #007ACC)',
++      'label': 'data(label)',
++      'color': 'var(--vscode-foreground, #CCCCCC)',
++      'font-size': '12px',
++      'text-valign': 'center',
++      'text-halign': 'center',
++      'width': '30px',
++      'height': '30px'
++    }
++  },
++  {
++    selector: 'edge',
++    style: {
++      'line-color': 'var(--vscode-foreground, #666666)',
++      'width': 2,
++      'opacity': 0.6,
++      'curve-style': 'bezier'
++    }
++  },
++  {
++    selector: 'node:selected',
++    style: {
++      'border-width': 3,
++      'border-color': 'var(--vscode-focusBorder, #007FD4)',
++      'background-color': 'var(--vscode-charts-orange, #FF8C00)'
++    }
++  }
++];
++```
++
++### Performance Considerations
++
++**Large Graph Handling:**
++- Show loading indicator for graphs > 200 nodes
++- Consider viewport culling for graphs > 1000 nodes (future enhancement)
++- Debounce layout recalculation during window resize
++
++**Memory Management:**
++- Destroy previous Cytoscape instance before creating new one
++- Clean up event listeners on component unmount
++- Limit retained graph history to prevent memory leaks
++
++### Future Enhancement Hooks
++
++**Planned Extension Points:**
++```typescript
++// TODO: File type-based node coloring
++const getNodeColor = (language: Node['language']) => { /* ... */ };
++
++// TODO: Dependency strength visualization
++const getEdgeWidth = (importCount: number) => { /* ... */ };
++
++// TODO: Cycle detection highlighting
++const highlightCycles = (cycles: string[][]) => { /* ... */ };
++
++// TODO: Filter controls
++const applyFilters = (filters: GraphFilters) => { /* ... */ };
++```
++
++This design provides a solid foundation for M1 while establishing clear extension points for future enhancements like advanced styling, filtering, and cycle detection.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/02-cytoscape-graph-visualization/requirements.md ---
+diff --git a/.kiro/specs/02-cytoscape-graph-visualization/requirements.md b/.kiro/specs/02-cytoscape-graph-visualization/requirements.md
+new file mode 100644
+index 0000000..7f1db85
+--- /dev/null
++++ b/.kiro/specs/02-cytoscape-graph-visualization/requirements.md
+@@ -0,0 +1,87 @@
++# Requirements Document
++
++## Introduction
++
++This feature implements interactive dependency graph visualization using Cytoscape.js within the VS Code extension's GraphView tab. The system will automatically scan project dependencies using dependency-cruiser and render them as an interactive graph where users can explore file relationships, navigate to specific files, and understand project architecture at a glance.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a developer, I want to visualize my project's dependency graph in an interactive format, so that I can understand the architecture and relationships between files.
++
++#### Acceptance Criteria
++
++1. WHEN I open the GraphView tab THEN the system SHALL display a Cytoscape.js graph representing files and their dependencies
++2. WHEN the dependency data file exists and is less than 5 MB THEN the system SHALL start rendering within 3 seconds on typical hardware, otherwise SHALL show "Loading graph..." until layout completes
++3. WHEN I interact with the graph THEN the system SHALL support pan and zoom operations
++4. WHEN the graph renders THEN each node SHALL represent a file with its basename as the label
++5. WHEN the graph renders THEN each edge SHALL represent a dependency relationship between files
++
++### Requirement 2
++
++**User Story:** As a developer, I want the system to automatically scan my project when dependency data is missing, so that I don't have to manually trigger scans before viewing the graph.
++
++#### Acceptance Criteria
++
++1. WHEN I open the GraphView and no dependency data exists THEN the system SHALL automatically trigger a dependency scan
++2. WHEN a scan is triggered THEN the system SHALL display "Scanning project..." status text without a progress bar
++3. WHEN the scan completes THEN the system SHALL automatically load and render the resulting graph
++4. WHEN a scan takes longer than 30 seconds THEN the system SHALL timeout and display an error message with suggestion to run "Constellation: Scan Dependencies"
++5. WHEN a scan fails THEN the system SHALL display an error message that is non-fatal to the tab
++
++### Requirement 3
++
++**User Story:** As a developer, I want to interact with graph nodes to navigate to files, so that I can efficiently explore my codebase.
++
++#### Acceptance Criteria
++
++1. WHEN I double-click on a graph node THEN the system SHALL open the corresponding file in VS Code using the absolute file path
++2. WHEN I single-click on a graph node THEN the system SHALL briefly highlight the node (no details sidebar in M1)
++
++### Requirement 4
++
++**User Story:** As a developer, I want the graph to use appropriate data from dependency-cruiser output, so that the visualization accurately represents my project structure.
++
++#### Acceptance Criteria
++
++1. WHEN transforming dependency data THEN the system SHALL read from `./.constellation/data/codebase-dependencies.json`
++2. WHEN creating nodes THEN the system SHALL use workspace-relative paths as unique identifiers
++3. WHEN creating edges THEN the system SHALL map dependency types to import/require/dynamic/unknown categories
++4. WHEN generating the graph THEN the system SHALL include metadata about node and edge counts
++5. WHEN processing dependencies THEN the system SHALL handle circular dependencies without errors
++
++### Requirement 5
++
++**User Story:** As a developer, I want the graph to have a clean, readable layout and styling, so that I can easily understand the dependency relationships.
++
++#### Acceptance Criteria
++
++1. WHEN the graph renders THEN the system SHALL use the 'cose' layout algorithm and fit the graph to the viewport on initial render
++2. WHEN styling nodes THEN the system SHALL use VS Code theme-derived colors with a static color scheme in M1
++3. WHEN styling edges THEN the system SHALL use subtle colors with no arrows in M1
++4. WHEN the layout completes THEN the system SHALL fit the entire graph within the viewport
++5. WHEN a node is selected or active THEN the system SHALL provide basic visual highlighting
++
++### Requirement 6
++
++**User Story:** As a developer, I want to manually trigger dependency rescans when needed, so that I can update the graph after making significant code changes.
++
++#### Acceptance Criteria
++
++1. WHEN I click a "Re-scan" button THEN the system SHALL trigger a new dependency scan using runScan
++2. WHEN a manual scan is triggered THEN the system SHALL show "Scanning project..." status and reload the graph after completion
++3. WHEN a manual scan fails THEN the system SHALL display an error message and leave the current graph as-is
++4. WHEN rescanning THEN the system SHALL defer view preservation guarantee and refresh the graph after scan completion
++
++### Requirement 7
++
++**User Story:** As a developer, I want the graph functionality to integrate seamlessly with the existing extension messaging system, so that it works reliably within the VS Code environment.
++
++#### Acceptance Criteria
++
++1. WHEN the webview requests graph data via 'graph/load' THEN the extension SHALL respond with 'graph/data' or 'graph/error'
++2. WHEN file opening is requested THEN the system SHALL use VS Code APIs for file operations
++3. WHEN errors occur THEN the system SHALL communicate them via the messaging channel
++4. WHEN the extension activates THEN the graph functionality SHALL run in background without blocking activation
++5. WHEN messages are exchanged THEN the system SHALL maintain type safety by defining shared types for messages
+\ No newline at end of file
+
+--- FILE: .kiro/specs/02-cytoscape-graph-visualization/tasks.md ---
+diff --git a/.kiro/specs/02-cytoscape-graph-visualization/tasks.md b/.kiro/specs/02-cytoscape-graph-visualization/tasks.md
+new file mode 100644
+index 0000000..35556a6
+--- /dev/null
++++ b/.kiro/specs/02-cytoscape-graph-visualization/tasks.md
+@@ -0,0 +1,83 @@
++# Implementation Plan
++
++- [x] 1. Add Cytoscape dependency and update package configuration
++  - Add "cytoscape": "^3.27.0" to Dependencies in root package.json
++  - Ensure Vite will bundle Cytoscape into webview UI build
++  - _Requirements: R1.1, R5.1_
++
++- [x] 2. Create graph data service for dependency transformation
++  - Create src/services/graph-data.service.ts with loadGraphData function
++  - Implement workspace detection and file path resolution logic
++  - Add polling mechanism for scan completion with 30-second timeout
++  - _Requirements: R2.1, R2.4, R4.1, R7.4_
++
++- [x] 2.1 Implement dependency-cruiser data transformation
++  - Write transformDepCruise function to convert modules array to nodes/edges
++  - Map workspace-relative paths to node IDs and absolute paths for file operations
++  - Map dependency types (esm, cjs, dynamic) to simplified edge kinds
++  - Generate unique edge IDs with collision handling
++  - _Requirements: R4.2, R4.3, R4.4, R4.5_
++
++- [x] 2.2 Add error handling and status reporting
++  - Implement graceful handling for missing workspace, scan failures, parse errors
++  - Create specific error messages for different failure scenarios
++  - Add file size checking and loading indicators for large files (>5MB)
++  - _Requirements: R2.5, R7.3_
++
++- [x] 3. Extend messaging system for graph communication
++  - Add GraphInboundMessage types to src/services/messenger.service.ts InboundMessage union
++  - Implement message handlers for 'graph/load', 'graph/open-file', and 'graph/scan'
++  - Add GraphOutboundMessage types for webview communication
++  - _Requirements: R7.1, R7.2, R7.5_
++
++- [x] 3.1 Wire graph message handling in extension
++  - Extend handleWebviewMessage function to route graph messages to graph data service
++  - Implement file opening using vscode.workspace.openTextDocument and showTextDocument
++  - Add webview message posting for graph/data, graph/error, and graph/status responses
++  - _Requirements: R3.1, R7.2_
++
++- [x] 3.2 Connect graph panel to messaging system
++  - Modify constellation.openGraphView command in src/extension.ts to attach message handlers
++  - Route webview messages through centralized messenger service
++  - Ensure proper cleanup of message handlers on panel disposal
++  - _Requirements: R7.1, R7.4_
++
++- [x] 4. Implement Cytoscape GraphView component
++  - Replace placeholder GraphView.tsx with Cytoscape integration
++  - Add cytoscape import and container div setup
++  - Implement component state for loading, error, and graph data
++  - _Requirements: R1.1, R1.4, R1.5_
++
++- [x] 4.1 Add graph data loading and rendering
++  - Send 'graph/load' message on component mount
++  - Listen for 'graph/data', 'graph/error', and 'graph/status' messages
++  - Create Cytoscape instance with nodes and edges from message payload
++  - Apply 'cose' layout with fit: true configuration
++  - _Requirements: R1.2, R2.2, R2.3, R5.1, R5.4_
++
++- [x] 4.2 Implement graph styling and interactions
++  - Apply VS Code theme-derived colors for nodes and subtle edge colors
++  - Add pan and zoom capabilities (enabled by default in Cytoscape)
++  - Implement single-click node highlighting with visual feedback
++  - Add double-click handler to send 'graph/open-file' message with node path
++  - _Requirements: R1.3, R3.1, R3.2, R5.2, R5.3, R5.5_
++
++- [x] 4.3 Add re-scan functionality and status display
++  - Create "Re-scan" button that sends 'graph/scan' message
++  - Display loading states during scanning with "Scanning project..." text
++  - Handle scan completion by automatically refreshing graph data
++  - Show error messages for scan failures without breaking current graph
++  - _Requirements: R6.1, R6.2, R6.3, R6.4_
++
++- [x] 5. Update webview messenger service for graph messages
++  - Add graph message types to webview-ui/src/services/messenger.ts Message union
++  - Ensure type safety for graph/load, graph/open-file, and graph/scan message posting
++  - Add message listener support for graph/data, graph/error, and graph/status
++  - _Requirements: R7.5_
++
++- [x] 6. Handle edge cases and performance optimization
++  - Implement timeout handling for dependency scans longer than 30 seconds
++  - Add loading indicators for large graphs and file processing
++  - Ensure proper Cytoscape instance cleanup on component unmount
++  - Handle missing workspace scenario with appropriate user messaging
++  - _Requirements: R1.2, R2.4, R2.5_
+\ No newline at end of file
+
+--- FILE: .kiro/specs/cytoscape-graph-visualization/design.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/design.md b/.kiro/specs/cytoscape-graph-visualization/design.md
+deleted file mode 100644
+index 8db25fb..0000000
+--- a/.kiro/specs/cytoscape-graph-visualization/design.md
++++ /dev/null
+@@ -1,337 +0,0 @@
+-# Design Document
+-
+-## Overview
+-
+-The Cytoscape Graph Visualization feature extends the existing Kiro Constellation extension to provide interactive dependency graph visualization. The design leverages the existing messaging architecture, dependency scanning service, and webview infrastructure to create a seamless graph viewing experience within VS Code.
+-
+-The system follows a request-response pattern where the GraphView webview requests data from the extension, which either serves cached dependency data or triggers a scan to generate it. The graph is rendered using Cytoscape.js with automatic layout and basic interaction capabilities.
+-
+-## Architecture
+-
+-### High-Level Data Flow
+-
+-```mermaid
+-sequenceDiagram
+-    participant U as User
+-    participant GV as GraphView (Webview)
+-    participant M as Messenger Service
+-    participant GDS as Graph Data Service
+-    participant DCS as Dependency Cruiser Service
+-    participant FS as File System
+-
+-    U->>GV: Opens Graph Tab
+-    GV->>M: post('graph/load')
+-    M->>GDS: loadGraphData()
+-    
+-    alt Dependency file exists
+-        GDS->>FS: Read codebase-dependencies.json
+-        FS->>GDS: Raw dependency data
+-        GDS->>GDS: Transform to graph format
+-        GDS->>M: Return {nodes, edges, meta}
+-        M->>GV: 'graph/data' message
+-    else No dependency file
+-        GDS->>DCS: runScan()
+-        DCS->>FS: Generate codebase-dependencies.json
+-        GDS->>M: 'graph/status' (scanning...)
+-        M->>GV: Show scanning status
+-        DCS->>GDS: Scan complete
+-        GDS->>FS: Read generated file
+-        GDS->>GDS: Transform to graph format
+-        GDS->>M: Return {nodes, edges, meta}
+-        M->>GV: 'graph/data' message
+-    end
+-    
+-    GV->>GV: Render Cytoscape graph
+-    U->>GV: Double-click node
+-    GV->>M: post('graph/open-file', {path})
+-    M->>VS Code: Open file
+-```
+-
+-### Component Architecture
+-
+-The implementation extends existing components and adds new services:
+-
+-**Existing Components (Extended):**
+-- `src/services/messenger.service.ts` - Add graph message handlers
+-- `webview-ui/src/services/messenger.ts` - Add graph message types
+-- `src/extension.ts` - Wire graph panel message handling
+-- `webview-ui/src/views/GraphView.tsx` - Replace placeholder with Cytoscape implementation
+-
+-**New Components:**
+-- `src/services/graph-data.service.ts` - Data loading and transformation logic
+-- Graph-specific message types and interfaces
+-
+-## Components and Interfaces
+-
+-### Message Protocol
+-
+-The messaging system extends the existing centralized messenger with graph-specific message types:
+-
+-**Webview → Extension Messages:**
+-```typescript
+-type GraphInboundMessage = 
+-  | { type: 'graph/load' }
+-  | { type: 'graph/open-file'; path: string }
+-  | { type: 'graph/scan' }
+-
+-// Extended InboundMessage union in messenger.service.ts
+-export type InboundMessage = 
+-  | { type: 'open-graph-view' }
+-  | { type: 'ping' }
+-  | GraphInboundMessage
+-```
+-
+-**Extension → Webview Messages:**
+-```typescript
+-type GraphOutboundMessage =
+-  | { type: 'graph/data'; payload: GraphData }
+-  | { type: 'graph/error'; message: string }
+-  | { type: 'graph/status'; message: string }
+-
+-// Sent via webview.postMessage() from extension
+-```
+-
+-### Data Models
+-
+-**Core Graph Types:**
+-```typescript
+-interface Node {
+-  id: string;           // workspace-relative path
+-  label: string;        // file basename
+-  path: string;         // absolute path for file operations
+-  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other';
+-}
+-
+-interface Edge {
+-  id: string;           // `${sourceId}->${targetId}` + optional index
+-  source: string;       // node id
+-  target: string;       // node id
+-  kind?: 'import' | 'require' | 'dynamic' | 'unknown';
+-}
+-
+-interface Meta {
+-  generatedAt?: string;
+-  count: {
+-    nodes: number;
+-    edges: number;
+-  };
+-}
+-
+-interface GraphData {
+-  nodes: Node[];
+-  edges: Edge[];
+-  meta: Meta;
+-}
+-```
+-
+-**Dependency Cruiser Input Format:**
+-```typescript
+-interface DepCruiseResult {
+-  version: 1;
+-  generatedAt: string;
+-  workspaceRoot: string;
+-  depcruise: {
+-    modules: Array<{
+-      source: string;           // file path
+-      dependencies: Array<{
+-        resolved: string;       // target file path
+-        dependencyTypes: string[]; // ['esm', 'cjs', 'dynamic', etc.]
+-      }>;
+-    }>;
+-  };
+-}
+-```
+-
+-### Graph Data Service
+-
+-**Primary Interface:**
+-```typescript
+-// src/services/graph-data.service.ts
+-export async function loadGraphData(
+-  context: vscode.ExtensionContext
+-): Promise<GraphData>
+-
+-export function transformDepCruise(
+-  depResult: DepCruiseResult, 
+-  workspaceRoot: string
+-): GraphData
+-```
+-
+-**Implementation Strategy:**
+-1. **Workspace Detection**: Use `vscode.workspace.workspaceFolders[0]` for workspace root
+-2. **File Path Resolution**: Compute `.constellation/data/codebase-dependencies.json` path
+-3. **Conditional Scanning**: If file missing, call existing `runScan()` and poll for completion
+-4. **Data Transformation**: Convert dependency-cruiser modules array to nodes/edges format
+-5. **Error Handling**: Return appropriate error messages for missing workspace, scan failures, etc.
+-
+-**Polling Strategy for Scan Completion:**
+-```typescript
+-// Poll every 500ms for up to 30 seconds
+-const pollForFile = async (filePath: string, timeoutMs: number = 30000) => {
+-  const startTime = Date.now();
+-  while (Date.now() - startTime < timeoutMs) {
+-    if (fs.existsSync(filePath)) return true;
+-    await new Promise(resolve => setTimeout(resolve, 500));
+-  }
+-  return false;
+-};
+-```
+-
+-## Data Models
+-
+-### Path Handling Strategy
+-
+-**Node IDs**: Use workspace-relative paths for stability and readability
+-- Input: `/Users/dev/project/src/components/Button.tsx`
+-- Workspace: `/Users/dev/project`
+-- Node ID: `src/components/Button.tsx`
+-- Node Label: `Button.tsx`
+-- Node Path: `/Users/dev/project/src/components/Button.tsx` (for file operations)
+-
+-**Edge IDs**: Deterministic generation to handle potential duplicates
+-- Format: `${sourceId}->${targetId}`
+-- Duplicates: Append index if multiple edges exist between same nodes
+-- Example: `src/app.ts->src/utils.ts`, `src/app.ts->src/utils.ts-1`
+-
+-### Dependency Type Mapping
+-
+-Map dependency-cruiser `dependencyTypes` to simplified categories:
+-```typescript
+-const mapDependencyKind = (types: string[]): Edge['kind'] => {
+-  if (types.includes('esm') || types.includes('es6')) return 'import';
+-  if (types.includes('cjs') || types.includes('commonjs')) return 'require';
+-  if (types.includes('dynamic')) return 'dynamic';
+-  return 'unknown';
+-};
+-```
+-
+-## Error Handling
+-
+-### Graceful Degradation Strategy
+-
+-**No Workspace**: Return empty graph with appropriate message
+-**Scan Timeout**: Show error with manual scan suggestion
+-**Parse Errors**: Log details, show user-friendly error message
+-**Large Files**: Show loading indicator for files > 5MB during processing
+-
+-### Error Message Types
+-
+-```typescript
+-// Specific error scenarios
+-const ERROR_MESSAGES = {
+-  NO_WORKSPACE: 'No workspace folder open. Open a project to view dependencies.',
+-  SCAN_TIMEOUT: 'Dependency scan timed out. Try running "Constellation: Scan Dependencies" manually.',
+-  SCAN_FAILED: 'Dependency scan failed. Check the output console for details.',
+-  PARSE_ERROR: 'Could not parse dependency data. Try re-scanning the project.',
+-  FILE_TOO_LARGE: 'Dependency file is very large. Graph rendering may take a moment.',
+-} as const;
+-```
+-
+-## Testing Strategy
+-
+-### Manual Testing Checklist
+-
+-**Basic Functionality:**
+-- [ ] Graph renders with nodes and edges
+-- [ ] Pan and zoom work smoothly
+-- [ ] Double-click opens correct files
+-- [ ] Re-scan button triggers new scan
+-
+-**Performance:**
+-- [ ] Small projects (< 50 files) render within 3 seconds
+-- [ ] Large projects show loading indicator appropriately
+-- [ ] No UI blocking during background scans
+-
+-**Error Scenarios:**
+-- [ ] No workspace shows appropriate message
+-- [ ] Corrupted data file recovers gracefully
+-- [ ] Scan timeout shows helpful error message
+-
+-## Implementation Notes
+-
+-### Cytoscape Integration
+-
+-**Layout Configuration:**
+-```typescript
+-const layoutOptions = {
+-  name: 'cose',
+-  fit: true,
+-  padding: 30,
+-  nodeRepulsion: 400000,
+-  idealEdgeLength: 100,
+-  edgeElasticity: 100,
+-  nestingFactor: 5,
+-  gravity: 80,
+-  numIter: 1000,
+-  initialTemp: 200,
+-  coolingFactor: 0.95,
+-  minTemp: 1.0
+-};
+-```
+-
+-**Styling Strategy:**
+-```typescript
+-const styleSheet = [
+-  {
+-    selector: 'node',
+-    style: {
+-      'background-color': 'var(--vscode-charts-blue, #007ACC)',
+-      'label': 'data(label)',
+-      'color': 'var(--vscode-foreground, #CCCCCC)',
+-      'font-size': '12px',
+-      'text-valign': 'center',
+-      'text-halign': 'center',
+-      'width': '30px',
+-      'height': '30px'
+-    }
+-  },
+-  {
+-    selector: 'edge',
+-    style: {
+-      'line-color': 'var(--vscode-foreground, #666666)',
+-      'width': 2,
+-      'opacity': 0.6,
+-      'curve-style': 'bezier'
+-    }
+-  },
+-  {
+-    selector: 'node:selected',
+-    style: {
+-      'border-width': 3,
+-      'border-color': 'var(--vscode-focusBorder, #007FD4)',
+-      'background-color': 'var(--vscode-charts-orange, #FF8C00)'
+-    }
+-  }
+-];
+-```
+-
+-### Performance Considerations
+-
+-**Large Graph Handling:**
+-- Show loading indicator for graphs > 200 nodes
+-- Consider viewport culling for graphs > 1000 nodes (future enhancement)
+-- Debounce layout recalculation during window resize
+-
+-**Memory Management:**
+-- Destroy previous Cytoscape instance before creating new one
+-- Clean up event listeners on component unmount
+-- Limit retained graph history to prevent memory leaks
+-
+-### Future Enhancement Hooks
+-
+-**Planned Extension Points:**
+-```typescript
+-// TODO: File type-based node coloring
+-const getNodeColor = (language: Node['language']) => { /* ... */ };
+-
+-// TODO: Dependency strength visualization
+-const getEdgeWidth = (importCount: number) => { /* ... */ };
+-
+-// TODO: Cycle detection highlighting
+-const highlightCycles = (cycles: string[][]) => { /* ... */ };
+-
+-// TODO: Filter controls
+-const applyFilters = (filters: GraphFilters) => { /* ... */ };
+-```
+-
+-This design provides a solid foundation for M1 while establishing clear extension points for future enhancements like advanced styling, filtering, and cycle detection.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/cytoscape-graph-visualization/requirements.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/requirements.md b/.kiro/specs/cytoscape-graph-visualization/requirements.md
+deleted file mode 100644
+index 7f1db85..0000000
+--- a/.kiro/specs/cytoscape-graph-visualization/requirements.md
++++ /dev/null
+@@ -1,87 +0,0 @@
+-# Requirements Document
+-
+-## Introduction
+-
+-This feature implements interactive dependency graph visualization using Cytoscape.js within the VS Code extension's GraphView tab. The system will automatically scan project dependencies using dependency-cruiser and render them as an interactive graph where users can explore file relationships, navigate to specific files, and understand project architecture at a glance.
+-
+-## Requirements
+-
+-### Requirement 1
+-
+-**User Story:** As a developer, I want to visualize my project's dependency graph in an interactive format, so that I can understand the architecture and relationships between files.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN I open the GraphView tab THEN the system SHALL display a Cytoscape.js graph representing files and their dependencies
+-2. WHEN the dependency data file exists and is less than 5 MB THEN the system SHALL start rendering within 3 seconds on typical hardware, otherwise SHALL show "Loading graph..." until layout completes
+-3. WHEN I interact with the graph THEN the system SHALL support pan and zoom operations
+-4. WHEN the graph renders THEN each node SHALL represent a file with its basename as the label
+-5. WHEN the graph renders THEN each edge SHALL represent a dependency relationship between files
+-
+-### Requirement 2
+-
+-**User Story:** As a developer, I want the system to automatically scan my project when dependency data is missing, so that I don't have to manually trigger scans before viewing the graph.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN I open the GraphView and no dependency data exists THEN the system SHALL automatically trigger a dependency scan
+-2. WHEN a scan is triggered THEN the system SHALL display "Scanning project..." status text without a progress bar
+-3. WHEN the scan completes THEN the system SHALL automatically load and render the resulting graph
+-4. WHEN a scan takes longer than 30 seconds THEN the system SHALL timeout and display an error message with suggestion to run "Constellation: Scan Dependencies"
+-5. WHEN a scan fails THEN the system SHALL display an error message that is non-fatal to the tab
+-
+-### Requirement 3
+-
+-**User Story:** As a developer, I want to interact with graph nodes to navigate to files, so that I can efficiently explore my codebase.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN I double-click on a graph node THEN the system SHALL open the corresponding file in VS Code using the absolute file path
+-2. WHEN I single-click on a graph node THEN the system SHALL briefly highlight the node (no details sidebar in M1)
+-
+-### Requirement 4
+-
+-**User Story:** As a developer, I want the graph to use appropriate data from dependency-cruiser output, so that the visualization accurately represents my project structure.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN transforming dependency data THEN the system SHALL read from `./.constellation/data/codebase-dependencies.json`
+-2. WHEN creating nodes THEN the system SHALL use workspace-relative paths as unique identifiers
+-3. WHEN creating edges THEN the system SHALL map dependency types to import/require/dynamic/unknown categories
+-4. WHEN generating the graph THEN the system SHALL include metadata about node and edge counts
+-5. WHEN processing dependencies THEN the system SHALL handle circular dependencies without errors
+-
+-### Requirement 5
+-
+-**User Story:** As a developer, I want the graph to have a clean, readable layout and styling, so that I can easily understand the dependency relationships.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the graph renders THEN the system SHALL use the 'cose' layout algorithm and fit the graph to the viewport on initial render
+-2. WHEN styling nodes THEN the system SHALL use VS Code theme-derived colors with a static color scheme in M1
+-3. WHEN styling edges THEN the system SHALL use subtle colors with no arrows in M1
+-4. WHEN the layout completes THEN the system SHALL fit the entire graph within the viewport
+-5. WHEN a node is selected or active THEN the system SHALL provide basic visual highlighting
+-
+-### Requirement 6
+-
+-**User Story:** As a developer, I want to manually trigger dependency rescans when needed, so that I can update the graph after making significant code changes.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN I click a "Re-scan" button THEN the system SHALL trigger a new dependency scan using runScan
+-2. WHEN a manual scan is triggered THEN the system SHALL show "Scanning project..." status and reload the graph after completion
+-3. WHEN a manual scan fails THEN the system SHALL display an error message and leave the current graph as-is
+-4. WHEN rescanning THEN the system SHALL defer view preservation guarantee and refresh the graph after scan completion
+-
+-### Requirement 7
+-
+-**User Story:** As a developer, I want the graph functionality to integrate seamlessly with the existing extension messaging system, so that it works reliably within the VS Code environment.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the webview requests graph data via 'graph/load' THEN the extension SHALL respond with 'graph/data' or 'graph/error'
+-2. WHEN file opening is requested THEN the system SHALL use VS Code APIs for file operations
+-3. WHEN errors occur THEN the system SHALL communicate them via the messaging channel
+-4. WHEN the extension activates THEN the graph functionality SHALL run in background without blocking activation
+-5. WHEN messages are exchanged THEN the system SHALL maintain type safety by defining shared types for messages
+\ No newline at end of file
+
+--- FILE: .kiro/specs/cytoscape-graph-visualization/tasks.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/tasks.md b/.kiro/specs/cytoscape-graph-visualization/tasks.md
+deleted file mode 100644
+index 35556a6..0000000
+--- a/.kiro/specs/cytoscape-graph-visualization/tasks.md
++++ /dev/null
+@@ -1,83 +0,0 @@
+-# Implementation Plan
+-
+-- [x] 1. Add Cytoscape dependency and update package configuration
+-  - Add "cytoscape": "^3.27.0" to Dependencies in root package.json
+-  - Ensure Vite will bundle Cytoscape into webview UI build
+-  - _Requirements: R1.1, R5.1_
+-
+-- [x] 2. Create graph data service for dependency transformation
+-  - Create src/services/graph-data.service.ts with loadGraphData function
+-  - Implement workspace detection and file path resolution logic
+-  - Add polling mechanism for scan completion with 30-second timeout
+-  - _Requirements: R2.1, R2.4, R4.1, R7.4_
+-
+-- [x] 2.1 Implement dependency-cruiser data transformation
+-  - Write transformDepCruise function to convert modules array to nodes/edges
+-  - Map workspace-relative paths to node IDs and absolute paths for file operations
+-  - Map dependency types (esm, cjs, dynamic) to simplified edge kinds
+-  - Generate unique edge IDs with collision handling
+-  - _Requirements: R4.2, R4.3, R4.4, R4.5_
+-
+-- [x] 2.2 Add error handling and status reporting
+-  - Implement graceful handling for missing workspace, scan failures, parse errors
+-  - Create specific error messages for different failure scenarios
+-  - Add file size checking and loading indicators for large files (>5MB)
+-  - _Requirements: R2.5, R7.3_
+-
+-- [x] 3. Extend messaging system for graph communication
+-  - Add GraphInboundMessage types to src/services/messenger.service.ts InboundMessage union
+-  - Implement message handlers for 'graph/load', 'graph/open-file', and 'graph/scan'
+-  - Add GraphOutboundMessage types for webview communication
+-  - _Requirements: R7.1, R7.2, R7.5_
+-
+-- [x] 3.1 Wire graph message handling in extension
+-  - Extend handleWebviewMessage function to route graph messages to graph data service
+-  - Implement file opening using vscode.workspace.openTextDocument and showTextDocument
+-  - Add webview message posting for graph/data, graph/error, and graph/status responses
+-  - _Requirements: R3.1, R7.2_
+-
+-- [x] 3.2 Connect graph panel to messaging system
+-  - Modify constellation.openGraphView command in src/extension.ts to attach message handlers
+-  - Route webview messages through centralized messenger service
+-  - Ensure proper cleanup of message handlers on panel disposal
+-  - _Requirements: R7.1, R7.4_
+-
+-- [x] 4. Implement Cytoscape GraphView component
+-  - Replace placeholder GraphView.tsx with Cytoscape integration
+-  - Add cytoscape import and container div setup
+-  - Implement component state for loading, error, and graph data
+-  - _Requirements: R1.1, R1.4, R1.5_
+-
+-- [x] 4.1 Add graph data loading and rendering
+-  - Send 'graph/load' message on component mount
+-  - Listen for 'graph/data', 'graph/error', and 'graph/status' messages
+-  - Create Cytoscape instance with nodes and edges from message payload
+-  - Apply 'cose' layout with fit: true configuration
+-  - _Requirements: R1.2, R2.2, R2.3, R5.1, R5.4_
+-
+-- [x] 4.2 Implement graph styling and interactions
+-  - Apply VS Code theme-derived colors for nodes and subtle edge colors
+-  - Add pan and zoom capabilities (enabled by default in Cytoscape)
+-  - Implement single-click node highlighting with visual feedback
+-  - Add double-click handler to send 'graph/open-file' message with node path
+-  - _Requirements: R1.3, R3.1, R3.2, R5.2, R5.3, R5.5_
+-
+-- [x] 4.3 Add re-scan functionality and status display
+-  - Create "Re-scan" button that sends 'graph/scan' message
+-  - Display loading states during scanning with "Scanning project..." text
+-  - Handle scan completion by automatically refreshing graph data
+-  - Show error messages for scan failures without breaking current graph
+-  - _Requirements: R6.1, R6.2, R6.3, R6.4_
+-
+-- [x] 5. Update webview messenger service for graph messages
+-  - Add graph message types to webview-ui/src/services/messenger.ts Message union
+-  - Ensure type safety for graph/load, graph/open-file, and graph/scan message posting
+-  - Add message listener support for graph/data, graph/error, and graph/status
+-  - _Requirements: R7.5_
+-
+-- [x] 6. Handle edge cases and performance optimization
+-  - Implement timeout handling for dependency scans longer than 30 seconds
+-  - Add loading indicators for large graphs and file processing
+-  - Ensure proper Cytoscape instance cleanup on component unmount
+-  - Handle missing workspace scenario with appropriate user messaging
+-  - _Requirements: R1.2, R2.4, R2.5_
+\ No newline at end of file
+
+--- FILE: cytoscape-graph-initial-prd.md ---
+diff --git a/cytoscape-graph-initial-prd.md b/cytoscape-graph-initial-prd.md
+deleted file mode 100644
+index 7fb2d70..0000000
+--- a/cytoscape-graph-initial-prd.md
++++ /dev/null
+@@ -1,128 +0,0 @@
+-# Cytoscape Graph – initial implementation PRD
+-
+-Objective
+-- Visualize the project dependency graph using Cytoscape.js in the GraphView tab.
+-- Data source: ./.constellation/data/codebase-dependencies.json created by the dependency-cruiser scan.
+-- If the file does not exist, trigger a scan, wait for completion, and then render.
+-
+-Non-goals (v1)
+-- Fancy styling (file-type colors, status indicators) — we’ll stub hooks for later.
+-- Layout persistence across reloads.
+-- Live updates on file change — v1 is on-demand (scan → render).
+-
+-User stories
+-1) As a user, when I open the GraphView, I see a graph representing files and their dependencies.
+-2) If the dependency data is missing, the extension runs a scan; when done, the graph appears.
+-3) I can pan/zoom the graph, click a node to see its path in a small details pane, and double-click to open the file in the editor (stretch goal within v1).
+-
+-Design overview
+-- Data flow
+-  - GraphView (webview UI) requests graph data from the extension via message ‘graph/load’.
+-  - Extension reads ./.constellation/data/codebase-dependencies.json (or triggers scan and re-reads), transforms dependency-cruiser output to a normalized format (nodes[] and edges[]), and returns it to the webview via message reply ‘graph/data’.
+-  - GraphView renders with Cytoscape and basic layout/styling.
+-
+-- Message contract
+-  - From webview → extension
+-    - { type: 'graph/load' }
+-    - { type: 'graph/open-file', path: string } (double-click node)
+-    - { type: 'graph/scan' } (optional manual re-scan)
+-  - From extension → webview
+-    - { type: 'graph/data', payload: { nodes: Node[], edges: Edge[], meta: Meta } }
+-    - { type: 'graph/error', message: string }
+-    - { type: 'graph/status', message: string }
+-
+-- Types (v1)
+-  - Node: { id: string; label: string; path: string; language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other' }
+-  - Edge: { id: string; source: string; target: string; kind?: 'import' | 'require' | 'dynamic' | 'unknown' }
+-  - Meta: { generatedAt?: string; count: { nodes: number; edges: number } }
+-
+-- Transformation (dependency-cruiser → cytoscape)
+-  - dependency-cruiser JSON (summary/graph) typically contains a modules array with source → dependencies[].
+-  - Node id: absolute path (or workspace-relative unique path). Prefer workspace-relative to keep ids stable and readable.
+-  - Node label: basename(file).
+-  - Edge id: `${sourceId}->${targetId}` + optional index to ensure uniqueness.
+-  - Edge kind: use dependency.dependencyTypes (e.g., esm, cjs, dynamic) → map to import/require/dynamic/unknown.
+-
+-- Rendering (Cytoscape)
+-  - Use a basic layout: ‘cose’ or ‘cose-bilkent’ (if the plugin is available; otherwise cose).
+-  - Styles (initial):
+-    - Nodes: background-color: var(--vscode-charts-blue) or default; label: data(label); color based on filetype later.
+-    - Edges: line-color: var(--vscode-foreground, #aaa); arrows: none in v1.
+-  - Interactions:
+-    - Pan/zoom default.
+-    - Click node: show selection (bold label) and display node details in a sidebar area in the graph view.
+-    - Double-click node: send ‘graph/open-file’ to extension.
+-
+-Detailed tasks
+-1) Dependency additions (root)
+-   - Add cytoscape to devDependencies (root; used in webview-ui bundle):
+-     - "cytoscape": "^3.27.0"
+-   - If using cose-bilkent later, add plugin; v1 can use builtin ‘cose’.
+-
+-2) Extension-side: graph data service
+-   - File: src/services/graph-data.service.ts
+-   - export async function loadGraphData(context: ExtensionContext): Promise<{ nodes: Node[]; edges: Edge[]; meta: Meta }>
+-     - Determine workspace root (first folder). If none, return error.
+-     - Compute path: <ws>/.constellation/data/codebase-dependencies.json.
+-     - If missing: runScan(context) and poll the file until present or timeout (e.g., 30s). Emit status messages while waiting (optional).
+-     - Read and parse JSON. Validate minimal shape (has depcruise.modules or similar).
+-     - Transform to nodes/edges using helper transform function.
+-   - export function transformDepCruise(dep: any, wsRoot: string): { nodes, edges, meta }
+-
+-3) Extension-side: webview messaging
+-   - Extend centralized messenger handling (src/services/messenger.service.ts):
+-     - Handle ‘graph/load’ → call loadGraphData → post ‘graph/data’ to the webview.
+-     - Handle ‘graph/open-file’ → vscode.workspace.openTextDocument + showTextDocument.
+-     - Optional ‘graph/scan’ → call runScan(context), then loadGraphData and reply.
+-   - Wiring:
+-     - Graph WebviewPanel setup (constellation.openGraphView) should attach onDidReceiveMessage and route to messenger.service.
+-     - Side panel provider remains unchanged.
+-
+-4) Webview UI: GraphView implementation
+-   - Install cytoscape in webview-ui project (already part of root devDependencies; Vite will bundle it into out/ui/main.js).
+-   - webview-ui/src/views/GraphView.tsx
+-     - On mount: messenger.post('graph/load'); listen for ‘graph/data’ and ‘graph/error’.
+-     - Build Cytoscape instance in a container div; set elements from payload.
+-     - Basic layout: cy.layout({ name: 'cose', fit: true }).run().
+-     - Add event handlers:
+-       - cy.on('tap', 'node', (e) => set selected node state + render details)
+-       - cy.on('dbltap', 'node', (e) => messenger.post('graph/open-file', { path: node.data('path') }))
+-     - Provide a small “Re-scan” button that posts ‘graph/scan’ (optional v1).
+-
+-5) UI plumbing and state
+-   - Introduce a lightweight GraphView component state: { loading: boolean, error?: string, selected?: Node }
+-   - Render states: loading spinner (text), error, graph + info panel.
+-
+-6) File path semantics
+-   - Prefer workspace-relative ids for nodes and show absolute path in tooltip/details.
+-   - When opening the file, pass vscode.Uri.file(absPath) from the extension handler.
+-
+-7) Timeouts and fallbacks
+-   - If scan is triggered: show status "Scanning project..." with up to 30s timeout. On timeout, show error with suggestion to run ‘Constellation: Scan Dependencies’.
+-
+-8) Security/CSP
+-   - No external resources — Cytoscape is bundled.
+-   - Keep CSP as is; no eval needed.
+-
+-9) Testing
+-   - Small repo with a handful of .ts files; run ping to open Graph tab; observe auto-load.
+-   - Remove the JSON file; open Graph tab → triggers scan → graph appears.
+-   - Double-click a node → underlying file opens.
+-
+-10) Future hooks (out of scope, leave TODO comments)
+-   - Color nodes by file type.
+-   - Hover metadata: size, #deps, cycles.
+-   - Filtering: show only src/, only cycles, etc.
+-   - Persist layout positions per workspace.
+-
+-Milestones
+-- M1: Data layer complete (load/scan/transform) + minimal GraphView rendering.
+-- M2: Interaction polish (open on double-click, details pane).
+-- M3: Visual polish (colors per file type), optional filters.
+-
+-Acceptance criteria
+-- Opening Graph tab loads and renders a Cytoscape graph from codebase-dependencies.json.
+-- If the file is missing, the extension triggers a scan and then renders once available.
+-- Double-clicking a node opens the corresponding file in the editor.
+-- No blocking of the main activation path; all heavy work done in background.
+-
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

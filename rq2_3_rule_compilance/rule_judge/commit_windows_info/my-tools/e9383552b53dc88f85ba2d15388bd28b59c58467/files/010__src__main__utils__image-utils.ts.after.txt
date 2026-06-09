@@ -1,0 +1,456 @@
+import { app } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { ImagePreviewSettings, ImageCompressionSettings } from './types';
+import { generateUniqueFilePath, getFilesInfo } from './file-utils';
+import { ConfigManager } from './config-manager';
+import { HistoryManager } from './history-manager';
+
+// 生成图片压缩预览
+export async function generateImagePreview(filePath: string, settings: ImagePreviewSettings) {
+  try {
+    const sharp = await import('sharp');
+    
+    const originalStats = await fs.stat(filePath);
+    const originalSize = originalStats.size;
+    const originalInfo = await sharp.default(filePath).metadata();
+    
+    // 创建临时预览文件
+    const tempDir = path.join(app.getPath('temp'), 'image-preview');
+    await fs.mkdir(tempDir, { recursive: true });
+    
+    const fileName = path.basename(filePath);
+    const fileNameWithoutExt = path.parse(fileName).name;
+    
+    // 确定输出格式和临时文件路径
+    const { outputFormat, tempExt } = determineOutputFormat(filePath, settings.outputFormat);
+    const tempPath = path.join(tempDir, `${fileNameWithoutExt}_preview.${tempExt}`);
+    
+    // 处理图片
+    const sharpInstance = await processImageForPreview(filePath, settings, outputFormat);
+    await sharpInstance.toFile(tempPath);
+    
+    // 生成预览结果
+    return await generatePreviewResult(filePath, tempPath, originalInfo, originalSize);
+    
+  } catch (error) {
+    console.error('生成预览失败:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '生成预览失败' 
+    };
+  }
+}
+
+// 清理预览文件
+export async function cleanupImagePreview(previewPath: string) {
+  try {
+    await fs.unlink(previewPath);
+    return { success: true };
+  } catch (error) {
+    console.error('清理预览文件失败:', error);
+    return { success: false };
+  }
+}
+
+// 压缩图片
+export async function compressImages(
+  filePaths: string[], 
+  settings: ImageCompressionSettings,
+  configManager: ConfigManager,
+  historyManager: HistoryManager,
+  onProgress?: (data: { currentFile: string; currentIndex: number; totalFiles: number; percentage: number }) => void
+) {
+  const startTime = Date.now();
+  let processedCount = 0;
+  
+  try {
+    const saveLocation = settings.saveLocation || app.getPath('downloads');
+    await fs.mkdir(saveLocation, { recursive: true });
+    
+    const totalFiles = filePaths.length;
+    
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
+      const fileName = path.basename(filePath);
+      
+      // 发送进度更新
+      if (onProgress) {
+        onProgress({
+          currentFile: fileName,
+          currentIndex: i,
+          totalFiles,
+          percentage: Math.round((i / totalFiles) * 100)
+        });
+      }
+      
+      try {
+        await processImageFile(filePath, settings, saveLocation, configManager);
+        processedCount++;
+      } catch (fileError) {
+        console.error(`处理文件 ${filePath} 时出错:`, fileError);
+      }
+    }
+    
+    // 发送完成进度
+    if (onProgress) {
+      onProgress({
+        currentFile: '',
+        currentIndex: filePaths.length,
+        totalFiles: filePaths.length,
+        percentage: 100
+      });
+    }
+    
+    // 记录成功历史
+    await recordCompressionSuccess(filePaths, settings, startTime, processedCount, historyManager);
+    
+    return {
+      success: true,
+      processedCount
+    };
+    
+  } catch (error) {
+    console.error('图片压缩错误:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : '压缩图片时发生未知错误';
+    
+    // 记录失败历史
+    await recordCompressionFailure(filePaths, settings, startTime, errorMessage, historyManager);
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+}
+
+// 确定输出格式
+function determineOutputFormat(filePath: string, outputFormat?: string) {
+  let format = outputFormat || 'original';
+  
+  if (format === 'original') {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.jpg' || ext === '.jpeg') {
+      format = 'jpeg';
+    } else if (ext === '.png') {
+      format = 'png';
+    } else if (ext === '.webp') {
+      format = 'webp';
+    } else {
+      format = 'jpeg';
+    }
+  }
+
+  let tempExt: string;
+  switch (format) {
+    case 'jpeg':
+    case 'jpg':
+      tempExt = 'jpg';
+      break;
+    case 'png':
+      tempExt = 'png';
+      break;
+    case 'webp':
+      tempExt = 'webp';
+      break;
+    default:
+      tempExt = 'jpg';
+  }
+  
+  return { outputFormat: format, tempExt };
+}
+
+// 处理图片用于预览
+async function processImageForPreview(filePath: string, settings: ImagePreviewSettings, outputFormat: string) {
+  const sharp = await import('sharp');
+  let sharpInstance = sharp.default(filePath);
+  
+  if (settings.method === 'quality') {
+    const quality = settings.quality || 70;
+    sharpInstance = applyQualitySettings(sharpInstance, outputFormat, quality);
+  } else if (settings.method === 'size') {
+    const targetSizeKB = settings.targetSize || 500;
+    const originalStats = await fs.stat(filePath);
+    const compressionRatio = (targetSizeKB * 1024) / originalStats.size;
+    const estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
+    sharpInstance = applyQualitySettings(sharpInstance, outputFormat, estimatedQuality);
+  } else if (settings.method === 'dimension') {
+    const maxDimension = settings.maxDimension || 1920;
+    sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+    sharpInstance = applyQualitySettings(sharpInstance, outputFormat, 80);
+  }
+  
+  return sharpInstance;
+}
+
+// 应用质量设置
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyQualitySettings(sharpInstance: any, outputFormat: string, quality: number) {
+  if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+    return sharpInstance.jpeg({ quality });
+  } else if (outputFormat === 'png') {
+    const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
+    return sharpInstance.png({ compressionLevel, progressive: true });
+  } else if (outputFormat === 'webp') {
+    return sharpInstance.webp({ quality });
+  }
+  return sharpInstance;
+}
+
+// 生成预览结果
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generatePreviewResult(filePath: string, tempPath: string, originalInfo: any, originalSize: number) {
+  const sharp = await import('sharp');
+  
+  const compressedStats = await fs.stat(tempPath);
+  const compressedSize = compressedStats.size;
+  const compressedInfo = await sharp.default(tempPath).metadata();
+  
+  const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
+  
+  const originalBuffer = await fs.readFile(filePath);
+  const compressedBuffer = await fs.readFile(tempPath);
+  
+  const getMimeType = (format: string) => {
+    switch (format.toLowerCase()) {
+      case 'jpeg':
+      case 'jpg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
+  };
+  
+  const originalMimeType = getMimeType(originalInfo.format || 'jpeg');
+  const compressedMimeType = getMimeType(compressedInfo.format || 'jpeg');
+  
+  const originalBase64 = `data:${originalMimeType};base64,${originalBuffer.toString('base64')}`;
+  const compressedBase64 = `data:${compressedMimeType};base64,${compressedBuffer.toString('base64')}`;
+  
+  return {
+    success: true,
+    preview: {
+      originalPath: filePath,
+      previewPath: tempPath,
+      originalBase64,
+      compressedBase64,
+      original: {
+        size: originalSize,
+        width: originalInfo.width || 0,
+        height: originalInfo.height || 0,
+        format: originalInfo.format || 'unknown'
+      },
+      compressed: {
+        size: compressedSize,
+        width: compressedInfo.width || 0,
+        height: compressedInfo.height || 0,
+        format: compressedInfo.format || 'unknown'
+      },
+      compressionRatio: Math.round(compressionRatio * 100) / 100,
+      sizeDifference: originalSize - compressedSize
+    }
+  };
+}
+
+// 处理单个图片文件
+async function processImageFile(
+  filePath: string, 
+  settings: ImageCompressionSettings, 
+  saveLocation: string,
+  configManager: ConfigManager
+) {
+  const fileName = path.basename(filePath);
+  const fileNameWithoutExt = path.parse(fileName).name;
+  const originalExt = path.parse(fileName).ext;
+  
+  const { outputFormat } = determineOutputFormat(filePath, settings.outputFormat);
+  
+  let outputExt: string;
+  switch (outputFormat) {
+    case 'jpg':
+    case 'jpeg':
+      outputExt = '.jpg';
+      break;
+    case 'png':
+      outputExt = '.png';
+      break;
+    case 'webp':
+      outputExt = '.webp';
+      break;
+    default:
+      outputExt = originalExt;
+  }
+  
+  const suffix = settings.namingSuffix || '_compressed';
+  const outputFileName = `${fileNameWithoutExt}${suffix}${outputExt}`;
+  
+  // 处理重名文件
+  const { path: finalOutputPath } = await generateUniqueFilePath(saveLocation, outputFileName, configManager);
+  
+  // 动态导入sharp并处理图片
+  const sharp = await import('sharp');
+  let sharpInstance = sharp.default(filePath);
+  let sizeCompressionCompleted = false;
+  
+  if (settings.method === 'quality') {
+    const quality = settings.quality || 70;
+    sharpInstance = applyQualitySettings(sharpInstance, outputFormat, quality);
+  } else if (settings.method === 'size') {
+    // 智能按大小压缩
+    const result = await smartSizeCompression(filePath, settings, outputFormat, finalOutputPath);
+    sizeCompressionCompleted = result.completed;
+    if (!result.completed) {
+      sharpInstance = result.sharpInstance;
+    }
+  } else if (settings.method === 'dimension') {
+    const maxDimension = settings.maxDimension || 1920;
+    sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+    sharpInstance = applyQualitySettings(sharpInstance, outputFormat, 80);
+  }
+  
+  // 高质量设置的文件大小检查
+  if (settings.method === 'quality' && (settings.quality || 70) > 85) {
+    await handleHighQualityCompression(filePath, sharpInstance, outputFormat, finalOutputPath, settings);
+  } else if (settings.method !== 'size' || !sizeCompressionCompleted) {
+    await sharpInstance.toFile(finalOutputPath);
+  }
+}
+
+// 智能按大小压缩
+async function smartSizeCompression(
+  filePath: string, 
+  settings: ImageCompressionSettings, 
+  outputFormat: string, 
+  finalOutputPath: string
+) {
+  const sharp = await import('sharp');
+  const targetSizeKB = settings.targetSize || 500;
+  const targetSizeBytes = targetSizeKB * 1024;
+  
+  const originalStats = await fs.stat(filePath);
+  const originalSize = originalStats.size;
+  
+  if (originalSize <= targetSizeBytes) {
+    const sharpInstance = applyQualitySettings(sharp.default(filePath), outputFormat, 85);
+    return { completed: false, sharpInstance };
+  }
+  
+  // 智能迭代压缩逻辑（简化版）
+  const compressionRatio = targetSizeBytes / originalSize;
+  let estimatedQuality: number;
+  
+  if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+    estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
+  } else if (outputFormat === 'png') {
+    estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
+  } else if (outputFormat === 'webp') {
+    estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
+  } else {
+    estimatedQuality = Math.max(15, Math.min(85, Math.round(compressionRatio * 110)));
+  }
+  
+  const sharpInstance = applyQualitySettings(sharp.default(filePath), outputFormat, estimatedQuality);
+  await sharpInstance.toFile(finalOutputPath);
+  
+  return { completed: true, sharpInstance: null };
+}
+
+// 处理高质量压缩
+async function handleHighQualityCompression(
+  filePath: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sharpInstance: any,
+  outputFormat: string,
+  finalOutputPath: string,
+  settings: ImageCompressionSettings
+) {
+  const originalStats = await fs.stat(filePath);
+  const originalSize = originalStats.size;
+  
+  const tempPath = finalOutputPath + '.tmp';
+  await sharpInstance.toFile(tempPath);
+  
+  const tempStats = await fs.stat(tempPath);
+  const compressedSize = tempStats.size;
+  
+  if (compressedSize > originalSize) {
+    await fs.unlink(tempPath);
+    
+    const adjustedQuality = Math.max(70, (settings.quality || 70) - 15);
+    const sharp = await import('sharp');
+    const adjustedInstance = applyQualitySettings(sharp.default(filePath), outputFormat, adjustedQuality);
+    await adjustedInstance.toFile(finalOutputPath);
+  } else {
+    await fs.rename(tempPath, finalOutputPath);
+  }
+}
+
+// 记录压缩成功
+async function recordCompressionSuccess(
+  filePaths: string[],
+  settings: ImageCompressionSettings,
+  startTime: number,
+  processedCount: number,
+  historyManager: HistoryManager
+) {
+  const duration = Date.now() - startTime;
+  
+  await historyManager.addRecord({
+    type: 'image-compress',
+    files: await getFilesInfo(filePaths),
+    output: {
+      name: `压缩完成 (${processedCount}/${filePaths.length})`,
+      path: settings.saveLocation || app.getPath('downloads')
+    },
+         settings: {
+       method: settings.method,
+       quality: settings.quality,
+       targetSize: settings.targetSize,
+       maxDimension: settings.maxDimension,
+       outputFormat: settings.outputFormat,
+       namingSuffix: settings.namingSuffix,
+       saveLocation: settings.saveLocation
+     } as Record<string, unknown>,
+    duration,
+    success: true
+  });
+}
+
+// 记录压缩失败
+async function recordCompressionFailure(
+  filePaths: string[],
+  settings: ImageCompressionSettings,
+  startTime: number,
+  errorMessage: string,
+  historyManager: HistoryManager
+) {
+  const duration = Date.now() - startTime;
+  
+  try {
+    await historyManager.addRecord({
+      type: 'image-compress',
+      files: await getFilesInfo(filePaths),
+      output: {
+        name: '压缩失败',
+        path: settings.saveLocation || app.getPath('downloads')
+      },
+             settings: settings as unknown as Record<string, unknown>,
+      duration,
+      success: false,
+      error: errorMessage
+    });
+  } catch (historyError) {
+    console.error('保存失败历史记录时出错:', historyError);
+  }
+} 

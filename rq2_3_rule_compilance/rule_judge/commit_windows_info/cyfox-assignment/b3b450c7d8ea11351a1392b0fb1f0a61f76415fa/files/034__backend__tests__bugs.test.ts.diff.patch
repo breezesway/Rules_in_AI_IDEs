@@ -1,0 +1,411 @@
+diff --git a/backend/tests/bugs.test.ts b/backend/tests/bugs.test.ts
+new file mode 100644
+index 0000000..c9a1e25
+--- /dev/null
++++ b/backend/tests/bugs.test.ts
+@@ -0,0 +1,404 @@
++import request from 'supertest';
++import app from '../src/app';
++import { createTestProject, createTestBug } from '../src/test/setup';
++
++describe('Bugs API', () => {
++  let testProject: { id: number; name: string };
++
++  beforeEach(async () => {
++    testProject = await createTestProject('Test Project');
++  });
++
++  describe('GET /api/projects/:projectId/bugs', () => {
++    it('should return empty array when no bugs exist', async () => {
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toEqual([]);
++      expect(response.body.message).toContain(`Retrieved 0 bugs for project ${testProject.id}`);
++    });
++
++    it('should return all bugs for a project', async () => {
++      await createTestBug(testProject.id, { title: 'Bug 1', severity: 'high' });
++      await createTestBug(testProject.id, { title: 'Bug 2', severity: 'low' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toHaveLength(2);
++      expect(response.body.data[0]).toMatchObject({
++        id: expect.any(Number),
++        projectId: testProject.id,
++        title: expect.any(String),
++        description: expect.any(String),
++        severity: expect.any(String),
++        status: expect.any(String),
++        createdAt: expect.any(String),
++      });
++    });
++
++    it('should filter bugs by severity', async () => {
++      await createTestBug(testProject.id, { severity: 'high' });
++      await createTestBug(testProject.id, { severity: 'low' });
++      await createTestBug(testProject.id, { severity: 'high' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs?severity=high`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toHaveLength(2);
++      expect(response.body.data.every((bug: any) => bug.severity === 'high')).toBe(true);
++    });
++
++    it('should filter bugs by status', async () => {
++      await createTestBug(testProject.id, { status: 'open' });
++      await createTestBug(testProject.id, { status: 'resolved' });
++      await createTestBug(testProject.id, { status: 'open' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs?status=open`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toHaveLength(2);
++      expect(response.body.data.every((bug: any) => bug.status === 'open')).toBe(true);
++    });
++
++    it('should sort bugs by title ascending', async () => {
++      await createTestBug(testProject.id, { title: 'Z Bug' });
++      await createTestBug(testProject.id, { title: 'A Bug' });
++      await createTestBug(testProject.id, { title: 'M Bug' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs?sortBy=title&sortOrder=ASC`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toHaveLength(3);
++      expect(response.body.data[0].title).toBe('A Bug');
++      expect(response.body.data[1].title).toBe('M Bug');
++      expect(response.body.data[2].title).toBe('Z Bug');
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const response = await request(app)
++        .get('/api/projects/999/bugs')
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++
++    it('should return 400 for invalid filter values', async () => {
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs?severity=invalid`)
++        .expect(400);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('VALIDATION_ERROR');
++    });
++  });
++
++  describe('GET /api/projects/:projectId/bugs/:bugId', () => {
++    it('should return bug by ID', async () => {
++      const bug = await createTestBug(testProject.id, { title: 'Test Bug' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toMatchObject({
++        id: bug.id,
++        projectId: testProject.id,
++        title: 'Test Bug',
++        description: expect.any(String),
++        severity: expect.any(String),
++        status: expect.any(String),
++        createdAt: expect.any(String),
++      });
++    });
++
++    it('should return 404 for non-existent bug', async () => {
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs/999`)
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const response = await request(app)
++        .get('/api/projects/999/bugs/1')
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++  });
++
++  describe('POST /api/projects/:projectId/bugs', () => {
++    it('should create a new bug', async () => {
++      const bugData = {
++        title: 'New Bug',
++        description: 'Bug description',
++        severity: 'high',
++        status: 'open',
++      };
++
++      const response = await request(app)
++        .post(`/api/projects/${testProject.id}/bugs`)
++        .send(bugData)
++        .expect(201);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toMatchObject({
++        id: expect.any(Number),
++        projectId: testProject.id,
++        title: 'New Bug',
++        description: 'Bug description',
++        severity: 'high',
++        status: 'open',
++        createdAt: expect.any(String),
++      });
++      expect(response.body.message).toBe('Bug created successfully');
++    });
++
++    it('should trim whitespace from bug fields', async () => {
++      const bugData = {
++        title: '  Trimmed Bug  ',
++        description: '  Trimmed description  ',
++        severity: 'medium',
++        status: 'open',
++      };
++
++      const response = await request(app)
++        .post(`/api/projects/${testProject.id}/bugs`)
++        .send(bugData)
++        .expect(201);
++
++      expect(response.body.data.title).toBe('Trimmed Bug');
++      expect(response.body.data.description).toBe('Trimmed description');
++    });
++
++    it('should return 400 for missing required fields', async () => {
++      const response = await request(app)
++        .post(`/api/projects/${testProject.id}/bugs`)
++        .send({})
++        .expect(400);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('VALIDATION_ERROR');
++    });
++
++    it('should return 400 for invalid severity', async () => {
++      const bugData = {
++        title: 'Test Bug',
++        description: 'Description',
++        severity: 'invalid',
++        status: 'open',
++      };
++
++      const response = await request(app)
++        .post(`/api/projects/${testProject.id}/bugs`)
++        .send(bugData)
++        .expect(400);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('VALIDATION_ERROR');
++    });
++
++    it('should return 400 for invalid status', async () => {
++      const bugData = {
++        title: 'Test Bug',
++        description: 'Description',
++        severity: 'high',
++        status: 'invalid',
++      };
++
++      const response = await request(app)
++        .post(`/api/projects/${testProject.id}/bugs`)
++        .send(bugData)
++        .expect(400);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('VALIDATION_ERROR');
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const bugData = {
++        title: 'Test Bug',
++        description: 'Description',
++        severity: 'high',
++        status: 'open',
++      };
++
++      const response = await request(app)
++        .post('/api/projects/999/bugs')
++        .send(bugData)
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++  });
++
++  describe('PUT /api/projects/:projectId/bugs/:bugId', () => {
++    it('should update bug fields', async () => {
++      const bug = await createTestBug(testProject.id);
++      const updates = {
++        title: 'Updated Title',
++        severity: 'critical',
++        status: 'in_progress',
++      };
++
++      const response = await request(app)
++        .put(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .send(updates)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toMatchObject({
++        id: bug.id,
++        title: 'Updated Title',
++        severity: 'critical',
++        status: 'in_progress',
++      });
++      expect(response.body.message).toBe('Bug updated successfully');
++    });
++
++    it('should handle partial updates', async () => {
++      const bug = await createTestBug(testProject.id, { title: 'Original Title' });
++      const updates = { status: 'resolved' };
++
++      const response = await request(app)
++        .put(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .send(updates)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data.title).toBe('Original Title'); // Unchanged
++      expect(response.body.data.status).toBe('resolved'); // Updated
++    });
++
++    it('should handle empty update (no changes)', async () => {
++      const bug = await createTestBug(testProject.id);
++
++      const response = await request(app)
++        .put(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .send({})
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data.id).toBe(bug.id);
++    });
++
++    it('should return 404 for non-existent bug', async () => {
++      const response = await request(app)
++        .put(`/api/projects/${testProject.id}/bugs/999`)
++        .send({ status: 'resolved' })
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const response = await request(app)
++        .put('/api/projects/999/bugs/1')
++        .send({ status: 'resolved' })
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++  });
++
++  describe('DELETE /api/projects/:projectId/bugs/:bugId', () => {
++    it('should delete bug', async () => {
++      const bug = await createTestBug(testProject.id);
++
++      const response = await request(app)
++        .delete(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .expect(204);
++
++      expect(response.body).toEqual({});
++
++      // Verify bug is deleted
++      await request(app)
++        .get(`/api/projects/${testProject.id}/bugs/${bug.id}`)
++        .expect(404);
++    });
++
++    it('should return 404 for non-existent bug', async () => {
++      const response = await request(app)
++        .delete(`/api/projects/${testProject.id}/bugs/999`)
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const response = await request(app)
++        .delete('/api/projects/999/bugs/1')
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++  });
++
++  describe('GET /api/projects/:projectId/bugs/statistics', () => {
++    it('should return bug statistics for empty project', async () => {
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs/statistics`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toMatchObject({
++        total: 0,
++        byStatus: {},
++        bySeverity: {},
++      });
++    });
++
++    it('should return bug statistics with data', async () => {
++      await createTestBug(testProject.id, { severity: 'high', status: 'open' });
++      await createTestBug(testProject.id, { severity: 'high', status: 'resolved' });
++      await createTestBug(testProject.id, { severity: 'low', status: 'open' });
++
++      const response = await request(app)
++        .get(`/api/projects/${testProject.id}/bugs/statistics`)
++        .expect(200);
++
++      expect(response.body.success).toBe(true);
++      expect(response.body.data).toMatchObject({
++        total: 3,
++        byStatus: {
++          open: 2,
++          resolved: 1,
++        },
++        bySeverity: {
++          high: 2,
++          low: 1,
++        },
++      });
++    });
++
++    it('should return 404 for non-existent project', async () => {
++      const response = await request(app)
++        .get('/api/projects/999/bugs/statistics')
++        .expect(404);
++
++      expect(response.body.success).toBe(false);
++      expect(response.body.error.code).toBe('NOT_FOUND');
++    });
++  });
++});
+\ No newline at end of file

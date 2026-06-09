@@ -1,0 +1,2215 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Language Features
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Formatting: Prettier with single quotes, 2-space tabs
++ - Formatting: Prettier with single quotes, 2-space tabs, don't use "any" as ts type
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Prettier configuration files (e.g., .prettierrc, package.json) and TypeScript source code files (.ts, .tsx).
+- Suggested Logic: 1. Inspect Prettier configuration files to verify that 'singleQuote' is set to true and 'tabWidth' is set to 2. 2. Scan TypeScript source files using a static analysis tool or AST parser to identify any instances where 'any' is used as a type annotation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: refactor: avoid using any as type in legacy code
+- Changed Files List: 
+.kiro/specs/kirapilot-app/tasks.md	+5	-4	after_lines=228
+.kiro/steering/tech.md	+1	-1	after_lines=60
+eslint.config.js	+8	-6	after_lines=84
+src/components/common/DatePicker.tsx	+6	-2	after_lines=321
+src/components/common/Header.tsx	+16	-10	after_lines=250
+src/components/planning/DayView.tsx	+2	-2	after_lines=437
+src/components/planning/Planner.tsx	+3	-1	after_lines=251
+src/components/planning/TaskCard.tsx	+7	-3	after_lines=491
+src/components/planning/TaskColumn.tsx	+2	-1	after_lines=221
+src/components/planning/TaskModal.tsx	+3	-1	after_lines=428
+src/components/planning/TimeHistoryModal.tsx	+12	-4	after_lines=257
+src/components/planning/WeekView.tsx	+8	-4	after_lines=482
+src/components/reports/Reports.tsx	+16	-6	after_lines=641
+src/components/timer/SessionHistory.tsx	+23	-9	after_lines=437
+src/contexts/TimerContext.tsx	+10	-1	after_lines=100
+src/hooks/useDatabase.ts	+3	-1	after_lines=168
+src/hooks/useSimpleTimer.ts	+6	-2	after_lines=272
+src/services/database/DatabaseProvider.tsx	+6	-1	after_lines=117
+src/services/database/__mocks__/mockDatabase.ts	+7	-4	after_lines=170
+src/services/database/index.ts	+6	-4	after_lines=492
+src/services/database/mockDatabase.ts	+19	-14	after_lines=399
+src/services/database/repositories/FocusRepository.ts	+11	-7	after_lines=690
+src/services/database/repositories/PatternRepository.ts	+57	-28	after_lines=655
+src/services/database/repositories/TaskRepository.ts	+22	-18	after_lines=602
+src/services/database/repositories/TimeTrackingRepository.ts	+42	-30	after_lines=717
+src/services/database/utils.ts	+4	-2	after_lines=198
+src/types/database.ts	+109	-0	after_lines=109
+src/types/index.ts	+23	-2	after_lines=371
+src/utils/__tests__/migration.test.ts	+1	-1	after_lines=104
+src/utils/clearOldData.ts	+4	-2	after_lines=42
+src/utils/debugDatabase.ts	+7	-4	after_lines=62
+src/utils/index.ts	+1	-1	after_lines=106
+src/utils/migration.ts	+11	-1	after_lines=118
+src/utils/resetDatabase.ts	+15	-7	after_lines=124
+src/utils/transformations.ts	+77	-56	after_lines=389
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .husky
+│   └── pre-commit
+├── .kiro
+│   ├── hooks
+│   │   └── fix-any-types.kiro.hook
+│   ├── specs
+│   │   └── kirapilot-app
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── extensions.json
+├── FORMATTING_SETUP.md
+├── PROJECT_STRUCTURE.md
+├── README.md
+├── TESTING.md
+├── TEST_SOLUTION.md
+├── eslint.config.js
+├── hero.ts
+├── index.html
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── tauri.svg
+│   └── vite.svg
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── TitleBar.tsx
+│   │   ├── common
+│   │   │   ├── DatePicker.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── PrioritySelector.tsx
+│   │   │   ├── RichTextEditor.tsx
+│   │   │   ├── TagInput.tsx
+│   │   │   └── index.ts
+│   │   ├── planning
+│   │   │   ├── DayView.tsx
+│   │   │   ├── Planner.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── TaskColumn.tsx
+│   │   │   ├── TaskModal.tsx
+│   │   │   ├── TimeHistoryModal.tsx
+│   │   │   ├── WeekView.tsx
+│   │   │   └── WeeklyPlan.tsx
+│   │   ├── reports
+│   │   │   ├── Reports.tsx
+│   │   │   └── index.ts
+│   │   └── timer
+│   │       ├── SessionHistory.tsx
+│   │       └── index.ts
+│   ├── contexts
+│   │   └── TimerContext.tsx
+│   ├── hooks
+│   │   ├── useDatabase.ts
+│   │   └── useSimpleTimer.ts
+│   ├── main.tsx
+│   ├── services
+│   │   ├── database
+│   │   │   ├── DatabaseProvider.tsx
+│   │   │   ├── README.md
+│   │   │   ├── __mocks__
+│   │   │   │   └── mockDatabase.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mockDatabase.ts
+│   │   │   ├── repositories
+│   │   │   │   ├── FocusRepository.ts
+│   │   │   │   ├── PatternRepository.ts
+│   │   │   │   ├── README.md
+│   │   │   │   ├── TaskRepository.ts
+│   │   │   │   ├── TimeTrackingRepository.ts
+│   │   │   │   ├── __tests__
+│   │   │   │   │   └── TaskRepository.test.ts
+│   │   │   │   └── index.ts
+│   │   │   └── utils.ts
+│   │   └── notifications
+│   │       └── TimerNotifications.ts
+│   ├── setupTests.ts
+│   ├── types
+│   │   ├── README.md
+│   │   ├── database.ts
+│   │   ├── index.ts
+│   │   └── validation.ts
+│   ├── utils
+│   │   ├── __tests__
+│   │   │   ├── migration.test.ts
+│   │   │   └── validation.test.ts
+│   │   ├── clearOldData.ts
+│   │   ├── debugDatabase.ts
+│   │   ├── index.ts
+│   │   ├── migration.ts
+│   │   ├── resetDatabase.ts
+│   │   └── transformations.ts
+│   └── vite-env.d.ts
+├── src-tauri
+│   ├── .gitignore
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── build.rs
+│   ├── capabilities
+│   │   └── default.json
+│   ├── icons
+│   │   ├── 128x128.png
+│   │   ├── 128x128@2x.png
+│   │   ├── 32x32.png
+│   │   ├── Square107x107Logo.png
+│   │   ├── Square142x142Logo.png
+│   │   ├── Square150x150Logo.png
+│   │   ├── Square284x284Logo.png
+│   │   ├── Square30x30Logo.png
+│   │   ├── Square310x310Logo.png
+│   │   ├── Square44x44Logo.png
+│   │   ├── Square71x71Logo.png
+│   │   ├── Square89x89Logo.png
+│   │   ├── StoreLogo.png
+│   │   ├── icon.icns
+│   │   ├── icon.ico
+│   │   └── icon.png
+│   ├── src
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   └── tauri.conf.json
+├── tailwind.config.js
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/kirapilot-app/tasks.md ---
+diff --git a/.kiro/specs/kirapilot-app/tasks.md b/.kiro/specs/kirapilot-app/tasks.md
+index 6fb3a2d..f9ce225 100644
+--- a/.kiro/specs/kirapilot-app/tasks.md
++++ b/.kiro/specs/kirapilot-app/tasks.md
+@@ -76,11 +76,12 @@
+   - Write tests for time analytics calculations
+   - _Requirements: 3.3, 3.4_
+ 
+-- [ ] 4.3 Refactor code base
++- [x] 4.3 Refactor code base
+   - Scan for "any" type in all code base (.ts, .tsx)
+-  - Fix them. Replace with proper types.
+-  - Run linting and code formatting to ensure all passed.
+-  - Run build and fix issues at the final.
++  - Fix them. Replace with proper types, only stop when you finish all
++  - Run linting and code formatting to ensure all passed
++  - Run build and fix issues at the final
++  - Adjust linting configs to improve it and iterate
+ 
+ - [ ] 5. Develop focus environment system
+ - [ ] 5.1 Implement focus session management
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 2cf7690..db6177e 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -16,7 +16,7 @@
+ ## Development Tools
+ 
+ - **Linting**: ESLint 9+ with TypeScript rules
+-- **Formatting**: Prettier with single quotes, 2-space tabs
++- **Formatting**: Prettier with single quotes, 2-space tabs, don't use "any" as ts type
+ - **Testing**: Jest with ts-jest, React Testing Library
+ - **Git Hooks**: Husky with lint-staged
+ - **Type Checking**: TypeScript 5.8+ in strict mode
+
+--- FILE: eslint.config.js ---
+diff --git a/eslint.config.js b/eslint.config.js
+index f0da751..f2a89c0 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -51,20 +51,22 @@ export default [
+       '@typescript-eslint': tseslint,
+     },
+     rules: {
+-      // Essential rules only
+-      'prefer-const': 'error',
+-      'no-var': 'error',
+-
+       // React rules
+       'react/react-in-jsx-scope': 'off',
+       'react/prop-types': 'off',
+ 
+-      // TypeScript rules - warnings only for now
++      // TypeScript rules
+       '@typescript-eslint/no-unused-vars': [
+         'warn',
+         { argsIgnorePattern: '^_' },
+       ],
+-      '@typescript-eslint/no-explicit-any': 'off', // Disabled for now - database code uses any heavily
++      '@typescript-eslint/no-explicit-any': 'warn',
++
++      // Code quality rules
++      'prefer-const': 'error',
++      'no-var': 'error',
++      eqeqeq: ['error', 'always'],
++      curly: ['error', 'all'],
+ 
+       // Disable problematic rules for now
+       'no-unused-vars': 'off',
+
+--- FILE: src/components/common/DatePicker.tsx ---
+diff --git a/src/components/common/DatePicker.tsx b/src/components/common/DatePicker.tsx
+index e033d9e..6f8a040 100644
+--- a/src/components/common/DatePicker.tsx
++++ b/src/components/common/DatePicker.tsx
+@@ -58,8 +58,12 @@ export function DatePicker({
+   };
+ 
+   const isDateDisabled = (date: Date) => {
+-    if (minDate && date < minDate) return true;
+-    if (maxDate && date > maxDate) return true;
++    if (minDate && date < minDate) {
++      return true;
++    }
++    if (maxDate && date > maxDate) {
++      return true;
++    }
+     return false;
+   };
+
+--- FILE: src/components/common/Header.tsx ---
+diff --git a/src/components/common/Header.tsx b/src/components/common/Header.tsx
+index 41dd49c..8574545 100644
+--- a/src/components/common/Header.tsx
++++ b/src/components/common/Header.tsx
+@@ -36,7 +36,9 @@ export const Header: React.FC<HeaderProps> = ({
+   const [showSessionLogs, setShowSessionLogs] = useState(false);
+ 
+   const handleTimerControl = () => {
+-    if (!activeTask) return;
++    if (!activeTask) {
++      return;
++    }
+ 
+     try {
+       if (isRunning) {
+@@ -50,7 +52,9 @@ export const Header: React.FC<HeaderProps> = ({
+   };
+ 
+   const handleStopTimer = () => {
+-    if (!activeTask) return;
++    if (!activeTask) {
++      return;
++    }
+ 
+     try {
+       handleTimerStop(activeTask);
+@@ -60,7 +64,9 @@ export const Header: React.FC<HeaderProps> = ({
+   };
+ 
+   const handleClearDatabase = async () => {
+-    if (!import.meta.env.DEV) return;
++    if (!import.meta.env.DEV) {
++      return;
++    }
+ 
+     const confirmed = window.confirm(
+       'Are you sure you want to clear all database data? This action cannot be undone.\n\n' +
+@@ -169,23 +175,23 @@ export const Header: React.FC<HeaderProps> = ({
+ 
+       <nav className='flex items-center gap-3'>
+         {/* Week/Day Toggle */}
+-        <div className='flex rounded-md border border-gray-600 overflow-hidden'>
++        <div className='flex rounded-lg border border-gray-500/50 overflow-hidden bg-gray-800/30'>
+           <button
+             onClick={() => onViewChange('week')}
+-            className={`px-2 py-1 text-xs font-medium transition-colors duration-200 ${
++            className={`px-4 py-1 text-sm font-semibold transition-all duration-200 ${
+               currentView === 'week'
+-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
++                ? 'bg-primary-600 text-white shadow-lg'
++                : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+             }`}
+           >
+             Week
+           </button>
+           <button
+             onClick={() => onViewChange('day')}
+-            className={`px-2 py-1 text-xs font-medium transition-colors duration-200 ${
++            className={`px-4 py-1 text-sm font-semibold transition-all duration-200 ${
+               currentView === 'day'
+-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30'
++                ? 'bg-primary-600 text-white shadow-lg'
++                : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+             }`}
+           >
+             Day
+
+--- FILE: src/components/planning/DayView.tsx ---
+diff --git a/src/components/planning/DayView.tsx b/src/components/planning/DayView.tsx
+index 4c64cd7..e2690d5 100644
+--- a/src/components/planning/DayView.tsx
++++ b/src/components/planning/DayView.tsx
+@@ -11,7 +11,7 @@ import {
+   DragOverlay,
+ } from '@dnd-kit/core';
+ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+-import { Task, TaskStatus } from '../../types';
++import { Task, TaskStatus, TaskTimerProps } from '../../types';
+ import { TaskColumn } from './TaskColumn';
+ import { TaskCard } from './TaskCard';
+ import { TaskModal } from './TaskModal';
+@@ -40,7 +40,7 @@ interface DayViewProps {
+   onInlineEdit?: (taskId: string, updates: Partial<Task>) => void;
+   onTaskDelete?: (task: Task) => void;
+   onViewTimeHistory?: (task: Task) => void;
+-  getTaskTimerProps?: (task: Task) => any;
++  getTaskTimerProps?: (task: Task) => TaskTimerProps;
+   className?: string;
+ }
+
+--- FILE: src/components/planning/Planner.tsx ---
+diff --git a/src/components/planning/Planner.tsx b/src/components/planning/Planner.tsx
+index 5c2e096..772499a 100644
+--- a/src/components/planning/Planner.tsx
++++ b/src/components/planning/Planner.tsx
+@@ -51,7 +51,9 @@ export function Planner({ viewMode = 'week' }: PlanningScreenProps) {
+     console.log('Moving task:', { taskId, fromColumn, toColumn, date });
+ 
+     const task = tasks.find(t => t.id === taskId);
+-    if (!task) return;
++    if (!task) {
++      return;
++    }
+ 
+     let newScheduledDate: Date | undefined;
+
+--- FILE: src/components/planning/TaskCard.tsx ---
+diff --git a/src/components/planning/TaskCard.tsx b/src/components/planning/TaskCard.tsx
+index dc075d3..25c083a 100644
+--- a/src/components/planning/TaskCard.tsx
++++ b/src/components/planning/TaskCard.tsx
+@@ -30,7 +30,7 @@ interface PlanningTaskCardProps {
+   onTimerStop?: (task: Task) => void;
+   onDelete?: (task: Task) => void;
+   onViewTimeHistory?: (task: Task) => void;
+-  activeTimerTaskId?: string;
++  activeTimerTaskId?: string | null;
+   isTimerRunning?: boolean;
+   elapsedTime?: number;
+   className?: string;
+@@ -69,7 +69,9 @@ export function TaskCard({
+ 
+   const handleStatusToggle = (e: React.MouseEvent) => {
+     e.stopPropagation();
+-    if (!onStatusChange) return;
++    if (!onStatusChange) {
++      return;
++    }
+ 
+     if (task.status === TaskStatus.COMPLETED) {
+       onStatusChange(TaskStatus.PENDING);
+@@ -118,7 +120,9 @@ export function TaskCard({
+ 
+   const handleTimerClick = (e: React.MouseEvent) => {
+     e.stopPropagation();
+-    if (isTimerOperationPending) return; // Prevent rapid clicks
++    if (isTimerOperationPending) {
++      return;
++    } // Prevent rapid clicks
+     setIsTimerOperationPending(true);
+     if (isTimerActive && isTimerRunning) {
+       // If timer is running, pause it
+
+--- FILE: src/components/planning/TaskColumn.tsx ---
+diff --git a/src/components/planning/TaskColumn.tsx b/src/components/planning/TaskColumn.tsx
+index 028bdbb..b8ee6ca 100644
+--- a/src/components/planning/TaskColumn.tsx
++++ b/src/components/planning/TaskColumn.tsx
+@@ -6,6 +6,7 @@ import {
+   verticalListSortingStrategy,
+ } from '@dnd-kit/sortable';
+ import { Plus, LucideIcon } from 'lucide-react';
++import { Task } from '../../types';
+ 
+ interface TaskColumnProps {
+   title: string;
+@@ -50,7 +51,7 @@ export function TaskColumn({
+         typeof child.props.task === 'object' &&
+         'id' in child.props.task
+       ) {
+-        return (child.props.task as any).id;
++        return (child.props.task as Task).id;
+       }
+       return null;
+     })
+
+--- FILE: src/components/planning/TaskModal.tsx ---
+diff --git a/src/components/planning/TaskModal.tsx b/src/components/planning/TaskModal.tsx
+index 1bd353d..0145c5a 100644
+--- a/src/components/planning/TaskModal.tsx
++++ b/src/components/planning/TaskModal.tsx
+@@ -101,7 +101,9 @@ export function TaskModal({
+   const handleSubmit = async (e: React.FormEvent) => {
+     e.preventDefault();
+ 
+-    if (!formData.title.trim()) return;
++    if (!formData.title.trim()) {
++      return;
++    }
+ 
+     setIsSubmitting(true);
+
+--- FILE: src/components/planning/TimeHistoryModal.tsx ---
+diff --git a/src/components/planning/TimeHistoryModal.tsx b/src/components/planning/TimeHistoryModal.tsx
+index 2eaa78d..0b7d2df 100644
+--- a/src/components/planning/TimeHistoryModal.tsx
++++ b/src/components/planning/TimeHistoryModal.tsx
+@@ -71,14 +71,22 @@ export function TimeHistoryModal({
+       (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+     );
+ 
+-    if (diffDays === 0) return 'Today';
+-    if (diffDays === 1) return 'Yesterday';
+-    if (diffDays < 7) return `${diffDays} days ago`;
++    if (diffDays === 0) {
++      return 'Today';
++    }
++    if (diffDays === 1) {
++      return 'Yesterday';
++    }
++    if (diffDays < 7) {
++      return `${diffDays} days ago`;
++    }
+     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+   };
+ 
+   const getSessionDuration = (session: TimerSession): number => {
+-    if (!session.endTime) return 0;
++    if (!session.endTime) {
++      return 0;
++    }
+     const startTime =
+       typeof session.startTime === 'string'
+         ? new Date(session.startTime)
+
+--- FILE: src/components/planning/WeekView.tsx ---
+diff --git a/src/components/planning/WeekView.tsx b/src/components/planning/WeekView.tsx
+index c15d6da..4f8886c 100644
+--- a/src/components/planning/WeekView.tsx
++++ b/src/components/planning/WeekView.tsx
+@@ -11,7 +11,7 @@ import {
+   DragOverlay,
+ } from '@dnd-kit/core';
+ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+-import { Task, TaskStatus } from '../../types';
++import { Task, TaskStatus, TaskTimerProps } from '../../types';
+ import { TaskColumn } from './TaskColumn';
+ import { TaskCard } from './TaskCard';
+ import { TaskModal } from './TaskModal';
+@@ -39,7 +39,7 @@ interface WeekViewProps {
+   onInlineEdit?: (taskId: string, updates: Partial<Task>) => void;
+   onTaskDelete?: (task: Task) => void;
+   onViewTimeHistory?: (task: Task) => void;
+-  getTaskTimerProps?: (task: Task) => any;
++  getTaskTimerProps?: (task: Task) => TaskTimerProps;
+ }
+ 
+ export function WeekView({
+@@ -147,7 +147,9 @@ export function WeekView({
+     today.setHours(0, 0, 0, 0);
+ 
+     return tasks.filter(task => {
+-      if (!task.scheduledDate) return false;
++      if (!task.scheduledDate) {
++        return false;
++      }
+       const scheduledDate = new Date(task.scheduledDate);
+       scheduledDate.setHours(0, 0, 0, 0);
+ 
+@@ -171,7 +173,9 @@ export function WeekView({
+   // Get upcoming tasks (STRICTLY after this week)
+   const upcomingTasks = useMemo(() => {
+     return tasks.filter(task => {
+-      if (!task.scheduledDate) return false;
++      if (!task.scheduledDate) {
++        return false;
++      }
+       const scheduledDate = new Date(task.scheduledDate);
+       return scheduledDate > weekEnd;
+     });
+
+--- FILE: src/components/reports/Reports.tsx ---
+diff --git a/src/components/reports/Reports.tsx b/src/components/reports/Reports.tsx
+index a27a707..7df0a94 100644
+--- a/src/components/reports/Reports.tsx
++++ b/src/components/reports/Reports.tsx
+@@ -14,6 +14,7 @@ import {
+   ResponsiveContainer,
+   Area,
+   AreaChart,
++  PieLabelRenderProps,
+ } from 'recharts';
+ import {
+   Clock,
+@@ -101,7 +102,9 @@ export function Reports() {
+   };
+ 
+   const loadAnalyticsData = async () => {
+-    if (!database) return;
++    if (!database) {
++      return;
++    }
+ 
+     const timeTrackingRepository = new TimeTrackingRepository();
+     const taskRepository = new TaskRepository();
+@@ -149,7 +152,9 @@ export function Reports() {
+       >();
+ 
+       completedSessions.forEach((session: TimerSession) => {
+-        if (!session.endTime) return;
++        if (!session.endTime) {
++          return;
++        }
+ 
+         const date = session.startTime.toISOString().split('T')[0];
+         const duration =
+@@ -203,7 +208,9 @@ export function Reports() {
+       >();
+ 
+       completedSessions.forEach((session: TimerSession) => {
+-        if (!session.endTime) return;
++        if (!session.endTime) {
++          return;
++        }
+ 
+         const hour = session.startTime.getHours();
+         const duration =
+@@ -257,7 +264,9 @@ export function Reports() {
+       >();
+ 
+       completedSessions.forEach((session: TimerSession) => {
+-        if (!session.endTime) return;
++        if (!session.endTime) {
++          return;
++        }
+ 
+         const duration =
+           session.endTime.getTime() - session.startTime.getTime();
+@@ -500,8 +509,9 @@ export function Reports() {
+                   cx='50%'
+                   cy='50%'
+                   labelLine={false}
+-                  label={(props: TaskTimeData) => {
+-                    const taskTitle = props.taskTitle || '';
++                  label={(props: PieLabelRenderProps) => {
++                    const data = props.payload as TaskTimeData;
++                    const taskTitle = data?.taskTitle || '';
+                     return `${taskTitle.slice(0, 15)}${taskTitle.length > 15 ? '...' : ''}`;
+                   }}
+                   outerRadius={80}
+
+--- FILE: src/components/timer/SessionHistory.tsx ---
+diff --git a/src/components/timer/SessionHistory.tsx b/src/components/timer/SessionHistory.tsx
+index 3c174f0..569cb01 100644
+--- a/src/components/timer/SessionHistory.tsx
++++ b/src/components/timer/SessionHistory.tsx
+@@ -7,7 +7,7 @@ import {
+   Play,
+   TrendingUp,
+ } from 'lucide-react';
+-import { TimerSession } from '../../types';
++import { TimerSession, SessionStatistics } from '../../types';
+ import { TimeTrackingRepository } from '../../services/database/repositories/TimeTrackingRepository';
+ import { useDatabaseOperation } from '../../hooks/useDatabase';
+ import {
+@@ -42,14 +42,16 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
+   const [selectedPeriod, setSelectedPeriod] = useState<
+     'today' | 'week' | 'month' | 'all'
+   >('all');
+-  const [statistics, setStatistics] = useState<any>(null);
++  const [statistics, setStatistics] = useState<SessionStatistics | null>(null);
+ 
+   const { execute, isLoading, error } = useDatabaseOperation();
+   const timeTrackingRepo = new TimeTrackingRepository();
+ 
+   // Load sessions and statistics
+   useEffect(() => {
+-    if (!isOpen) return;
++    if (!isOpen) {
++      return;
++    }
+ 
+     const loadData = async () => {
+       let sessionsData: TimerSession[] = [];
+@@ -129,14 +131,22 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
+       (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+     );
+ 
+-    if (diffDays === 0) return 'Today';
+-    if (diffDays === 1) return 'Yesterday';
+-    if (diffDays < 7) return `${diffDays} days ago`;
++    if (diffDays === 0) {
++      return 'Today';
++    }
++    if (diffDays === 1) {
++      return 'Yesterday';
++    }
++    if (diffDays < 7) {
++      return `${diffDays} days ago`;
++    }
+     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+   };
+ 
+   const getSessionDuration = (session: TimerSession): number => {
+-    if (!session.endTime) return 0;
++    if (!session.endTime) {
++      return 0;
++    }
+     const startTime =
+       typeof session.startTime === 'string'
+         ? new Date(session.startTime)
+@@ -159,7 +169,9 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
+         : session.endTime
+       : null;
+     const totalDuration = endTime ? endTime.getTime() - startTime.getTime() : 0;
+-    if (totalDuration === 0) return 0;
++    if (totalDuration === 0) {
++      return 0;
++    }
+ 
+     const workTime = totalDuration - session.pausedTime;
+     return Math.round((workTime / totalDuration) * 100);
+@@ -187,7 +199,9 @@ export const SessionHistoryModal: React.FC<SessionHistoryModalProps> = ({
+               <Select
+                 selectedKeys={[selectedPeriod]}
+                 onSelectionChange={keys =>
+-                  setSelectedPeriod(Array.from(keys)[0] as any)
++                  setSelectedPeriod(
++                    Array.from(keys)[0] as 'today' | 'week' | 'month' | 'all'
++                  )
+                 }
+                 size='sm'
+                 className='w-24'
+
+--- FILE: src/contexts/TimerContext.tsx ---
+diff --git a/src/contexts/TimerContext.tsx b/src/contexts/TimerContext.tsx
+index 5d7214e..cb5ffb5 100644
+--- a/src/contexts/TimerContext.tsx
++++ b/src/contexts/TimerContext.tsx
+@@ -2,6 +2,15 @@ import React, { createContext, useContext } from 'react';
+ import { Task } from '../types';
+ import { useSimpleTimer } from '../hooks/useSimpleTimer';
+ 
++interface TaskTimerProps {
++  onTimerStart: () => void;
++  onTimerPause: () => void;
++  onTimerStop: () => void;
++  activeTimerTaskId: string | null;
++  isTimerRunning: boolean;
++  elapsedTime: number;
++}
++
+ interface TimerContextType {
+   // State
+   isRunning: boolean;
+@@ -14,7 +23,7 @@ interface TimerContextType {
+   startTimer: (task: Task) => void;
+   pauseTimer: () => void;
+   stopTimer: () => void;
+-  getTaskTimerProps: (task: Task) => any;
++  getTaskTimerProps: (task: Task) => TaskTimerProps;
+   formatElapsedTime: (milliseconds?: number) => string;
+ 
+   // Legacy compatibility
+
+--- FILE: src/hooks/useDatabase.ts ---
+diff --git a/src/hooks/useDatabase.ts b/src/hooks/useDatabase.ts
+index 285eb2a..e5b218f 100644
+--- a/src/hooks/useDatabase.ts
++++ b/src/hooks/useDatabase.ts
+@@ -105,7 +105,9 @@ export function useDatabase() {
+ 
+   // Periodic health checks
+   useEffect(() => {
+-    if (!state.isInitialized) return;
++    if (!state.isInitialized) {
++      return;
++    }
+ 
+     const healthCheckInterval = setInterval(() => {
+       checkHealth();
+
+--- FILE: src/hooks/useSimpleTimer.ts ---
+diff --git a/src/hooks/useSimpleTimer.ts b/src/hooks/useSimpleTimer.ts
+index 7a7cf84..47d1be6 100644
+--- a/src/hooks/useSimpleTimer.ts
++++ b/src/hooks/useSimpleTimer.ts
+@@ -124,7 +124,9 @@ export function useSimpleTimer(options: UseSimpleTimerOptions = {}) {
+   );
+ 
+   const pauseTimer = useCallback(() => {
+-    if (!state.isRunning) return;
++    if (!state.isRunning) {
++      return;
++    }
+ 
+     console.log('Pausing timer');
+ 
+@@ -172,7 +174,9 @@ export function useSimpleTimer(options: UseSimpleTimerOptions = {}) {
+   }, [state, enableNotifications]);
+ 
+   const stopTimer = useCallback(() => {
+-    if (!state.activeTaskId) return;
++    if (!state.activeTaskId) {
++      return;
++    }
+ 
+     console.log('Stopping timer');
+
+--- FILE: src/services/database/DatabaseProvider.tsx ---
+diff --git a/src/services/database/DatabaseProvider.tsx b/src/services/database/DatabaseProvider.tsx
+index 7822cd8..6eccd6b 100644
+--- a/src/services/database/DatabaseProvider.tsx
++++ b/src/services/database/DatabaseProvider.tsx
+@@ -16,7 +16,12 @@ interface DatabaseContextType {
+     lastMigration?: string;
+   } | null;
+   initialize: () => Promise<void>;
+-  checkHealth: () => Promise<any>;
++  checkHealth: () => Promise<{
++    isHealthy: boolean;
++    version: string;
++    tableCount: number;
++    lastMigration?: string;
++  }>;
+   close: () => Promise<void>;
+ }
+
+--- FILE: src/services/database/index.ts ---
+diff --git a/src/services/database/index.ts b/src/services/database/index.ts
+index 7a2de26..07305d3 100644
+--- a/src/services/database/index.ts
++++ b/src/services/database/index.ts
+@@ -7,8 +7,8 @@ let db: Database | MockDatabase | null = null;
+ // Type declaration for Tauri window properties
+ declare global {
+   interface Window {
+-    __TAURI__?: any;
+-    __TAURI_INTERNALS__?: any;
++    __TAURI__?: Record<string, unknown>;
++    __TAURI_INTERNALS__?: Record<string, unknown>;
+   }
+ }
+ 
+@@ -314,7 +314,7 @@ function getMigrations(): Migration[] {
+ 
+ // Transaction management state
+ let isTransactionActive = false;
+-const transactionQueue: Array<() => Promise<any>> = [];
++const transactionQueue: Array<() => Promise<unknown>> = [];
+ let processingQueue = false;
+ 
+ /**
+@@ -398,7 +398,9 @@ export async function executeTransaction<T>(
+       } catch (rollbackError) {
+         // Only log rollback errors that aren't "no transaction is active"
+         if (
+-          !(rollbackError as any)?.message?.includes('no transaction is active')
++          !(rollbackError as Error)?.message?.includes(
++            'no transaction is active'
++          )
+         ) {
+           console.warn('Failed to rollback transaction:', rollbackError);
+         }
+
+--- FILE: src/services/database/mockDatabase.ts ---
+diff --git a/src/services/database/mockDatabase.ts b/src/services/database/mockDatabase.ts
+index 318a905..d49092c 100644
+--- a/src/services/database/mockDatabase.ts
++++ b/src/services/database/mockDatabase.ts
+@@ -8,9 +8,9 @@ export class MockDatabase {
+   public readonly isMock = true;
+   private storageKey = 'kirapilot-mock-db';
+   private transactionActive = false;
+-  private transactionData: any = null;
++  private transactionData: Record<string, unknown> | null = null;
+ 
+-  private getData(): any {
++  private getData(): Record<string, unknown> {
+     const data = localStorage.getItem(this.storageKey);
+     return data
+       ? JSON.parse(data)
+@@ -24,7 +24,7 @@ export class MockDatabase {
+         };
+   }
+ 
+-  private saveData(data: any): void {
++  private saveData(data: Record<string, unknown>): void {
+     localStorage.setItem(this.storageKey, JSON.stringify(data));
+   }
+ 
+@@ -35,7 +35,10 @@ export class MockDatabase {
+     this.saveData(data);
+   }
+ 
+-  async execute(query: string, params?: any[]): Promise<any> {
++  async execute(
++    query: string,
++    params?: unknown[]
++  ): Promise<{ changes: number; lastInsertRowid?: number }> {
+     console.log('Mock DB Execute:', query, params);
+ 
+     // Handle transaction commands
+@@ -104,7 +107,7 @@ export class MockDatabase {
+           updatedAt: params[16], // ISO string
+         };
+ 
+-        data.tasks.push(newTask);
++        (data.tasks as Record<string, unknown>[]).push(newTask);
+         this.saveData(data);
+ 
+         return { changes: 1, lastInsertRowid: Date.now() };
+@@ -115,7 +118,7 @@ export class MockDatabase {
+     return { changes: 1, lastInsertRowid: Date.now() };
+   }
+ 
+-  async select<T>(query: string, params?: any[]): Promise<T> {
++  async select<T>(query: string, params?: unknown[]): Promise<T> {
+     console.log('Mock DB Select:', query, params);
+ 
+     const data = this.getData();
+@@ -178,13 +181,13 @@ export async function initializeMockDatabase(): Promise<MockDatabase> {
+       if (parsed.tasks && parsed.tasks.length > 0) {
+         // Check if any task has old format ID or is missing scheduledDate field
+         const hasOldFormatIds = parsed.tasks.some(
+-          (task: any) =>
++          (task: { id: string }) =>
+             !task.id.match(
+               /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+             )
+         );
+         const missingScheduledDate = parsed.tasks.some(
+-          (task: any) =>
++          (task: Record<string, unknown>) =>
+             task.scheduledDate === undefined &&
+             task.hasOwnProperty('scheduledDate') === false
+         );
+@@ -381,14 +384,16 @@ export function getSampleTasks(): Task[] {
+   const tasks = data.tasks || [];
+ 
+   // Convert date strings back to Date objects
+-  return tasks.map((task: any) => ({
++  return tasks.map((task: Record<string, unknown>) => ({
+     ...task,
+-    createdAt: new Date(task.createdAt),
+-    updatedAt: new Date(task.updatedAt),
+-    dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
++    createdAt: new Date(task.createdAt as string),
++    updatedAt: new Date(task.updatedAt as string),
++    dueDate: task.dueDate ? new Date(task.dueDate as string) : undefined,
+     scheduledDate: task.scheduledDate
+-      ? new Date(task.scheduledDate)
++      ? new Date(task.scheduledDate as string)
++      : undefined,
++    completedAt: task.completedAt
++      ? new Date(task.completedAt as string)
+       : undefined,
+-    completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+   }));
+ }
+
+--- FILE: src/services/database/repositories/FocusRepository.ts ---
+diff --git a/src/services/database/repositories/FocusRepository.ts b/src/services/database/repositories/FocusRepository.ts
+index 946ad63..e535e65 100644
+--- a/src/services/database/repositories/FocusRepository.ts
++++ b/src/services/database/repositories/FocusRepository.ts
+@@ -6,6 +6,7 @@ import {
+   FocusMetrics,
+   FocusBreak,
+ } from '../../../types';
++import { FocusSessionDbRow, DbQueryResult } from '../../../types/database';
+ import {
+   focusSessionToDbRow,
+   dbRowToFocusSession,
+@@ -285,7 +286,7 @@ export class FocusRepository {
+   async getActiveSession(): Promise<FocusSession | null> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<FocusSessionDbRow>>(
+       'SELECT * FROM focus_sessions WHERE completed_at IS NULL LIMIT 1'
+     );
+ 
+@@ -298,7 +299,7 @@ export class FocusRepository {
+   async findById(id: string): Promise<FocusSession | null> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<FocusSessionDbRow>>(
+       'SELECT * FROM focus_sessions WHERE id = ?',
+       [id]
+     );
+@@ -312,7 +313,7 @@ export class FocusRepository {
+   async getByTask(taskId: string): Promise<FocusSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<FocusSessionDbRow>>(
+       'SELECT * FROM focus_sessions WHERE task_id = ? ORDER BY created_at DESC',
+       [taskId]
+     );
+@@ -329,7 +330,7 @@ export class FocusRepository {
+   ): Promise<FocusSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<FocusSessionDbRow>>(
+       'SELECT * FROM focus_sessions WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC',
+       [startDate.toISOString(), endDate.toISOString()]
+     );
+@@ -368,7 +369,7 @@ export class FocusRepository {
+     const db = await getDatabase();
+ 
+     let query = 'SELECT * FROM focus_sessions';
+-    const params: any[] = [];
++    const params: unknown[] = [];
+ 
+     if (startDate) {
+       query += ' WHERE created_at >= ?';
+@@ -381,7 +382,10 @@ export class FocusRepository {
+       params.push(endDate.toISOString());
+     }
+ 
+-    const sessions = await db.select<any[]>(query, params);
++    const sessions = await db.select<DbQueryResult<FocusSessionDbRow>>(
++      query,
++      params
++    );
+     const focusSessions = sessions.map(row => dbRowToFocusSession(row));
+ 
+     if (focusSessions.length === 0) {
+@@ -489,7 +493,7 @@ export class FocusRepository {
+   async getIncompleteSessions(): Promise<FocusSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<FocusSessionDbRow>>(
+       'SELECT * FROM focus_sessions WHERE completed_at IS NULL ORDER BY created_at DESC'
+     );
+
+--- FILE: src/services/database/repositories/PatternRepository.ts ---
+diff --git a/src/services/database/repositories/PatternRepository.ts b/src/services/database/repositories/PatternRepository.ts
+index d61f2b6..73b07aa 100644
+--- a/src/services/database/repositories/PatternRepository.ts
++++ b/src/services/database/repositories/PatternRepository.ts
+@@ -7,6 +7,12 @@ import {
+   PatternAnalysis,
+   TrendData,
+ } from '../../../types';
++import {
++  ProductivityPatternDbRow,
++  TaskTrendDbRow,
++  FocusTrendDbRow,
++  DbQueryResult,
++} from '../../../types/database';
+ import { generateId } from '../../../utils';
+ 
+ export class PatternRepository {
+@@ -22,7 +28,7 @@ export class PatternRepository {
+   ): Promise<void> {
+     return await executeTransaction(async db => {
+       // Check if pattern already exists
+-      const existing = await db.select<any[]>(
++      const existing = await db.select<DbQueryResult<ProductivityPatternDbRow>>(
+         `
+         SELECT * FROM productivity_patterns 
+         WHERE user_id = ? AND pattern_type = ? AND time_slot = ?
+@@ -96,7 +102,7 @@ export class PatternRepository {
+   ): Promise<ProductivityPattern[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<ProductivityPatternDbRow>>(
+       `
+       SELECT * FROM productivity_patterns 
+       WHERE user_id = ? AND pattern_type = ?
+@@ -108,7 +114,11 @@ export class PatternRepository {
+     return result.map(row => ({
+       id: row.id,
+       userId: row.user_id,
+-      patternType: row.pattern_type,
++      patternType: row.pattern_type as
++        | 'daily'
++        | 'weekly'
++        | 'task_based'
++        | 'energy_based',
+       timeSlots: this.parseTimeSlot(row.time_slot),
+       productivity: row.productivity_score,
+       confidence: row.confidence_level,
+@@ -140,7 +150,7 @@ export class PatternRepository {
+   ): Promise<TimeSlot[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<ProductivityPatternDbRow>>(
+       `
+       SELECT time_slot, productivity_score, confidence_level, sample_size
+       FROM productivity_patterns 
+@@ -165,7 +175,7 @@ export class PatternRepository {
+     const db = await getDatabase();
+ 
+     // Get completed tasks in date range
+-    const tasks = await db.select<any[]>(
++    const tasks = await db.select<DbQueryResult<ProductivityPatternDbRow>>(
+       `
+       SELECT * FROM tasks 
+       WHERE completed_at >= ? AND completed_at <= ? AND status = 'completed'
+@@ -175,7 +185,9 @@ export class PatternRepository {
+     );
+ 
+     // Get focus sessions in date range
+-    const focusSessions = await db.select<any[]>(
++    const focusSessions = await db.select<
++      DbQueryResult<ProductivityPatternDbRow>
++    >(
+       `
+       SELECT * FROM focus_sessions 
+       WHERE created_at >= ? AND created_at <= ? AND completed_at IS NOT NULL
+@@ -185,7 +197,9 @@ export class PatternRepository {
+     );
+ 
+     // Get time sessions in date range
+-    const timeSessions = await db.select<any[]>(
++    const timeSessions = await db.select<
++      DbQueryResult<ProductivityPatternDbRow>
++    >(
+       `
+       SELECT * FROM time_sessions 
+       WHERE created_at >= ? AND created_at <= ? AND end_time IS NOT NULL
+@@ -200,9 +214,9 @@ export class PatternRepository {
+ 
+     // Generate insights
+     const insights = this.generateInsights(
+-      tasks,
+-      focusSessions,
+-      timeSessions,
++      tasks as Record<string, unknown>[],
++      focusSessions as Record<string, unknown>[],
++      timeSessions as Record<string, unknown>[],
+       productivityPatterns
+     );
+ 
+@@ -320,7 +334,7 @@ export class PatternRepository {
+     }
+ 
+     // Get task completion trend
+-    const taskTrend = await db.select<any[]>(
++    const taskTrend = await db.select<DbQueryResult<TaskTrendDbRow>>(
+       `
+       SELECT 
+         ${groupBy} as period,
+@@ -335,7 +349,7 @@ export class PatternRepository {
+     );
+ 
+     // Get focus session trend
+-    const focusTrend = await db.select<any[]>(
++    const focusTrend = await db.select<DbQueryResult<FocusTrendDbRow>>(
+       `
+       SELECT 
+         ${groupBy} as period,
+@@ -413,7 +427,7 @@ export class PatternRepository {
+   }> {
+     const db = await getDatabase();
+ 
+-    const patterns = await db.select<any[]>(
++    const patterns = await db.select<DbQueryResult<ProductivityPatternDbRow>>(
+       `
+       SELECT * FROM productivity_patterns WHERE user_id = ?
+     `,
+@@ -509,10 +523,18 @@ export class PatternRepository {
+    * Categorize energy level
+    */
+   private categorizeEnergyLevel(score: number): string {
+-    if (score >= 80) return 'high';
+-    if (score >= 60) return 'medium-high';
+-    if (score >= 40) return 'medium';
+-    if (score >= 20) return 'low-medium';
++    if (score >= 80) {
++      return 'high';
++    }
++    if (score >= 60) {
++      return 'medium-high';
++    }
++    if (score >= 40) {
++      return 'medium';
++    }
++    if (score >= 20) {
++      return 'low-medium';
++    }
+     return 'low';
+   }
+ 
+@@ -520,9 +542,9 @@ export class PatternRepository {
+    * Generate insights from data
+    */
+   private generateInsights(
+-    tasks: any[],
+-    focusSessions: any[],
+-    _timeSessions: any[],
++    tasks: Record<string, unknown>[],
++    focusSessions: Record<string, unknown>[],
++    _timeSessions: Record<string, unknown>[],
+     patterns: ProductivityPattern[]
+   ) {
+     // Find most productive time
+@@ -546,11 +568,13 @@ export class PatternRepository {
+     );
+ 
+     // Calculate average task duration
+-    const completedTasks = tasks.filter(t => t.actual_time > 0);
++    const completedTasks = tasks.filter(t => (t.actual_time as number) > 0);
+     const averageTaskDuration =
+       completedTasks.length > 0
+-        ? completedTasks.reduce((sum, t) => sum + t.actual_time, 0) /
+-          completedTasks.length
++        ? completedTasks.reduce(
++            (sum, t) => sum + (t.actual_time as number),
++            0
++          ) / completedTasks.length
+         : 0;
+ 
+     // Calculate completion rate
+@@ -567,8 +591,10 @@ export class PatternRepository {
+     );
+     const focusEfficiency =
+       completedFocusSessions.length > 0
+-        ? completedFocusSessions.reduce((sum, s) => sum + s.focus_score, 0) /
+-          completedFocusSessions.length
++        ? completedFocusSessions.reduce(
++            (sum, s) => sum + (s.focus_score as number),
++            0
++          ) / completedFocusSessions.length
+         : 0;
+ 
+     return {
+@@ -583,13 +609,16 @@ export class PatternRepository {
+   /**
+    * Generate AI recommendations based on patterns
+    */
+-  private async generateRecommendations(_userId: string, insights: any) {
++  private async generateRecommendations(
++    _userId: string,
++    insights: Record<string, unknown>
++  ) {
+     // This would typically integrate with the AI system
+     // For now, return basic recommendations based on patterns
+ 
+     const recommendations = [];
+ 
+-    if (insights.focusEfficiency < 70) {
++    if ((insights.focusEfficiency as number) < 70) {
+       recommendations.push({
+         id: generateId(),
+         type: 'focus' as const,
+@@ -605,7 +634,7 @@ export class PatternRepository {
+       });
+     }
+ 
+-    if (insights.completionRate < 80) {
++    if ((insights.completionRate as number) < 80) {
+       recommendations.push({
+         id: generateId(),
+         type: 'task' as const,
+
+--- FILE: src/services/database/repositories/TaskRepository.ts ---
+diff --git a/src/services/database/repositories/TaskRepository.ts b/src/services/database/repositories/TaskRepository.ts
+index c6559df..5c4fd34 100644
+--- a/src/services/database/repositories/TaskRepository.ts
++++ b/src/services/database/repositories/TaskRepository.ts
+@@ -8,6 +8,7 @@ import {
+   TaskSortOptions,
+   ValidationResult,
+ } from '../../../types';
++import { TaskDbRow, DbQueryResult } from '../../../types/database';
+ import {
+   createTaskRequestToTask,
+   applyTaskUpdate,
+@@ -89,7 +90,7 @@ export class TaskRepository {
+ 
+       // Update parent task's subtasks if this is a subtask
+       if (task.parentTaskId) {
+-        const parentResult = await db.select<any[]>(
++        const parentResult = await db.select<DbQueryResult<TaskDbRow>>(
+           'SELECT * FROM tasks WHERE id = ?',
+           [task.parentTaskId]
+         );
+@@ -108,7 +109,7 @@ export class TaskRepository {
+       }
+ 
+       // Retrieve the task from database to ensure proper data conversion
+-      const createdTaskResult = await db.select<any[]>(
++      const createdTaskResult = await db.select<DbQueryResult<TaskDbRow>>(
+         'SELECT * FROM tasks WHERE id = ?',
+         [task.id]
+       );
+@@ -129,9 +130,10 @@ export class TaskRepository {
+   async findById(id: string): Promise<Task | null> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>('SELECT * FROM tasks WHERE id = ?', [
+-      id,
+-    ]);
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
++      'SELECT * FROM tasks WHERE id = ?',
++      [id]
++    );
+ 
+     return result.length > 0 ? dbRowToTask(result[0]) : null;
+   }
+@@ -146,7 +148,7 @@ export class TaskRepository {
+     const db = await getDatabase();
+ 
+     let query = 'SELECT * FROM tasks';
+-    const params: any[] = [];
++    const params: unknown[] = [];
+     const conditions: string[] = [];
+ 
+     // Apply filters
+@@ -226,7 +228,7 @@ export class TaskRepository {
+       query += ' ORDER BY created_at DESC';
+     }
+ 
+-    const result = await db.select<any[]>(query, params);
++    const result = await db.select<DbQueryResult<TaskDbRow>>(query, params);
+     return result.map(row => dbRowToTask(row));
+   }
+ 
+@@ -244,7 +246,7 @@ export class TaskRepository {
+ 
+     return await executeTransaction(async db => {
+       // Find existing task using transaction db
+-      const existingResult = await db.select<any[]>(
++      const existingResult = await db.select<DbQueryResult<TaskDbRow>>(
+         'SELECT * FROM tasks WHERE id = ?',
+         [id]
+       );
+@@ -259,7 +261,9 @@ export class TaskRepository {
+       // Check for circular dependencies if dependencies changed
+       if (request.dependencies) {
+         // Get all tasks using transaction db
+-        const allTasksResult = await db.select<any[]>('SELECT * FROM tasks');
++        const allTasksResult = await db.select<DbQueryResult<TaskDbRow>>(
++          'SELECT * FROM tasks'
++        );
+         const allTasks = allTasksResult.map(row => dbRowToTask(row));
+ 
+         if (hasCircularDependency(id, request.dependencies, allTasks)) {
+@@ -323,7 +327,7 @@ export class TaskRepository {
+   async delete(id: string): Promise<void> {
+     return await executeTransaction(async db => {
+       // Get task using transaction db
+-      const taskResult = await db.select<any[]>(
++      const taskResult = await db.select<DbQueryResult<TaskDbRow>>(
+         'SELECT * FROM tasks WHERE id = ?',
+         [id]
+       );
+@@ -335,7 +339,7 @@ export class TaskRepository {
+ 
+       // Remove from parent's subtasks if this is a subtask
+       if (task.parentTaskId) {
+-        const parentResult = await db.select<any[]>(
++        const parentResult = await db.select<DbQueryResult<TaskDbRow>>(
+           'SELECT * FROM tasks WHERE id = ?',
+           [task.parentTaskId]
+         );
+@@ -367,7 +371,7 @@ export class TaskRepository {
+   async getDependencies(taskId: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       `
+       SELECT t.* FROM tasks t
+       INNER JOIN task_dependencies td ON t.id = td.depends_on_id
+@@ -386,7 +390,7 @@ export class TaskRepository {
+   async getDependents(taskId: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       `
+       SELECT t.* FROM tasks t
+       INNER JOIN task_dependencies td ON t.id = td.task_id
+@@ -405,7 +409,7 @@ export class TaskRepository {
+   async getSubtasks(parentId: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       'SELECT * FROM tasks WHERE parent_task_id = ? ORDER BY created_at ASC',
+       [parentId]
+     );
+@@ -419,7 +423,7 @@ export class TaskRepository {
+   async getByProject(projectId: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       'SELECT * FROM tasks WHERE project_id = ? ORDER BY priority DESC, created_at DESC',
+       [projectId]
+     );
+@@ -434,7 +438,7 @@ export class TaskRepository {
+     const db = await getDatabase();
+     const now = new Date().toISOString();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       'SELECT * FROM tasks WHERE due_date < ? AND status != ? ORDER BY due_date ASC',
+       [now, 'completed']
+     );
+@@ -448,7 +452,7 @@ export class TaskRepository {
+   async getByTag(tag: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       'SELECT * FROM tasks WHERE tags LIKE ? ORDER BY created_at DESC',
+       [`%"${tag}"%`]
+     );
+@@ -462,7 +466,7 @@ export class TaskRepository {
+   async search(query: string): Promise<Task[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TaskDbRow>>(
+       `
+       SELECT * FROM tasks 
+       WHERE title LIKE ? OR description LIKE ? OR tags LIKE ?
+
+--- FILE: src/services/database/repositories/TimeTrackingRepository.ts ---
+diff --git a/src/services/database/repositories/TimeTrackingRepository.ts b/src/services/database/repositories/TimeTrackingRepository.ts
+index 90d0997..83c2011 100644
+--- a/src/services/database/repositories/TimeTrackingRepository.ts
++++ b/src/services/database/repositories/TimeTrackingRepository.ts
+@@ -1,6 +1,7 @@
+ // Time tracking repository for database operations
+ import { getDatabase, executeTransaction } from '../index';
+ import { TimerSession, CompletedSession, TimerBreak } from '../../../types';
++import { TimerSessionDbRow, DbQueryResult } from '../../../types/database';
+ import {
+   timerSessionToDbRow,
+   dbRowToTimerSession,
+@@ -9,17 +10,18 @@ import { validateTimerSession } from '../../../types/validation';
+ import { generateId } from '../../../utils';
+ 
+ export class TimeTrackingRepository {
+-  private async executeWithRetry(
+-    operation: () => Promise<any>,
++  private async executeWithRetry<T>(
++    operation: () => Promise<T>,
+     maxRetries = 3,
+     delay = 100
+-  ): Promise<any> {
++  ): Promise<T> {
+     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+       try {
+         return await operation();
+-      } catch (error: any) {
++      } catch (error: unknown) {
+         if (
+-          error?.message?.includes('database is locked') &&
++          error instanceof Error &&
++          error.message.includes('database is locked') &&
+           attempt < maxRetries
+         ) {
+           // Wait before retrying
+@@ -32,6 +34,9 @@ export class TimeTrackingRepository {
+         throw error;
+       }
+     }
++
++    // This should never be reached, but TypeScript requires it
++    throw new Error('Maximum retry attempts exceeded');
+   }
+ 
+   /**
+@@ -40,10 +45,9 @@ export class TimeTrackingRepository {
+   async startSession(taskId: string, notes?: string): Promise<TimerSession> {
+     return await executeTransaction(async db => {
+       // Check if there's already an active session using the transaction db
+-      const activeSessionResult = await db.select<any[]>(
+-        'SELECT * FROM time_sessions WHERE is_active = ? LIMIT 1',
+-        [true]
+-      );
++      const activeSessionResult = await db.select<
++        DbQueryResult<TimerSessionDbRow>
++      >('SELECT * FROM time_sessions WHERE is_active = ? LIMIT 1', [true]);
+ 
+       if (activeSessionResult.length > 0) {
+         throw new Error('Another timer session is already active');
+@@ -114,7 +118,7 @@ export class TimeTrackingRepository {
+     const db = await getDatabase();
+ 
+     // Get session
+-    const sessionResult = await db.select<any[]>(
++    const sessionResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE id = ? LIMIT 1',
+       [sessionId]
+     );
+@@ -164,17 +168,18 @@ export class TimeTrackingRepository {
+     );
+ 
+     console.log('Update result:', {
+-      rowsAffected: updateResult.rowsAffected,
+-      lastInsertRowid: updateResult.lastInsertRowid,
++      changes: (updateResult as { changes: number }).changes,
++      lastInsertRowid: (updateResult as { lastInsertRowid?: number })
++        .lastInsertRowid,
+     });
+ 
+     // If no rows were affected, the WHERE clause didn't match
+-    if (updateResult.rowsAffected === 0) {
++    if ((updateResult as { changes: number }).changes === 0) {
+       console.error(
+         'UPDATE affected 0 rows - WHERE clause did not match any records'
+       );
+       // Check if the session still exists
+-      const recheckResult = await db.select<any[]>(
++      const recheckResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+         'SELECT id, is_active FROM time_sessions WHERE id = ?',
+         [sessionId]
+       );
+@@ -185,7 +190,7 @@ export class TimeTrackingRepository {
+     }
+ 
+     // Verify the update
+-    const verifyResult = await db.select<any[]>(
++    const verifyResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT is_active FROM time_sessions WHERE id = ?',
+       [sessionId]
+     );
+@@ -214,7 +219,7 @@ export class TimeTrackingRepository {
+     const db = await getDatabase();
+ 
+     // Get session
+-    const sessionResult = await db.select<any[]>(
++    const sessionResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE id = ? LIMIT 1',
+       [sessionId]
+     );
+@@ -233,7 +238,9 @@ export class TimeTrackingRepository {
+     }
+ 
+     // Check if there's another active session (should not happen with proper state management)
+-    const activeSessionResult = await db.select<any[]>(
++    const activeSessionResult = await db.select<
++      DbQueryResult<TimerSessionDbRow>
++    >(
+       'SELECT * FROM time_sessions WHERE is_active = ? AND id != ? LIMIT 1',
+       [1, sessionId] // Use 1 instead of true for SQLite
+     );
+@@ -262,7 +269,7 @@ export class TimeTrackingRepository {
+     );
+ 
+     // Verify the update
+-    const verifyResult = await db.select<any[]>(
++    const verifyResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT is_active FROM time_sessions WHERE id = ?',
+       [sessionId]
+     );
+@@ -295,7 +302,7 @@ export class TimeTrackingRepository {
+       const db = await getDatabase();
+ 
+       // Get session
+-      const sessionResult = await db.select<any[]>(
++      const sessionResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+         'SELECT * FROM time_sessions WHERE id = ?',
+         [sessionId]
+       );
+@@ -366,7 +373,7 @@ export class TimeTrackingRepository {
+   ): Promise<TimerSession> {
+     return await executeTransaction(async db => {
+       // Get session using transaction db
+-      const sessionResult = await db.select<any[]>(
++      const sessionResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+         'SELECT * FROM time_sessions WHERE id = ?',
+         [sessionId]
+       );
+@@ -408,7 +415,7 @@ export class TimeTrackingRepository {
+   async getActiveSession(): Promise<TimerSession | null> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE is_active = ? LIMIT 1',
+       [1] // Use 1 instead of true for SQLite
+     );
+@@ -422,7 +429,7 @@ export class TimeTrackingRepository {
+   async findById(id: string): Promise<TimerSession | null> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE id = ?',
+       [id]
+     );
+@@ -436,7 +443,7 @@ export class TimeTrackingRepository {
+   async getByTask(taskId: string): Promise<TimerSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE task_id = ? ORDER BY created_at DESC',
+       [taskId]
+     );
+@@ -453,7 +460,7 @@ export class TimeTrackingRepository {
+   ): Promise<TimerSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC',
+       [startDate.toISOString(), endDate.toISOString()]
+     );
+@@ -492,7 +499,7 @@ export class TimeTrackingRepository {
+     const db = await getDatabase();
+ 
+     let query = 'SELECT * FROM time_sessions WHERE end_time IS NOT NULL';
+-    const params: any[] = [];
++    const params: unknown[] = [];
+ 
+     if (startDate) {
+       query += ' AND created_at >= ?';
+@@ -504,7 +511,10 @@ export class TimeTrackingRepository {
+       params.push(endDate.toISOString());
+     }
+ 
+-    const sessions = await db.select<any[]>(query, params);
++    const sessions = await db.select<DbQueryResult<TimerSessionDbRow>>(
++      query,
++      params
++    );
+     const completedSessions = sessions.map(row => dbRowToTimerSession(row));
+ 
+     if (completedSessions.length === 0) {
+@@ -572,7 +582,7 @@ export class TimeTrackingRepository {
+     const db = await getDatabase();
+ 
+     // Check if session exists first
+-    const sessionResult = await db.select<any[]>(
++    const sessionResult = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT id FROM time_sessions WHERE id = ?',
+       [id]
+     );
+@@ -590,7 +600,7 @@ export class TimeTrackingRepository {
+   async getIncompleteSessions(): Promise<TimerSession[]> {
+     const db = await getDatabase();
+ 
+-    const result = await db.select<any[]>(
++    const result = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT * FROM time_sessions WHERE end_time IS NULL ORDER BY created_at DESC'
+     );
+ 
+@@ -605,7 +615,9 @@ export class TimeTrackingRepository {
+     actualWork: number,
+     breakCount: number
+   ): number {
+-    if (totalDuration === 0) return 0;
++    if (totalDuration === 0) {
++      return 0;
++    }
+ 
+     const workRatio = actualWork / totalDuration;
+     const breakPenalty = Math.min(breakCount * 0.05, 0.3); // Max 30% penalty for breaks
+@@ -680,7 +692,7 @@ export class TimeTrackingRepository {
+     const db = await getDatabase();
+ 
+     // Check for multiple active sessions (should never happen)
+-    const activeSessions = await db.select<any[]>(
++    const activeSessions = await db.select<DbQueryResult<TimerSessionDbRow>>(
+       'SELECT id, task_id, created_at FROM time_sessions WHERE is_active = ?',
+       [1] // Use 1 instead of true for SQLite
+     );
+
+--- FILE: src/services/database/utils.ts ---
+diff --git a/src/services/database/utils.ts b/src/services/database/utils.ts
+index dc4dc22..5c1de41 100644
+--- a/src/services/database/utils.ts
++++ b/src/services/database/utils.ts
+@@ -102,7 +102,7 @@ export async function getDatabaseStats(): Promise<{
+ export async function exportDatabaseToJSON(): Promise<string> {
+   const db = await getDatabase();
+ 
+-  const backup: Record<string, any[]> = {};
++  const backup: Record<string, Record<string, unknown>[]> = {};
+ 
+   // Get all user tables
+   const tables = await db.select<{ name: string }[]>(
+@@ -111,7 +111,9 @@ export async function exportDatabaseToJSON(): Promise<string> {
+ 
+   for (const table of tables) {
+     try {
+-      const data = await db.select<any[]>(`SELECT * FROM ${table.name}`);
++      const data = await db.select<Record<string, unknown>[]>(
++        `SELECT * FROM ${table.name}`
++      );
+       backup[table.name] = data;
+     } catch (error) {
+       console.warn(`Failed to export table ${table.name}:`, error);
+
+--- FILE: src/types/database.ts ---
+diff --git a/src/types/database.ts b/src/types/database.ts
+new file mode 100644
+index 0000000..7ca69ed
+--- /dev/null
++++ b/src/types/database.ts
+@@ -0,0 +1,109 @@
++// Database row types for SQLite query results
++
++export interface TaskDbRow extends Record<string, unknown> {
++  id: string;
++  title: string;
++  description: string;
++  priority: number;
++  status: string;
++  dependencies: string; // JSON string
++  time_estimate: number;
++  actual_time: number;
++  due_date: string | null; // ISO string
++  scheduled_date: string | null; // ISO string
++  tags: string; // JSON string
++  project_id: string | null;
++  parent_task_id: string | null;
++  subtasks: string; // JSON string
++  completed_at: string | null; // ISO string
++  created_at: string; // ISO string
++  updated_at: string; // ISO string
++}
++
++export interface TimerSessionDbRow extends Record<string, unknown> {
++  id: string;
++  task_id: string;
++  start_time: string; // ISO string
++  end_time: string | null; // ISO string
++  paused_time: number;
++  is_active: number; // SQLite boolean (0 or 1)
++  notes: string;
++  breaks: string; // JSON string
++  created_at: string; // ISO string
++}
++
++export interface FocusSessionDbRow extends Record<string, unknown> {
++  id: string;
++  task_id: string;
++  planned_duration: number;
++  actual_duration: number | null;
++  focus_score: number | null;
++  distraction_count: number;
++  distraction_level: string;
++  background_audio: string | null; // JSON string
++  notes: string;
++  breaks: string; // JSON string
++  metrics: string; // JSON string
++  created_at: string; // ISO string
++  completed_at: string | null; // ISO string
++}
++
++export interface ProductivityPatternDbRow extends Record<string, unknown> {
++  id: string;
++  user_id: string;
++  pattern_type: string;
++  time_slot: string;
++  productivity_score: number;
++  confidence_level: number;
++  sample_size: number;
++  created_at: string; // ISO string
++  updated_at: string; // ISO string
++}
++
++export interface UserPreferencesDbRow {
++  id: string;
++  working_hours: string; // JSON string
++  break_preferences: string; // JSON string
++  focus_preferences: string; // JSON string
++  notifications: string; // JSON string
++  theme: string;
++  language: string;
++  created_at: string; // ISO string
++  updated_at: string; // ISO string
++}
++
++export interface AISuggestionDbRow {
++  id: string;
++  type: string;
++  title: string;
++  description: string;
++  confidence: number;
++  actionable: number; // SQLite boolean (0 or 1)
++  priority: number;
++  estimated_impact: number;
++  reasoning: string;
++  actions: string; // JSON string
++  created_at: string; // ISO string
++  dismissed_at: string | null; // ISO string
++  applied_at: string | null; // ISO string
++}
++
++// Aggregated query result types
++export interface TaskTrendDbRow extends Record<string, unknown> {
++  period: string;
++  completed_tasks: number;
++  efficiency: number;
++}
++
++export interface FocusTrendDbRow extends Record<string, unknown> {
++  period: string;
++  avg_focus_score: number;
++  focus_sessions: number;
++}
++
++// Generic database result types
++export type DbQueryResult<T = Record<string, unknown>> = T[];
++export type DbExecuteResult = {
++  changes: number;
++  lastInsertRowid?: number;
++};
+
+--- FILE: src/types/index.ts ---
+diff --git a/src/types/index.ts b/src/types/index.ts
+index 054e2b7..cd33dd9 100644
+--- a/src/types/index.ts
++++ b/src/types/index.ts
+@@ -260,7 +260,7 @@ export interface ActivityEvent {
+     | 'focus_started'
+     | 'focus_ended';
+   timestamp: Date;
+-  data: Record<string, any>;
++  data: Record<string, unknown>;
+ }
+ 
+ export interface UserPreferences {
+@@ -298,7 +298,7 @@ export interface AIAction {
+     | 'TAKE_BREAK'
+     | 'ANALYZE_PRODUCTIVITY'
+     | 'SUGGEST_SCHEDULE';
+-  parameters: Record<string, any>;
++  parameters: Record<string, unknown>;
+   context: AppContext;
+   confidence: number;
+ }
+@@ -348,3 +348,24 @@ export interface TaskSortOptions {
+   field: 'title' | 'priority' | 'dueDate' | 'createdAt' | 'updatedAt';
+   direction: 'asc' | 'desc';
+ }
++// Timer-related types
++export interface TaskTimerProps {
++  onTimerStart: () => void;
++  onTimerPause: () => void;
++  onTimerStop: () => void;
++  activeTimerTaskId: string | null;
++  isTimerRunning: boolean;
++  elapsedTime: number;
++}
++
++// Statistics types
++export interface SessionStatistics {
++  totalSessions: number;
++  totalTime: number;
++  totalWorkTime: number;
++  totalBreakTime: number;
++  averageSessionLength: number;
++  averageProductivity: number;
++  mostProductiveHour: number;
++  sessionsPerDay: Record<string, number>;
++}
+
+--- FILE: src/utils/clearOldData.ts ---
+diff --git a/src/utils/clearOldData.ts b/src/utils/clearOldData.ts
+index 7090405..6df8b3e 100644
+--- a/src/utils/clearOldData.ts
++++ b/src/utils/clearOldData.ts
+@@ -5,7 +5,9 @@ import { isValidUUID } from './migration';
+  * Clear localStorage if it contains old format data
+  */
+ export function clearOldDataIfNeeded(): void {
+-  if (typeof localStorage === 'undefined') return;
++  if (typeof localStorage === 'undefined') {
++    return;
++  }
+ 
+   try {
+     const existingData = localStorage.getItem('kirapilot-mock-db');
+@@ -14,7 +16,7 @@ export function clearOldDataIfNeeded(): void {
+       if (parsed.tasks && parsed.tasks.length > 0) {
+         // Check if any task has old format ID
+         const hasOldFormatIds = parsed.tasks.some(
+-          (task: any) => task.id && !isValidUUID(task.id)
++          (task: { id: string }) => task.id && !isValidUUID(task.id)
+         );
+ 
+         if (hasOldFormatIds) {
+
+--- FILE: src/utils/debugDatabase.ts ---
+diff --git a/src/utils/debugDatabase.ts b/src/utils/debugDatabase.ts
+index 99b9149..67dcdea 100644
+--- a/src/utils/debugDatabase.ts
++++ b/src/utils/debugDatabase.ts
+@@ -7,7 +7,7 @@ import { getDatabase } from '../services/database';
+ export async function checkActiveTimerSessions(): Promise<void> {
+   try {
+     const db = await getDatabase();
+-    const activeSessions = await db.select<any[]>(
++    const activeSessions = await db.select<Record<string, unknown>[]>(
+       'SELECT * FROM time_sessions WHERE is_active = ?',
+       [true]
+     );
+@@ -53,7 +53,10 @@ export async function clearAllTimerData(): Promise<void> {
+ 
+ // Export for console debugging
+ if (typeof window !== 'undefined') {
+-  (window as any).checkActiveTimerSessions = checkActiveTimerSessions;
+-  (window as any).forceStopAllTimers = forceStopAllTimers;
+-  (window as any).clearAllTimerData = clearAllTimerData;
++  (window as unknown as Record<string, unknown>).checkActiveTimerSessions =
++    checkActiveTimerSessions;
++  (window as unknown as Record<string, unknown>).forceStopAllTimers =
++    forceStopAllTimers;
++  (window as unknown as Record<string, unknown>).clearAllTimerData =
++    clearAllTimerData;
+ }
+
+--- FILE: src/utils/index.ts ---
+diff --git a/src/utils/index.ts b/src/utils/index.ts
+index f45a428..67fed93 100644
+--- a/src/utils/index.ts
++++ b/src/utils/index.ts
+@@ -94,7 +94,7 @@ export function formatRelativeTime(date: Date | string): string {
+ /**
+  * Debounce function for performance optimization
+  */
+-export function debounce<T extends (...args: any[]) => any>(
++export function debounce<T extends (...args: unknown[]) => unknown>(
+   func: T,
+   wait: number
+ ): (...args: Parameters<T>) => void {
+
+--- FILE: src/utils/migration.ts ---
+diff --git a/src/utils/migration.ts b/src/utils/migration.ts
+index 53117cf..64d2273 100644
+--- a/src/utils/migration.ts
++++ b/src/utils/migration.ts
+@@ -53,10 +53,20 @@ export function createIdMigrationMap(oldIds: string[]): Map<string, string> {
+   return migrationMap;
+ }
+ 
++interface TaskMigrationData {
++  id: string;
++  dependencies?: string[];
++  parentTaskId?: string;
++  subtasks?: string[];
++  [key: string]: unknown;
++}
++
+ /**
+  * Migrate task data to use proper UUIDs
+  */
+-export function migrateTaskData(tasks: any[]): any[] {
++export function migrateTaskData(
++  tasks: TaskMigrationData[]
++): TaskMigrationData[] {
+   // First pass: create ID migration map
+   const allIds = tasks.map(task => task.id);
+   const idMap = createIdMigrationMap(allIds);
+
+--- FILE: src/utils/resetDatabase.ts ---
+diff --git a/src/utils/resetDatabase.ts b/src/utils/resetDatabase.ts
+index 8f3a0a0..6eaa7e0 100644
+--- a/src/utils/resetDatabase.ts
++++ b/src/utils/resetDatabase.ts
+@@ -23,7 +23,9 @@ export function resetDatabase(): void {
+  * This preserves user data while fixing the missing column issue
+  */
+ export function migrateScheduledDateData(): boolean {
+-  if (typeof localStorage === 'undefined') return false;
++  if (typeof localStorage === 'undefined') {
++    return false;
++  }
+ 
+   try {
+     const existingData = localStorage.getItem('kirapilot-mock-db');
+@@ -32,7 +34,7 @@ export function migrateScheduledDateData(): boolean {
+       if (parsed.tasks && parsed.tasks.length > 0) {
+         // Check if tasks have scheduledDate but we need to ensure the column exists
+         const hasScheduledTasks = parsed.tasks.some(
+-          (task: any) =>
++          (task: Record<string, unknown>) =>
+             task.scheduledDate !== undefined && task.scheduledDate !== null
+         );
+ 
+@@ -58,7 +60,9 @@ export function migrateScheduledDateData(): boolean {
+  * Check if database needs reset due to old format data
+  */
+ export function checkAndResetIfNeeded(): boolean {
+-  if (typeof localStorage === 'undefined') return false;
++  if (typeof localStorage === 'undefined') {
++    return false;
++  }
+ 
+   try {
+     const existingData = localStorage.getItem('kirapilot-mock-db');
+@@ -67,7 +71,7 @@ export function checkAndResetIfNeeded(): boolean {
+       if (parsed.tasks && parsed.tasks.length > 0) {
+         // Check if any task has old format ID
+         const hasOldFormatIds = parsed.tasks.some(
+-          (task: any) =>
++          (task: { id: string }) =>
+             task.id &&
+             !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+               task.id
+@@ -110,7 +114,11 @@ export function checkDatabaseIntegrity(): boolean {
+ 
+ // Export for console debugging
+ if (typeof window !== 'undefined') {
+-  (window as any).resetKiraPilotDatabase = resetDatabase;
+-  (window as any).checkKiraPilotDatabase = checkAndResetIfNeeded;
+-  (window as any).checkKiraPilotDatabaseIntegrity = checkDatabaseIntegrity;
++  (window as unknown as Record<string, unknown>).resetKiraPilotDatabase =
++    resetDatabase;
++  (window as unknown as Record<string, unknown>).checkKiraPilotDatabase =
++    checkAndResetIfNeeded;
++  (
++    window as unknown as Record<string, unknown>
++  ).checkKiraPilotDatabaseIntegrity = checkDatabaseIntegrity;
+ }
+
+--- FILE: src/utils/transformations.ts ---
+diff --git a/src/utils/transformations.ts b/src/utils/transformations.ts
+index fe6997b..400f839 100644
+--- a/src/utils/transformations.ts
++++ b/src/utils/transformations.ts
+@@ -47,10 +47,15 @@ export function applyTaskUpdate(task: Task, update: UpdateTaskRequest): Task {
+   };
+ 
+   // Apply updates only for defined fields
+-  if (update.title !== undefined) updatedTask.title = update.title;
+-  if (update.description !== undefined)
++  if (update.title !== undefined) {
++    updatedTask.title = update.title;
++  }
++  if (update.description !== undefined) {
+     updatedTask.description = update.description;
+-  if (update.priority !== undefined) updatedTask.priority = update.priority;
++  }
++  if (update.priority !== undefined) {
++    updatedTask.priority = update.priority;
++  }
+   if (update.status !== undefined) {
+     updatedTask.status = update.status;
+     // Set completion time when task is completed
+@@ -62,14 +67,21 @@ export function applyTaskUpdate(task: Task, update: UpdateTaskRequest): Task {
+       updatedTask.completedAt = undefined;
+     }
+   }
+-  if (update.timeEstimate !== undefined)
++  if (update.timeEstimate !== undefined) {
+     updatedTask.timeEstimate = update.timeEstimate;
+-  if (update.dueDate !== undefined) updatedTask.dueDate = update.dueDate;
+-  if (update.scheduledDate !== undefined)
++  }
++  if (update.dueDate !== undefined) {
++    updatedTask.dueDate = update.dueDate;
++  }
++  if (update.scheduledDate !== undefined) {
+     updatedTask.scheduledDate = update.scheduledDate;
+-  if (update.tags !== undefined) updatedTask.tags = update.tags;
+-  if (update.dependencies !== undefined)
++  }
++  if (update.tags !== undefined) {
++    updatedTask.tags = update.tags;
++  }
++  if (update.dependencies !== undefined) {
+     updatedTask.dependencies = update.dependencies;
++  }
+ 
+   return updatedTask;
+ }
+@@ -77,7 +89,7 @@ export function applyTaskUpdate(task: Task, update: UpdateTaskRequest): Task {
+ /**
+  * Convert Task to database row format
+  */
+-export function taskToDbRow(task: Task): Record<string, any> {
++export function taskToDbRow(task: Task): Record<string, unknown> {
+   return {
+     id: task.id,
+     title: task.title,
+@@ -102,16 +114,16 @@ export function taskToDbRow(task: Task): Record<string, any> {
+ /**
+  * Safely parse JSON string with fallback
+  */
+-function safeJsonParse(
++function safeJsonParse<T = unknown>(
+   jsonString: string | null | undefined,
+-  fallback: any = []
+-): any {
++  fallback: T = [] as T
++): T {
+   if (!jsonString || jsonString.trim() === '') {
+     return fallback;
+   }
+ 
+   try {
+-    return JSON.parse(jsonString);
++    return JSON.parse(jsonString) as T;
+   } catch (error) {
+     console.warn('Failed to parse JSON:', jsonString, error);
+     return fallback;
+@@ -121,27 +133,29 @@ function safeJsonParse(
+ /**
+  * Convert database row to Task
+  */
+-export function dbRowToTask(row: Record<string, any>): Task {
++export function dbRowToTask(row: Record<string, unknown>): Task {
+   return {
+-    id: row.id,
+-    title: row.title,
+-    description: row.description,
+-    priority: row.priority,
+-    status: row.status,
+-    dependencies: safeJsonParse(row.dependencies, []),
+-    timeEstimate: row.time_estimate || 0,
+-    actualTime: row.actual_time || 0,
+-    dueDate: row.due_date ? new Date(row.due_date) : undefined,
++    id: row.id as string,
++    title: row.title as string,
++    description: row.description as string,
++    priority: row.priority as Priority,
++    status: row.status as TaskStatus,
++    dependencies: safeJsonParse<string[]>(row.dependencies as string, []),
++    timeEstimate: (row.time_estimate as number) || 0,
++    actualTime: (row.actual_time as number) || 0,
++    dueDate: row.due_date ? new Date(row.due_date as string) : undefined,
+     scheduledDate: row.scheduled_date
+-      ? new Date(row.scheduled_date)
++      ? new Date(row.scheduled_date as string)
+       : undefined,
+-    tags: safeJsonParse(row.tags, []),
+-    projectId: row.project_id,
+-    parentTaskId: row.parent_task_id,
+-    subtasks: safeJsonParse(row.subtasks, []),
+-    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+-    createdAt: new Date(row.created_at),
+-    updatedAt: new Date(row.updated_at),
++    tags: safeJsonParse<string[]>(row.tags as string, []),
++    projectId: row.project_id as string | undefined,
++    parentTaskId: row.parent_task_id as string | undefined,
++    subtasks: safeJsonParse<string[]>(row.subtasks as string, []),
++    completedAt: row.completed_at
++      ? new Date(row.completed_at as string)
++      : undefined,
++    createdAt: new Date(row.created_at as string),
++    updatedAt: new Date(row.updated_at as string),
+   };
+ }
+ 
+@@ -150,7 +164,7 @@ export function dbRowToTask(row: Record<string, any>): Task {
+  */
+ export function timerSessionToDbRow(
+   session: TimerSession
+-): Record<string, any> {
++): Record<string, unknown> {
+   return {
+     id: session.id,
+     task_id: session.taskId,
+@@ -167,17 +181,19 @@ export function timerSessionToDbRow(
+ /**
+  * Convert database row to TimerSession
+  */
+-export function dbRowToTimerSession(row: Record<string, any>): TimerSession {
++export function dbRowToTimerSession(
++  row: Record<string, unknown>
++): TimerSession {
+   return {
+-    id: row.id,
+-    taskId: row.task_id,
+-    startTime: new Date(row.start_time),
+-    endTime: row.end_time ? new Date(row.end_time) : undefined,
+-    pausedTime: row.paused_time || 0,
++    id: row.id as string,
++    taskId: row.task_id as string,
++    startTime: new Date(row.start_time as string),
++    endTime: row.end_time ? new Date(row.end_time as string) : undefined,
++    pausedTime: (row.paused_time as number) || 0,
+     isActive: Boolean(row.is_active),
+-    notes: row.notes || '',
+-    breaks: JSON.parse(row.breaks || '[]'),
+-    createdAt: new Date(row.created_at),
++    notes: (row.notes as string) || '',
++    breaks: JSON.parse((row.breaks as string) || '[]'),
++    createdAt: new Date(row.created_at as string),
+   };
+ }
+ 
+@@ -186,7 +202,7 @@ export function dbRowToTimerSession(row: Record<string, any>): TimerSession {
+  */
+ export function focusSessionToDbRow(
+   session: FocusSession
+-): Record<string, any> {
++): Record<string, unknown> {
+   return {
+     id: session.id,
+     task_id: session.taskId,
+@@ -209,23 +225,28 @@ export function focusSessionToDbRow(
+ /**
+  * Convert database row to FocusSession
+  */
+-export function dbRowToFocusSession(row: Record<string, any>): FocusSession {
++export function dbRowToFocusSession(
++  row: Record<string, unknown>
++): FocusSession {
+   return {
+-    id: row.id,
+-    taskId: row.task_id,
+-    plannedDuration: row.planned_duration,
+-    actualDuration: row.actual_duration,
+-    focusScore: row.focus_score,
+-    distractionCount: row.distraction_count || 0,
+-    distractionLevel: row.distraction_level || DistractionLevel.MODERATE,
++    id: row.id as string,
++    taskId: row.task_id as string,
++    plannedDuration: row.planned_duration as number,
++    actualDuration: row.actual_duration as number | undefined,
++    focusScore: row.focus_score as number | undefined,
++    distractionCount: (row.distraction_count as number) || 0,
++    distractionLevel:
++      (row.distraction_level as DistractionLevel) || DistractionLevel.MODERATE,
+     backgroundAudio: row.background_audio
+-      ? JSON.parse(row.background_audio)
++      ? JSON.parse(row.background_audio as string)
++      : undefined,
++    notes: (row.notes as string) || '',
++    breaks: JSON.parse((row.breaks as string) || '[]'),
++    metrics: JSON.parse((row.metrics as string) || '{}'),
++    createdAt: new Date(row.created_at as string),
++    completedAt: row.completed_at
++      ? new Date(row.completed_at as string)
+       : undefined,
+-    notes: row.notes || '',
+-    breaks: JSON.parse(row.breaks || '[]'),
+-    metrics: JSON.parse(row.metrics || '{}'),
+-    createdAt: new Date(row.created_at),
+-    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+   };
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

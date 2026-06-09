@@ -1,0 +1,1420 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: fix: bugs
+- Changed Files List: 
+src/backendEventBus.js	+11	-4	after_lines=58
+src/components/ActionPanel.vue	+2	-2	after_lines=108
+src/components/BattleLogPanel.vue	+1	-1	after_lines=204
+src/components/SkillsHand.vue	+1	-1	after_lines=379
+src/data/abilities/leino.js	+16	-2	after_lines=69
+src/data/ability.js	+5	-0	after_lines=26
+src/data/battle.js	+137	-117	after_lines=399
+src/data/effectDescription.js	+14	-0	after_lines=280
+src/data/effectProcessor.js	+42	-9	after_lines=342
+src/data/player.js	+1	-0	after_lines=107
+src/data/rest.js	+2	-0	after_lines=143
+src/data/skill.js	+6	-2	after_lines=127
+src/data/skills/basic.js	+0	-1	after_lines=233
+src/data/skills/fireAssist.js	+126	-10	after_lines=542
+src/game.js	+16	-27	after_lines=109
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   └── TestEffectDisplay.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationDispatcher.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effect.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── animationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/backendEventBus.js ---
+diff --git a/src/backendEventBus.js b/src/backendEventBus.js
+index b332058..616f61c 100644
+--- a/src/backendEventBus.js
++++ b/src/backendEventBus.js
+@@ -13,9 +13,6 @@ export const EventNames = {
+     GAME_OVER: 'game-over',
+   },
+   Player: {
+-    USE_SKILL: 'player-use-skill',
+-    DROP_SKILL: 'player-drop-skill',
+-    END_TURN: 'player-end-turn',
+     FRONTIER_UPDATED: 'player-frontier-skills-updated',
+     TIER_UPGRADED: 'player-tier-upgraded',
+     ABILITY_CLAIMED: 'player-ability-claimed',
+@@ -25,11 +22,21 @@ export const EventNames = {
+     SKILL_DROPPED: 'player-skill-dropped',
+     SKILL_REWARD_CLAIMED: 'player-skill-claimed'
+   },
++  Battle: {
++    // Used to schedule battle phases, not intended to be listened
++    BATTLE_START: 'battle-battle-start',
++    PLAYER_TURN: 'battle-player-turn',
++    PLAYER_USE_SKILL: 'battle-player-use-skill',
++    PLAYER_DROP_SKILL: 'battle-player-drop-skill',
++    PLAYER_END_TURN: 'player-end-turn',
++    ENEMY_TURN: 'battle-enemy-turn',
++    // Except this one
++    BATTLE_VICTORY: 'battle-victory'
++  },
+   Enemy: {
+     TURN_START: 'enemy-turn-start',
+     ACTION_END: 'enemy-action-end',
+     TURN_END: 'enemy-turn-end',
+-    BATTLE_VICTORY: 'battle-victory'
+   },
+   Rest: {
+     REWARDS_SPAWNED: 'rewards-spawned',
+
+--- FILE: src/components/ActionPanel.vue ---
+diff --git a/src/components/ActionPanel.vue b/src/components/ActionPanel.vue
+index 478c321..78acc70 100644
+--- a/src/components/ActionPanel.vue
++++ b/src/components/ActionPanel.vue
+@@ -76,10 +76,10 @@ export default {
+   },
+   methods: {
+     onEndTurnButtonClicked() {
+-      backendEventBus.emit(EventNames.Player.END_TURN);
++      backendEventBus.emit(EventNames.Battle.PLAYER_END_TURN);
+     },
+     onDropSkillButtonClicked() {
+-      backendEventBus.emit(EventNames.Player.DROP_SKILL);
++      backendEventBus.emit(EventNames.Battle.PLAYER_DROP_SKILL);
+     },
+     onDeckClick() {
+       // 打开牌库覆盖面板，并隐藏悬浮tooltip
+
+--- FILE: src/components/BattleLogPanel.vue ---
+diff --git a/src/components/BattleLogPanel.vue b/src/components/BattleLogPanel.vue
+index 03fa790..bbc4c70 100644
+--- a/src/components/BattleLogPanel.vue
++++ b/src/components/BattleLogPanel.vue
+@@ -34,7 +34,7 @@ export default {
+       _revealQueue: [],        // 等待显示的日志队列（按时间顺序）
+       _revealing: false,       // 是否正在逐条显示
+       _revealTimer: null,      // 计时器句柄
+-      revealIntervalMs: 500,   // 每条日志出现的间隔
++      revealIntervalMs: 200,   // 每条日志出现的间隔
+       _idCounter: 0,           // 用于为每条日志分配稳定的 key
+     };
+   },
+
+--- FILE: src/components/SkillsHand.vue ---
+diff --git a/src/components/SkillsHand.vue b/src/components/SkillsHand.vue
+index c68d4de..607d000 100644
+--- a/src/components/SkillsHand.vue
++++ b/src/components/SkillsHand.vue
+@@ -238,7 +238,7 @@ export default {
+         const actionPointCost = skill.actionPointCost;
+         const mouseX = event.clientX;
+         const mouseY = event.clientY;
+-        backendEventBus.emit(EventNames.Player.USE_SKILL, skill.uniqueID);
++        backendEventBus.emit(EventNames.Battle.PLAYER_USE_SKILL, skill.uniqueID);
+         this.generateParticleEffects(manaCost, actionPointCost, mouseX, mouseY);
+       }
+     },
+
+--- FILE: src/data/abilities/leino.js ---
+diff --git a/src/data/abilities/leino.js b/src/data/abilities/leino.js
+index cc67678..3be5398 100644
+--- a/src/data/abilities/leino.js
++++ b/src/data/abilities/leino.js
+@@ -1,14 +1,28 @@
+ // 灵脉相关能力
+ import {Ability} from "../ability";
+ import {backendGameState} from "../gameState";
++import backendEventBus, {EventNames} from "../../backendEventBus";
+ 
+ export class FireLeino extends Ability {
+   constructor() {
+-    super('火灵脉', '能使用火系灵御技能，来自/effect{燃烧}的伤害减2', 5, 10);
++    super('火灵脉', '能使用火系灵御技能，获得4层/effect{火焰抗性}', 5, 10);
++    this.fireResistAddHook = null;
+   }
+ 
+   apply(player) {
+     player.leino.push('fire');
++    // 增加一个钩子，来自燃烧的伤害减4
++    backendEventBus.on(EventNames.Game.PRE_BATTLE, this.fireResistAddHook = () => {
++      player.addEffect('火焰抗性', 4);
++    });
++  }
++
++  deapply () {
++    // 移除钩子
++    if(this.fireResistAddHook) {
++      backendEventBus.off(EventNames.Game.PRE_BATTLE, this.fireResistAddHook);
++      this.fireResistAddHook = null;
++    }
+   }
+ 
+   get spawnWeight() {
+@@ -28,7 +42,7 @@ export class FireLeino extends Ability {
+   }
+ }
+ 
+-export class WoodLeino extends Ability {
++class WoodLeino extends Ability {
+   constructor() {
+     super('木灵脉', '能使用木系灵御技能', 5, 10);
+   }
+
+--- FILE: src/data/ability.js ---
+diff --git a/src/data/ability.js b/src/data/ability.js
+index bed31cc..4f6b48f 100644
+--- a/src/data/ability.js
++++ b/src/data/ability.js
+@@ -14,6 +14,11 @@ export class Ability {
+   apply(player) {
+     // 子类需要实现具体逻辑
+   }
++
++  deapply(player) {
++    // 子类需要实现具体逻辑
++  }
++
+   get spawnWeight() {
+     return this.baseSpawnWeight;
+   }
+
+--- FILE: src/data/battle.js ---
+diff --git a/src/data/battle.js b/src/data/battle.js
+index 41cb206..5d83249 100644
+--- a/src/data/battle.js
++++ b/src/data/battle.js
+@@ -9,10 +9,10 @@ import { enqueueUI, enqueueDelay } from './animationDispatcher.js'
+ import {burnSkillCard, dropSkillCard} from "./battleUtils";
+ 
+ // 开始战斗
+-export function startBattle() {
++export function enterBattleStage() {
+   
+   gameState.battleCount++;
+-  
++
+   // 生成敌人
+   generateEnemy(gameState);
+ 
+@@ -22,7 +22,15 @@ export function startBattle() {
+     player: gameState.player,
+     enemy: gameState.enemy
+   });
+-  
++
++  // 切换游戏状态到战斗状态
++  gameState.gameStage = 'battle';
++
++  // 进入游戏控制流
++  backendEventBus.emit(EventNames.Battle.BATTLE_START);
++}
++
++function startBattle() {
+   // 从技能槽克隆技能到战斗技能数组
+   console.log('Starting battle with cultivated skills:', gameState.player.cultivatedSkills);
+   gameState.player.skills = gameState.player.cultivatedSkills
+@@ -33,7 +41,7 @@ export function startBattle() {
+   // 初始化前台和后备技能列表
+   gameState.player.backupSkills = [...gameState.player.skills];
+   gameState.player.frontierSkills = [];
+-  
++
+   // 填充前台技能
+   fillFrontierSkills(gameState.player);
+ 
+@@ -41,40 +49,23 @@ export function startBattle() {
+   gameState.player.skills.forEach(skill => {
+     skill.onBattleStart();
+   });
+-  
++
+   // 添加战斗日志
+   addSystemLog(`战斗 #${gameState.battleCount} 开始！`);
+   addSystemLog(`遭遇了 ${gameState.enemy.name}！`);
+-  
+-  // 切换游戏状态到战斗状态
+-  gameState.gameStage = 'battle';
+ 
+-  // 开始玩家游戏回合
+-  startPlayerTurn(gameState);
+-}
+-
+-// 生成敌人
+-export function generateEnemy() {
+-  // 根据战斗场次数生成敌人
+-  const battleIntensity = gameState.battleCount;
+-  
+-  // 简单实现：在第2 + 6xn (n = 1, 2, 3, ...）场战斗时生成Boss
+-  if (gameState.battleCount !== 2 && (gameState.battleCount - 2) % 6 === 0) {
+-    gameState.enemy = EnemyFactory.generateRandomEnemy(battleIntensity, true);
+-  } else {
+-    // 普通敌人
+-    gameState.enemy = EnemyFactory.generateRandomEnemy(battleIntensity, false);
+-  }
++  // 开始玩家回合
++  backendEventBus.emit(EventNames.Battle.PLAYER_TURN, {});
+ }
+ 
+ // 开始玩家回合
+-export function startPlayerTurn() {
++function startPlayerTurn() {
+   // 确保这是玩家回合
+   gameState.isEnemyTurn = false;
+ 
+   // 补充行动力
+   gameState.player.remainingActionPoints = gameState.player.maxActionPoints;
+-  
++
+   // 进行技能冷却
+   gameState.player.skills.forEach(skill => {
+     skill.coldDown();
+@@ -83,49 +74,78 @@ export function startPlayerTurn() {
+   // 填充前台技能
+   fillFrontierSkills(gameState.player);
+ 
++  enqueueDelay(300);
+   // 回合开始时结算效果
+   const isStunned = processStartOfTurnEffects(gameState.player);
++  if(checkBattleVictory()) return ;
++
+   if (isStunned) {
+     addSystemLog('你被眩晕，跳过回合！');
+-    endPlayerTurn(gameState);
++    // 触发玩家回合结束事件
++    backendEventBus.emit(EventNames.Battle.PLAYER_END_TURN, {});
+     return;
+   }
+ 
+   enqueueUI('unlockControl');
+-  
+-  // 强制刷新操作面板渲染
+-  // 注意：在Vue组件中可能需要不同的处理方式
+-  
++
+   // 等待玩家操作
+   // 玩家操作通过BattleScreen组件的事件处理
++  // 玩家结束回合后会自动进入下一阶段
++}
++
++function checkBattleVictory () {
++  // 看看玩家是不是逝了
++  const isPlayerDead = gameState.player.hp <= 0;
++  const isEnemyDead = gameState.enemy.hp <= 0;
++
++  if (isPlayerDead) {
++    backendEventBus.emit(EventNames.Battle.BATTLE_VICTORY, false);
++    return true;
++  }
++
++  // 看看敌人是不是逝了
++  if (isEnemyDead) {
++    backendEventBus.emit(EventNames.Battle.BATTLE_VICTORY, true);
++    return true;
++  }
++
++  return false;
+ }
+ 
++// 生成敌人
++export function generateEnemy() {
++  // 根据战斗场次数生成敌人
++  const battleIntensity = gameState.battleCount;
++  
++  // 简单实现：在第2 + 6xn (n = 1, 2, 3, ...）场战斗时生成Boss
++  if (gameState.battleCount !== 2 && (gameState.battleCount - 2) % 6 === 0) {
++    gameState.enemy = EnemyFactory.generateRandomEnemy(battleIntensity, true);
++  } else {
++    // 普通敌人
++    gameState.enemy = EnemyFactory.generateRandomEnemy(battleIntensity, false);
++  }
++}
++
++// 此技能返回值必须被检查！
+ export function activateSkill (skill) {
+   // 技能发动时结算效果（后端状态）
+   processSkillActivationEffects(gameState.player);
++  if(checkBattleVictory()) return true;
+ 
+   var stage = 0;
+   // 发动技能效果
+   while(true) {
+     const result = skill.use(gameState.player, gameState.enemy, stage);
++    if(checkBattleVictory()) return true;
+ 
+-    // 先检查玩家死亡
+-    if (gameState.player.hp <= 0) {
+-      // 提前退出结算
+-      return;
+-    }
+-    // 然后再检查敌人死亡
+-    if (gameState.enemy.hp <= 0) {
+-      // 提前退出结算
+-      return;
+-    }
+     if(result === true) break;
+     stage ++;
+   }
++  return false;
+ }
+ 
+ // 使用技能
+-export function useSkill(skill) {
++function useSkill(skill) {
+   // 使用技能逻辑
+   addPlayerActionLog(`你使用了 /blue{${skill.name}}！`);
+ 
+@@ -139,26 +159,15 @@ export function useSkill(skill) {
+   skill.consumeResources(gameState.player);
+   
+   // 触发技能发动前效果
+-  activateSkill(skill);
++  if(activateSkill(skill)) return ;
+ 
+-  // 先检查玩家死亡
+-  if (gameState.player.hp <= 0) {
+-    endBattle(false);
+-    enqueueUI('unlockControl');
+-    // 提前退出结算
+-    return;
+-  }
+-  // 然后再检查敌人死亡
+-  if (gameState.enemy.hp <= 0) {
+-    endBattle(true);
+-    enqueueUI('unlockControl');
+-    // 提前退出结算
+-    return;
+-  }
++  if(checkBattleVictory()) return ;
+ 
+   backendEventBus.emit(EventNames.Player.SKILL_USED, { player: gameState.player, skill: skill });
+   handleSkillAfterUse(skill);
+ 
++  if(checkBattleVictory()) return ;
++
+   // UI解锁
+   enqueueUI('unlockControl');
+ }
+@@ -170,10 +179,23 @@ export function dropLeftmostSkill() {
+   gameState.player.consumeActionPoints(1);
+   // 从前台技能中移除最左侧技能
+   dropSkillCard(gameState.player, gameState.player.frontierSkills[0].uniqueID);
++  if(checkBattleVictory()) return ;
++}
++
++
++// 结束玩家回合
++function endPlayerTurn() {
++  // 回合结束时结算效果
++  processEndOfTurnEffects(gameState.player);
++
++  if(checkBattleVictory()) return ;
++
++  // 进入敌人回合
++  backendEventBus.emit(EventNames.Battle.ENEMY_TURN, {})
+ }
+ 
+ // 敌人回合
+-export function enemyTurn() {
++function enemyTurn() {
+   // 敌人行动逻辑
+   gameState.isEnemyTurn = true;
+ 
+@@ -181,7 +203,7 @@ export function enemyTurn() {
+ 
+   addEnemyActionLog(`/red{${gameState.enemy.name}} 的回合！`);
+ 
+-  enqueueDelay(1000);
++  enqueueDelay(500);
+ 
+   // 触发敌人回合开始事件
+   backendEventBus.emit(EventNames.Enemy.TURN_START);
+@@ -190,68 +212,31 @@ export function enemyTurn() {
+   const isStunned = processStartOfTurnEffects(gameState.enemy);
+   if (isStunned) {
+     addSystemLog('敌人被眩晕，跳过回合！');
+-    // 触发敌人回合结束事件，通知BattleScreen组件
+-    backendEventBus.emit(EventNames.Enemy.TURN_END);
+-    startNextTurn(gameState);
+-    enqueueUI('unlockControl');
+-    return;
++  } else {
++    // 等待敌人行动完成（包括所有攻击动画）
++    gameState.enemy.act(gameState.player);
+   }
+ 
+-  // 等待敌人行动完成（包括所有攻击动画）
+-  gameState.enemy.act(gameState.player);
+-  // 看看玩家是不是逝了
+-  const isPlayerDead = gameState.player.hp <= 0;
+ 
+-  if (isPlayerDead) {
+-    endBattle(false);
+-    return;
+-  }
++  if(checkBattleVictory()) return ;
++  enqueueDelay(500);
++
+   // 触发敌人行动结束事件，通知BattleScreen组件
+   backendEventBus.emit(EventNames.Enemy.ACTION_END);
+   // 结算敌人回合结束效果
+   processEndOfTurnEffects(gameState.enemy);
+-  // 触发敌人回合结束事件，通知BattleScreen组件
+-  backendEventBus.emit(EventNames.Enemy.TURN_END);
+-  // 敌人行动结束后开始新回合
+-  startNextTurn(gameState);
+-}
+ 
+-// 结束玩家回合
+-export function endPlayerTurn() {
+-  // 回合结束时结算效果
+-  processEndOfTurnEffects(gameState.player);
+-  
+-  // 检查玩家是否死亡
+-  if (gameState.player.hp <= 0) {
+-    endBattle(false);
+-    return;
+-  }
+-  
+-  // 执行敌人回合
+-  enemyTurn(gameState);
+-}
++  if(checkBattleVictory()) return ;
++  enqueueDelay(500);
+ 
+-// 开始下一回合
+-export function startNextTurn(gameState) {
+-  // 检查游戏是否结束
+-  if (gameState.player.hp <= 0) {
+-    endBattle(false);
+-    return;
+-  }
+-  
+-  if (gameState.enemy.hp <= 0) {
+-    endBattle(true);
+-    return;
+-  }
+-  
+-  addSystemLog(`你的回合！`);
+-  // 开始新回合
+-  startPlayerTurn(gameState);
++  // 触发敌人回合结束事件，通知BattleScreen组件
++  backendEventBus.emit(EventNames.Enemy.TURN_END);
++  // 敌人行动结束后进入玩家回合
++  backendEventBus.emit(EventNames.Battle.PLAYER_TURN, {});
+ }
+ 
+ // 结束战斗
+-export function endBattle(isVictory) {
+-
++function battleVictory(isVictory) {
+   // 清空玩家身上的所有效果
+   gameState.player.effects = {};
+   // 清空玩家身上的护盾
+@@ -269,9 +254,6 @@ export function endBattle(isVictory) {
+     addSystemLog("/red{你失败了！}");
+   }
+ 
+-  // 发送胜利事件
+-  if(isVictory) backendEventBus.emit(EventNames.Enemy.BATTLE_VICTORY);
+-
+   // 添加延迟，让玩家体验到胜利或失败的感觉
+   enqueueDelay(3000);
+ 
+@@ -290,7 +272,6 @@ export function endBattle(isVictory) {
+   });
+ }
+ 
+-
+ function fillFrontierSkills(player) {
+   // 从后备技能列表头部取技能，直到前台技能数量达到最大值
+   while (player.frontierSkills.length < player.maxFrontierSkills && player.backupSkills.length > 0) {
+@@ -307,16 +288,12 @@ function fillFrontierSkills(player) {
+ 
+ // 处理技能使用后的逻辑
+ function handleSkillAfterUse(skill) {
+-
+   // 查找技能在前台技能列表中的位置
+   const index = gameState.player.frontierSkills.findIndex(s => s === skill);
+   if (index !== -1) {
+-
+     if (skill.coldDownTurns !== 0 || skill.maxUses === Infinity || skill.remainingUses > 0) {
+       // 如果是可充能/无限使用技能，或者充能有剩余，移动到后备技能列表尾部
+-      // enqueueUI('animateCardById', {id: skill.uniqueID, kind: 'flyToDeckFade'});
+       dropSkillCard(gameState.player, skill.uniqueID);
+-      // addSystemLog(`/blue{${skill.name}} 进入后备。`);
+     } else {
+       // 如果是不可充能技能，焚毁
+       burnSkillCard(gameState.player, skill.uniqueID);
+@@ -328,7 +305,50 @@ function handleSkillAfterUse(skill) {
+       backupSkills: gameState.player.backupSkills
+     });
+   }
++}
++
++export function initializeBattleFlowListeners() {
++  // 战斗开始
++  backendEventBus.on(EventNames.Battle.BATTLE_START, () => {
++    startBattle();
++  });
++
++  // 玩家回合开始
++  backendEventBus.on(EventNames.Battle.PLAYER_TURN, () => {
++    startPlayerTurn();
++  });
++
+ 
++  // 玩家使用技能
++  backendEventBus.on(EventNames.Battle.PLAYER_USE_SKILL, (uniqueID) => {
++    const skill = gameState.player.frontierSkills.find(s => s.uniqueID === uniqueID);
++    console.log('使用技能：', skill);
++    if (skill) useSkill(skill);
++    else {
++      console.warn(`技能使用失败：前台技能列表中未找到id为 ${uniqueID} 的技能`);
++      console.log(gameState.player.frontierSkills);
++    }
++  });
++
++  // 玩家丢弃最左侧技能
++  backendEventBus.on(EventNames.Battle.PLAYER_DROP_SKILL, () => {
++    dropLeftmostSkill();
++  });
++
++  // 玩家结束回合
++  backendEventBus.on(EventNames.Battle.PLAYER_END_TURN, () => {
++    endPlayerTurn();
++  });
++
++  // 敌人回合开始
++  backendEventBus.on(EventNames.Battle.ENEMY_TURN, () => {
++    enemyTurn();
++  })
++
++  // 战斗结束
++  backendEventBus.on(EventNames.Battle.BATTLE_VICTORY, (isVictory) => {
++    battleVictory(isVictory);
++  });
+ }
+ 
+ // 克隆技能对象
+
+--- FILE: src/data/effectDescription.js ---
+diff --git a/src/data/effectDescription.js b/src/data/effectDescription.js
+index 976e377..08b406c 100644
+--- a/src/data/effectDescription.js
++++ b/src/data/effectDescription.js
+@@ -35,6 +35,13 @@ const effectDescriptions = {
+     type: 'debuff',
+     icon: '🩶'
+   },
++  '火焰抗性': {
++    name: '火焰抗性',
++    description: '减少层数点受到的燃烧伤害',
++    type: 'buff',
++    icon: '🔥',
++    color: '#FF8C00' // 深橙色
++  },
+ 
+   // 回合开始时触发的效果
+   '泉涌': {
+@@ -51,6 +58,13 @@ const effectDescriptions = {
+     icon: '💨',
+     color: '#808080' // 灰色
+   },
++  '吸热': {
++    name: '吸热',
++    description: '回合开始时，减少层数层燃烧',
++    type: 'buff',
++    icon: '❄️',
++    color: '#1E90FF' // 道奇蓝
++  },
+   '燃烧': {
+     name: '燃烧',
+     description: '回合开始时，受到层数点伤害，层数减1',
+
+--- FILE: src/data/effectProcessor.js ---
+diff --git a/src/data/effectProcessor.js b/src/data/effectProcessor.js
+index 3450e8d..a3461a5 100644
+--- a/src/data/effectProcessor.js
++++ b/src/data/effectProcessor.js
+@@ -4,6 +4,7 @@
+ import effectDescriptions from '../data/effectDescription.js';
+ import { dealDamage } from './battleUtils.js';
+ import { addEffectLog, addBattleLog } from './battleLogUtils.js';
++import {enqueueDelay} from "./animationDispatcher";
+ 
+ /**
+  * 处理回合开始时触发的效果
+@@ -18,19 +19,25 @@ export function processStartOfTurnEffects(target) {
+     target.shield = 0;
+   }
+ 
+-  // 吸收效果
+-  if (target.effects['吸收'] > 0) {
+-    target.mana += target.effects['吸收'];
+-    addEffectLog(`${target.name}/effect{吸收}了${target.effects['吸收']}点魏启！`);
+-    delete target.effects['吸收'];
++  // 处理吸热效果
++  if (target.effects['吸热'] > 0) {
++    const stacks = Math.min(target.effects['吸热'], target.effects['燃烧']);
++    if (stacks > 0) {
++      target.removeEffect('燃烧', stacks);
++      enqueueDelay(400);
++    }
+   }
+ 
+   // 处理燃烧效果
+   if (target.effects['燃烧'] > 0) {
+-    const damage = target.effects['燃烧'];
++    let damage = target.effects['燃烧'];
++    damage -= target.effects['火焰抗性'] || 0;
+     target.addEffect('燃烧', -1);
+-    addEffectLog(`${target.name}被烧伤了，受到${damage}伤害！`);
+-    dealDamage(null, target, damage);
++    if(damage > 0) {
++      addEffectLog(`${target.name}被烧伤了，受到${damage}伤害！`);
++      dealDamage(null, target, damage);
++      enqueueDelay(400);
++    }
+   }
+   
+   // 聚气效果
+@@ -38,6 +45,7 @@ export function processStartOfTurnEffects(target) {
+     if (typeof target.gainMana === 'function') {
+       target.gainMana(target.effects['聚气']);
+       addEffectLog(`${target.name}通过/effect{聚气}恢复了${target.effects['聚气']}点魏启！`);
++      enqueueDelay(400);
+     }
+     target.addEffect('聚气', -target.effects['聚气']);
+   }
+@@ -56,12 +64,14 @@ export function processStartOfTurnEffects(target) {
+   if (target.effects['飞行'] > 0) {
+     target.addEffect('闪避', 1);
+     addEffectLog(`${target.name}通过/effect{飞行}获得了1层/effect{闪避}！`);
++    enqueueDelay(400);
+   }
+   
+   // 最后再处理眩晕效果
+   if (target.effects['眩晕'] > 0) {
+     target.addEffect('眩晕', -1);
+     addEffectLog(`${target.name}处于眩晕状态，跳过回合！`);
++    enqueueDelay(400);
+     return true; // 返回true表示需要跳过回合
+   }
+ 
+@@ -79,6 +89,7 @@ export function processEndOfTurnEffects(target) {
+       target.gainMana(target.effects['吸收']);
+     }
+     addEffectLog(`${target.name}通过/effect{吸收}恢复了${target.effects['吸收']}点魏启！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理漏气效果
+@@ -87,6 +98,7 @@ export function processEndOfTurnEffects(target) {
+       target.consumeMana(target.effects['漏气']);
+     }
+     addEffectLog(`${target.name}因/effect{漏气}失去了${target.effects['漏气']}点魏启！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理中毒效果
+@@ -94,7 +106,8 @@ export function processEndOfTurnEffects(target) {
+     const damage = target.effects['中毒'];
+     dealDamage(null, target, damage, true);
+     target.addEffect('中毒', -1);
+-    addEffectLog(`${target.name}受到/effect{中毒}影响，受到${damage}伤害！`);
++    addEffectLog(`${target.name}受到/effect{中毒}影响，受到${damage}真实伤害！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理再生效果
+@@ -103,6 +116,7 @@ export function processEndOfTurnEffects(target) {
+     target.applyHeal(heal);
+     target.addEffect('再生', -1);
+     addEffectLog(`${target.name}通过/effect{再生}恢复了${heal}点/named{生命}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理超然效果
+@@ -110,6 +124,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['超然'];
+     target.addEffect('集中', stacks);
+     addEffectLog(`${target.name}通过/effect{超然}获得了${stacks}层/effect{集中}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理侵蚀效果
+@@ -117,6 +132,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['侵蚀'];
+     target.addEffect('集中', -stacks);
+     addEffectLog(`${target.name}受到/effect{侵蚀}影响，失去了${stacks}层/effect{集中}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理燃心效果
+@@ -124,9 +140,11 @@ export function processEndOfTurnEffects(target) {
+     const amount = 3 * target.effects['燃心'];
+     target.addEffect('集中', amount);
+     addEffectLog(`${target.name}通过/effect{燃心}获得了${amount}层/effect{集中}！`);
++    enqueueDelay(400);
+     const burnAmount = 8 * target.effects['燃心'];
+     target.addEffect('燃烧', burnAmount);
+     addEffectLog(`${target.name}通过/effect{燃心}获得了${burnAmount}层/effect{燃烧}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理成长效果
+@@ -134,6 +152,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['成长'];
+     target.addEffect('力量', stacks);
+     addEffectLog(`${target.name}通过/effect{成长}获得了${stacks}层/effect{力量}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理衰败效果
+@@ -141,6 +160,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['衰败'];
+     target.addEffect('力量', -stacks);
+     addEffectLog(`${target.name}受到/effect{衰败}影响，失去了${stacks}层/effect{力量}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理巩固效果
+@@ -148,6 +168,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['巩固'];
+     target.addEffect('坚固', stacks);
+     addEffectLog(`${target.name}通过/effect{巩固}获得了${stacks}层/effect{坚固}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理崩溃效果
+@@ -155,6 +176,7 @@ export function processEndOfTurnEffects(target) {
+     const stacks = target.effects['崩溃'];
+     target.addEffect('坚固', -stacks);
+     addEffectLog(`${target.name}受到/effect{崩溃}影响，失去了${stacks}层/effect{坚固}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理魏宗圣体效果
+@@ -164,6 +186,7 @@ export function processEndOfTurnEffects(target) {
+     target.addEffect('力量', stacks);
+     target.addEffect('坚固', stacks);
+     addEffectLog(`${target.name}通过/effect{魏宗圣体}获得了${stacks}层/effect{集中}、/effect{力量}和/effect{坚固}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理解体效果
+@@ -173,6 +196,7 @@ export function processEndOfTurnEffects(target) {
+     target.addEffect('力量', -stacks);
+     target.addEffect('坚固', -stacks);
+     addEffectLog(`${target.name}受到/effect{解体}影响，失去了${stacks}层/effect{集中}、/effect{力量}和/effect{坚固}！`);
++    enqueueDelay(400);
+   }
+ 
+   // 易伤效果
+@@ -196,6 +220,7 @@ export function processSkillActivationEffects(target) {
+     target.gainActionPoint(1);
+     target.addEffect('连发', -1);
+     addEffectLog(`${target.name}通过/effect{连发}效果获得了1点/named{行动力}！`);
++    enqueueDelay(400);
+   }
+ }
+ 
+@@ -213,6 +238,7 @@ export function processAttackTakenEffects(target, damage) {
+     finalDamage = Math.floor(finalDamage / 2);
+     target.addEffect('格挡', -1);
+     addEffectLog(`${target.name}通过/effect{格挡}效果将伤害减半！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理闪避效果
+@@ -220,6 +246,7 @@ export function processAttackTakenEffects(target, damage) {
+     finalDamage = 0;
+     target.addEffect('闪避', -1);
+     addEffectLog(`${target.name}通过/effect{闪避}效果完全回避了攻击！`);
++    enqueueDelay(400);
+   }
+ 
+   // 易伤，伤害乘以150%
+@@ -241,6 +268,7 @@ export function processDamageTakenEffects(target, passThroughDamage, hpDamage) {
+   if (target.effects['飞行'] > 0) {
+     if(hpDamage > 0) {
+       target.removeEffect('飞行', 1);
++      enqueueDelay(400);
+     }
+   }
+   // 处理暴怒效果
+@@ -248,6 +276,7 @@ export function processDamageTakenEffects(target, passThroughDamage, hpDamage) {
+     const stacks = target.effects['暴怒'];
+     target.addEffect('力量', stacks);
+     addEffectLog(`${target.name}通过/effect{暴怒}效果获得了${stacks}层/effect{力量}！`);
++    enqueueDelay(400);
+   }
+   
+   // 处理执着效果
+@@ -255,6 +284,7 @@ export function processDamageTakenEffects(target, passThroughDamage, hpDamage) {
+     const stacks = target.effects['执着'];
+     target.addEffect('集中', stacks);
+     addEffectLog(`${target.name}通过/effect{执着}效果获得了${stacks}层/effect{集中}！`);
++    enqueueDelay(400);
+   }
+ 
+   // 处理灼烧效果，受到攻击后有50%概率获得1层燃烧
+@@ -263,6 +293,7 @@ export function processDamageTakenEffects(target, passThroughDamage, hpDamage) {
+     if (Math.random() < 0.5) {
+       target.addEffect('燃烧', target.effects['灼烧']);
+       addEffectLog(`${target.name}被灼烧，获得了${target.effects['灼烧']}层燃烧！`);
++      enqueueDelay(400);
+     }
+   }
+ }
+@@ -291,6 +322,7 @@ export function processPostAttackEffects(attacker, target, damage) {
+     if (Math.random() < 0.1) {
+       finalDamage *= 2;
+       addEffectLog(`${attacker.name}的攻击触发了超频效果，伤害翻倍！`);
++      enqueueDelay(400);
+     }
+   }
+   return finalDamage;
+@@ -304,6 +336,7 @@ export function processAttackFinishEffects(attacker, target, hpDamage, passthrou
+     if (Math.random() < 1) {
+       target.addEffect('燃烧', Math.floor(burnLevel));
+       addEffectLog(`${target.name}被灼热的攻击烫伤，获得了${Math.floor(burnLevel)}层燃烧！`);
++      enqueueDelay(400);
+     }
+   }
+ }
+\ No newline at end of file
+
+--- FILE: src/data/player.js ---
+diff --git a/src/data/player.js b/src/data/player.js
+index e71c384..086f8b8 100644
+--- a/src/data/player.js
++++ b/src/data/player.js
+@@ -69,6 +69,7 @@ export class Player extends Unit {
+     this.maxFrontierSkills = 8; // 最大前台技能数量
+     // effects 由 Unit 初始化
+     this.leino = ['normal']; // 灵脉列表，可以包含normal, fire, wind, wood, earth, water, thunder, light, dark
++    this.abilities = []; // 玩家能力列表
+   }
+ 
+   // 计算属性
+
+--- FILE: src/data/rest.js ---
+diff --git a/src/data/rest.js b/src/data/rest.js
+index 8bb1f74..d3d79ea 100644
+--- a/src/data/rest.js
++++ b/src/data/rest.js
+@@ -29,6 +29,7 @@ export function clearRewards() {
+ 
+ // 计算奖励
+ export function spawnRewards() {
++
+   // 计算战斗奖励
+   gameState.rewards.money = Math.floor(Math.random() * 20) + 10;
+ 
+@@ -94,6 +95,7 @@ export function claimSkillReward(skill, slotIndex, clearRewardsFlag) {
+ export function claimAbilityReward(ability, clearRewardsFlag) {
+   // 领取能力奖励
+   ability.apply(gameState.player);
++  gameState.player.abilities.push(ability);
+   if(clearRewardsFlag) {
+     gameState.rewards.abilities = [];
+   }
+
+--- FILE: src/data/skill.js ---
+diff --git a/src/data/skill.js b/src/data/skill.js
+index 267ef75..118b471 100644
+--- a/src/data/skill.js
++++ b/src/data/skill.js
+@@ -1,6 +1,6 @@
+ // 技能抽象类
+ class Skill {
+-  constructor(name, type, tier, baseManaCost, baseActionPointCost, maxUses, skillSeriesName = undefined, spawnWeight = undefined) {
++  constructor(name, type, tier, baseManaCost, baseActionPointCost, baseMaxUses, skillSeriesName = undefined, spawnWeight = undefined) {
+     this.name = name; // 技能名称
+     this.type = type; // 技能所属灵脉。特别地：'normal'（都可用）,'curse'（诅咒）
+     this.tier = tier; // 技能等阶
+@@ -11,7 +11,7 @@ class Skill {
+     this.subtitle = ''; // 副标题，一般而言仅有S级或特殊、诅咒技能有
+     this.baseManaCost = baseManaCost || 0; // 魏启消耗
+     this.baseActionPointCost = baseActionPointCost || 1; // 行动点消耗，默认为1
+-    this.maxUses = maxUses || 1; // 最大充能次数，inf代表无需充能，可以随便用
++    this.baseMaxUses = baseMaxUses || 1; // 基础最大充能次数，inf代表无需充能，可以随便用
+     this.remainingUses = this.maxUses; // 剩余充能次数
+     this.skillSeriesName = skillSeriesName || name; // 技能系列名称
+     this.upgradeTo = ""; // 如果此技能可以升级，升级后的技能名称。如果有多个升级方向，则为数组。
+@@ -24,6 +24,10 @@ class Skill {
+     return Math.max(this.baseManaCost, 0);
+   }
+ 
++  get maxUses () {
++    return this.baseMaxUses;
++  }
++
+   get actionPointCost () {
+     return Math.max(this.baseActionPointCost, 0);
+   }
+
+--- FILE: src/data/skills/basic.js ---
+diff --git a/src/data/skills/basic.js b/src/data/skills/basic.js
+index 014a3d7..4c90905 100644
+--- a/src/data/skills/basic.js
++++ b/src/data/skills/basic.js
+@@ -31,7 +31,6 @@ export class RollPunch extends Skill {
+ export class Roll extends Skill {
+   constructor() {
+     super('打滚', 'normal', 0, 0, 1, 1, '打滚', 1);
+-    this.maxUses = 1;
+     this.baseColdDownTurns = 4;
+   }
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index c550ca8..dbf0062 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -1,8 +1,7 @@
+ // 火属辅助类技能
+ 
+ import Skill from '../skill.js';
+-import {launchAttack, dealDamage, gainShield, dropSkillCard, burnSkillCard, drawSkillCard} from '../battleUtils.js';
+-import { addBattleLog } from '../battleLogUtils.js';
++import {applyHeal, burnSkillCard, dealDamage, drawSkillCard, dropSkillCard, launchAttack} from '../battleUtils.js';
+ import {enqueueDelay} from "../animationDispatcher";
+ 
+ // 无缘烈焰（C-）
+@@ -115,18 +114,18 @@ export class SearingHeat extends Skill {
+   }
+ }
+ 
+-// 烫手（C-）
+-// 获得3层燃烧，抽4张牌
+-export class HotHands extends Skill {
++// 火花（C-)
++// 获得2层燃烧，抽1张牌
++export class Spark extends Skill {
+   constructor() {
+-    super('烫手', 'fire', 1, 0, 1, 1);
+-    this.baseColdDownTurns = 3;
++    super('火花', 'fire', 1, 0, 1, 1);
++    this.baseColdDownTurns = 2;
+   }
+   get cards() {
+-    return Math.max(4 + this.power, 1);
++    return Math.max(1 + this.power, 1);
+   }
+   get stacks() {
+-    return 3;
++    return 2;
+   }
+   use(player, enemy, stage) {
+     if(stage === 0) {
+@@ -182,6 +181,56 @@ export class Firework extends Skill {
+   }
+ }
+ 
++// 温暖拥抱（C-）
++// 受3伤害，将你一半燃烧赋予对手
++export class WarmHug extends Skill {
++  constructor() {
++    super('温暖拥抱', 'fire', 1, 0, 1, 2);
++  }
++
++  get damage () {
++    return 3 - 3 * this.power;
++  }
++  getStacks(player) {
++    const stacks = player.effects['燃烧'] || 0;
++    const baseTransferStacks = Math.ceil(stacks / 2);
++    return Math.max(0, baseTransferStacks);
++  }
++
++  use(player, enemy, stage) {
++    if(stage === 0) {
++      if(this.damage > 0) {
++        dealDamage(player, player, this.damage);
++      } else if(this.damage < 0) {
++        applyHeal(player, this.damage);
++      }
++      enqueueDelay(500);
++      return false;
++    } else {
++      const stacks = this.getStacks(player);
++      player.removeEffect('燃烧', Math.min(stacks, player.effects['燃烧'] || 0));
++      enemy.addEffect('燃烧', stacks);
++      enqueueDelay(500);
++      return true;
++    }
++  }
++
++  get damageText () {
++    if(this.damage > 0) {
++      return `受到${this.damage}点伤害，`;
++    } else if(this.damage < 0) {
++      return `治疗${-this.damage}，`;
++    } else return '';
++  }
++
++  regenerateDescription(player) {
++    if(player) {
++      return `${this.damageText}转移${this.getStacks(player)}层/effect{燃烧}给对手`;
++    }
++    return `${this.damageText}转移你一半燃烧给对手`;
++  }
++}
++
+ // 散火（C-）
+ // 丢弃前方所有牌，并失去所有燃烧
+ export class DisperseFire extends Skill {
+@@ -214,7 +263,7 @@ export class DisperseFire extends Skill {
+     }
+   }
+   regenerateDescription(player) {
+-    return `丢弃所有牌，失去所有/effect{燃烧}`;
++    return `丢弃/named{前方}所有牌，失去所有/effect{燃烧}`;
+   }
+ }
+ 
+@@ -270,6 +319,73 @@ export class ScorchingCurse extends Skill {
+   }
+ }
+ 
++// 耐热（C+）
++// 获得5层火焰抗性
++export class HeatResistance extends Skill {
++  constructor() {
++    super('耐热', 'fire', 2, 2, 1, 1);
++  }
++  get stacks() {
++    return Math.max(5 + 2 * this.power, 1);
++  }
++  use(player, enemy, stage) {
++    player.addEffect('火焰抗性', this.stacks);
++    return true;
++  }
++  regenerateDescription(player) {
++    return `获得${this.stacks}层/effect{火焰抗性}`;
++  }
++}
++
++// 烫手（C+）
++// 获得5层燃烧，抽4张牌
++export class HotHands extends Skill {
++  constructor() {
++    super('烫手', 'fire', 2, 0, 1, 1);
++    this.baseColdDownTurns = 3;
++  }
++  get cards() {
++    return Math.max(4 + 2 * this.power, 1);
++  }
++  get stacks() {
++    return 5;
++  }
++  use(player, enemy, stage) {
++    if(stage === 0) {
++      player.addEffect('燃烧', this.stacks);
++      return false;
++    } else {
++      for(let i = 0; i < this.cards; i ++) {
++        drawSkillCard(player)
++        enqueueDelay(400);
++      }
++      return true;
++    }
++  }
++  regenerateDescription(player) {
++    return `获得${this.stacks}层/effect{燃烧}，抽${this.cards}张牌`;
++  }
++}
++
++
++// 吸热（C+）
++// 获得2层吸热
++export class HeatAbsorptionI extends Skill {
++  constructor() {
++    super('吸热', 'fire', 2, 1, 1, 1, '吸热');
++  }
++  get stacks() {
++    return Math.max(2 + this.power, 1);
++  }
++  use(player, enemy, stage) {
++    player.addEffect('吸热', this.stacks);
++    return false;
++  }
++  regenerateDescription(player) {
++    return `获得${this.stacks}层/effect{吸热}`;
++  }
++}
++
+ // 火焰伴身（B-）
+ // 每3层燃烧转化为1点集中
+ export class FireAssistance extends Skill {
+
+--- FILE: src/game.js ---
+diff --git a/src/game.js b/src/game.js
+index d5f0b46..9d80c9e 100644
+--- a/src/game.js
++++ b/src/game.js
+@@ -2,7 +2,10 @@ import backendEventBus, { EventNames } from "./backendEventBus";
+ import * as dialogues from './data/dialogues'
+ import SkillManager from './data/skillManager.js'
+ import {backendGameState as gameState, backendGameState} from './data/gameState.js'
+-import { startBattle, useSkill, dropLeftmostSkill, endPlayerTurn } from './data/battle.js'
++import {
++  enterBattleStage,
++  initializeBattleFlowListeners
++} from './data/battle.js'
+ import {
+   claimMoney, claimSkillReward, claimAbilityReward, claimBreakthroughReward, reorderSkills, purchaseItem, spawnRewards, clearRewards
+ } from './data/rest.js'
+@@ -39,29 +42,10 @@ export function initGameFlowListeners() {
+ 
+   // 开始战斗（统一入口）
+   backendEventBus.on(EventNames.Game.ENTER_BATTLE_STAGE, () => {
+-    startBattle();
+-  });
+-
+-  // 玩家使用技能（由前端仅发事件，不直接调用函数）
+-  backendEventBus.on(EventNames.Player.USE_SKILL, (uniqueID) => {
+-    const skill = gameState.player.frontierSkills.find(s => s.uniqueID === uniqueID);
+-    console.log('使用技能：', skill);
+-    if (skill) useSkill(skill);
+-    else {
+-      console.warn(`技能使用失败：前台技能列表中未找到id为 ${uniqueID} 的技能`);
+-      console.log(gameState.player.frontierSkills);
+-    }
+-  });
+-
+-  // 玩家丢弃最左侧技能
+-  backendEventBus.on(EventNames.Player.DROP_SKILL, () => {
+-    dropLeftmostSkill();
++    enterBattleStage();
+   });
+ 
+-  // 玩家结束回合
+-  backendEventBus.on(EventNames.Player.END_TURN, () => {
+-    endPlayerTurn();
+-  });
++  initializeBattleFlowListeners();
+ 
+   // 战斗结束后的流程编排（胜利进入休整；失败进入结束）
+   backendEventBus.on(EventNames.Game.POST_BATTLE, ({ isVictory }) => {
+@@ -70,22 +54,28 @@ export function initGameFlowListeners() {
+       // 计算奖励
+       clearRewards();
+       spawnRewards();
+-      gameState.gameStage = 'rest';
+       gameState.isVictory = true;
+     } else {
+       // 玩家失败
+       gameState.isVictory = false;
+-      gameState.gameStage = 'end';
+     }
+     if (!isVictory) {
+       // 失败：宣告游戏结束（UI 监听 game-over 做收尾）
+       backendEventBus.emit(EventNames.Game.GAME_OVER, { reason: 'defeat' });
+     } else {
+-      // 胜利：已在 battle.js 中设置 gameStage='rest' 并生成奖励；等待休整结束
++      // z胜利：进入休整阶段
+       backendEventBus.emit(EventNames.Game.ENTER_REST_STAGE);
+     }
+   });
+ 
++  backendEventBus.on(EventNames.Game.GAME_OVER, () => {
++    gameState.gameStage = 'end';
++  });
++
++  backendEventBus.on(EventNames.Game.ENTER_REST_STAGE, () => {
++    gameState.gameStage = 'rest';
++  });
++
+   // 休整阶段：事件驱动的后端结算与流程推进
+   backendEventBus.on(EventNames.Rest.CLAIM_MONEY, () => {
+     claimMoney();
+@@ -105,8 +95,7 @@ export function initGameFlowListeners() {
+   backendEventBus.on(EventNames.Rest.PURCHASE_ITEM, ({ item }) => {
+     const ok = purchaseItem(item);
+     if (ok) {
+-      // 刷新商店物品，由后端生成，显示层通过投影自动更新
+-      spawnRewards();
++      // TODO 刷新商店物品
+     }
+   });
+   backendEventBus.on(EventNames.Rest.FINISH, () => {
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,419 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursor/rules/general/engineer.mdc
+- Change Type: modified
+- Target Rule Content:
+- Styling: SCSS, Tailwind CSS
++ Styling: SCSS, CSS
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, file extensions (.css, .scss), and source code content (CSS/SCSS files).
+- Suggested Logic: 1. Check package.json to ensure 'tailwindcss' is not listed in dependencies or devDependencies.
+2. Verify the existence of .css and .scss files in the repository.
+3. Scan CSS and SCSS files for the absence of Tailwind-specific directives like '@tailwind' or '@apply'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: remove tailwind and hr, rewrite styling to be left aligned
+- Changed Files List: 
+src/App.jsx	+0	-2	after_lines=17
+src/components/Bio/Bio.jsx	+3	-3	after_lines=30
+src/components/Contact/Contact.jsx	+8	-8	after_lines=38
+src/components/Divider/Divider.jsx	+0	-7	after_lines=0
+src/components/Header/Header.jsx	+5	-5	after_lines=19
+src/components/Wrapper/Wrapper.jsx	+2	-2	after_lines=11
+src/index.css	+98	-67	after_lines=123
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── design
+│       │   ├── site.mdc
+│       │   └── structure.mdc
+│       └── general
+│           ├── behavior.mdc
+│           ├── clean-code.mdc
+│           ├── code-quality.mdc
+│           ├── engineer.mdc
+│           ├── guidance.mdc
+│           └── typescript.mdc
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── postcss.config.cjs
+├── prompt-materials
+│   └── one-site-prompt-design.png
+├── src
+│   ├── App.css
+│   ├── App.jsx
+│   ├── assets
+│   │   └── JM_logo.png
+│   ├── components
+│   │   ├── Bio
+│   │   │   └── Bio.jsx
+│   │   ├── Contact
+│   │   │   └── Contact.jsx
+│   │   ├── Header
+│   │   │   └── Header.jsx
+│   │   └── Wrapper
+│   │       └── Wrapper.jsx
+│   ├── index.css
+│   └── main.jsx
+├── tailwind.config.cjs
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/App.jsx ---
+diff --git a/src/App.jsx b/src/App.jsx
+index 15745f8..4c94cfe 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -2,7 +2,6 @@ import React from 'react';
+ import Wrapper from './components/Wrapper/Wrapper';
+ import Header from './components/Header/Header';
+ import Bio from './components/Bio/Bio';
+-import Divider from './components/Divider/Divider';
+ import Contact from './components/Contact/Contact';
+ 
+ function App() {
+@@ -10,7 +9,6 @@ function App() {
+ 		<Wrapper>
+ 			<Header />
+ 			<Bio />
+-			<Divider />
+ 			<Contact />
+ 		</Wrapper>
+ 	);
+
+--- FILE: src/components/Bio/Bio.jsx ---
+diff --git a/src/components/Bio/Bio.jsx b/src/components/Bio/Bio.jsx
+index dfdac4b..017c65b 100644
+--- a/src/components/Bio/Bio.jsx
++++ b/src/components/Bio/Bio.jsx
+@@ -4,11 +4,11 @@ const LINKEDIN_URL = 'https://www.linkedin.com/in/josephmanghan/';
+ const PHD_URL = 'https://eprints.soton.ac.uk/443879/#:~:text=Manghan%2C%20Joseph%20Philip%20(2020),%2C%20Doctoral%20Thesis%2C%20237pp.';
+ 
+ const Bio = () => (
+-	<div className="w-full text-center sm:text-left mb-8 space-y-4 text-gray-800 text-lg font-normal">
++	<div className="bio-section">
+ 		<p>
+ 			I'm Joe – a <a
+ 				href={LINKEDIN_URL}
+-				className="font-medium text-black underline-link"
++				className="bio-link"
+ 				target="_blank"
+ 				rel="noopener noreferrer"
+ 			>Frontend Developer</a> who enjoys writing clean, scalable code, and thoughtful UX. I work on authentication and identity solutions within digital banking.
+@@ -19,7 +19,7 @@ const Bio = () => (
+ 		<p>
+ 			Beyond development, I enjoy weightlifting, long walks, art, and the odd video game. I hold a <a
+ 				href={PHD_URL}
+-				className="font-medium text-black underline-link"
++				className="bio-link"
+ 				target="_blank"
+ 				rel="noopener noreferrer"
+ 			>PhD</a> that explored using web practices to outsource compositional tasks to crowds.
+
+--- FILE: src/components/Contact/Contact.jsx ---
+diff --git a/src/components/Contact/Contact.jsx b/src/components/Contact/Contact.jsx
+index aa5711c..293762f 100644
+--- a/src/components/Contact/Contact.jsx
++++ b/src/components/Contact/Contact.jsx
+@@ -10,26 +10,26 @@ const Contact = () => {
+ 		setTimeout(() => setCopied(false), 1800);
+ 	};
+ 	return (
+-		<div className="w-full flex flex-col gap-4 mt-2">
++		<div className="contact-section">
+ 			<button
+ 				onClick={handleCopy}
+-				className="group flex items-center gap-3 text-lg text-black font-normal focus:outline-none"
++				className="contact-btn"
+ 				aria-label="Copy email address"
+ 			>
+-				<span className="material-icons text-gray-700 text-2xl">mail</span>
+-				<span className="underline-link cursor-pointer select-all">josephmanghan@gmail.com</span>
++				<span className="material-icons contact-icon">mail</span>
++				<span className="contact-email">josephmanghan@gmail.com</span>
+ 				{copied && (
+-					<span className="ml-2 text-turquoise text-sm transition-opacity">Copied!</span>
++					<span className="contact-copied">Copied!</span>
+ 				)}
+ 			</button>
+ 			<a
+ 				href={LINKEDIN_URL}
+ 				target="_blank"
+ 				rel="noopener noreferrer"
+-				className="group flex items-center gap-3 text-lg text-black font-normal"
++				className="contact-link"
+ 			>
+-				<span className="material-icons text-gray-700 text-2xl">linkedin</span>
+-				<span className="underline-link">in/josephmanghan</span>
++				<span className="material-icons contact-icon">linkedin</span>
++				<span className="contact-linkedin">in/josephmanghan</span>
+ 			</a>
+ 		</div>
+ 	);
+
+--- FILE: src/components/Divider/Divider.jsx ---
+diff --git a/src/components/Divider/Divider.jsx b/src/components/Divider/Divider.jsx
+deleted file mode 100644
+index 8449bdd..0000000
+--- a/src/components/Divider/Divider.jsx
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import React from 'react';
+-
+-const Divider = () => (
+-	<hr className="w-full border-t border-gray-200 my-8 opacity-60" />
+-);
+-
+-export default Divider; 
+\ No newline at end of file
+
+--- FILE: src/components/Header/Header.jsx ---
+diff --git a/src/components/Header/Header.jsx b/src/components/Header/Header.jsx
+index 6f41711..a085e4e 100644
+--- a/src/components/Header/Header.jsx
++++ b/src/components/Header/Header.jsx
+@@ -2,15 +2,15 @@ import React from 'react';
+ import JMLogo from '../../assets/JM_logo.png';
+ 
+ const Header = () => (
+-	<div className="w-full flex flex-col sm:flex-row items-center justify-between mb-8 gap-6">
+-		<div className="flex-1 text-center sm:text-left">
+-			<h1 className="font-bold text-4xl sm:text-5xl text-black mb-2 tracking-tight">Dr Joe Manghan</h1>
++	<div className="header-section">
++		<div>
++			<h1 className="header-title">Dr Joe Manghan</h1>
+ 		</div>
+-		<div className="flex-shrink-0 flex items-center justify-center">
++		<div>
+ 			<img
+ 				src={JMLogo}
+ 				alt="Profile"
+-				className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border border-gray-200 shadow-sm bg-gray-50"
++				className="header-image"
+ 			/>
+ 		</div>
+ 	</div>
+
+--- FILE: src/components/Wrapper/Wrapper.jsx ---
+diff --git a/src/components/Wrapper/Wrapper.jsx b/src/components/Wrapper/Wrapper.jsx
+index 4d5d3b1..98cc24f 100644
+--- a/src/components/Wrapper/Wrapper.jsx
++++ b/src/components/Wrapper/Wrapper.jsx
+@@ -1,8 +1,8 @@
+ import React from 'react';
+ 
+ const Wrapper = ({ children }) => (
+-	<div className="min-h-screen flex items-center justify-center bg-white px-4">
+-		<div className="w-full max-w-xl mx-auto p-8 bg-white rounded-lg shadow-none flex flex-col items-center">
++	<div className="wrapper-outer">
++		<div className="wrapper-inner">
+ 			{children}
+ 		</div>
+ 	</div>
+
+--- FILE: src/index.css ---
+diff --git a/src/index.css b/src/index.css
+index ff7353e..766eb4b 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -1,92 +1,123 @@
+-@tailwind base;
+-@tailwind components;
+-@tailwind utilities;
+-
+ :root {
+   font-family: 'Plus Jakarta Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+   line-height: 1.5;
+   font-weight: 400;
+-
+   color-scheme: light dark;
+-  color: rgba(255, 255, 255, 0.87);
+-  background-color: #242424;
+-
++  color: #222;
++  background-color: #fff;
+   font-synthesis: none;
+   text-rendering: optimizeLegibility;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+ }
+ 
+-a {
+-  font-weight: 500;
+-  color: #213547;
+-  text-decoration: inherit;
++.wrapper-outer {
++  min-height: 100vh;
++  display: flex;
++  background: #fff;
+ }
+-
+-body {
+-  margin: 0;
++.wrapper-inner {
++  max-width: 900px;
++  padding: 2rem;
++  background: #fff;
++  border-radius: 0.75rem;
++  box-shadow: none;
+   display: flex;
+-  place-items: center;
+-  min-width: 320px;
+-  min-height: 100vh;
++  flex-direction: column;
++  margin-left: 1rem;
++  text-align: left;
+ }
+ 
+-h1 {
+-  font-size: 3.2em;
+-  line-height: 1.1;
++.header-section {
++  margin-bottom: 2rem;
++  text-align: left;
++}
++.header-title {
++  font-weight: 700;
++  font-size: 2.25rem;
++  color: #222;
++  margin-bottom: 0.5rem;
++  letter-spacing: -0.01em;
++}
++.header-image {
++  width: 7rem;
++  height: 7rem;
++  object-fit: cover;
++  border-radius: 9999px;
++  border: 1px solid #e5e7eb;
++  background: #f8fafc;
++  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+ }
+ 
+-button {
+-  border-radius: 8px;
+-  border: 1px solid transparent;
+-  padding: 0.6em 1.2em;
+-  font-size: 1em;
++.bio-section {
++  max-width: 500px;
++  margin-bottom: 2rem;
++  color: #222;
++  font-size: 1.125rem;
++  line-height: 1.7;
++  text-align: left;
++}
++.bio-link {
+   font-weight: 500;
+-  font-family: inherit;
+-  background-color: #1a1a1a;
+-  cursor: pointer;
+-  transition: border-color 0.25s;
++  color: #089e8e;
++  text-decoration: none;
++  position: relative;
+ }
+-button:hover {
+-  border-color: #646cff;
++.bio-link::after {
++  content: '';
++  display: block;
++  position: absolute;
++  left: 0;
++  bottom: 0.05em;
++  height: 0.18em;
++  width: 100%;
++  background: linear-gradient(90deg, rgba(8,158,142,0.18) 0%, rgba(8,158,142,0.18) 100%);
++  border-radius: 2px;
++  transition: height 0.28s cubic-bezier(.4,0,.2,1), background 0.28s cubic-bezier(.4,0,.2,1);
++  z-index: 0;
+ }
+-button:focus,
+-button:focus-visible {
+-  outline: 4px auto -webkit-focus-ring-color;
++.bio-link:hover::after, .bio-link:focus::after {
++  height: 100%;
++  background: linear-gradient(90deg, rgba(8,158,142,0.32) 0%, rgba(8,158,142,0.32) 100%);
+ }
+ 
+-@media (prefers-color-scheme: light) {
+-  :root {
+-    color: #213547;
+-    background-color: #ffffff;
+-  }
+-  button {
+-    background-color: #f9f9f9;
+-  }
++.divider {
++  border: none;
++  border-top: 1px solid #e5e7eb;
++  margin: 2rem 0;
++  opacity: 0.6;
+ }
+ 
+-.underline-link {
+-	position: relative;
+-	text-decoration: none;
+-	background: none;
+-}
+-.underline-link::after {
+-	content: '';
+-	display: block;
+-	position: absolute;
+-	left: 0;
+-	bottom: 0.05em;
+-	height: 0.22em;
+-	width: 100%;
+-	background: linear-gradient(90deg, rgba(13, 238, 193, 0.543) 0%, rgba(77, 250, 210, 0.53) 100%);
+-	border-radius: 2px;
+-	transition: height 0.28s cubic-bezier(.4,0,.2,1), background 0.28s cubic-bezier(.4,0,.2,1);
+-	z-index: 0;
+-}
+-.underline-link:hover::after, .underline-link:focus::after {
+-	height: 100%;
+-	background: linear-gradient(90deg, rgba(22, 234, 209, 0.32) 0%, rgba(13, 210, 190, 0.32) 100%);
+-}
+-.text-turquoise {
+-	color: #089e8e;
++.contact-section {
++  margin-top: 0.5rem;
++  text-align: left;
++}
++.contact-btn, .contact-link {
++  display: flex;
++  align-items: center;
++  font-size: 1.125rem;
++  color: #222;
++  font-weight: 400;
++  background: none;
++  border: none;
++  padding: 0;
++  margin-bottom: 0.5rem;
++  cursor: pointer;
++}
++.contact-btn:focus {
++  outline: 2px solid #089e8e;
++}
++.contact-icon {
++  font-size: 2rem;
++  color: #666;
++}
++.contact-email, .contact-linkedin {
++  margin-left: 0.5rem;
++  user-select: all;
++}
++.contact-copied {
++  margin-left: 0.5rem;
++  color: #089e8e;
++  font-size: 0.95rem;
++  transition: opacity 0.2s;
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

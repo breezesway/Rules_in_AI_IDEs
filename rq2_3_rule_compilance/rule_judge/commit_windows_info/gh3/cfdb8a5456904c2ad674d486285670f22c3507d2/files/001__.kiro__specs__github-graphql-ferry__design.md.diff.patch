@@ -1,0 +1,225 @@
+diff --git a/.kiro/specs/github-graphql-ferry/design.md b/.kiro/specs/github-graphql-ferry/design.md
+index a5b777b..1dd0fb4 100644
+--- a/.kiro/specs/github-graphql-ferry/design.md
++++ b/.kiro/specs/github-graphql-ferry/design.md
+@@ -52,9 +52,8 @@ graph TB
+         REPO_FRAG_CODE[repository_card.graphql.dart]
+     end
+     
+-    subgraph "Ferry Client & Cache"
+-        FERRY[Ferry Client] --> CACHE[Ferry Cache]
+-        FERRY --> GITHUB_GQL[GitHub GraphQL API]
++    subgraph "Ferry Client"
++        FERRY[Ferry Client] --> GITHUB_GQL[GitHub GraphQL API]
+     end
+     
+     HOME_SCREEN --> HOME_VM
+@@ -84,7 +83,6 @@ graph LR
+         FERRY_CLIENT[Ferry Client]
+         AUTH_LINK[Auth Link]
+         HTTP_LINK[HTTP Link]
+-        CACHE_STORE[Cache Store]
+     end
+     
+     subgraph "ViewModels"
+@@ -177,9 +175,8 @@ lib/src/widgets/
+   - Handle client lifecycle and automatic token updates on authentication changes
+ - **Dependencies**: `ITokenStorage` (injected), `http.Client` (injected)
+ - **Key Methods**:
+-  - `createClient()`: Initialize Ferry client with GitHub endpoint, auth link, and cache
++  - `createClient()`: Initialize Ferry client with GitHub endpoint and auth link
+   - `updateAuthToken(String token)`: Automatically update authentication headers
+-  - `clearCache()`: Clear GraphQL cache on logout
+   - `dispose()`: Clean up resources and subscriptions
+ 
+ ```dart
+@@ -206,7 +203,6 @@ class FerryClientService {
+     
+     return Client(
+       link: link,
+-      cache: Cache(store: InMemoryStore()),
+     );
+   }
+ }
+@@ -220,16 +216,6 @@ class FerryClientService {
+   - Provide error handling for authentication failures
+ - **Integration**: Custom Ferry Link implementation
+ 
+-#### Cache Configuration
+-- **Purpose**: Configure Ferry's caching behavior
+-- **Responsibilities**:
+-  - Set cache policies for different operation types
+-  - Configure cache persistence options
+-  - Handle cache invalidation strategies
+-- **Options**:
+-  - In-memory cache for development
+-  - Persistent cache for production
+-  - Custom cache keys for user-specific data
+ 
+ ### GraphQL Operations
+ 
+@@ -802,14 +788,12 @@ graph TD
+     AUTH_HANDLER --> LOGOUT[Logout User]
+     RATE_HANDLER --> WAIT[Wait for Reset]
+     GQL_HANDLER --> NO_PARTIAL[No Partial Data - Treat as Failure]
+-    OFFLINE_HANDLER --> CACHE_CHECK[Check Cache]
++    OFFLINE_HANDLER --> OFFLINE_MESSAGE[Show Offline Message]
+     
+     RETRY -->|Yes| QUERY
+     RETRY -->|No| FALLBACK[Use REST API]
+     WAIT --> QUERY
+     NO_PARTIAL --> USER_FEEDBACK[Show Error Message]
+-    CACHE_CHECK -->|Available| CACHED_DATA[Show Cached Data]
+-    CACHE_CHECK -->|None| OFFLINE_MESSAGE[Show Offline Message]
+ ```
+ 
+ #### Error Processing in ViewModels
+@@ -858,56 +842,6 @@ class GraphQLErrorHandler {
+   }
+ }
+ 
+-## Caching Strategy
+-
+-### Cache Policies
+-
+-#### Query-Specific Policies
+-- **User Profiles**: Cache for 5 minutes, background refresh
+-- **Repository Data**: Cache for 2 minutes, aggressive refresh
+-- **Following Lists**: Cache for 10 minutes, manual refresh
+-- **Search Results**: Cache for 1 minute, no background refresh
+-
+-#### Cache Invalidation
+-```dart
+-class CacheInvalidationService {
+-  final Client _ferryClient;
+-  
+-  // Invalidate user-related caches when user data changes
+-  void invalidateUserCache(String login) {
+-    _ferryClient.cache.evict(
+-      typename: 'User',
+-      id: login,
+-    );
+-  }
+-  
+-  // Invalidate repository caches when repository changes
+-  void invalidateRepositoryCache(String owner, String name) {
+-    _ferryClient.cache.evict(
+-      typename: 'Repository', 
+-      id: '$owner/$name',
+-    );
+-  }
+-}
+-```
+-
+-### Offline Support
+-
+-#### Cache Persistence
+-- Use Ferry's built-in cache persistence
+-- Store critical data for offline access
+-- Implement cache warming strategies
+-- Handle cache size limits gracefully
+-
+-#### Offline-First Queries
+-```dart
+-// Configure queries for offline-first behavior
+-final userQuery = GetUserQuery(
+-  variables: GetUserArguments(login: login),
+-  fetchPolicy: FetchPolicy.cacheFirst,
+-  errorPolicy: ErrorPolicy.all, // Return partial data with errors
+-);
+-```
+ 
+ ## Performance Optimizations
+ 
+@@ -916,7 +850,6 @@ final userQuery = GetUserQuery(
+ #### Field Selection
+ - Request only necessary fields in GraphQL queries
+ - Use fragments to avoid duplication
+-- Implement field-level caching where appropriate
+ 
+ #### Pagination Strategy
+ ```graphql
+@@ -967,7 +900,7 @@ class GraphQLViewModel extends ChangeNotifier {
+ 
+ ## Testing Strategy (Requirement 5)
+ 
+-**Complete Testability**: Ferry operations support mocking responses, error injection, cache inspection, and simulated network conditions.
++**Complete Testability**: Ferry operations support mocking responses, error injection, and simulated network conditions.
+ 
+ ### Unit Testing GraphQL Operations
+ 
+@@ -1127,66 +1060,6 @@ group('GraphQL Schema Integration Tests', () {
+ });
+ ```
+ 
+-#### Cache Testing with Inspection
+-```dart
+-group('Ferry Cache Testing', () {
+-  late Client ferryClient;
+-  late Cache cache;
+-  
+-  setUp(() {
+-    cache = Cache(store: InMemoryStore());
+-    ferryClient = Client(
+-      link: MockLink(),
+-      cache: cache,
+-    );
+-  });
+-  
+-  test('should cache query results correctly', () async {
+-    // Test cache hit/miss scenarios
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    // First request - cache miss
+-    await ferryClient.request(query).first;
+-    
+-    // Verify data was cached
+-    final cachedData = cache.readQuery(query);
+-    expect(cachedData, isNotNull);
+-    
+-    // Second request - cache hit  
+-    final result = await ferryClient.request(query).first;
+-    expect(result.source, equals(QueryResultSource.cache));
+-  });
+-  
+-  test('should handle cache invalidation', () {
+-    // Test cache eviction and invalidation logic
+-    cache.evict(typename: 'User', id: 'testuser');
+-    
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    final cachedData = cache.readQuery(query);
+-    expect(cachedData, isNull);
+-  });
+-  
+-  test('should support offline behavior with cached data', () async {
+-    // Pre-populate cache
+-    final query = GetUserDetailsQuery(
+-      variables: GetUserDetailsArguments(login: 'testuser'),
+-    );
+-    
+-    cache.writeQuery(query, {
+-      'user': {'login': 'testuser', 'name': 'Test User'}
+-    });
+-    
+-    // Test offline access
+-    final result = await ferryClient.request(query, fetchPolicy: FetchPolicy.cacheOnly).first;
+-    expect(result.data?.user?.login, equals('testuser'));
+-    expect(result.source, equals(QueryResultSource.cache));
+-  });
+-});
+ 
+ ## Migration Strategy
+ 
+@@ -1231,4 +1104,4 @@ group('Ferry Cache Testing', () {
+ ### Data Privacy
+ - Respect GitHub's API rate limits and terms
+ - Implement proper data retention policies
+-- Handle sensitive data appropriately in caches
+\ No newline at end of file
++- Handle sensitive data appropriately
+\ No newline at end of file

@@ -1,0 +1,53 @@
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 076d9e9..5b682c1 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -14,10 +14,17 @@ import 'package:get_it/get_it.dart' as _i174;
+ import 'package:gh3/src/env/env.dart' as _i589;
+ import 'package:gh3/src/routing/route_collection_service.dart' as _i482;
+ import 'package:gh3/src/screens/app/auth_viewmodel.dart' as _i850;
++import 'package:gh3/src/screens/home_screen/home_route_provider.dart' as _i176;
+ import 'package:gh3/src/screens/home_screen/home_viewmodel_factory.dart'
+     as _i1013;
++import 'package:gh3/src/screens/loading_screen/loading_route_provider.dart'
++    as _i492;
++import 'package:gh3/src/screens/login_screen/login_route_provider.dart'
++    as _i468;
+ import 'package:gh3/src/screens/login_screen/login_viewmodel_factory.dart'
+     as _i76;
++import 'package:gh3/src/screens/user_details/user_details_route_provider.dart'
++    as _i57;
+ import 'package:gh3/src/screens/user_details/user_details_viewmodel_factory.dart'
+     as _i627;
+ import 'package:gh3/src/services/auth_service.dart' as _i336;
+@@ -50,6 +57,11 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.lazySingleton<_i519.Client>(() => githubAuthHttpClientModule.httpClient);
+     gh.lazySingleton<_i1066.TimerService>(() => _i1066.DefaultTimerService());
+     gh.lazySingleton<_i895.ITokenStorage>(() => _i895.PrefsTokenStorage());
++    gh.factory<_i57.UserDetailsRouteProvider>(
++      () => _i57.UserDetailsRouteProvider(
++        gh<_i627.UserDetailsViewModelFactory>(),
++      ),
++    );
+     gh.factory<String>(
+       () => envModule.githubClientId,
+       instanceName: 'GithubClientID',
+@@ -93,6 +105,18 @@ extension GetItInjectableX on _i174.GetIt {
+         gh<_i850.AuthViewModel>(),
+       ),
+     );
++    gh.factoryAsync<_i176.HomeRouteProvider>(
++      () async => _i176.HomeRouteProvider(
++        await getAsync<_i1013.HomeViewModelFactory>(),
++        gh<_i850.AuthViewModel>(),
++      ),
++    );
++    gh.factory<_i492.LoadingRouteProvider>(
++      () => _i492.LoadingRouteProvider(gh<_i850.AuthViewModel>()),
++    );
++    gh.factory<_i468.LoginRouteProvider>(
++      () => _i468.LoginRouteProvider(gh<_i76.LoginViewModelFactory>()),
++    );
+     return this;
+   }
+ }

@@ -1,0 +1,108 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Follow modern Python packaging with pyproject.toml
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure (specifically the presence of 'pyproject.toml' in the repository).
+- Suggested Logic: Verify that a file named 'pyproject.toml' exists in the root directory or relevant project subdirectories to ensure modern Python packaging standards are followed.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: urls
+- Changed Files List: 
+tests/test_url_validation.py	+7	-0	after_lines=348
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           ├── chat_logger.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_chat_logging.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: tests/test_url_validation.py ---
+diff --git a/tests/test_url_validation.py b/tests/test_url_validation.py
+index ebe3247..244a1e3 100644
+--- a/tests/test_url_validation.py
++++ b/tests/test_url_validation.py
+@@ -95,6 +95,13 @@ class TestVideoIDExtraction:
+             ("https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=youtu.be", "dQw4w9WgXcQ"),
+             ("https://youtu.be/dQw4w9WgXcQ?t=123", "dQw4w9WgXcQ"),
+             ("https://youtu.be/dQw4w9WgXcQ?si=abc123", "dQw4w9WgXcQ"),
++            # Test the specific parameters mentioned by the user
++            ("https://www.youtube.com/watch?v=1LKruiR_4hA&pp=ugUEEgJlbg%3D%3D", "1LKruiR_4hA"),
++            ("https://www.youtube.com/watch?v=Ri_o1TpHYsw&t=5s", "Ri_o1TpHYsw"),
++            ("https://youtu.be/1LKruiR_4hA?pp=ugUEEgJlbg%3D%3D", "1LKruiR_4hA"),
++            ("https://youtu.be/Ri_o1TpHYsw?t=5s", "Ri_o1TpHYsw"),
++            # Test multiple parameters
++            ("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=5s&pp=ugUEEgJlbg%3D%3D&feature=youtu.be", "dQw4w9WgXcQ"),
+         ]
+         
+         for url, expected_id in test_cases:
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

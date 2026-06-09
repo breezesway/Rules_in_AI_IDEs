@@ -1,0 +1,282 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- dependency-cruiser: ^16.8.0 (Codebase dependency analysis)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json' in a Node.js environment) to verify that 'dependency-cruiser' is listed under 'dependencies' or 'devDependencies' with a version matching '^16.8.0'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: Update docs
+- Changed Files List: 
+.kiro/steering/dependency-scanning.md	+63	-0	after_lines=63
+.kiro/steering/product.md	+4	-1	after_lines=36
+.kiro/steering/structure.md	+6	-1	after_lines=96
+.kiro/steering/tech.md	+12	-0	after_lines=102
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   └── styles
+    │       └── global.css
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/dependency-scanning.md ---
+diff --git a/.kiro/steering/dependency-scanning.md b/.kiro/steering/dependency-scanning.md
+new file mode 100644
+index 0000000..6e2db53
+--- /dev/null
++++ b/.kiro/steering/dependency-scanning.md
+@@ -0,0 +1,63 @@
++# Dependency Scanning Integration
++
++## Overview
++Kiro Constellation includes built-in dependency-cruiser integration that automatically analyzes codebase dependencies and structure. This provides valuable insights into project architecture and helps identify potential issues.
++
++## Automatic Scanning
++- **Trigger**: Runs automatically on extension activation (background, non-blocking)
++- **Target**: First workspace folder
++- **Timeout**: 60 seconds maximum
++- **Output**: `./.constellation/data/codebase-dependencies.json`
++
++## Configuration Detection
++The scanner intelligently detects and uses existing project configurations:
++
++### Dependency-Cruiser Config
++Auto-detects these config files in workspace root:
++- `.dependency-cruiser.js`
++- `.dependency-cruiser.cjs` 
++- `.dependency-cruiser.mjs`
++- `dependency-cruiser.config.js`
++- `dependency-cruiser.config.cjs`
++
++If found, uses `--config <path>`. Otherwise runs with `--no-config`.
++
++### TypeScript Config
++- Auto-detects `tsconfig.json` in workspace root
++- Passes as `--ts-config <absolute-path>` when present
++- Enables TypeScript-aware dependency analysis
++
++## Default Exclusions
++When running without a custom config, excludes these patterns:
++- `node_modules`
++- `dist`
++- `out` 
++- `build`
++- `coverage`
++- `.git`
++- `.vscode`
++- `.constellation`
++
++## Manual Scanning
++- **Command**: "Constellation: Scan Dependencies" (Command Palette)
++- **Behavior**: Overwrites existing results file
++- **Use Case**: Re-analyze after significant code changes
++
++## Output Format
++Results are written as JSON to `./.constellation/data/codebase-dependencies.json` containing:
++- Module dependency graph
++- Circular dependency detection
++- Orphaned modules identification
++- Dependency metrics and statistics
++
++## Troubleshooting
++- **Large repos**: May hit 60s timeout - consider narrower subfolder or custom excludes
++- **Config errors**: Check debug console for "Dependency scan stderr:" messages
++- **Missing results**: Ensure workspace has analyzable code files
++- **Permission issues**: Verify write access to `./.constellation/data/` directory
++
++## Integration Points
++- **Service**: `src/services/dependency-cruiser.service.ts`
++- **Activation**: Called from `src/extension.ts` on startup
++- **UI**: Results can be visualized in webview dashboard components
++- **Commands**: Registered in `package.json` contributions
+\ No newline at end of file
+
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index 354946e..a5d463d 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -15,12 +15,14 @@ Kiro Constellation is a VS Code extension that provides a bare-bones MCP (Model
+ - **Dual Configuration**: User-level and workspace-level MCP config support
+ - **Development Workflow**: Dev/prod server ID namespacing for isolation
+ - **Webview Side Panel**: Modern Preact UI with Vite build system
+-- **Extension Commands**: Self-test and config management commands
++- **Dependency Analysis**: Background dependency-cruiser integration for codebase scanning
++- **Extension Commands**: Self-test, config management, and dependency scanning commands
+ 
+ ## Architecture Components
+ - **VS Code Extension**: Main extension host integration (`src/extension.ts`)
+ - **MCP Server**: Standalone server with ping/echo tools (`src/mcp.server.ts`)
+ - **Webview UI**: Preact-based side panel with dashboard components
++- **Dependency Scanner**: Background dependency-cruiser integration service
+ - **Build System**: TypeScript + Vite for extension and UI compilation
+ - **Configuration**: Automatic Kiro MCP config management
+ 
+@@ -30,4 +32,5 @@ Developers who want to:
+ - Create custom tools for Kiro AI assistant
+ - Build VS Code extensions with webview UIs
+ - Understand Kiro integration workflows
++- Analyze codebase dependencies and structure
+ - Extend Kiro's capabilities with local services
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index f603790..c1cb79c 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -36,6 +36,7 @@
+   - `extension-config.service.ts`: VS Code settings management
+   - `mcp-config.service.ts`: Kiro MCP configuration handling
+   - `node-version.service.ts`: Node.js version validation
++  - `dependency-cruiser.service.ts`: Background dependency scanning integration
+ - **`shared/constants.ts`**: Shared constants and configuration
+ - **`test/`**: VS Code test framework integration
+ 
+@@ -51,7 +52,7 @@
+ 
+ ## Key Configuration Files
+ - **`package.json`**: Extension manifest with VS Code contributions
+-  - Commands: self-test, open MCP config
++  - Commands: self-test, open MCP config, scan dependencies
+   - Views: Activity bar container and side panel
+   - Settings: Node path, workspace config, server ID
+ - **`tsconfig.json`**: TypeScript compilation (ES2022, NodeNext modules)
+@@ -73,10 +74,14 @@
+   - `main.js`: Bundled Preact application
+   - `style.css`: Compiled styles
+ 
++## Data Output Structure (`.constellation/`)
++- **`data/codebase-dependencies.json`**: Dependency-cruiser scan results
++
+ ## Architecture Patterns
+ - **Separation of Concerns**: Extension, MCP server, and UI as distinct layers
+ - **Service Layer**: Abstracted configuration and system services
+ - **Configuration Management**: User vs workspace MCP config handling
++- **Background Processing**: Non-blocking dependency scanning on activation
+ - **Error Handling**: Graceful fallbacks with user notifications
+ - **Environment Awareness**: Dev/prod server ID namespacing
+ - **Self-Validation**: Built-in server health checks
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index f17a553..7e36269 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -8,6 +8,7 @@
+ - **Zod**: Schema validation and type safety
+ - **Preact**: Lightweight React alternative for webview UI
+ - **Vite**: Fast build tool for webview bundling
++- **dependency-cruiser**: Codebase dependency analysis and visualization
+ 
+ ## Build System
+ - **TypeScript Compiler**: Direct `tsc` compilation for extension code
+@@ -48,6 +49,14 @@ npm run clean:mcp    # Clean user MCP config
+ npm run clean:mcp:ws # Clean workspace MCP config
+ ```
+ 
++### Analysis & Scanning
++- **Dependency Scanning**: Automatic background scan on activation
++  - Auto-detects dependency-cruiser config files (`.dependency-cruiser.{js,cjs,mjs}`)
++  - Auto-detects and uses `tsconfig.json` when present
++  - Excludes: `node_modules|dist|out|build|coverage|.git|.vscode|.constellation`
++  - Output: `./.constellation/data/codebase-dependencies.json`
++  - Manual trigger: Command palette → "Constellation: Scan Dependencies"
++
+ ### Development Workflow
+ - **F5 Launch**: Extension Development Host with dual watch tasks
+   - TypeScript watch (`tsc -watch`)
+@@ -64,6 +73,8 @@ npm run clean:mcp:ws # Clean workspace MCP config
+ - **MCP Configuration**: Automatic Kiro config file management
+   - User-level: `~/.kiro/settings/mcp.json`
+   - Workspace-level: `./.kiro/settings/mcp.json`
++- **Output Files**: Generated analysis data
++  - Dependency scan results: `./.constellation/data/codebase-dependencies.json`
+ 
+ ## Code Style & Standards
+ - **Strict TypeScript**: Full type checking with ES2022 target
+@@ -80,6 +91,7 @@ npm run clean:mcp:ws # Clean workspace MCP config
+ - `@modelcontextprotocol/sdk`: ^1.18.0 (MCP server implementation)
+ - `zod`: ^3.23.8 (Schema validation)
+ - `preact`: ^10.24.3 (UI framework)
++- `dependency-cruiser`: ^16.8.0 (Codebase dependency analysis)
+ 
+ ### Development Dependencies
+ - `typescript`: ^5.9.2 (Language and compiler)
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

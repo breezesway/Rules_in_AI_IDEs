@@ -1,0 +1,376 @@
+diff --git a/src/utils/orchestration/workflow-orchestrator.ts b/src/utils/orchestration/workflow-orchestrator.ts
+index eaa08b5..8abe16d 100644
+--- a/src/utils/orchestration/workflow-orchestrator.ts
++++ b/src/utils/orchestration/workflow-orchestrator.ts
+@@ -130,7 +130,7 @@ export class WorkflowOrchestrator {
+       excludePatterns: RegExp[];
+     }
+   ): Promise<PageInfo[]> {
+-    this.errorHandler.logInfo('[DEBUG] Phase 1: Starting site crawling', {
++    this.errorHandler.logInfo('Phase 1: Starting site crawling', {
+       targetUrl,
+       maxPages: options.maxPages,
+       maxDepth: options.maxDepth,
+@@ -142,7 +142,7 @@ export class WorkflowOrchestrator {
+ 
+       const siteCrawler = new SiteCrawler(page, targetUrl);
+ 
+-      this.errorHandler.logInfo(`[DEBUG] Starting crawl for: ${targetUrl}`);
++      this.errorHandler.logInfo(`Starting crawl for: ${targetUrl}`);
+       const crawlResults = await siteCrawler.crawlSite({
+         maxPages: options.maxPages,
+         maxDepth: options.maxDepth,
+@@ -153,7 +153,7 @@ export class WorkflowOrchestrator {
+         timeoutMs: 20000,
+       });
+       this.errorHandler.logInfo(
+-        `[DEBUG] Crawl complete for: ${targetUrl}, pages found: ${crawlResults.length}`
++        `Crawl complete for: ${targetUrl}, pages found: ${crawlResults.length}`
+       );
+ 
+       // Convert to PageInfo format
+@@ -174,7 +174,7 @@ export class WorkflowOrchestrator {
+       return pageInfos;
+     } catch (error) {
+       this.errorHandler.logWarning(
+-        `[DEBUG] Site crawling failed: ${error instanceof Error ? error.message : error}`
++        `Site crawling failed: ${error instanceof Error ? error.message : error}`
+       );
+       this.errorHandler.handleError(error, 'Site crawling failed');
+       throw error;
+@@ -185,7 +185,7 @@ export class WorkflowOrchestrator {
+     pages: PageInfo[],
+     options: Record<string, unknown>
+   ): Promise<AnalysisResult[]> {
+-    this.errorHandler.logInfo('[DEBUG] Phase 2: Starting accessibility analysis', {
++    this.errorHandler.logInfo('Phase 2: Starting accessibility analysis', {
+       totalPages: pages.length,
+       maxConcurrency: options['maxConcurrency'] as number,
+     });
+@@ -197,7 +197,7 @@ export class WorkflowOrchestrator {
+       for (let i = 0; i < pages.length; i += (options['batchSize'] as number) || 10) {
+         const batch = pages.slice(i, i + (options['batchSize'] as number) || 10);
+         this.errorHandler.logInfo(
+-          `[DEBUG] Starting analysis batch: ${i / ((options['batchSize'] as number) || 10) + 1}, batch size: ${batch.length}`
++          `Starting analysis batch: ${i / ((options['batchSize'] as number) || 10) + 1}, batch size: ${batch.length}`
+         );
+         const batchResult = await this.parallelAnalyzer.analyzePages(batch, {
+           maxConcurrency: options['maxConcurrency'] as number,
+@@ -206,14 +206,14 @@ export class WorkflowOrchestrator {
+           delayBetweenBatches: options['delayBetweenBatches'] as number,
+         });
+         this.errorHandler.logInfo(
+-          `[DEBUG] Batch analysis complete: ${i / ((options['batchSize'] as number) || 10) + 1}, successful: ${batchResult.successful.length}, failed: ${batchResult.failed.length}`
++          `Batch analysis complete: ${i / ((options['batchSize'] as number) || 10) + 1}, successful: ${batchResult.successful.length}, failed: ${batchResult.failed.length}`
+         );
+ 
+         analysisResults.push(...batchResult.successful);
+         if (options['retryFailedPages'] as boolean) {
+           const failedPages = batchResult.failed.map(f => f.page);
+           if (failedPages.length > 0) {
+-            this.errorHandler.logWarning('[DEBUG] Retrying failed pages from previous batch', {
++            this.errorHandler.logWarning('Retrying failed pages from previous batch', {
+               failedPages: failedPages.map(p => p.url),
+             });
+             const retryResult = await this.parallelAnalyzer.analyzePages(failedPages, {
+@@ -223,7 +223,7 @@ export class WorkflowOrchestrator {
+               delayBetweenBatches: options['delayBetweenBatches'] as number,
+             });
+             this.errorHandler.logInfo(
+-              `[DEBUG] Retry batch complete: successful: ${retryResult.successful.length}, failed: ${retryResult.failed.length}`
++              `Retry batch complete: successful: ${retryResult.successful.length}, failed: ${retryResult.failed.length}`
+             );
+             analysisResults.push(...retryResult.successful);
+           }
+@@ -239,7 +239,7 @@ export class WorkflowOrchestrator {
+       return analysisResults;
+     } catch (error) {
+       this.errorHandler.logWarning(
+-        `[DEBUG] Accessibility analysis failed: ${error instanceof Error ? error.message : error}`
++        `Accessibility analysis failed: ${error instanceof Error ? error.message : error}`
+       );
+       this.errorHandler.handleError(error, 'Accessibility analysis failed');
+       throw error;
+@@ -259,13 +259,21 @@ export class WorkflowOrchestrator {
+     try {
+       const siteWideReport = this.convertAnalysisResultsToSiteWideReport(
+         analysisResults,
+-        targetUrl
++        targetUrl,
++        'WCAG2AA'
+       );
+       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+       const baseFilename = `accessibility-audit-${timestamp}`;
+ 
++      // Ensure accessibility-reports directory exists
++      const reportsDir = './accessibility-reports';
++      if (!fs.existsSync(reportsDir)) {
++        fs.mkdirSync(reportsDir, { recursive: true });
++        this.errorHandler.logInfo(`Created accessibility-reports directory: ${reportsDir}`);
++      }
++
+       // 1. Generate JSON Report (Raw Data)
+-      const jsonReportPath = `./accessibility-reports/${baseFilename}-results.json`;
++      const jsonReportPath = `${reportsDir}/${baseFilename}-results.json`;
+       try {
+         fs.writeFileSync(jsonReportPath, JSON.stringify(siteWideReport, null, 2));
+         reportPaths.push(jsonReportPath);
+@@ -323,9 +331,13 @@ export class WorkflowOrchestrator {
+   /**
+    * Convert analysis results to site-wide report format
+    */
+-  private convertAnalysisResultsToSiteWideReport(
++  // Private method removed - now using public convertAnalysisResultsToSiteWideReport method
++
++  // Make convertAnalysisResultsToSiteWideReport public for web server access
++  public convertAnalysisResultsToSiteWideReport(
+     analysisResults: AnalysisResult[],
+-    targetUrl: string
++    targetUrl: string,
++    wcagLevel: string = 'WCAG2AA'
+   ): any {
+     const timestamp = new Date().toISOString();
+     const totalViolations = analysisResults.reduce(
+@@ -411,45 +423,43 @@ export class WorkflowOrchestrator {
+     return {
+       siteUrl: targetUrl,
+       timestamp,
+-      scanDate: timestamp, // Add scanDate for PDF template compatibility
+-      testSuite: 'Phase 2 Accessibility Testing',
+-      totalPages: analysisResults.length,
+-      pagesAnalyzed: analysisResults.length,
+-      totalViolations,
+-      // Add the summary object that the PDF generator expects
++      wcagLevel,
+       summary: {
+         totalPages: analysisResults.length,
+-        pagesAnalyzed: analysisResults.length,
+-        pagesWithViolations,
+-        totalViolations,
+-        criticalViolations: totalCritical,
+-        seriousViolations: totalSerious,
+-        moderateViolations: totalModerate,
+-        minorViolations: totalMinor,
+-        compliancePercentage,
+-        wcagAAViolations: totalCritical + totalSerious, // Critical and Serious are typically AA level
+-        wcagAAAViolations: totalModerate + totalMinor, // Moderate and Minor are typically AAA level
+-        mostCommonViolations, // Add the detailed violations list
+-      },
+-      // Add detailed violation data for audience-specific content
+-      violationsByType,
+-      mostCommonViolations,
+-      overallSummary: {
+         totalViolations,
+         criticalViolations: totalCritical,
+         seriousViolations: totalSerious,
+         moderateViolations: totalModerate,
+         minorViolations: totalMinor,
++        pagesWithViolations,
+         compliancePercentage,
++        wcagAAViolations: totalCritical + totalSerious,
++        wcagAAAViolations: totalModerate + totalMinor,
+       },
+       pageAnalysis: analysisResults.map(result => ({
+         url: result.url,
+         title: result.url.split('/').pop() || result.url,
+         timestamp: result.timestamp,
++        testSuite: result.tool || 'Accessibility Testing',
++        summary: {
++          ...result.summary,
++          wcagAAViolations: result.summary.criticalViolations + result.summary.seriousViolations,
++          wcagAAAViolations: result.summary.moderateViolations + result.summary.minorViolations,
++        },
+         violations: result.violations || [],
+-        summary: result.summary,
+-        tool: result.tool,
++        pageAnalysis: {
++          title: result.url.split('/').pop() || result.url,
++          headingStructure: [],
++          landmarks: { main: false, nav: false, footer: false },
++          skipLink: { exists: false, isVisible: false, targetExists: false },
++          images: [],
++          links: [],
++          forms: [],
++          keyboardNavigation: [],
++        },
+       })),
++      violationsByType,
++      mostCommonViolations,
+       wcagComplianceMatrix: this.generateWcagComplianceMatrix(analysisResults),
+     };
+   }
+@@ -637,12 +647,12 @@ export class WorkflowOrchestrator {
+   }
+ 
+   async testSinglePage(url: string): Promise<AnalysisResult[]> {
+-    this.errorHandler.logInfo('[DEBUG] Starting single page test', { url });
++    this.errorHandler.logInfo('Starting single page test', { url });
+ 
+     try {
+       // Initialize browser manager if not already initialized
+       await this.browserManager.initialize();
+-      this.errorHandler.logInfo('[DEBUG] Browser manager initialized for single page test');
++      this.errorHandler.logInfo('Browser manager initialized for single page test');
+ 
+       const pageInfo: PageInfo = {
+         url,
+@@ -653,13 +663,13 @@ export class WorkflowOrchestrator {
+         loadTime: 0, // Default loadTime for single page test
+       };
+ 
+-      this.errorHandler.logInfo('[DEBUG] Starting accessibility analysis for single page');
++      this.errorHandler.logInfo('Starting accessibility analysis for single page');
+       const result = await this.performAccessibilityAnalysis([pageInfo], {
+         maxConcurrency: 1,
+         retryFailedPages: false,
+       });
+ 
+-      this.errorHandler.logInfo('[DEBUG] Single page analysis completed', {
++      this.errorHandler.logInfo('Single page analysis completed', {
+         resultsCount: result.length,
+         violationsFound: result.reduce((sum, r) => sum + r.summary.totalViolations, 0)
+       });
+@@ -959,4 +969,143 @@ export class WorkflowOrchestrator {
+       }
+     }
+   }
++
++  // Add testSinglePageWithReports method for web server
++  async testSinglePageWithReports(
++    url: string,
++    wcagLevel: string = 'WCAG2AA',
++    scanMetadata?: any
++  ): Promise<{ analysisResults: AnalysisResult[]; reportPaths: string[] }> {
++    this.errorHandler.logInfo('Starting single page accessibility test with reports', { url });
++
++    try {
++      // Initialize browser manager
++      await this.browserManager.initialize();
++
++      // Create a single page info object
++      const pageInfo: PageInfo = {
++        url,
++        title: url.split('/').pop() || url,
++        depth: 0,
++        foundOn: url,
++        status: 200,
++        loadTime: 0,
++      };
++
++      // Run analysis on the single page
++      const analysisResults = await this.performAccessibilityAnalysis([pageInfo], {
++        maxConcurrency: 1,
++        retryFailedPages: false,
++      });
++
++      // Generate reports
++      const reportPaths = await this.generateReports(analysisResults, url);
++
++      this.errorHandler.logSuccess('Single page test with reports completed', {
++        url,
++        analysisResults: analysisResults.length,
++        reportPaths: reportPaths.length,
++      });
++
++      return {
++        analysisResults,
++        reportPaths,
++      };
++    } catch (error) {
++      this.errorHandler.handleError(error, 'Single page test with reports failed');
++      throw error;
++    } finally {
++      await this.cleanup();
++    }
++  }
++
++  // Add generatePdfReportsFromStoredData method for web server
++  async generatePdfReportsFromStoredData(
++    storedReport: any,
++    options: {
++      reportId: string;
++      audience?: string;
++      generateAll?: boolean;
++      scanMetadata?: any;
++    }
++  ): Promise<ServiceResult<Array<{ filePath: string; audience: string; displayName: string; sizeKB: number }>>> {
++    try {
++      this.errorHandler.logInfo('Generating PDF reports from stored data', {
++        reportId: options.reportId,
++        audience: options.audience,
++        generateAll: options.generateAll,
++      });
++
++      // Ensure browser is healthy before PDF generation
++      const isHealthy = await this.browserManager.isBrowserHealthy();
++      if (!isHealthy) {
++        this.errorHandler.logInfo('Browser not healthy, force reinitializing for PDF generation...');
++        await this.browserManager.forceReinitialize();
++      }
++
++      const pdfGenerator = new PdfOrchestrator(await this.browserManager.getPage('pdf-generation'));
++
++      // Determine which audiences to generate reports for
++      let audiences: Array<{ name: string; displayName: string }> = [];
++
++      if (options.generateAll) {
++        audiences = [
++          { name: 'stakeholders', displayName: 'Product Owners & Stakeholders' },
++          { name: 'researchers', displayName: 'User Researchers & UCD' },
++          { name: 'developers', displayName: 'Developers & Testers' },
++        ];
++      } else if (options.audience) {
++        const audienceMap: Record<string, { name: string; displayName: string }> = {
++          stakeholders: { name: 'stakeholders', displayName: 'Product Owners & Stakeholders' },
++          researchers: { name: 'researchers', displayName: 'User Researchers & UCD' },
++          developers: { name: 'developers', displayName: 'Developers & Testers' },
++        };
++        const audience = audienceMap[options.audience];
++        if (audience) {
++          audiences = [audience];
++        } else {
++          return {
++            success: false,
++            message: `Invalid audience: ${options.audience}. Valid options are: stakeholders, researchers, developers`,
++          };
++        }
++      } else {
++        return {
++          success: false,
++          message: 'Either generateAll or audience must be specified',
++        };
++      }
++
++      // Generate PDF reports
++      const pdfResults = await pdfGenerator.generatePdfReports(storedReport, {
++        filename: `accessibility-audit-${options.reportId}`,
++        audiences,
++      });
++
++      if (pdfResults.success && pdfResults.data) {
++        this.errorHandler.logSuccess('PDF reports generated successfully from stored data', {
++          reportId: options.reportId,
++          totalReports: pdfResults.data.length,
++          audiences: audiences.map(a => a.displayName),
++        });
++
++        return {
++          success: true,
++          data: pdfResults.data,
++          message: `Successfully generated ${pdfResults.data.length} PDF reports from stored data.`,
++        };
++      } else {
++        return {
++          success: false,
++          message: pdfResults.message || 'Failed to generate PDF reports from stored data',
++        };
++      }
++    } catch (error) {
++      this.errorHandler.handleError(error, 'Failed to generate PDF reports from stored data');
++      return {
++        success: false,
++        message: `Failed to generate PDF reports: ${error instanceof Error ? error.message : 'Unknown error'}`,
++      };
++    }
++  }
+ }

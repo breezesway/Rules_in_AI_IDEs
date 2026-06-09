@@ -1,0 +1,579 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Routing: React Router v6 for protected routes
+- State Management: Context API for authentication state
+- Storage: localStorage/sessionStorage for JWT tokens
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, source code files (.js, .jsx, .ts, .tsx)
+- Suggested Logic: 1. Check 'package.json' to ensure 'react-router-dom' version is ^6.0.0. 2. Scan source code for the use of 'createContext' or 'useContext' in files related to authentication (e.g., searching for 'AuthContext'). 3. Scan source code for 'localStorage' or 'sessionStorage' method calls (like .getItem or .setItem) where the key argument matches patterns like 'token', 'jwt', or 'access_token'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: Add register validation logic
+- Changed Files List: 
+app/src/components/auth/AuthForms.css	+18	-0	after_lines=232
+app/src/components/auth/RegisterForm.jsx	+228	-38	after_lines=433
+backend/src/main/java/com/example/todoapp/repository/UserRepository.java	+2	-0	after_lines=23
+backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java	+6	-0	after_lines=137
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── app
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   └── src
+│       ├── App.css
+│       ├── App.js
+│       ├── App.test.js
+│       ├── components
+│       │   ├── TodoForm.css
+│       │   ├── TodoForm.jsx
+│       │   ├── TodoItem.css
+│       │   ├── TodoItem.jsx
+│       │   ├── TodoList.css
+│       │   ├── TodoList.jsx
+│       │   ├── auth
+│       │   │   ├── AuthForms.css
+│       │   │   ├── LoginForm.jsx
+│       │   │   ├── ProtectedRoute.jsx
+│       │   │   └── RegisterForm.jsx
+│       │   └── layout
+│       │       ├── Header.css
+│       │       └── Header.jsx
+│       ├── context
+│       │   └── AuthContext.jsx
+│       ├── hooks
+│       │   └── useTodos.js
+│       ├── index.css
+│       ├── index.js
+│       ├── logo.svg
+│       ├── pages
+│       │   ├── HomePage.jsx
+│       │   ├── LoginSuccessPage.css
+│       │   ├── LoginSuccessPage.jsx
+│       │   └── TodoPage.jsx
+│       ├── reportWebVitals.js
+│       ├── services
+│       │   ├── authService.js
+│       │   └── todoService.js
+│       └── setupTests.js
+└── backend
+    ├── HELP.md
+    ├── build.gradle
+    ├── gradle
+    │   └── wrapper
+    │       ├── gradle-wrapper.jar
+    │       └── gradle-wrapper.properties
+    ├── gradlew
+    ├── gradlew.bat
+    ├── settings.gradle
+    └── src
+        ├── main
+        │   ├── java
+        │   │   └── com
+        │   │       └── example
+        │   │           └── todoapp
+        │   │               ├── TodoApplication.java
+        │   │               ├── config
+        │   │               │   ├── DataInitializer.java
+        │   │               │   ├── JwtConfig.java
+        │   │               │   └── SecurityConfig.java
+        │   │               ├── controller
+        │   │               │   ├── AuthController.java
+        │   │               │   └── TodoController.java
+        │   │               ├── dto
+        │   │               │   ├── TodoRequestDto.java
+        │   │               │   ├── TodoResponseDto.java
+        │   │               │   ├── auth
+        │   │               │   │   ├── AuthResponseDto.java
+        │   │               │   │   ├── LoginRequestDto.java
+        │   │               │   │   ├── RegisterRequestDto.java
+        │   │               │   │   └── UserProfileDto.java
+        │   │               │   └── common
+        │   │               │       ├── ApiResponseDto.java
+        │   │               │       └── ErrorResponseDto.java
+        │   │               ├── entity
+        │   │               │   ├── Role.java
+        │   │               │   ├── Todo.java
+        │   │               │   └── User.java
+        │   │               ├── exception
+        │   │               │   └── GlobalExceptionHandler.java
+        │   │               ├── repository
+        │   │               │   ├── RoleRepository.java
+        │   │               │   ├── TodoRepository.java
+        │   │               │   └── UserRepository.java
+        │   │               ├── security
+        │   │               │   ├── CustomUserDetailsService.java
+        │   │               │   ├── JwtAuthenticationEntryPoint.java
+        │   │               │   ├── JwtAuthenticationFilter.java
+        │   │               │   └── UserPrincipal.java
+        │   │               └── service
+        │   │                   ├── AuthService.java
+        │   │                   ├── JwtService.java
+        │   │                   ├── TodoService.java
+        │   │                   └── impl
+        │   │                       ├── AuthServiceImpl.java
+        │   │                       ├── JwtServiceImpl.java
+        │   │                       └── TodoServiceImpl.java
+        │   └── resources
+        │       └── application.properties
+        └── test
+            └── java
+                └── com
+                    └── example
+                        └── todoapp
+                            └── TodoApplicationTests.java
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: app/src/components/auth/AuthForms.css ---
+diff --git a/app/src/components/auth/AuthForms.css b/app/src/components/auth/AuthForms.css
+index 253346c..93cfea9 100644
+--- a/app/src/components/auth/AuthForms.css
++++ b/app/src/components/auth/AuthForms.css
+@@ -70,6 +70,15 @@
+   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+ }
+ 
++.name-field input.valid {
++  border-color: #10b981;
++}
++
++.name-field input.valid:focus {
++  border-color: #10b981;
++  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
++}
++
+ .form-group label {
+   display: block;
+   margin-bottom: 8px;
+@@ -103,6 +112,15 @@
+   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+ }
+ 
++.form-group input.valid {
++  border-color: #10b981;
++}
++
++.form-group input.valid:focus {
++  border-color: #10b981;
++  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
++}
++
+ .error-text {
+   color: #e74c3c;
+   font-size: 12px;
+
+--- FILE: app/src/components/auth/RegisterForm.jsx ---
+diff --git a/app/src/components/auth/RegisterForm.jsx b/app/src/components/auth/RegisterForm.jsx
+index eb335d9..cb660c1 100644
+--- a/app/src/components/auth/RegisterForm.jsx
++++ b/app/src/components/auth/RegisterForm.jsx
+@@ -23,67 +23,193 @@ const RegisterForm = () => {
+       ...prev,
+       [name]: value
+     }));
+-    // Clear error when user starts typing
++    
++    // Clear related errors when user starts typing
+     if (errors[name]) {
+       setErrors(prev => ({
+         ...prev,
+         [name]: ''
+       }));
+     }
++    
++    // Clear general error if it's related to the field being edited
++    if (errors.general) {
++      const generalError = errors.general.toLowerCase();
++      const fieldName = name.toLowerCase();
++      
++      if (generalError.includes(fieldName) || 
++          (fieldName === 'email' && generalError.includes('email')) ||
++          (fieldName === 'username' && generalError.includes('username')) ||
++          (fieldName === 'password' && generalError.includes('password'))) {
++        setErrors(prev => ({
++          ...prev,
++          general: ''
++        }));
++      }
++    }
++    
++    // Clear "User already exists" error when firstName or lastName is modified
++    if ((name === 'firstName' || name === 'lastName') && 
++        (errors.firstName === 'User already exists' || errors.lastName === 'User already exists')) {
++      setErrors(prev => ({
++        ...prev,
++        firstName: prev.firstName === 'User already exists' ? '' : prev.firstName,
++        lastName: prev.lastName === 'User already exists' ? '' : prev.lastName
++      }));
++    }
++    
++    // Real-time validation
++    validateField(name, value);
++  };
++
++  const validateField = (fieldName, value) => {
++    let error = '';
++    
++    switch (fieldName) {
++      case 'username':
++        if (!value.trim()) {
++          error = 'Username is required';
++        } else if (value.length < 3) {
++          error = 'Username must be at least 3 characters';
++        } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
++          error = 'Username can only contain letters, numbers, and underscores';
++        }
++        break;
++        
++      case 'email':
++        if (!value.trim()) {
++          error = 'Email is required';
++        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
++          error = 'Please enter a valid email address';
++        }
++        break;
++        
++      case 'password':
++        if (!value) {
++          error = 'Password is required';
++        } else if (value.length < 8) {
++          error = 'Password must be at least 8 characters';
++        } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(value)) {
++          error = 'Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character';
++        }
++        
++        // Also validate confirm password if it has a value
++        if (formData.confirmPassword && value !== formData.confirmPassword) {
++          setErrors(prev => ({
++            ...prev,
++            confirmPassword: 'Passwords do not match'
++          }));
++        } else if (formData.confirmPassword && value === formData.confirmPassword) {
++          setErrors(prev => ({
++            ...prev,
++            confirmPassword: ''
++          }));
++        }
++        break;
++        
++      case 'confirmPassword':
++        if (!value) {
++          error = 'Please confirm your password';
++        } else if (formData.password !== value) {
++          error = 'Passwords do not match';
++        }
++        break;
++        
++      case 'firstName':
++        if (value && value.length > 50) {
++          error = 'First name must not exceed 50 characters';
++        }
++        break;
++        
++      case 'lastName':
++        if (value && value.length > 50) {
++          error = 'Last name must not exceed 50 characters';
++        }
++        break;
++        
++      default:
++        break;
++    }
++    
++    // If the field is now valid, clear any server errors that might be related
++    if (!error && errors[fieldName]) {
++      setErrors(prev => ({
++        ...prev,
++        [fieldName]: ''
++      }));
++    }
++    
++    setErrors(prev => ({
++      ...prev,
++      [fieldName]: error
++    }));
+   };
+ 
+   const validateForm = () => {
++    // Check if there are any existing errors
++    const hasErrors = Object.values(errors).some(error => error && error !== '');
++    
++    if (hasErrors) {
++      return false;
++    }
++    
++    // Additional validation for required fields that might be empty
+     const newErrors = {};
+-
+-    // Username validation
++    
+     if (!formData.username.trim()) {
+       newErrors.username = 'Username is required';
+-    } else if (formData.username.length < 3) {
+-      newErrors.username = 'Username must be at least 3 characters';
+-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+-      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+     }
+-
+-    // Email validation
++    
+     if (!formData.email.trim()) {
+       newErrors.email = 'Email is required';
+-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+-      newErrors.email = 'Please enter a valid email address';
+     }
+-
+-    // Password validation
++    
+     if (!formData.password) {
+       newErrors.password = 'Password is required';
+-    } else if (formData.password.length < 8) {
+-      newErrors.password = 'Password must be at least 8 characters';
+-    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character';
+     }
+-
+-    // Confirm password validation
++    
+     if (!formData.confirmPassword) {
+       newErrors.confirmPassword = 'Please confirm your password';
+-    } else if (formData.password !== formData.confirmPassword) {
+-      newErrors.confirmPassword = 'Passwords do not match';
+     }
+-
+-    // First name validation
+-    if (formData.firstName && formData.firstName.length > 50) {
+-      newErrors.firstName = 'First name must not exceed 50 characters';
++    
++    if (Object.keys(newErrors).length > 0) {
++      setErrors(prev => ({
++        ...prev,
++        ...newErrors
++      }));
++      return false;
+     }
++    
++    return true;
++  };
+ 
+-    // Last name validation
+-    if (formData.lastName && formData.lastName.length > 50) {
+-      newErrors.lastName = 'Last name must not exceed 50 characters';
++  const clearServerErrors = () => {
++    // Clear any server-related errors when form is being submitted
++    const serverErrors = {};
++    Object.keys(errors).forEach(key => {
++      if (errors[key] && (
++        errors[key].toLowerCase().includes('already exists') ||
++        errors[key].toLowerCase().includes('invalid') ||
++        errors[key].toLowerCase().includes('not found')
++      )) {
++        serverErrors[key] = '';
++      }
++    });
++    
++    if (Object.keys(serverErrors).length > 0) {
++      setErrors(prev => ({
++        ...prev,
++        ...serverErrors
++      }));
+     }
+-
+-    setErrors(newErrors);
+-    return Object.keys(newErrors).length === 0;
+   };
+ 
+   const handleSubmit = async (e) => {
+     e.preventDefault();
+     
++    // Clear server errors before validation
++    clearServerErrors();
++    
+     if (!validateForm()) {
+       return;
+     }
+@@ -103,7 +229,33 @@ const RegisterForm = () => {
+         // Redirect to login success page with flag indicating new user
+         navigate('/login-success', { state: { fromRegistration: true } });
+       } else {
+-        setErrors({ general: result.error });
++        // Map server errors to specific fields
++        const fieldErrors = {};
++        
++        if (result.error) {
++          if (result.error.toLowerCase().includes('username') && result.error.toLowerCase().includes('exists')) {
++            fieldErrors.username = 'Username already exists';
++          } else if (result.error.toLowerCase().includes('email') && result.error.toLowerCase().includes('exists')) {
++            fieldErrors.email = 'Email already exists';
++          } else if (result.error.toLowerCase().includes('user already exists')) {
++            fieldErrors.firstName = 'User already exists';
++            fieldErrors.lastName = 'User already exists';
++          } else if (result.error.toLowerCase().includes('username')) {
++            fieldErrors.username = result.error;
++          } else if (result.error.toLowerCase().includes('email')) {
++            fieldErrors.email = result.error;
++          } else if (result.error.toLowerCase().includes('password')) {
++            fieldErrors.password = result.error;
++          } else {
++            // If no specific field can be determined, show as general error
++            fieldErrors.general = result.error;
++          }
++        }
++        
++        setErrors(prev => ({
++          ...prev,
++          ...fieldErrors
++        }));
+       }
+     } catch (error) {
+       setErrors({ general: 'An unexpected error occurred' });
+@@ -112,6 +264,38 @@ const RegisterForm = () => {
+     }
+   };
+ 
++  const getInputClassName = (fieldName) => {
++    if (errors[fieldName]) {
++      return 'error';
++    }
++    if (formData[fieldName] && formData[fieldName].trim()) {
++      // For password fields, only show valid if they meet requirements
++      if (fieldName === 'password') {
++        if (formData.password.length >= 8 && 
++            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
++          return 'valid';
++        }
++      } else if (fieldName === 'confirmPassword') {
++        if (formData.confirmPassword && formData.password === formData.confirmPassword) {
++          return 'valid';
++        }
++      } else if (fieldName === 'username') {
++        if (formData.username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(formData.username)) {
++          return 'valid';
++        }
++      } else if (fieldName === 'email') {
++        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
++          return 'valid';
++        }
++      } else if (fieldName === 'firstName' || fieldName === 'lastName') {
++        if (formData[fieldName] && formData[fieldName].length <= 50) {
++          return 'valid';
++        }
++      }
++    }
++    return '';
++  };
++
+   return (
+     <div className="auth-container">
+       <div className="auth-form">
+@@ -133,7 +317,8 @@ const RegisterForm = () => {
+                 name="firstName"
+                 value={formData.firstName}
+                 onChange={handleChange}
+-                className={errors.firstName ? 'error' : ''}
++                onBlur={(e) => validateField('firstName', e.target.value)}
++                className={getInputClassName('firstName')}
+                 placeholder="Enter your first name"
+               />
+               {errors.firstName && (
+@@ -148,7 +333,8 @@ const RegisterForm = () => {
+                 name="lastName"
+                 value={formData.lastName}
+                 onChange={handleChange}
+-                className={errors.lastName ? 'error' : ''}
++                onBlur={(e) => validateField('lastName', e.target.value)}
++                className={getInputClassName('lastName')}
+                 placeholder="Enter your last name"
+               />
+               {errors.lastName && (
+@@ -165,7 +351,8 @@ const RegisterForm = () => {
+               name="username"
+               value={formData.username}
+               onChange={handleChange}
+-              className={errors.username ? 'error' : ''}
++              onBlur={(e) => validateField('username', e.target.value)}
++              className={getInputClassName('username')}
+               placeholder="Enter your username"
+             />
+             {errors.username && (
+@@ -181,7 +368,8 @@ const RegisterForm = () => {
+               name="email"
+               value={formData.email}
+               onChange={handleChange}
+-              className={errors.email ? 'error' : ''}
++              onBlur={(e) => validateField('email', e.target.value)}
++              className={getInputClassName('email')}
+               placeholder="Enter your email"
+             />
+             {errors.email && (
+@@ -197,7 +385,8 @@ const RegisterForm = () => {
+               name="password"
+               value={formData.password}
+               onChange={handleChange}
+-              className={errors.password ? 'error' : ''}
++              onBlur={(e) => validateField('password', e.target.value)}
++              className={getInputClassName('password')}
+               placeholder="Enter your password"
+             />
+             {errors.password && (
+@@ -213,7 +402,8 @@ const RegisterForm = () => {
+               name="confirmPassword"
+               value={formData.confirmPassword}
+               onChange={handleChange}
+-              className={errors.confirmPassword ? 'error' : ''}
++              onBlur={(e) => validateField('confirmPassword', e.target.value)}
++              className={getInputClassName('confirmPassword')}
+               placeholder="Confirm your password"
+             />
+             {errors.confirmPassword && (
+
+--- FILE: backend/src/main/java/com/example/todoapp/repository/UserRepository.java ---
+diff --git a/backend/src/main/java/com/example/todoapp/repository/UserRepository.java b/backend/src/main/java/com/example/todoapp/repository/UserRepository.java
+index 77e87d0..3666426 100644
+--- a/backend/src/main/java/com/example/todoapp/repository/UserRepository.java
++++ b/backend/src/main/java/com/example/todoapp/repository/UserRepository.java
+@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
+     boolean existsByUsername(String username);
+     
+     boolean existsByEmail(String email);
++    
++    boolean existsByFirstNameAndLastName(String firstName, String lastName);
+ }
+
+--- FILE: backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java ---
+diff --git a/backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java b/backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java
+index 1958078..1ff5ccd 100644
+--- a/backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java
++++ b/backend/src/main/java/com/example/todoapp/service/impl/AuthServiceImpl.java
+@@ -42,6 +42,12 @@ public class AuthServiceImpl implements AuthService {
+         if (userRepository.existsByEmail(request.getEmail())) {
+             throw new RuntimeException("Email already exists");
+         }
++        
++        // Check if user with same first name and last name already exists
++        if (request.getFirstName() != null && request.getLastName() != null && 
++            userRepository.existsByFirstNameAndLastName(request.getFirstName(), request.getLastName())) {
++            throw new RuntimeException("User already exists");
++        }
+ 
+         // Create new user
+         User user = new User();
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

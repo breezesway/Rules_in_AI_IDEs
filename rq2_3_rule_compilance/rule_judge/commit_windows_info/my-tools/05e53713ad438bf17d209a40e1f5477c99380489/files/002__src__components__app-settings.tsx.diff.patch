@@ -1,0 +1,93 @@
+diff --git a/src/components/app-settings.tsx b/src/components/app-settings.tsx
+index 6f2f16b..456b796 100644
+--- a/src/components/app-settings.tsx
++++ b/src/components/app-settings.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState, useEffect } from 'react';
+-import { RotateCcw, Save, FileText } from 'lucide-react';
++import { RotateCcw, Save, FileText, FolderOpen } from 'lucide-react';
+ import { Modal } from '../ui/modal';
++import { SaveLocationSelector } from '../ui/save-location-selector';
+ import { AppConfig } from '../types/electron.d';
+ import { toast } from 'sonner';
+ 
+@@ -11,7 +12,8 @@ interface AppSettingsProps {
+ 
+ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+   const [config, setConfig] = useState<AppConfig>({
+-    autoNumberDuplicateFiles: true
++    autoNumberDuplicateFiles: true,
++    defaultSaveLocation: ''
+   });
+   const [loading, setLoading] = useState(false);
+   const [saving, setSaving] = useState(false);
+@@ -69,13 +71,26 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+   };
+ 
+   // 更新配置项
+-  const updateConfig = (key: keyof AppConfig, value: boolean) => {
++  const updateConfig = (key: keyof AppConfig, value: boolean | string) => {
+     setConfig(prev => ({
+       ...prev,
+       [key]: value
+     }));
+   };
+ 
++  // 选择默认保存位置
++  const handleSelectDefaultSaveLocation = async () => {
++    try {
++      const result = await window.electronAPI.selectSaveLocation();
++      if (result.success && result.path) {
++        updateConfig('defaultSaveLocation', result.path);
++      }
++    } catch (error) {
++      console.error('选择保存位置失败:', error);
++      toast.error('选择保存位置失败，请重试');
++    }
++  };
++
+   useEffect(() => {
+     if (isOpen) {
+       loadConfig();
+@@ -132,6 +147,41 @@ export function AppSettings({ isOpen, onClose }: AppSettingsProps) {
+           </div>
+         ) : (
+           <div className="space-y-6">
++            {/* 文件保存设置 */}
++            <div className="space-y-4">
++              <div className="flex items-center space-x-2 mb-4">
++                <FolderOpen className="h-5 w-5 text-gray-600" />
++                <h3 className="text-lg font-medium text-gray-900">文件保存</h3>
++              </div>
++
++              {/* 默认保存位置设置 */}
++              <div className="p-4 border border-gray-200 rounded-xl">
++                <div className="space-y-4">
++                  <div>
++                    <h4 className="font-medium text-gray-900 mb-2">
++                      默认保存位置
++                    </h4>
++                    <p className="text-sm text-gray-600 mb-3">
++                      设置所有工具的默认文件保存位置。如果不设置，将使用系统默认下载目录。
++                    </p>
++                  </div>
++                  
++                  <div>
++                    <label className="block text-sm font-medium mb-2 text-gray-900">保存位置</label>
++                    <SaveLocationSelector
++                      value={config.defaultSaveLocation}
++                      placeholder="使用系统默认下载目录"
++                      onSelect={handleSelectDefaultSaveLocation}
++                      disabled={loading || saving}
++                    />
++                    {config.defaultSaveLocation && (
++                      <p className="text-sm text-gray-500 mt-2">当前设置: {config.defaultSaveLocation}</p>
++                    )}
++                  </div>
++                </div>
++              </div>
++            </div>
++
+             {/* 文件处理设置 */}
+             <div className="space-y-4">
+               <div className="flex items-center space-x-2 mb-4">

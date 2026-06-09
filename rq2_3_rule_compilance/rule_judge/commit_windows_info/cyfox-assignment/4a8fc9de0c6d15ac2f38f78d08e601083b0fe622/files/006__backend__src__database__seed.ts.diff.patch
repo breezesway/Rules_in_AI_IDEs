@@ -1,0 +1,74 @@
+diff --git a/backend/src/database/seed.ts b/backend/src/database/seed.ts
+index dffbd5f..e25298d 100644
+--- a/backend/src/database/seed.ts
++++ b/backend/src/database/seed.ts
+@@ -1,4 +1,4 @@
+-import { query, transaction } from './connection';
++import { transaction } from './connection';
+ import { clearAllData } from './utils';
+ 
+ interface SeedProject {
+@@ -132,54 +132,7 @@ const seedData: SeedProject[] = [
+   },
+ ];
+ 
+-/**
+- * Insert seed projects and return their IDs
+- */
+-async function seedProjects(): Promise<Map<string, number>> {
+-  const projectIds = new Map<string, number>();
+-  
+-  console.log('🌱 Seeding projects...');
+-  
+-  for (const project of seedData) {
+-    const result = await query(
+-      'INSERT INTO projects (name) VALUES ($1) RETURNING id',
+-      [project.name]
+-    );
+-    
+-    const projectId = result.rows[0]?.id;
+-    if (projectId) {
+-      projectIds.set(project.name, projectId);
+-      console.log(`  ✅ Created project: ${project.name} (ID: ${projectId})`);
+-    }
+-  }
+-  
+-  return projectIds;
+-}
+ 
+-/**
+- * Insert seed bugs for all projects
+- */
+-async function seedBugs(projectIds: Map<string, number>): Promise<void> {
+-  console.log('🐛 Seeding bugs...');
+-  
+-  for (const project of seedData) {
+-    const projectId = projectIds.get(project.name);
+-    if (!projectId) {
+-      console.error(`❌ Project ID not found for: ${project.name}`);
+-      continue;
+-    }
+-    
+-    for (const bug of project.bugs) {
+-      await query(
+-        `INSERT INTO bugs (project_id, title, description, severity, status) 
+-         VALUES ($1, $2, $3, $4, $5)`,
+-        [projectId, bug.title, bug.description, bug.severity, bug.status]
+-      );
+-    }
+-    
+-    console.log(`  ✅ Created ${project.bugs.length} bugs for: ${project.name}`);
+-  }
+-}
+ 
+ /**
+  * Run the complete seeding process
+@@ -213,7 +166,7 @@ export async function seedDatabase(): Promise<void> {
+         if (!projectId) continue;
+         
+         if (project.bugs.length > 0) {
+-          const bugValues = project.bugs.map((bug, index) => {
++          const bugValues = project.bugs.map((_bug, index) => {
+             const baseIndex = index * 5;
+             return `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5})`;
+           }).join(', ');

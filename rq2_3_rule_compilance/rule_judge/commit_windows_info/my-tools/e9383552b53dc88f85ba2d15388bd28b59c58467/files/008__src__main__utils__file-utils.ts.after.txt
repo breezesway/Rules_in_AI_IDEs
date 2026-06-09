@@ -1,0 +1,85 @@
+import { dialog, shell } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { ConfigManager } from './config-manager';
+
+// 生成唯一的输出文件路径
+export async function generateUniqueFilePath(
+  outputPath: string,
+  fileName: string,
+  configManager: ConfigManager
+): Promise<{ path: string; name: string }> {
+  const config = await configManager.getConfig();
+  let finalOutputPath = path.join(outputPath, fileName);
+  let finalFileName = fileName;
+
+  if (config.autoNumberDuplicateFiles) {
+    let counter = 1;
+    const nameWithoutExt = path.parse(fileName).name;
+    const ext = path.parse(fileName).ext;
+    
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        await fs.access(finalOutputPath);
+        finalFileName = `${nameWithoutExt}(${counter})${ext}`;
+        finalOutputPath = path.join(outputPath, finalFileName);
+        counter++;
+      } catch {
+        break;
+      }
+    }
+  } else {
+    try {
+      await fs.access(finalOutputPath);
+      const result = await dialog.showMessageBox({
+        type: 'question',
+        buttons: ['覆盖', '取消'],
+        defaultId: 0,
+        message: '文件已存在',
+        detail: `文件 "${fileName}" 已存在，是否要覆盖？`
+      });
+      
+      if (result.response !== 0) {
+        throw new Error('用户取消了操作');
+      }
+    } catch (error) {
+      // 文件不存在或用户取消，继续
+      if (error instanceof Error && error.message === '用户取消了操作') {
+        throw error;
+      }
+    }
+  }
+
+  return { path: finalOutputPath, name: finalFileName };
+}
+
+// 获取文件信息
+export async function getFileInfo(filePath: string) {
+  try {
+    const stats = await fs.stat(filePath);
+    return {
+      path: filePath,
+      name: path.basename(filePath),
+      size: stats.size,
+    };
+  } catch (error) {
+    console.error(`获取文件信息失败: ${filePath}`, error);
+    return null;
+  }
+}
+
+// 批量获取文件信息
+export async function getFilesInfo(filePaths: string[]) {
+  const fileInfos = await Promise.all(filePaths.map(getFileInfo));
+  return fileInfos.filter(info => info !== null);
+}
+
+// 打开文件位置
+export async function openFileLocation(filePath: string): Promise<void> {
+  try {
+    shell.showItemInFolder(filePath);
+  } catch (error) {
+    console.error('打开文件位置失败:', error);
+  }
+} 

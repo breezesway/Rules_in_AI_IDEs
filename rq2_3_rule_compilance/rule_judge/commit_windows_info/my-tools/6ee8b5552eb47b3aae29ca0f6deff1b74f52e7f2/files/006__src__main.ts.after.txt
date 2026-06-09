@@ -1,0 +1,529 @@
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import started from 'electron-squirrel-startup';
+import { PDFDocument } from 'pdf-lib';
+
+// 声明 Vite 环境变量
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+// 历史记录类型定义
+interface HistoryRecord {
+  id: string;
+  type: 'pdf-merge' | 'image-compress';
+  timestamp: number;
+  files: {
+    name: string;
+    size: number;
+    path: string;
+  }[];
+  output: {
+    name: string;
+    path: string;
+    size?: number;
+  };
+  settings: Record<string, unknown>;
+  duration?: number;
+  success: boolean;
+  error?: string;
+}
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) {
+  app.quit();
+}
+
+// 历史记录管理
+class HistoryManager {
+  private historyFilePath: string;
+  private maxRecords = 100; // 最多保存100条记录
+
+  constructor() {
+    // 获取用户数据目录
+    const userDataPath = app.getPath('userData');
+    this.historyFilePath = path.join(userDataPath, 'operation-history.json');
+  }
+
+  async getHistory(): Promise<HistoryRecord[]> {
+    try {
+      const data = await fs.readFile(this.historyFilePath, 'utf-8');
+      const history = JSON.parse(data) as HistoryRecord[];
+      // 按时间倒序排列
+      return history.sort((a, b) => b.timestamp - a.timestamp);
+    } catch (error) {
+      // 文件不存在或解析失败，返回空数组
+      return [];
+    }
+  }
+
+  async addRecord(record: Omit<HistoryRecord, 'id' | 'timestamp'>): Promise<void> {
+    try {
+      const history = await this.getHistory();
+      
+      const newRecord: HistoryRecord = {
+        ...record,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        timestamp: Date.now()
+      };
+
+      // 添加新记录到开头
+      history.unshift(newRecord);
+
+      // 限制记录数量
+      if (history.length > this.maxRecords) {
+        history.splice(this.maxRecords);
+      }
+
+      // 确保目录存在
+      await fs.mkdir(path.dirname(this.historyFilePath), { recursive: true });
+
+      // 保存到文件
+      await fs.writeFile(this.historyFilePath, JSON.stringify(history, null, 2));
+    } catch (error) {
+      console.error('保存历史记录失败:', error);
+    }
+  }
+
+  async clearHistory(): Promise<void> {
+    try {
+      await fs.unlink(this.historyFilePath);
+    } catch (error) {
+      // 文件可能不存在，忽略错误
+    }
+  }
+
+  async deleteRecord(id: string): Promise<void> {
+    try {
+      const history = await this.getHistory();
+      const filteredHistory = history.filter(record => record.id !== id);
+      await fs.writeFile(this.historyFilePath, JSON.stringify(filteredHistory, null, 2));
+    } catch (error) {
+      console.error('删除历史记录失败:', error);
+    }
+  }
+}
+
+const historyManager = new HistoryManager();
+
+// 应用配置管理
+interface AppConfig {
+  autoNumberDuplicateFiles: boolean;
+}
+
+class ConfigManager {
+  private configFilePath: string;
+  private defaultConfig: AppConfig = {
+    autoNumberDuplicateFiles: true
+  };
+
+  constructor() {
+    const userDataPath = app.getPath('userData');
+    this.configFilePath = path.join(userDataPath, 'app-config.json');
+  }
+
+  async getConfig(): Promise<AppConfig> {
+    try {
+      const data = await fs.readFile(this.configFilePath, 'utf-8');
+      const config = JSON.parse(data) as AppConfig;
+      // 合并默认配置，确保所有字段都存在
+      return { ...this.defaultConfig, ...config };
+    } catch (error) {
+      // 文件不存在或解析失败，返回默认配置
+      return this.defaultConfig;
+    }
+  }
+
+  async updateConfig(config: Partial<AppConfig>): Promise<void> {
+    try {
+      const currentConfig = await this.getConfig();
+      const newConfig = { ...currentConfig, ...config };
+      
+      // 确保目录存在
+      await fs.mkdir(path.dirname(this.configFilePath), { recursive: true });
+      
+      // 保存配置
+      await fs.writeFile(this.configFilePath, JSON.stringify(newConfig, null, 2));
+    } catch (error) {
+      console.error('保存配置失败:', error);
+      throw error;
+    }
+  }
+
+  async resetConfig(): Promise<void> {
+    try {
+      await fs.writeFile(this.configFilePath, JSON.stringify(this.defaultConfig, null, 2));
+    } catch (error) {
+      console.error('重置配置失败:', error);
+      throw error;
+    }
+  }
+}
+
+const configManager = new ConfigManager();
+
+
+
+const createWindow = () => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+
+  // Open the DevTools (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
+
+
+};
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow);
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+// PDF合并功能
+ipcMain.handle('merge-pdfs', async (event, options: {
+  filePaths: string[];
+  outputPath: string;
+  outputFileName: string;
+}) => {
+  const startTime = Date.now();
+  const { filePaths, outputPath, outputFileName } = options;
+  
+  try {
+    
+    // 创建新的PDF文档
+    const mergedPdf = await PDFDocument.create();
+    
+    // 逐个读取并合并PDF文件
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
+      
+      // 发送进度更新
+      event.sender.send('merge-progress', {
+        current: i + 1,
+        total: filePaths.length,
+        currentFile: path.basename(filePath),
+        progress: Math.round(((i + 1) / filePaths.length) * 100)
+      });
+      
+      try {
+        // 读取PDF文件
+        const pdfBytes = await fs.readFile(filePath);
+        const pdf = await PDFDocument.load(pdfBytes);
+        
+        // 获取所有页面
+        const pageIndices = pdf.getPageIndices();
+        
+        // 复制页面到合并的PDF
+        const pages = await mergedPdf.copyPages(pdf, pageIndices);
+        pages.forEach((page) => mergedPdf.addPage(page));
+        
+      } catch (fileError) {
+        console.error(`处理文件 ${filePath} 时出错:`, fileError);
+        throw new Error(`文件 ${path.basename(filePath)} 可能已损坏或不是有效的PDF文件`);
+      }
+    }
+    
+    // 生成合并后的PDF字节
+    const pdfBytes = await mergedPdf.save();
+    
+    // 确保输出目录存在
+    await fs.mkdir(outputPath, { recursive: true });
+    
+    // 构建完整的输出文件路径
+    const fullOutputPath = path.join(outputPath, outputFileName);
+    
+    // 检查文件是否已存在并处理重名
+    const config = await configManager.getConfig();
+    let finalOutputPath = fullOutputPath;
+    let finalOutputFileName = outputFileName;
+
+    if (config.autoNumberDuplicateFiles) {
+      // 自动添加数字序号
+      let counter = 1;
+      const nameWithoutExt = path.parse(outputFileName).name;
+      const ext = path.parse(outputFileName).ext;
+      
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        try {
+          await fs.access(finalOutputPath);
+          // 文件存在，生成新的文件名
+          finalOutputFileName = `${nameWithoutExt}(${counter})${ext}`;
+          finalOutputPath = path.join(outputPath, finalOutputFileName);
+          counter++;
+        } catch {
+          // 文件不存在，使用当前路径
+          break;
+        }
+      }
+    } else {
+      // 传统方式：询问用户是否覆盖
+      try {
+        await fs.access(fullOutputPath);
+        // 文件存在，询问用户是否覆盖
+        const result = await dialog.showMessageBox({
+          type: 'question',
+          buttons: ['覆盖', '取消'],
+          defaultId: 0,
+          message: '文件已存在',
+          detail: `文件 "${outputFileName}" 已存在，是否要覆盖？`
+        });
+        
+        if (result.response !== 0) {
+          throw new Error('用户取消了操作');
+        }
+      } catch (error) {
+        // 文件不存在，继续
+      }
+    }
+    
+    // 写入合并后的PDF文件
+    await fs.writeFile(finalOutputPath, pdfBytes);
+
+    // 获取输出文件大小
+    const outputStats = await fs.stat(finalOutputPath);
+    const duration = Date.now() - startTime;
+
+    // 添加成功的历史记录
+    await historyManager.addRecord({
+      type: 'pdf-merge',
+      files: await Promise.all(filePaths.map(async (filePath) => {
+        const stats = await fs.stat(filePath);
+        return {
+          name: path.basename(filePath),
+          size: stats.size,
+          path: filePath
+        };
+      })),
+      output: {
+        name: finalOutputFileName,
+        path: finalOutputPath,
+        size: outputStats.size
+      },
+      settings: {
+        outputPath,
+        fileCount: filePaths.length
+      },
+      duration,
+      success: true
+    });
+
+    return {
+      success: true,
+      outputPath: finalOutputPath,
+      message: `PDF文件已成功合并为 "${finalOutputFileName}"`
+    };
+    
+  } catch (error) {
+    console.error('PDF合并错误:', error);
+    
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : '合并PDF时发生未知错误';
+
+    // 添加失败的历史记录
+    try {
+      await historyManager.addRecord({
+        type: 'pdf-merge',
+        files: await Promise.all(filePaths.map(async (filePath) => {
+          try {
+            const stats = await fs.stat(filePath);
+            return {
+              name: path.basename(filePath),
+              size: stats.size,
+              path: filePath
+            };
+          } catch {
+            return {
+              name: path.basename(filePath),
+              size: 0,
+              path: filePath
+            };
+          }
+        })),
+        output: {
+          name: outputFileName,
+          path: path.join(outputPath, outputFileName)
+        },
+        settings: {
+          outputPath,
+          fileCount: filePaths.length
+        },
+        duration,
+        success: false,
+        error: errorMessage
+      });
+    } catch (historyError) {
+      console.error('保存失败历史记录时出错:', historyError);
+    }
+
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+});
+
+// 选择保存位置
+ipcMain.handle('select-save-path', async () => {
+  const result = await dialog.showSaveDialog({
+    title: '选择保存位置',
+    defaultPath: 'merged-document.pdf',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ]
+  });
+  
+  if (result.canceled) {
+    return null;
+  }
+  
+  return {
+    filePath: result.filePath,
+    directory: path.dirname(result.filePath || ''),
+    fileName: path.basename(result.filePath || '')
+  };
+});
+
+// 获取默认下载目录
+ipcMain.handle('get-downloads-path', async () => {
+  return app.getPath('downloads');
+});
+
+// 选择PDF文件
+ipcMain.handle('select-pdf-files', async () => {
+  const result = await dialog.showOpenDialog({
+    title: '选择PDF文件',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ],
+    properties: ['openFile', 'multiSelections']
+  });
+  
+  if (result.canceled || !result.filePaths.length) {
+    return null;
+  }
+  
+  // 返回文件信息
+  const fileInfos = await Promise.all(
+    result.filePaths.map(async (filePath) => {
+      try {
+        const stats = await fs.stat(filePath);
+        return {
+          path: filePath,
+          name: path.basename(filePath),
+          size: stats.size,
+        };
+      } catch (error) {
+        console.error(`获取文件信息失败: ${filePath}`, error);
+        return null;
+      }
+    })
+  );
+  
+  return fileInfos.filter(info => info !== null);
+});
+
+
+
+// 打开文件位置
+ipcMain.handle('open-file-location', async (event, filePath: string) => {
+  try {
+    shell.showItemInFolder(filePath);
+  } catch (error) {
+    console.error('打开文件位置失败:', error);
+  }
+});
+
+// 历史记录相关IPC处理
+ipcMain.handle('get-operation-history', async () => {
+  try {
+    return await historyManager.getHistory();
+  } catch (error) {
+    console.error('获取历史记录失败:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('clear-operation-history', async () => {
+  try {
+    await historyManager.clearHistory();
+    return { success: true };
+  } catch (error) {
+    console.error('清除历史记录失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '清除失败' };
+  }
+});
+
+ipcMain.handle('delete-history-record', async (event, id: string) => {
+  try {
+    await historyManager.deleteRecord(id);
+    return { success: true };
+  } catch (error) {
+    console.error('删除历史记录失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '删除失败' };
+  }
+});
+
+// 配置相关IPC处理
+ipcMain.handle('get-app-config', async () => {
+  try {
+    return await configManager.getConfig();
+  } catch (error) {
+    console.error('获取配置失败:', error);
+    return configManager['defaultConfig'];
+  }
+});
+
+ipcMain.handle('update-app-config', async (event, config: Partial<AppConfig>) => {
+  try {
+    await configManager.updateConfig(config);
+    return { success: true };
+  } catch (error) {
+    console.error('更新配置失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '更新失败' };
+  }
+});
+
+ipcMain.handle('reset-app-config', async () => {
+  try {
+    await configManager.resetConfig();
+    return { success: true };
+  } catch (error) {
+    console.error('重置配置失败:', error);
+    return { success: false, error: error instanceof Error ? error.message : '重置失败' };
+  }
+});

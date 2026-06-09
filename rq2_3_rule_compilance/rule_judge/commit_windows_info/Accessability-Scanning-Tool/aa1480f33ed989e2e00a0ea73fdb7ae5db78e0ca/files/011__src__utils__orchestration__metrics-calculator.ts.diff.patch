@@ -1,0 +1,81 @@
+diff --git a/src/utils/orchestration/metrics-calculator.ts b/src/utils/orchestration/metrics-calculator.ts
+index 733e52e..188cff8 100644
+--- a/src/utils/orchestration/metrics-calculator.ts
++++ b/src/utils/orchestration/metrics-calculator.ts
+@@ -132,8 +132,8 @@ export class MetricsCalculator {
+         ).length;
+ 
+         const compliancePercentage = analysisResults.length > 0
+-            ? Math.round(((analysisResults.length - pagesWithViolations) / analysisResults.length) * 100)
+-            : 0;
++            ? Math.round(((analysisResults.length - pagesWithViolations) / analysisResults.length) * 100 * 100) / 100
++            : 100;
+ 
+         return {
+             totalPages: analysisResults.length,
+@@ -144,8 +144,8 @@ export class MetricsCalculator {
+             seriousViolations: totalSerious,
+             moderateViolations: totalModerate,
+             minorViolations: totalMinor,
+-            wcagAAViolations: totalCritical + totalSerious,
+-            wcagAAAViolations: totalModerate + totalMinor,
++            wcagAAViolations: totalSerious,
++            wcagAAAViolations: totalCritical,
+         };
+     }
+ 
+@@ -274,9 +274,10 @@ export class MetricsCalculator {
+      */
+     generatePerformanceReport(metrics: WorkflowMetrics): string {
+         const formatTime = (ms: number) => {
+-            if (ms < 1000) return `${ms}ms`;
+-            if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+-            return `${(ms / 60000).toFixed(1)}m`;
++            if (ms === 0) return `0.00s`;
++            if (ms < 1000) return `${(ms / 1000).toFixed(2)}s`;
++            if (ms < 60000) return `${(ms / 1000).toFixed(2)}s`;
++            return `${(ms / 60000).toFixed(2)}m`;
+         };
+ 
+         return `
+@@ -288,7 +289,7 @@ Total Time: ${formatTime(metrics.totalTime)}
+ └── Report Time: ${formatTime(metrics.reportTime)}
+ 
+ Pages Analyzed: ${metrics.pagesAnalyzed}
+-Success Rate: ${metrics.successRate.toFixed(1)}%
++Success Rate: ${metrics.successRate.toFixed(2)}%
+ Violations Found: ${metrics.violationsFound}
+ 
+ Average Time per Page: ${formatTime(metrics.totalTime / metrics.pagesAnalyzed)}
+@@ -300,21 +301,22 @@ Average Time per Page: ${formatTime(metrics.totalTime / metrics.pagesAnalyzed)}
+      */
+     generateComplianceReport(compliance: ComplianceMetrics): string {
+         return `
+-Compliance Summary:
++Compliance Report:
+ ==================
+ Total Pages: ${compliance.totalPages}
+ Pages with Violations: ${compliance.pagesWithViolations}
+-Compliance Percentage: ${compliance.compliancePercentage}%
++Compliance Percentage: ${compliance.compliancePercentage.toFixed(2)}%
++Total Violations: ${compliance.totalViolations}
+ 
+ Violation Breakdown:
+-├── Critical: ${compliance.criticalViolations}
+-├── Serious: ${compliance.seriousViolations}
+-├── Moderate: ${compliance.moderateViolations}
+-└── Minor: ${compliance.minorViolations}
++├── Critical Violations: ${compliance.criticalViolations}
++├── Serious Violations: ${compliance.seriousViolations}
++├── Moderate Violations: ${compliance.moderateViolations}
++└── Minor Violations: ${compliance.minorViolations}
+ 
+ WCAG Compliance:
+-├── AA Level Violations: ${compliance.wcagAAViolations}
+-└── AAA Level Violations: ${compliance.wcagAAAViolations}
++├── WCAG AA Violations: ${compliance.wcagAAViolations}
++└── WCAG AAA Violations: ${compliance.wcagAAAViolations}
+ `.trim();
+     }
+ } 
+\ No newline at end of file

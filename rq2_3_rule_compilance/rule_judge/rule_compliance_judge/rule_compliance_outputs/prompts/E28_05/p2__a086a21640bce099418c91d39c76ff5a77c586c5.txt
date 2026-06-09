@@ -1,0 +1,319 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+- - Providers handle webview lifecycle, HTML generation, and message routing
++ - Providers use registerWebviewWithBus(id, webview) helper for lifecycle management
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (specifically those designated as 'Providers' by file path, naming convention, or class inheritance).
+- Suggested Logic: Scan source code for files identified as 'Providers' and verify the presence of a call to the helper function `registerWebviewWithBus(id, webview)`. This can be done using simple Regex or AST parsing to ensure the function is invoked.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: Adds fallback MCP server discovery
+
+Improves MCP server discovery by adding a fallback mechanism.
+
+If the language model API is unavailable or fails to register the MCP server, writes a Kiro-specific JSON configuration file to disk.
+This allows Kiro IDE to discover and start the server, providing a more robust experience when the VS Code API is incomplete or unavailable.
+
+Also standardizes server script and node command resolution into dedicated functions for reusability.
+- Changed Files List: 
+src/mcp/mcpProvider.ts	+161	-14	after_lines=202
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── docs
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── eslint.config.mjs
+├── media
+│   ├── global.css
+│   └── kiro.svg
+├── package-lock.json
+├── package.json
+├── src
+│   ├── extension.ts
+│   ├── mcp
+│   │   ├── mcpProvider.ts
+│   │   └── mcpStdioServer.ts
+│   ├── services
+│   │   └── messageBus.ts
+│   ├── shared
+│   │   ├── commands.ts
+│   │   ├── events.ts
+│   │   └── utils
+│   │       ├── event-bus-register.utils.ts
+│   │       └── generate-nonce.utils.ts
+│   ├── test
+│   │   └── extension.test.ts
+│   ├── types
+│   │   └── mcp-shims.d.ts
+│   └── ui-providers
+│       ├── asset-manifest.ts
+│       ├── health-dashboard
+│       │   ├── health-dashboard.panel.ts
+│       │   └── index.ts
+│       └── sidebar
+│           ├── index.ts
+│           └── sidebar.provider.ts
+├── tsconfig.json
+├── vsc-extension-quickstart.md
+└── web
+    ├── src
+    │   ├── components
+    │   │   └── molecules
+    │   │       └── Button.tsx
+    │   ├── main-dashboard.tsx
+    │   ├── main-sidebar.tsx
+    │   ├── services
+    │   │   └── messageBus.ts
+    │   ├── types
+    │   │   └── cssmodule.d.ts
+    │   ├── views
+    │   │   ├── HealthDashboard
+    │   │   │   ├── HealthDashboard.module.css
+    │   │   │   └── HealthDashboard.tsx
+    │   │   └── Sidebar
+    │   │       ├── Sidebar.module.css
+    │   │       └── Sidebar.tsx
+    │   └── vscode.ts
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/mcp/mcpProvider.ts ---
+diff --git a/src/mcp/mcpProvider.ts b/src/mcp/mcpProvider.ts
+index d9a57c3..9d747b5 100644
+--- a/src/mcp/mcpProvider.ts
++++ b/src/mcp/mcpProvider.ts
+@@ -2,6 +2,149 @@ import * as vscode from 'vscode';
+ import * as path from 'path';
+ import * as fs from 'fs';
+ 
++type KiroMcpConfig = {
++  mcpServers: Record<string, {
++    command: string;
++    args: string[];
++    disabled: boolean;
++  }>;
++};
++
++function resolveServerScript(context: vscode.ExtensionContext): string {
++  const outMcpDir = path.join(context.extensionPath, 'out', 'mcp');
++  const candidates = [
++    path.join(outMcpDir, 'mcpStdioServer.cjs'),
++    path.join(outMcpDir, 'mcpStdioServer.js'),
++    path.join(outMcpDir, 'mcpStdioServer.mjs'),
++  ];
++  const existing = candidates.find((p) => fs.existsSync(p));
++  const chosen = existing ?? candidates[0];
++  console.log('[Kiro MCP] Server script resolved to:', chosen);
++  if (!existing) {
++    console.warn('[Kiro MCP] Preferred MCP bundle not found yet. Expected one of:', candidates);
++  }
++  return chosen;
++}
++
++function resolveNodeCommand(): string {
++  const fromEnv = process.env.KIRO_MCP_NODE;
++  if (fromEnv && fs.existsSync(fromEnv)) {
++    console.log('[Kiro MCP] Using node from KIRO_MCP_NODE:', fromEnv);
++    return fromEnv;
++  }
++
++  const execBase = path.basename(process.execPath).toLowerCase();
++  if (execBase.includes('node')) {
++    return process.execPath;
++  }
++
++  const common = [
++    '/opt/homebrew/bin/node',
++    '/usr/local/bin/node',
++    '/usr/bin/node',
++  ];
++  for (const p of common) {
++    if (fs.existsSync(p)) {
++      return p;
++    }
++  }
++  return 'node';
++}
++
++function getWorkspaceRoot(): string | undefined {
++  const wf = vscode.workspace.workspaceFolders;
++  if (!wf || wf.length === 0) {
++    return undefined;
++  }
++  return wf[0].uri.fsPath;
++}
++
++function getKiroConfigPath(): string | undefined {
++  const root = getWorkspaceRoot();
++  if (!root) {
++    return undefined;
++  }
++  const relDir = process.env.KIRO_MCP_CONFIG_DIR && process.env.KIRO_MCP_CONFIG_DIR.trim() !== ''
++    ? process.env.KIRO_MCP_CONFIG_DIR
++    : '.kiro/settings';
++  const dir = path.join(root, relDir);
++  try {
++    fs.mkdirSync(dir, { recursive: true });
++  } catch (e) {
++    console.error('[Kiro MCP] Failed to create config directory:', dir, e);
++    return undefined;
++  }
++  return path.join(dir, 'mcp.json');
++}
++
++function readExistingConfig(configPath: string): KiroMcpConfig | undefined {
++  try {
++    if (!fs.existsSync(configPath)) {
++      return undefined;
++    }
++    const raw = fs.readFileSync(configPath, 'utf-8');
++    return JSON.parse(raw) as KiroMcpConfig;
++  } catch (e) {
++    console.warn('[Kiro MCP] Failed to read existing MCP config, will overwrite:', e);
++    return undefined;
++  }
++}
++
++function shouldRewrite(existing: KiroMcpConfig | undefined, command: string, script: string): boolean {
++  if (!existing) {
++    return true;
++  }
++  const entry = existing.mcpServers?.['kiro-constellation'];
++  if (!entry) {
++    return true;
++  }
++  if (entry.disabled !== false) {
++    return true;
++  }
++  if (entry.command !== command) {
++    return true;
++  }
++  if (!Array.isArray(entry.args) || entry.args[0] !== script) {
++    return true;
++  }
++  return false;
++}
++
++function writeKiroMcpJson(context: vscode.ExtensionContext): boolean {
++  const configPath = getKiroConfigPath();
++  if (!configPath) {
++    console.warn('[Kiro MCP] No workspace folder; cannot write kiro mcp.json');
++    return false;
++  }
++  const command = resolveNodeCommand();
++  const script = resolveServerScript(context);
++  const existing = readExistingConfig(configPath);
++  if (!shouldRewrite(existing, command, script)) {
++    console.log('[Kiro MCP] Existing mcp.json is up-to-date; no changes written.');
++    return true;
++  }
++
++  const data: KiroMcpConfig = {
++    mcpServers: {
++      'kiro-constellation': {
++        command,
++        args: [script],
++        disabled: false,
++      },
++    },
++  };
++
++  try {
++    const json = JSON.stringify(data, null, 2);
++    fs.writeFileSync(configPath, json, 'utf-8');
++    console.log('[Kiro MCP] Wrote fallback MCP config to', configPath);
++    return true;
++  } catch (e) {
++    console.error('[Kiro MCP] Failed to write MCP config:', e);
++    return false;
++  }
++}
++
+ export class KiroConstellationMCPProvider {
+   constructor(private readonly context: vscode.ExtensionContext) {}
+ 
+@@ -10,6 +153,8 @@ export class KiroConstellationMCPProvider {
+     const lm: any = (vscode as any).lm;
+     if (!lm) {
+       console.warn('Language model API (vscode.lm) not available. No MCP servers provided.');
++      // Fallback: write Kiro MCP JSON so Kiro IDE can discover the server
++      writeKiroMcpJson(this.context);
+       return [];
+     }
+ 
+@@ -17,20 +162,15 @@ export class KiroConstellationMCPProvider {
+     const McpStdioCtor: any = (vscode as any).McpStdioServerDefinition ?? lm.McpStdioServerDefinition;
+     if (typeof McpStdioCtor !== 'function') {
+       console.warn('McpStdioServerDefinition constructor not available on this VS Code build. No MCP servers provided.');
++      // Fallback: write JSON for Kiro discovery
++      writeKiroMcpJson(this.context);
+       return [];
+     }
+ 
+   // Resolve the bundled server script (.cjs in package, with dev fallbacks)
+-  const outMcpDir = path.join(this.context.extensionPath, 'out', 'mcp');
+-  const candidates = [
+-    path.join(outMcpDir, 'mcpStdioServer.cjs'),
+-    path.join(outMcpDir, 'mcpStdioServer.js'),
+-    path.join(outMcpDir, 'mcpStdioServer.mjs'),
+-  ];
+-  const serverScript = candidates.find((p) => fs.existsSync(p)) ?? candidates[0];
+-  console.log('Kiro MCP server script resolved to:', serverScript);
++  const serverScript = resolveServerScript(this.context);
+     const label = 'Kiro Constellation POC';
+-    const command = process.execPath; // use the running Node binary
++    const command = resolveNodeCommand();
+     const args = [serverScript];
+ 
+     const stdioDef = new McpStdioCtor(label, command, args);
+@@ -44,12 +184,19 @@ export function registerMcpProvider(context: vscode.ExtensionContext) {
+   const lm: any = (vscode as any).lm;
+   if (!lm?.registerMcpServerDefinitionProvider) {
+     console.warn('Language model API (vscode.lm) not available. MCP provider not registered.');
++    // Fallback: write Kiro JSON so Kiro IDE can start the server via workspace file
++    writeKiroMcpJson(context);
+     return;
+   }
+ 
+-  const provider = new KiroConstellationMCPProvider(context);
+-  // The id must match contributes.mcpServerDefinitionProviders[0].id in package.json
+-  const disposable = lm.registerMcpServerDefinitionProvider('kiro-constellation', provider);
+-  context.subscriptions.push(disposable);
+-  console.log('Kiro Constellation MCP Provider registered successfully.');
++  try {
++    const provider = new KiroConstellationMCPProvider(context);
++    // The id must match contributes.mcpServerDefinitionProviders[0].id in package.json
++    const disposable = lm.registerMcpServerDefinitionProvider('kiro-constellation', provider);
++    context.subscriptions.push(disposable);
++    console.log('Kiro Constellation MCP Provider registered successfully.');
++  } catch (e) {
++    console.error('Failed to register MCP provider. Falling back to Kiro JSON:', e);
++    writeKiroMcpJson(context);
++  }
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

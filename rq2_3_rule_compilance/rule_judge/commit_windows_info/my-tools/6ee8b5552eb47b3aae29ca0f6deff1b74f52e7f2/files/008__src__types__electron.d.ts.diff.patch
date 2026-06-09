@@ -1,0 +1,47 @@
+diff --git a/src/types/electron.d.ts b/src/types/electron.d.ts
+index 12513fd..6799b19 100644
+--- a/src/types/electron.d.ts
++++ b/src/types/electron.d.ts
+@@ -38,6 +38,42 @@ export interface ElectronAPI {
+   
+   // 打开文件位置
+   openFileLocation: (filePath: string) => Promise<void>;
++  
++  // 历史记录相关
++  getOperationHistory: () => Promise<HistoryRecord[]>;
++  clearOperationHistory: () => Promise<{ success: boolean; error?: string }>;
++  deleteHistoryRecord: (id: string) => Promise<{ success: boolean; error?: string }>;
++  
++  // 配置相关
++  getAppConfig: () => Promise<AppConfig>;
++  updateAppConfig: (config: Partial<AppConfig>) => Promise<{ success: boolean; error?: string }>;
++  resetAppConfig: () => Promise<{ success: boolean; error?: string }>;
++}
++
++// 历史记录类型定义
++export interface HistoryRecord {
++  id: string;
++  type: 'pdf-merge' | 'image-compress';
++  timestamp: number;
++  files: {
++    name: string;
++    size: number;
++    path: string;
++  }[];
++  output: {
++    name: string;
++    path: string;
++    size?: number;
++  };
++  settings: Record<string, unknown>;
++  duration?: number;
++  success: boolean;
++  error?: string;
++}
++
++// 应用配置类型定义
++export interface AppConfig {
++  autoNumberDuplicateFiles: boolean;
+ }
+ 
+ declare global {

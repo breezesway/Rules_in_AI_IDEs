@@ -1,0 +1,34 @@
+diff --git a/src/web/server.ts b/src/web/server.ts
+index bf8c828..82fe2ab 100644
+--- a/src/web/server.ts
++++ b/src/web/server.ts
+@@ -30,8 +30,8 @@ export class WebServer {
+         this.errorHandler = ErrorHandlerService.getInstance();
+         this.config = ConfigurationService.getInstance();
+         this.setupMiddleware();
+-        this.setupStaticFiles();
+-        this.setupRoutes();
++        this.setupRoutes(); // Setup API routes first
++        this.setupStaticFiles(); // Setup static files after API routes
+         this.setupWebSocket();
+     }
+ 
+@@ -74,9 +74,16 @@ export class WebServer {
+         // Serve static files from the public directory
+         this.app.use(express.static(path.join(__dirname, '../public')));
+ 
+-        // Serve the main HTML file for all routes (SPA)
++        // Serve the main HTML file for all non-API routes (SPA)
+         this.app.get('*', (req, res) => {
+-            res.sendFile(path.join(__dirname, '../public/index.html'));
++            // Skip API routes - let them be handled by the API route handlers
++            if (req.path.startsWith('/api/')) {
++                return res.status(404).json({
++                    success: false,
++                    error: 'API endpoint not found'
++                });
++            }
++            return res.sendFile(path.join(__dirname, '../public/index.html'));
+         });
+     }
+ 

@@ -1,0 +1,96 @@
+---
+description: Guidelines for managing package.json with yarn 2+ (Berry)
+globs: ["package.json"]
+alwaysApply: false
+---
+# Package.json Management with Yarn 2+
+
+## Context
+Package.json management in Yarn 2+ (Berry) projects requires specific practices to maintain consistency and proper dependency management. Common mistakes include manually editing dependencies and removing the packageManager field.
+
+## Key Rules
+
+1. **Never Remove packageManager Field**
+   - The `packageManager` field is crucial for Yarn 2+ projects
+   - It specifies the exact version of Yarn to use
+   - Example:
+   ```json
+   {
+     "packageManager": "yarn@4.8.1"
+   }
+   ```
+
+2. **Dependency Management**
+   - ❌ Never manually edit the dependencies/devDependencies in package.json
+   - ✅ Always use yarn commands:
+     ```bash
+     yarn add <package>        # Add production dependency
+     yarn add -D <package>     # Add development dependency
+     yarn remove <package>     # Remove any dependency
+     ```
+   - Let yarn determine the correct version constraints
+   - Trust the package manager's version resolution
+
+## Examples
+
+### ❌ Incorrect: Manual Dependency Editing
+```json
+{
+  "dependencies": {
+    "@marp-team/marp-cli": "^3.4.0"  // Manually added/edited version
+  }
+}
+```
+
+### ✅ Correct: Using Yarn Commands
+```bash
+yarn add @marp-team/marp-cli  # Let yarn determine the version
+```
+
+### ❌ Incorrect: Removing packageManager
+```diff
+{
+-  "packageManager": "yarn@4.8.1",
+   "dependencies": {
+     // ...
+   }
+}
+```
+
+### ✅ Correct: Preserving packageManager
+```json
+{
+  "packageManager": "yarn@4.8.1",
+  "dependencies": {
+    // ...
+  }
+}
+```
+
+## Error Categories
+
+1. **Version Specification**
+   - Problem: Manually specifying versions can lead to outdated or incompatible dependencies
+   - Solution: Let yarn handle version resolution through `yarn add`
+
+2. **Package Manager Configuration**
+   - Problem: Removing packageManager field breaks yarn 2+ functionality
+   - Solution: Always preserve the packageManager field
+
+3. **Dependency Type**
+   - Problem: Manually adding to wrong dependency section
+   - Solution: Use `yarn add` with appropriate flags (-D for devDependencies)
+
+## Implementation Instructions
+
+When modifying package.json:
+1. NEVER manually edit dependency versions
+2. NEVER remove the packageManager field
+3. ALWAYS use yarn commands for dependency management
+4. ALWAYS let yarn handle version resolution
+5. ALWAYS commit the entire .yarn directory according to the project's .gitignore
+
+## Related Rules
+- Yarn PnP configuration
+- Zero-installs setup
+- Dependency management best practices

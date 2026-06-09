@@ -1,0 +1,69 @@
+diff --git a/app/src/components/TodoForm.jsx b/app/src/components/TodoForm.jsx
+index ff77452..81d6f93 100644
+--- a/app/src/components/TodoForm.jsx
++++ b/app/src/components/TodoForm.jsx
+@@ -6,10 +6,39 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+         title: initialData?.title || '',
+         description: initialData?.description || '',
+         completed: initialData?.completed || false,
+-        deadline: initialData?.deadline ? initialData.deadline.slice(0, 16) : '' // Format for datetime-local input
++        deadline: initialData?.deadline ? formatDateForInput(initialData.deadline) : '' // Format for datetime-local input
+     });
+     const [errors, setErrors] = useState({});
+ 
++    // Helper function to format date for datetime-local input (preserves local timezone)
++    function formatDateForInput(dateString) {
++        if (!dateString) return '';
++        const date = new Date(dateString);
++        // Convert to local timezone and format for datetime-local input
++        const year = date.getFullYear();
++        const month = String(date.getMonth() + 1).padStart(2, '0');
++        const day = String(date.getDate()).padStart(2, '0');
++        const hours = String(date.getHours()).padStart(2, '0');
++        const minutes = String(date.getMinutes()).padStart(2, '0');
++        return `${year}-${month}-${day}T${hours}:${minutes}`;
++    }
++
++    // Helper function to get current local time
++    function getCurrentLocalTime() {
++        const now = new Date();
++        // Get local time components
++        const year = now.getFullYear();
++        const month = now.getMonth();
++        const day = now.getDate();
++        const hours = now.getHours();
++        const minutes = now.getMinutes();
++        const seconds = now.getSeconds();
++        const milliseconds = now.getMilliseconds();
++        
++        // Create new date in local timezone
++        return new Date(year, month, day, hours, minutes, seconds, milliseconds);
++    }
++
+     const validateForm = () => {
+         const newErrors = {};
+         
+@@ -26,7 +55,7 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+         // Validate deadline if set
+         if (formData.deadline) {
+             const selectedDate = new Date(formData.deadline);
+-            const now = new Date();
++            const now = getCurrentLocalTime();
+             if (selectedDate <= now) {
+                 newErrors.deadline = 'Deadline must be in the future';
+             }
+@@ -84,9 +113,12 @@ const TodoForm = ({ onSubmit, loading, initialData = null, isEdit = false }) =>
+     };
+ 
+     const setQuickDeadline = (hours) => {
+-        const now = new Date();
++        // Use local time instead of UTC
++        const now = getCurrentLocalTime();
+         const deadline = new Date(now.getTime() + hours * 60 * 60 * 1000);
+-        const formattedDeadline = deadline.toISOString().slice(0, 16);
++        
++        // Format for datetime-local input (preserves local timezone)
++        const formattedDeadline = formatDateForInput(deadline.toISOString());
+         setFormData(prev => ({ ...prev, deadline: formattedDeadline }));
+         if (errors.deadline) {
+             setErrors(prev => ({ ...prev, deadline: '' }));

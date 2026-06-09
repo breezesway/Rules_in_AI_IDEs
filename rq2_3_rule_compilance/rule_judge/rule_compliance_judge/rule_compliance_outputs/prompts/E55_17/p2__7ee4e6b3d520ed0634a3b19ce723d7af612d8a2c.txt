@@ -1,0 +1,636 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design References & Constraints
+- Rule File Path: .trae/rules/project_rules.md
+- Change Type: modified
+- Target Rule Content:
+- 6. 前后端状态交互通过`animationDispatcher.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
++ 6. 前后端状态交互通过`animationSequencer.js`完成，它将后端对`backendGameState`的状态修改和动画指令输入动画队列，由一个单独协程消耗此队列元素通知前端。
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: The file system (presence of specific files), source code imports, and variable references (specifically 'backendGameState' and 'animationSequencer.js').
+- Suggested Logic: 1. Verify the existence of 'animationSequencer.js' and the absence or deprecation of 'animationDispatcher.js' for state management.
+2. Use static analysis to ensure that any code modifying 'backendGameState' or managing the animation queue is located within 'animationSequencer.js'.
+3. Check that files involving frontend-backend interaction import and utilize 'animationSequencer.js' rather than the old dispatcher.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: feat: add new skills and adjust existing skill mechanics
+- Changed Files List: 
+src/components/SkillCard.vue	+1	-0	after_lines=528
+src/data/battleUtils.js	+1	-2	after_lines=201
+src/data/effectDescription.js	+7	-0	after_lines=287
+src/data/namedEntities.js	+5	-0	after_lines=135
+src/data/skill.js	+13	-2	after_lines=138
+src/data/skills/cMinus.js	+32	-4	after_lines=248
+src/data/skills/fireAssist.js	+42	-7	after_lines=577
+src/data/skills/fireControl.js	+3	-3	after_lines=241
+src/data/unit.js	+83	-15	after_lines=138
+
+- Project Directory Tree (Snapshot after commit):
+├── "src
+│   └── assets
+│       └── cards
+│           ├── \345\245\207\350\277\271.png"
+│           ├── \345\260\217\347\210\206\350\243\202\346\234\257.png"
+│           ├── \347\207\203\345\277\203\345\206\263.png"
+│           └── \351\275\220\346\230\216\345\244\251\347\204\261.png"
+├── .github
+│   └── workflows
+│       └── main.yml
+├── .gitignore
+├── .idea
+│   ├── .gitignore
+│   ├── codeStyles
+│   │   └── codeStyleConfig.xml
+│   ├── copilot.data.migration.agent.xml
+│   ├── copilot.data.migration.ask.xml
+│   ├── copilot.data.migration.ask2agent.xml
+│   ├── copilot.data.migration.edit.xml
+│   ├── modules.xml
+│   ├── rtvl_test.iml
+│   ├── vcs.xml
+│   └── wekyspire.iml
+├── .trae
+│   └── rules
+│       └── project_rules.md
+├── README.md
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── changelog.md
+├── src
+│   ├── App.vue
+│   ├── DebugApp.vue
+│   ├── GameApp.vue
+│   ├── assets
+│   │   ├── cards
+│   │   │   ├── fire-1.png
+│   │   │   ├── fire-2.png
+│   │   │   ├── fire-3.png
+│   │   │   ├── fire-4.png
+│   │   │   ├── wood-0.png
+│   │   │   ├── wood-1.png
+│   │   │   ├── wood-2.png
+│   │   │   ├── wood-3.png
+│   │   │   └── wood-4.png
+│   │   ├── common.css
+│   │   ├── cutscenes
+│   │   │   ├── opening-1.png
+│   │   │   └── opening-2.png
+│   │   ├── enemies
+│   │   │   └── slime.png
+│   │   ├── images
+│   │   │   ├── shop-background.png
+│   │   │   └── start-screen.png
+│   │   ├── main.css
+│   │   ├── remi.png
+│   │   ├── sounds
+│   │   │   └── story-mode-intro.mp3
+│   │   └── zLayers.css
+│   ├── backendEventBus.js
+│   ├── components
+│   │   ├── AbilityRewardPanel.vue
+│   │   ├── ActionPanel.vue
+│   │   ├── ActionPointsBar.vue
+│   │   ├── AnimationOverlay.vue
+│   │   ├── ArenaDebugScreen.vue
+│   │   ├── AudioControllerScreen.vue
+│   │   ├── BarPoint.vue
+│   │   ├── BattleLogPanel.vue
+│   │   ├── BattleScreen.vue
+│   │   ├── BossShowupAnimation.vue
+│   │   ├── BreakthroughRewardPanel.vue
+│   │   ├── ChangeLog.vue
+│   │   ├── ColoredText.vue
+│   │   ├── CutsceneScreen.vue
+│   │   ├── DeckIcon.vue
+│   │   ├── DeckOverlayPanel.vue
+│   │   ├── DialogScreen.vue
+│   │   ├── EffectDisplayBar.vue
+│   │   ├── EffectIcon.vue
+│   │   ├── EndScreen.vue
+│   │   ├── EnemyStatusPanel.vue
+│   │   ├── FloatingTooltip.vue
+│   │   ├── HealthBar.vue
+│   │   ├── HurtAnimationWrapper.vue
+│   │   ├── ManaBar.vue
+│   │   ├── MessagePopupScreen.vue
+│   │   ├── MoneyRewardPanel.vue
+│   │   ├── NamedEntity.vue
+│   │   ├── NamedEntityTest.vue
+│   │   ├── ParticleEffectManager.vue
+│   │   ├── PlayerBasicStats.vue
+│   │   ├── PlayerStatusPanel.vue
+│   │   ├── PreparationPanel.vue
+│   │   ├── RestControlPanel.vue
+│   │   ├── RestScreen.vue
+│   │   ├── ShopPanel.vue
+│   │   ├── SkillCard.vue
+│   │   ├── SkillRewardPanel.vue
+│   │   ├── SkillSelectionPanel.vue
+│   │   ├── SkillsHand.vue
+│   │   ├── StartScreen.vue
+│   │   └── TestEffectDisplay.vue
+│   ├── data
+│   │   ├── README.md
+│   │   ├── abilities
+│   │   │   ├── basic.js
+│   │   │   └── leino.js
+│   │   ├── ability.js
+│   │   ├── abilityManager.js
+│   │   ├── animationDispatcher.js
+│   │   ├── battle.js
+│   │   ├── battleLogUtils.js
+│   │   ├── battleUtils.js
+│   │   ├── dialogues.js
+│   │   ├── effect.js
+│   │   ├── effectDescription.js
+│   │   ├── effectProcessor.js
+│   │   ├── enemies
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── boss.js
+│   │   │   ├── slimes.js
+│   │   │   └── special.js
+│   │   ├── enemy.js
+│   │   ├── enemyFactory.js
+│   │   ├── gameState.js
+│   │   ├── item.js
+│   │   ├── itemManager.js
+│   │   ├── namedEntities.js
+│   │   ├── player.js
+│   │   ├── rest.js
+│   │   ├── skill.js
+│   │   ├── skillManager.js
+│   │   ├── skills
+│   │   │   ├── README.md
+│   │   │   ├── basic.js
+│   │   │   ├── blast.js
+│   │   │   ├── cMinus.js
+│   │   │   ├── concentration.js
+│   │   │   ├── curses.js
+│   │   │   ├── fireAssist.js
+│   │   │   ├── fireControl.js
+│   │   │   ├── heal.js
+│   │   │   ├── levitation.js
+│   │   │   ├── punchKicks.js
+│   │   │   ├── refuelWeky.js
+│   │   │   ├── shielding.js
+│   │   │   ├── speedThinking.js
+│   │   │   └── untested
+│   │   │       ├── icecontrol.js
+│   │   │       ├── lumi.js
+│   │   │       └── remi.js
+│   │   ├── testSkill.js
+│   │   └── unit.js
+│   ├── frontendEventBus.js
+│   ├── game.js
+│   ├── main.js
+│   └── utils
+│       ├── animationOrchestrator.js
+│       ├── cardDomRegistry.js
+│       └── tierUtils.js
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/components/SkillCard.vue ---
+diff --git a/src/components/SkillCard.vue b/src/components/SkillCard.vue
+index 95afe32..3421676 100644
+--- a/src/components/SkillCard.vue
++++ b/src/components/SkillCard.vue
+@@ -33,6 +33,7 @@
+         <ColoredText v-if="skill.coldDownTurns != 0 && skill.remainingUses != skill.maxUses && !previewMode" :text="`/named{重整} ${skill.remainingColdDownTurns}/${skill.coldDownTurns}`"></ColoredText>
+         <ColoredText v-else-if="skill.coldDownTurns != 0" :text="`/named{重整} ${skill.coldDownTurns} 回合`"></ColoredText>
+         <ColoredText v-else-if="skill.remainingUses != Infinity" :text="`/named{消耗}`"></ColoredText>
++        <ColoredText v-if="skill.slowStart" text="/named{慢热}"></ColoredText>
+         <br />
+         <strong v-if="skill.maxUses === Infinity && skill.coldDownTurns == 0">无限</strong>
+         <span v-else-if="previewMode">(装填 {{ skill.maxUses }}/{{ skill.maxUses }})</span>
+
+--- FILE: src/data/battleUtils.js ---
+diff --git a/src/data/battleUtils.js b/src/data/battleUtils.js
+index 14bf10c..f5c7273 100644
+--- a/src/data/battleUtils.js
++++ b/src/data/battleUtils.js
+@@ -145,10 +145,9 @@ export function drawSkillCard(player, number = 1) {
+       break;
+     }
+     // 对于入手而言，动画是自动编排的，所以这里无需手动触发
+-
+     const firstSkill = player.backupSkills.shift();
+     player.frontierSkills.push(firstSkill);
+-
++    if(number === 1) return firstSkill;
+   }
+ }
+
+--- FILE: src/data/effectDescription.js ---
+diff --git a/src/data/effectDescription.js b/src/data/effectDescription.js
+index 08b406c..423e595 100644
+--- a/src/data/effectDescription.js
++++ b/src/data/effectDescription.js
+@@ -274,6 +274,13 @@ const effectDescriptions = {
+     type: 'buff',
+     icon: '👀',
+     color: '#808080' // 灰色
++  },
++  '神焰': {
++    name: '神焰',
++    description: '每两层燃烧提供一点灵能',
++    type: 'buff',
++    icon: '🔥',
++    color: '#FF0000'
+   }
+ };
+
+--- FILE: src/data/namedEntities.js ---
+diff --git a/src/data/namedEntities.js b/src/data/namedEntities.js
+index bd5459a..a55b92b 100644
+--- a/src/data/namedEntities.js
++++ b/src/data/namedEntities.js
+@@ -124,6 +124,11 @@ const namedEntities = {
+     icon: '🔥',
+     color: 'red',
+     description: '焚毁会从一场战斗中永久移除一个技能。'
++  },
++  '慢热': {
++    icon: '🐢',
++    color: 'purple',
++    description: '慢热技能在战斗开始时没有充能，需要冷却后才能使用。'
+   }
+ };
+
+--- FILE: src/data/skill.js ---
+diff --git a/src/data/skill.js b/src/data/skill.js
+index 118b471..52ad6d9 100644
+--- a/src/data/skill.js
++++ b/src/data/skill.js
+@@ -18,6 +18,11 @@ class Skill {
+     this.spawnWeight = spawnWeight || 1; // 技能出现权重，默认为1
+     this.remainingColdDownTurns = 0; // 回合剩余冷却时间
+     this.baseColdDownTurns = 0;
++    this.baseSlowStart = false; // 是否为慢热型技能，慢热型技能开始时充能为0
++  }
++
++  get slowStart () {
++    return this.baseSlowStart;
+   }
+ 
+   get manaCost () {
+@@ -76,8 +81,14 @@ class Skill {
+ 
+   // 战斗开始时调用，用于初始化技能
+   onBattleStart() {
+-    this.remainingUses = this.maxUses;
+-    this.remainingColdDown = this.coldDownTurns;
++    if(this.slowStart) {
++      this.remainingUses = this.maxUses;
++      this.remainingColdDownTurns = this.coldDownTurns;
++    } else {
++      // 冷启动卡牌必须等待冷却后才能发动！
++      this.remainingUses = 0;
++      this.remainingColdDownTurns = this.coldDownTurns;
++    }
+     // 默认实现，子类可以重写
+   }
+
+--- FILE: src/data/skills/cMinus.js ---
+diff --git a/src/data/skills/cMinus.js b/src/data/skills/cMinus.js
+index 2ab1284..d307dd7 100644
+--- a/src/data/skills/cMinus.js
++++ b/src/data/skills/cMinus.js
+@@ -14,7 +14,7 @@ export class ChargePunch extends Skill {
+   }
+ 
+   get damage() {
+-    return 20 + 4 * this.power;
++    return 25 + 4 * this.power;
+   }
+ 
+   getChargedDamage(player) {
+@@ -31,10 +31,10 @@ export class ChargePunch extends Skill {
+   // 使用技能
+   use(player, enemy) {
+     if (super.use(player, enemy)) {
+-      if(this.mode == 'idle'){
++      if(this.mode === 'idle'){
+         this.mode = 'charge';
+         this.chargedDamage = this.getChargedDamage(player);
+-      } else if(this.mode == 'charge'){
++      } else if(this.mode === 'charge'){
+         this.mode = 'idle';
+         launchAttack(player, enemy, this.chargedDamage);
+         this.chargedDamage = 0;
+@@ -92,10 +92,38 @@ export class StrengthenI extends Skill {
+   }
+ }
+ 
++// 脆弱锻造技能
++export class FragileForge extends Skill {
++  constructor() {
++    super('脆弱锻造', 'normal', 1, 0, 3, 1, "锻造");
++  }
++
++  use(player, enemy, stage) {
++    // 找到左边的技能
++    const leftSkill = player.frontierSkills[this.getInBattleIndex(player) - 1];
++    if(leftSkill) {
++      leftSkill.power += 1;
++    }
++    if(this.power > 0) {
++      const rightSkill = player.frontierSkills[this.getInBattleIndex(player) + 1];
++      if(rightSkill) {
++        rightSkill.power += 1;
++      }
++    }
++    return true;
++  }
++
++  regenerateDescription(player) {
++    if(this.power > 0) return `/named{强化}/named{左邻}和/named{右邻}技能`;
++    return `/named{强化}/named{左邻}技能`;
++  }
++}
++
+ // 锻造技能
+ export class Forge extends Skill {
+   constructor() {
+-    super('锻造', 'normal', 2, 0, 1, 1, "锻造");
++    super('锻造', 'normal', 2, 0, 3, 1, "锻造");
++    this.baseSlowStart = true;
+   }
+ 
+   get coldDownTurns () {
+
+--- FILE: src/data/skills/fireAssist.js ---
+diff --git a/src/data/skills/fireAssist.js b/src/data/skills/fireAssist.js
+index dbf0062..9b769c9 100644
+--- a/src/data/skills/fireAssist.js
++++ b/src/data/skills/fireAssist.js
+@@ -5,7 +5,7 @@ import {applyHeal, burnSkillCard, dealDamage, drawSkillCard, dropSkillCard, laun
+ import {enqueueDelay} from "../animationDispatcher";
+ 
+ // 无缘烈焰（C-）
+-// 丢弃冷却中的技能，自己和敌人各获得4层燃烧
++// 丢弃冷却中的技能，自己和敌人各获得3层燃烧
+ export class UnreasonableFire extends Skill {
+   constructor() {
+     super('无缘烈焰', 'fire', 1, 0, 2, 1);
+@@ -13,11 +13,11 @@ export class UnreasonableFire extends Skill {
+   }
+ 
+   get selfStacks() {
+-    return 4;
++    return 3;
+   }
+ 
+   get enemyStacks() {
+-    return Math.max(4 + 2 * this.power, 1);
++    return Math.max(3 + 2 * this.power, 1);
+   }
+ 
+   use(player, enemy, stage) {
+@@ -119,7 +119,7 @@ export class SearingHeat extends Skill {
+ export class Spark extends Skill {
+   constructor() {
+     super('火花', 'fire', 1, 0, 1, 1);
+-    this.baseColdDownTurns = 2;
++    this.baseColdDownTurns = 1;
+   }
+   get cards() {
+     return Math.max(1 + this.power, 1);
+@@ -145,11 +145,12 @@ export class Spark extends Skill {
+ }
+ 
+ // 玩火（C-）
+-// 丢弃前方所有牌，每丢一张获得并赋予2层燃烧
++// 丢弃前方所有牌，每丢一张获得并赋予3层燃烧
+ export class Firework extends Skill {
+   constructor() {
+     super('玩火', 'fire', 1, 1, 1, 1);
+     this.baseColdDownTurns = 3;
++    this.baseSlowStart = true;
+     this.subtitle = '小心牢底坐穿';
+   }
+ 
+@@ -158,7 +159,7 @@ export class Firework extends Skill {
+   }
+ 
+   get stacks() {
+-    return 2;
++    return 3;
+   }
+ 
+   use(player, enemy, stage) {
+@@ -367,7 +368,6 @@ export class HotHands extends Skill {
+   }
+ }
+ 
+-
+ // 吸热（C+）
+ // 获得2层吸热
+ export class HeatAbsorptionI extends Skill {
+@@ -409,6 +409,41 @@ export class FireAssistance extends Skill {
+   }
+ }
+ 
++// 奉予烈焰
++// 抽牌焚毁，赋予【3 + 灵能】层燃烧，重复
++export class GiveFire extends Skill {
++  constructor() {
++    super('奉予烈焰', 'fire', 3, 1, 1, 2);
++    this.baseColdDownTurns = 4;
++  }
++  get stacks() {
++    return Math.max(3 + 2 * this.power, 1);
++  }
++  getStacks(player) {
++    return this.stacks + player.magic;
++  }
++  use(player, enemy, stage) {
++    for(let i = 0; i < 2; i ++) {
++      const card = drawSkillCard(player);
++      enqueueDelay(400);
++      if (card) {
++        burnSkillCard(player, card.uniqueID);
++        enqueueDelay(400);
++      }
++      enemy.addEffect('燃烧', this.getStacks(player));
++      enqueueDelay(400);
++    }
++    return true;
++  }
++  regenerateDescription(player) {
++    if(player) {
++      return `抽牌焚毁，赋予${this.getStacks(player)}层/effect{燃烧}，重复`;
++    }
++    return `抽牌焚毁，赋予【3 + /named{灵能}】层/effect{燃烧}，重复`;
++  }
++}
++
++
+ // 燃心决（A）
+ // 获得6层集中和1层燃心
+ export class DevotionCurse extends Skill {
+
+--- FILE: src/data/skills/fireControl.js ---
+diff --git a/src/data/skills/fireControl.js b/src/data/skills/fireControl.js
+index a34ce30..780789a 100644
+--- a/src/data/skills/fireControl.js
++++ b/src/data/skills/fireControl.js
+@@ -41,7 +41,7 @@ export class FireControlII extends Skill {
+   }
+ 
+   get stack() {
+-    return Math.max(6 + this.power, 0);
++    return Math.max(6 + 2 * this.power, 0);
+   }
+ 
+   getStacks(player) {
+@@ -185,7 +185,7 @@ export class FireControlAssistIII2 extends Skill {
+ 
+   use(player, enemy, stage) {
+     if(stage === 0) {
+-      player.removeEffects(999);
++      player.removeEffects(999, 'random-kind');
+       return false;
+     } else {
+       const frontierCurse = player.frontierSkills.find((skill) => skill.type === 'curse');
+@@ -223,7 +223,7 @@ export class AuthenticFireControl extends Skill {
+     if(this.mode === "idle") {
+       this.mode = "active";
+       this.name = '控:神焰';
+-      player.removeEffects(999);
++      player.removeEffects(999, 'random-kind');
+       return true;
+     } else {
+       // TODO
+
+--- FILE: src/data/unit.js ---
+diff --git a/src/data/unit.js b/src/data/unit.js
+index 44193ca..b7922b8 100644
+--- a/src/data/unit.js
++++ b/src/data/unit.js
+@@ -1,5 +1,6 @@
+ // filepath: d:\cb_6\hineven_wekyspire\wekyspire\src\data\unit.js
+ import { addEffect as addEffectToTarget, removeEffect as removeEffectFromTarget, applyHeal as applyHealToTarget } from './battleUtils.js'
++import effectDescriptions from './effectDescription.js'
+ 
+ // 基础作战单位抽象类（玩家/敌人公用）
+ export default class Unit {
+@@ -43,28 +44,95 @@ export default class Unit {
+     applyHealToTarget(this, heal);
+   }
+ 
++  // 随机移除效果
++  // mode:
++  // - 'random' 随机移除,
++  // - 'highest-stack' 优先层数最高的
++  // - 'highest-stack-kind' 以种类数为单位移除，优先层数最高种类
++  // - 'ramdom-kind' 以种类数为单位移除，随机种类
++  // type: 'all' | 'buff' | 'debuff' | 'neutral' 只移除指定类型的效果
++  removeEffects(count, mode = 'random', type='all') {
++    if (!count || count <= 0) return;
+ 
+-  // 随机移除stacks层效果
+-  removeEffects(stacks) {
+-    const effectNames = Object.keys(this.effects);
+-    for (let i = 0; i < stacks; i++) {
+-      if (effectNames.length === 0) break;
+-      const randomIndex = Math.floor(Math.random() * effectNames.length);
+-      const effectName = effectNames[randomIndex];
+-      this.removeEffect(effectName, 1);
++    const isTarget = (name) => {
++      const desc = effectDescriptions[name];
++      return desc && (type === 'all' || desc.type === type);
++    };
++
++    // 动态获取当前有效减益（层数>0）
++    const getTargetEntries = () => Object.entries(this.effects)
++      .filter(([name, stacks]) => (stacks || 0) > 0 && isTarget(name));
++
++    const kindRandom = mode === 'random-kind' || mode === 'ramdom-kind';
++    const kindHighest = mode === 'highest-stack-kind';
++
++    if (kindRandom || kindHighest) {
++      // 以“种类”为单位移除
++      for (let i = 0; i < count; i++) {
++        const targets = getTargetEntries();
++        if (targets.length === 0) break;
++
++        let chosen;
++        if (kindHighest) {
++          // 选择层数最高的种类（并在并列时随机）
++          const maxStacks = Math.max(...targets.map(([, s]) => s));
++          const candidates = targets.filter(([, s]) => s === maxStacks);
++          chosen = candidates[Math.floor(Math.random() * candidates.length)];
++        } else {
++          // 随机选择一个种类
++          chosen = targets[Math.floor(Math.random() * targets.length)];
++        }
++        const [name, stacks] = chosen;
++        this.removeEffect(name, stacks);
++      }
++      return;
++    }
++
++    // 以“层数”为单位移除
++    for (let i = 0; i < count; i++) {
++      const targets = getTargetEntries();
++      if (targets.length === 0) break;
++
++      let chosenName;
++      if (mode === 'highest-stack') {
++        // 选择当前层数最高的效果（并在并列时随机）
++        const maxStacks = Math.max(...targets.map(([, s]) => s));
++        const candidates = targets.filter(([, s]) => s === maxStacks);
++        chosenName = candidates[Math.floor(Math.random() * candidates.length)][0];
++      } else {
++        // 'random'：在效果种类中等概率选一个，移除1层
++        chosenName = targets[Math.floor(Math.random() * targets.length)][0];
++      }
++
++      this.removeEffect(chosenName, 1);
+     }
+   }
+ 
+-  // 随机移除负面效果
+-  // mode: 'random' 随机移除, 'highest-stack' 优先层数最高的
+-  // 'highest-stack-kind' 种类移除，优先层数最高种类
+-  // 'ramdom-kind' 种类移除，随机种类
+   removeNegativeEffects(count, mode = 'random') {
+-    // TODO
++    this.removeEffects(count, mode, 'debuff');
++  }
++
++  removePositiveEffects(count, mode = 'random') {
++    this.removeEffects(count, mode, 'buff');
+   }
+ 
++  clearEffects (type='all') {
++    // 将所有同类效果一网打尽
++    const isTarget = (name) => {
++      const desc = effectDescriptions[name];
++      return desc && (type === 'all' || desc.type === type);
++    };
++    for (const [name, stacks] of Object.entries(this.effects)) {
++      if ((stacks || 0) > 0 && isTarget(name)) {
++        this.removeEffect(name, stacks);
++      }
++    }
++  }
+ 
+-  clearNegativeEffects () {
+-    // TODO
++  clearNegativeEffects() {
++    this.clearEffects('debuff');
++  }
++  clearPositiveEffects() {
++    this.clearEffects('buff');
+   }
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

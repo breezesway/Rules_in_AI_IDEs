@@ -1,0 +1,916 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- `graphql_errors.dart` - GraphQL error type definitions
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code files (specifically graphql_errors.dart).
+- Suggested Logic: Search the repository to verify that a file named 'graphql_errors.dart' exists. Optionally, verify that the file contains GraphQL error-related code using basic AST parsing or Regex (e.g., checking for 'class', 'enum', or 'error' keywords).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: refactor: remove HTTP screenshot server (port 3000) to fix firewall issues
+
+Remove the unused HTTP screenshot server that was causing connection
+problems due to firewall restrictions. This simplifies the architecture
+and eliminates a potential point of failure.
+
+## Changes
+
+### Removed Components
+- `screenshot_server.dart`: Deleted entire HTTP server implementation
+- Port 3000 HTTP endpoints: `/screenshot`, `/health` routes removed
+- Screenshot server fallback logic in `capture_screenshot` tool
+
+### Updated Components
+- `server.dart`: Removed ScreenshotServer dependencies and initialization
+- MCP server startup: No longer attempts to bind to port 3000
+- Screenshot capture: Now relies solely on VM Service methods
+
+### Benefits
+- **Eliminates Firewall Issues**: No HTTP server means no port conflicts
+- **Simpler Architecture**: Removes unused fallback mechanism
+- **Faster Startup**: No HTTP server initialization delay
+- **Reduced Resource Usage**: One less server process to manage
+
+### Impact
+- Widget inspector tools still fully functional via VM Service
+- Screenshot capture works through existing VM Service extensions
+- MCP connection stability improved by removing potential failure point
+
+The screenshot server fallback was never effectively used since Flutter
+apps don't automatically upload screenshots to it, making this a
+zero-impact removal that fixes connection issues.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+- Changed Files List: 
+mcp_flutter_automation/lib/src/screenshot_server.dart	+0	-135	after_lines=0
+mcp_flutter_automation/lib/src/server.dart	+12	-54	after_lines=592
+mcp_flutter_automation/mcp_flutter_automation	+-	--	after_lines=SKIPPED	skipped_reason=binary (numstat=-)
+*(Note: The following files were modified but ignored because diff details are unavailable (e.g., binary/skipped in meta): mcp_flutter_automation/mcp_flutter_automation.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── UI_SYSTEM_NAVIGATION.md
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── home-screen
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── modular-navigation-architecture
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-example-screens
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-foundation
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-phase-1-navigation
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-phase-2-spacing
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-phase-3-components
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-phase-4-demo
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── ui-system-widgets
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── user-details-screen
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── user-repositories-screen
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   ├── steering
+│   │   ├── agent-lessons.md
+│   │   ├── navigation.md
+│   │   ├── product.md
+│   │   ├── rules.md
+│   │   ├── structure.md
+│   │   ├── tech.md
+│   │   └── ui-system.md
+│   └── workstreams
+│       └── ui-system-migration
+│           ├── README.md
+│           ├── feedback-log.md
+│           ├── improvement-plan.md
+│           ├── material-design-patterns.md
+│           ├── migration-plan.md
+│           ├── navigation-pattern.md
+│           ├── progress-tracker.md
+│           ├── spacing-analysis.md
+│           └── ui-system-standards.md
+├── .mcp.json
+├── .metadata
+├── CLAUDE.md
+├── README.md
+├── SCREENSHOT_SYSTEM_TECHNICAL_DOCS.md
+├── SLOW_TESTS.md
+├── WIDGET_INSPECTOR_DOCS.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── demo
+│   │   ├── main_ui_system.dart
+│   │   └── main_widgets_demo.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── base_viewmodel.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_route_provider.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   ├── home_viewmodel_factory.dart
+│       │   │   └── widgets
+│       │   │       ├── current_user_card.dart
+│       │   │       ├── section_header.dart
+│       │   │       └── work_item_list_tile.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   ├── loading_route_provider.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_route_provider.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   ├── user_details
+│       │   │   ├── __generated__
+│       │   │   │   ├── user_details_viewmodel.ast.gql.dart
+│       │   │   │   ├── user_details_viewmodel.data.gql.dart
+│       │   │   │   ├── user_details_viewmodel.data.gql.g.dart
+│       │   │   │   ├── user_details_viewmodel.req.gql.dart
+│       │   │   │   ├── user_details_viewmodel.req.gql.g.dart
+│       │   │   │   ├── user_details_viewmodel.var.gql.dart
+│       │   │   │   └── user_details_viewmodel.var.gql.g.dart
+│       │   │   ├── user_details_route.dart
+│       │   │   ├── user_details_route_provider.dart
+│       │   │   ├── user_details_screen.dart
+│       │   │   ├── user_details_viewmodel.dart
+│       │   │   ├── user_details_viewmodel.graphql
+│       │   │   └── user_details_viewmodel_factory.dart
+│       │   ├── user_organizations
+│       │   │   ├── user_organizations_route.dart
+│       │   │   ├── user_organizations_route_provider.dart
+│       │   │   └── user_organizations_screen.dart
+│       │   ├── user_repositories
+│       │   │   ├── __generated__
+│       │   │   │   ├── user_repositories_viewmodel.ast.gql.dart
+│       │   │   │   ├── user_repositories_viewmodel.data.gql.dart
+│       │   │   │   ├── user_repositories_viewmodel.data.gql.g.dart
+│       │   │   │   ├── user_repositories_viewmodel.req.gql.dart
+│       │   │   │   ├── user_repositories_viewmodel.req.gql.g.dart
+│       │   │   │   ├── user_repositories_viewmodel.var.gql.dart
+│       │   │   │   └── user_repositories_viewmodel.var.gql.g.dart
+│       │   │   ├── user_repositories_route.dart
+│       │   │   ├── user_repositories_route_provider.dart
+│       │   │   ├── user_repositories_screen.dart
+│       │   │   ├── user_repositories_viewmodel.dart
+│       │   │   ├── user_repositories_viewmodel.graphql
+│       │   │   └── user_repositories_viewmodel_factory.dart
+│       │   └── user_starred
+│       │       ├── user_starred_route.dart
+│       │       ├── user_starred_route_provider.dart
+│       │       └── user_starred_screen.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── graphql_error_handler.dart
+│       │   ├── graphql_errors.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       ├── ui-system
+│       │   ├── COMPONENT_DOCUMENTATION.md
+│       │   ├── README.md
+│       │   ├── components
+│       │   │   ├── gh_button.dart
+│       │   │   ├── gh_card.dart
+│       │   │   ├── gh_chip.dart
+│       │   │   ├── gh_list_tile.dart
+│       │   │   ├── gh_search_bar.dart
+│       │   │   └── gh_text_field.dart
+│       │   ├── data
+│       │   │   └── fake_data_service.dart
+│       │   ├── docs
+│       │   │   ├── component_usage_guide.md
+│       │   │   ├── stakeholder_presentation_guide.dart
+│       │   │   └── ui_system_impact_summary.dart
+│       │   ├── examples
+│       │   │   ├── component_catalog_screen.dart
+│       │   │   ├── design_tokens_screen.dart
+│       │   │   ├── developer_guide_screen.dart
+│       │   │   ├── documentation_screen.dart
+│       │   │   ├── fake_data_provider.dart
+│       │   │   ├── github_widgets_screen.dart
+│       │   │   ├── home_screen_example.dart
+│       │   │   ├── interactive_component_demo_screen.dart
+│       │   │   ├── interactive_examples_screen.dart
+│       │   │   ├── issue_detail_example.dart
+│       │   │   ├── issues_list_example.dart
+│       │   │   ├── pulls_list_example.dart
+│       │   │   ├── reference_patterns_guide.dart
+│       │   │   ├── repository_details_example.dart
+│       │   │   ├── repository_file_example.dart
+│       │   │   ├── repository_tree_example.dart
+│       │   │   ├── search_example.dart
+│       │   │   ├── trending_example.dart
+│       │   │   ├── uat_home_screen.dart
+│       │   │   ├── user_organizations_screen.dart
+│       │   │   ├── user_profile_example.dart
+│       │   │   ├── user_repositories_screen.dart
+│       │   │   └── user_starred_screen.dart
+│       │   ├── layouts
+│       │   │   ├── gh_content_template.dart
+│       │   │   ├── gh_list_template.dart
+│       │   │   └── gh_screen_template.dart
+│       │   ├── navigation
+│       │   │   ├── example_routes.dart
+│       │   │   ├── navigation_service.dart
+│       │   │   └── ui_system_app.dart
+│       │   ├── state_widgets
+│       │   │   ├── gh_empty_state.dart
+│       │   │   ├── gh_error_state.dart
+│       │   │   └── gh_loading_indicator.dart
+│       │   ├── theme
+│       │   │   └── gh_theme.dart
+│       │   ├── tokens
+│       │   │   └── gh_tokens.dart
+│       │   ├── tools
+│       │   │   ├── comparison
+│       │   │   │   ├── comparison_screen.dart
+│       │   │   │   ├── component_showcase_comparison_screen.dart
+│       │   │   │   ├── mock_screen.dart
+│       │   │   │   ├── navigation_comparison_screen.dart
+│       │   │   │   └── spacing_comparison_screen.dart.bak
+│       │   │   ├── demo_readiness_checklist.dart
+│       │   │   ├── measurement_validation_screen.dart
+│       │   │   └── standards_compliance_screen.dart
+│       │   ├── utils
+│       │   │   ├── color_utils.dart
+│       │   │   ├── date_formatter.dart
+│       │   │   ├── debounced_search.dart
+│       │   │   ├── number_formatter.dart
+│       │   │   ├── search_service.dart
+│       │   │   ├── spacing_debug_overlay.dart
+│       │   │   ├── spacing_developer_tools.dart
+│       │   │   └── spacing_validator.dart
+│       │   └── widgets
+│       │       ├── gh_content_metadata.dart
+│       │       ├── gh_entity_header.dart
+│       │       ├── gh_file_tree_item.dart
+│       │       ├── gh_filter_bar.dart
+│       │       ├── gh_issue_card.dart
+│       │       ├── gh_navigation_grid.dart
+│       │       ├── gh_repository_card.dart
+│       │       ├── gh_status_badge.dart
+│       │       ├── gh_user_card.dart
+│       │       └── theme_toggle_button.dart
+│       └── widgets
+│           ├── cached_avatar
+│           │   └── cached_avatar.dart
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   ├── repository_card.dart
+│           │   └── repository_card.graphql
+│           ├── screenshot_wrapper.dart
+│           ├── skeleton_loading
+│           │   └── skeleton_loading.dart
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           ├── user_profile
+│           │   ├── __generated__
+│           │   │   ├── user_profile.ast.gql.dart
+│           │   │   ├── user_profile.data.gql.dart
+│           │   │   ├── user_profile.data.gql.g.dart
+│           │   │   ├── user_profile.req.gql.dart
+│           │   │   ├── user_profile.req.gql.g.dart
+│           │   │   ├── user_profile.var.gql.dart
+│           │   │   └── user_profile.var.gql.g.dart
+│           │   ├── user_profile.dart
+│           │   └── user_profile.graphql
+│           ├── user_stats_row
+│           │   └── user_stats_row.dart
+│           └── user_status_card
+│               └── user_status_card.dart
+├── mcp_flutter_automation
+│   ├── .mcp.json
+│   ├── CLAUDE_CODE_SETUP.md
+│   ├── CLAUDE_SETUP.md
+│   ├── README.md
+│   ├── bin
+│   │   └── mcp_flutter_automation.dart
+│   ├── dart_test.yaml
+│   ├── example
+│   │   ├── example_config.json
+│   │   └── usage_example.md
+│   ├── lib
+│   │   ├── mcp_flutter_automation.dart
+│   │   └── src
+│   │       ├── flutter_controller.dart
+│   │       ├── models
+│   │       │   └── flutter_app.dart
+│   │       ├── server.dart
+│   │       └── widget_inspector.dart
+│   ├── mcp_flutter_automation
+│   ├── pubspec.lock
+│   ├── pubspec.yaml
+│   ├── run_mcp_server.sh
+│   ├── scripts
+│   │   └── run_tests.sh
+│   └── test
+│       ├── README.md
+│       ├── all_tests.dart
+│       ├── integration
+│       │   └── mcp_server_test.dart
+│       ├── performance
+│       │   ├── fast_performance_test.dart
+│       │   └── performance_test.dart
+│       ├── test_utils.dart
+│       └── unit
+│           ├── flutter_app_test.dart
+│           └── flutter_controller_test.dart
+├── poll-ci-status.sh
+├── pubspec.lock
+├── pubspec.yaml
+├── scripts
+│   ├── README.md
+│   └── find_slow_tests.dart
+├── test
+│   ├── app_start_test.dart
+│   ├── app_start_test.mocks.dart
+│   ├── integration
+│   │   ├── auth_integration_test.dart
+│   │   ├── auth_integration_test.mocks.dart
+│   │   ├── di_factory_integration_test.dart
+│   │   ├── di_factory_integration_test.mocks.dart
+│   │   ├── modular_architecture_test.dart
+│   │   └── modular_architecture_test.mocks.dart
+│   ├── routing
+│   │   ├── app_route_test.dart
+│   │   ├── route_collection_service_test.dart
+│   │   └── route_collection_service_test.mocks.dart
+│   ├── screens
+│   │   ├── app
+│   │   │   ├── auth_viewmodel_test.dart
+│   │   │   └── auth_viewmodel_test.mocks.dart
+│   │   ├── base_viewmodel_test.dart
+│   │   ├── home_screen
+│   │   │   ├── home_route_provider_test.dart
+│   │   │   ├── home_route_provider_test.mocks.dart
+│   │   │   ├── home_route_test.dart
+│   │   │   ├── home_screen_integration_test.dart
+│   │   │   ├── home_screen_integration_test.mocks.dart
+│   │   │   ├── home_viewmodel_factory_test.dart
+│   │   │   ├── home_viewmodel_factory_test.mocks.dart
+│   │   │   ├── home_viewmodel_test.dart
+│   │   │   ├── home_viewmodel_test.mocks.dart
+│   │   │   └── widgets
+│   │   │       ├── current_user_card_test.dart
+│   │   │       ├── section_header_test.dart
+│   │   │       └── work_item_list_tile_test.dart
+│   │   ├── loading_screen
+│   │   │   ├── loading_route_provider_test.dart
+│   │   │   ├── loading_route_provider_test.mocks.dart
+│   │   │   ├── loading_route_test.dart
+│   │   │   ├── loading_screen_test.dart
+│   │   │   └── loading_screen_test.mocks.dart
+│   │   ├── login_screen
+│   │   │   ├── login_route_provider_test.dart
+│   │   │   ├── login_route_provider_test.mocks.dart
+│   │   │   ├── login_route_test.dart
+│   │   │   ├── login_screen_test.dart
+│   │   │   ├── login_screen_test.mocks.dart
+│   │   │   ├── login_viewmodel_factory_test.dart
+│   │   │   ├── login_viewmodel_factory_test.mocks.dart
+│   │   │   ├── login_viewmodel_test.dart
+│   │   │   └── login_viewmodel_test.mocks.dart
+│   │   ├── user_details
+│   │   │   ├── user_details_route_provider_test.dart
+│   │   │   ├── user_details_route_provider_test.mocks.dart
+│   │   │   ├── user_details_route_test.dart
+│   │   │   ├── user_details_screen_comprehensive_test.dart
+│   │   │   ├── user_details_screen_comprehensive_test.mocks.dart
+│   │   │   ├── user_details_screen_integration_test.dart
+│   │   │   ├── user_details_screen_integration_test.mocks.dart
+│   │   │   ├── user_details_screen_navigation_test.dart
+│   │   │   ├── user_details_screen_navigation_test.mocks.dart
+│   │   │   ├── user_details_screen_test.dart
+│   │   │   ├── user_details_screen_test.mocks.dart
+│   │   │   ├── user_details_viewmodel_factory_test.dart
+│   │   │   ├── user_details_viewmodel_factory_test.mocks.dart
+│   │   │   ├── user_details_viewmodel_test.dart
+│   │   │   └── user_details_viewmodel_test.mocks.dart
+│   │   └── user_repositories
+│   │       ├── user_repositories_viewmodel_test.dart
+│   │       └── user_repositories_viewmodel_test.mocks.dart
+│   ├── services
+│   │   ├── auth_service_test.dart
+│   │   ├── auth_service_test.mocks.dart
+│   │   ├── github_auth_client_test.dart
+│   │   ├── github_auth_client_test.mocks.dart
+│   │   ├── scope_service_test.dart
+│   │   ├── scope_service_test.mocks.dart
+│   │   ├── timer_service_test.dart
+│   │   └── token_storage_test.dart
+│   ├── src
+│   │   └── ui-system
+│   │       ├── accessibility
+│   │       │   └── design_token_compliance_test.dart
+│   │       ├── components
+│   │       │   ├── gh_button_test.dart
+│   │       │   └── gh_card_test.dart
+│   │       ├── examples
+│   │       │   ├── component_catalog_screen_test.dart
+│   │       │   ├── design_tokens_screen_test.dart
+│   │       │   ├── developer_guide_screen_test.dart
+│   │       │   ├── documentation_screen_test.dart
+│   │       │   ├── interactive_component_demo_screen_test.dart
+│   │       │   ├── reference_patterns_guide_test.dart
+│   │       │   └── uat_home_screen_test.dart
+│   │       ├── integration
+│   │       │   ├── basic_ui_system_test.dart
+│   │       │   ├── navigation_ui_system_test.dart
+│   │       │   ├── screen_integration_test.dart
+│   │       │   └── theme_ui_system_test.dart
+│   │       ├── navigation
+│   │       │   └── ui_system_app_test.dart
+│   │       ├── state_widgets
+│   │       │   ├── gh_empty_state_test.dart
+│   │       │   └── gh_error_state_test.dart
+│   │       ├── theme
+│   │       │   └── component_theme_test.dart
+│   │       ├── tools
+│   │       │   ├── comparison
+│   │       │   │   ├── comparison_screen_test.dart
+│   │       │   │   ├── component_showcase_comparison_screen_test.dart
+│   │       │   │   ├── mock_screen_test.dart
+│   │       │   │   ├── navigation_comparison_screen_test.dart
+│   │       │   │   └── spacing_comparison_screen_test.dart.bak
+│   │       │   ├── measurement_validation_screen_test.dart
+│   │       │   └── standards_compliance_screen_test.dart
+│   │       ├── utilities
+│   │       │   └── spacing_validator_test.dart
+│   │       ├── utils
+│   │       │   ├── color_utils_test.dart
+│   │       │   ├── date_formatter_test.dart
+│   │       │   └── number_formatter_test.dart
+│   │       └── widgets
+│   │           └── theme_toggle_button_test.dart
+│   ├── ui-system
+│   │   ├── components
+│   │   │   └── gh_card_test.dart
+│   │   ├── integration
+│   │   │   ├── error_state_integration_test.dart
+│   │   │   └── gh_content_template_integration_test.dart
+│   │   ├── layouts
+│   │   │   └── gh_content_template_test.dart
+│   │   ├── state_widgets
+│   │   │   ├── gh_empty_state_test.dart
+│   │   │   ├── gh_error_state_test.dart
+│   │   │   ├── gh_loading_indicator_test.dart
+│   │   │   └── gh_loading_transition_test.dart
+│   │   ├── tokens
+│   │   │   └── gh_tokens_test.dart
+│   │   ├── ui_system
+│   │   │   ├── accessibility_test.dart
+│   │   │   ├── examples
+│   │   │   │   └── interactive_examples_screen_test.dart
+│   │   │   └── theme_test.dart
+│   │   └── widgets
+│   │       └── gh_content_metadata_test.dart
+│   ├── widget_test.dart
+│   └── widgets
+│       ├── user_card
+│       │   └── user_card_test.dart
+│       ├── user_stats_row
+│       │   └── user_stats_row_test.dart
+│       └── user_status_card
+│           └── user_status_card_test.dart
+└── web
+    ├── favicon.png
+    ├── icons
+    │   ├── Icon-192.png
+    │   ├── Icon-512.png
+    │   ├── Icon-maskable-192.png
+    │   └── Icon-maskable-512.png
+    ├── index.html
+    └── manifest.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: mcp_flutter_automation/lib/src/screenshot_server.dart ---
+diff --git a/mcp_flutter_automation/lib/src/screenshot_server.dart b/mcp_flutter_automation/lib/src/screenshot_server.dart
+deleted file mode 100644
+index d013c07..0000000
+--- a/mcp_flutter_automation/lib/src/screenshot_server.dart
++++ /dev/null
+@@ -1,135 +0,0 @@
+-import 'dart:convert';
+-import 'dart:io';
+-import 'package:logging/logging.dart';
+-
+-class ScreenshotServer {
+-  final _logger = Logger('ScreenshotServer');
+-  HttpServer? _server;
+-  String? _latestScreenshot;
+-  DateTime? _screenshotTimestamp;
+-
+-  Future<void> start({int port = 3000}) async {
+-    try {
+-      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+-      _logger.info('Screenshot server started on http://127.0.0.1:$port');
+-
+-      _server!.listen((HttpRequest request) async {
+-        await _handleRequest(request);
+-      });
+-    } catch (e) {
+-      _logger.severe('Failed to start screenshot server: $e');
+-      rethrow;
+-    }
+-  }
+-
+-  Future<void> _handleRequest(HttpRequest request) async {
+-    try {
+-      // Add CORS headers
+-      request.response.headers.add('Access-Control-Allow-Origin', '*');
+-      request.response.headers
+-          .add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+-      request.response.headers
+-          .add('Access-Control-Allow-Headers', 'Content-Type');
+-
+-      if (request.method == 'OPTIONS') {
+-        request.response.statusCode = 200;
+-        await request.response.close();
+-        return;
+-      }
+-
+-      if (request.uri.path == '/screenshot' && request.method == 'POST') {
+-        await _handleScreenshotUpload(request);
+-      } else if (request.uri.path == '/screenshot' && request.method == 'GET') {
+-        await _handleScreenshotDownload(request);
+-      } else if (request.uri.path == '/health' && request.method == 'GET') {
+-        await _handleHealthCheck(request);
+-      } else {
+-        request.response.statusCode = 404;
+-        request.response.write('Not Found');
+-        await request.response.close();
+-      }
+-    } catch (e) {
+-      _logger.warning('Request handling error: $e');
+-      request.response.statusCode = 500;
+-      request.response.write('Internal Server Error');
+-      await request.response.close();
+-    }
+-  }
+-
+-  Future<void> _handleScreenshotUpload(HttpRequest request) async {
+-    try {
+-      final body = await utf8.decoder.bind(request).join();
+-      final data = json.decode(body);
+-
+-      _latestScreenshot = data['image'] as String?;
+-      _screenshotTimestamp = DateTime.parse(data['timestamp'] as String);
+-
+-      _logger.info(
+-          'Screenshot received: ${_latestScreenshot?.length ?? 0} bytes at $_screenshotTimestamp');
+-
+-      request.response.statusCode = 200;
+-      request.response.headers.contentType = ContentType.json;
+-      request.response.write(json.encode({
+-        'success': true,
+-        'message': 'Screenshot received',
+-        'timestamp': _screenshotTimestamp?.toIso8601String(),
+-      }));
+-      await request.response.close();
+-    } catch (e) {
+-      _logger.warning('Screenshot upload error: $e');
+-      request.response.statusCode = 400;
+-      request.response.write('Bad Request');
+-      await request.response.close();
+-    }
+-  }
+-
+-  Future<void> _handleScreenshotDownload(HttpRequest request) async {
+-    try {
+-      if (_latestScreenshot == null) {
+-        request.response.statusCode = 404;
+-        request.response.headers.contentType = ContentType.json;
+-        request.response.write(json.encode({
+-          'error': 'No screenshot available',
+-        }));
+-        await request.response.close();
+-        return;
+-      }
+-
+-      request.response.statusCode = 200;
+-      request.response.headers.contentType = ContentType.json;
+-      request.response.write(json.encode({
+-        'success': true,
+-        'image': _latestScreenshot,
+-        'timestamp': _screenshotTimestamp?.toIso8601String(),
+-        'format': 'png',
+-      }));
+-      await request.response.close();
+-    } catch (e) {
+-      _logger.warning('Screenshot download error: $e');
+-      request.response.statusCode = 500;
+-      request.response.write('Internal Server Error');
+-      await request.response.close();
+-    }
+-  }
+-
+-  Future<void> _handleHealthCheck(HttpRequest request) async {
+-    request.response.statusCode = 200;
+-    request.response.headers.contentType = ContentType.json;
+-    request.response.write(json.encode({
+-      'status': 'healthy',
+-      'hasScreenshot': _latestScreenshot != null,
+-      'lastScreenshot': _screenshotTimestamp?.toIso8601String(),
+-    }));
+-    await request.response.close();
+-  }
+-
+-  String? getLatestScreenshot() => _latestScreenshot;
+-  DateTime? getScreenshotTimestamp() => _screenshotTimestamp;
+-
+-  Future<void> stop() async {
+-    if (_server != null) {
+-      await _server!.close();
+-      _logger.info('Screenshot server stopped');
+-    }
+-  }
+-}
+
+--- FILE: mcp_flutter_automation/lib/src/server.dart ---
+diff --git a/mcp_flutter_automation/lib/src/server.dart b/mcp_flutter_automation/lib/src/server.dart
+index 167f9c7..05f8f06 100644
+--- a/mcp_flutter_automation/lib/src/server.dart
++++ b/mcp_flutter_automation/lib/src/server.dart
+@@ -3,7 +3,6 @@ import 'dart:convert';
+ import 'dart:io';
+ import 'package:logging/logging.dart';
+ import 'flutter_controller.dart';
+-import 'screenshot_server.dart';
+ import 'widget_inspector.dart';
+ 
+ // Simplified MCP server base class for testing
+@@ -15,7 +14,6 @@ abstract class MCPBase {
+ class FlutterAutomationMCPServer extends MCPBase {
+   final _logger = Logger('FlutterAutomationMCPServer');
+   late final FlutterController _controller;
+-  late final ScreenshotServer _screenshotServer;
+   late final WidgetInspector _widgetInspector;
+ 
+   FlutterAutomationMCPServer()
+@@ -26,7 +24,6 @@ class FlutterAutomationMCPServer extends MCPBase {
+           },
+         ) {
+     _controller = FlutterController();
+-    _screenshotServer = ScreenshotServer();
+     _widgetInspector = WidgetInspector(_controller);
+   }
+ 
+@@ -91,45 +88,17 @@ class FlutterAutomationMCPServer extends MCPBase {
+           _logger.info(
+               'Received screenshot request for app: $appId, filename: $filename');
+ 
+-          // Try VM service screenshot first
+-          try {
+-            _logger.info('Attempting VM service screenshot...');
+-            final screenshot = await _controller.captureScreenshot(appId);
+-            if (screenshot != null) {
+-              _logger.info(
+-                  'VM service screenshot successful, size: ${screenshot.length}');
+-
+-              // Save to specified file
+-              final appInfo = _controller.getAppInfo(appId);
+-              final filePath = '${appInfo['projectPath']}/$filename';
+-              final bytes = base64Decode(screenshot);
+-              final file = File(filePath);
+-              await file.writeAsBytes(bytes);
+-
+-              return {
+-                'success': true,
+-                'filename': filename,
+-                'filepath': filePath,
+-                'size_bytes': bytes.length,
+-                'format': 'png',
+-                'method': 'vm_service',
+-              };
+-            }
+-          } catch (e) {
+-            _logger.warning('VM Service screenshot failed: $e');
+-          }
+-
+-          // Fallback to screenshot server (RenderRepaintBoundary)
+-          _logger.info('Trying screenshot server fallback...');
+-          final latestScreenshot = _screenshotServer.getLatestScreenshot();
+-          if (latestScreenshot != null) {
++          // Capture screenshot via VM service
++          _logger.info('Attempting VM service screenshot...');
++          final screenshot = await _controller.captureScreenshot(appId);
++          if (screenshot != null) {
+             _logger.info(
+-                'Screenshot server has screenshot, size: ${latestScreenshot.length}');
++                'VM service screenshot successful, size: ${screenshot.length}');
+ 
+             // Save to specified file
+             final appInfo = _controller.getAppInfo(appId);
+             final filePath = '${appInfo['projectPath']}/$filename';
+-            final bytes = base64Decode(latestScreenshot);
++            final bytes = base64Decode(screenshot);
+             final file = File(filePath);
+             await file.writeAsBytes(bytes);
+ 
+@@ -139,18 +108,15 @@ class FlutterAutomationMCPServer extends MCPBase {
+               'filepath': filePath,
+               'size_bytes': bytes.length,
+               'format': 'png',
+-              'method': 'render_repaint_boundary',
+-              'timestamp':
+-                  _screenshotServer.getScreenshotTimestamp()?.toIso8601String(),
++              'method': 'vm_service',
++            };
++          } else {
++            return {
++              'success': false,
++              'error': 'Screenshot capture failed - VM service returned null',
+             };
+           }
+ 
+-          _logger.warning('No screenshot available from any method');
+-          return {
+-            'success': false,
+-            'error': 'No screenshot available from any method',
+-          };
+-
+         case 'get_logs':
+           final appId = params['appId'] as String;
+           final count = params['count'] as int?;
+@@ -295,13 +261,6 @@ class FlutterAutomationMCPServer extends MCPBase {
+   Future<void> start() async {
+     _logger.info('Starting Flutter Automation MCP Server');
+ 
+-    // Start the screenshot server
+-    try {
+-      await _screenshotServer.start(port: 3000);
+-    } catch (e) {
+-      _logger.warning('Failed to start screenshot server: $e');
+-    }
+-
+     // Listen for MCP protocol messages on stdin
+     await for (final line
+         in stdin.transform(utf8.decoder).transform(LineSplitter())) {
+@@ -629,6 +588,5 @@ class FlutterAutomationMCPServer extends MCPBase {
+   Future<void> stop() async {
+     _logger.info('Stopping Flutter Automation MCP Server');
+     await _controller.dispose();
+-    await _screenshotServer.stop();
+   }
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

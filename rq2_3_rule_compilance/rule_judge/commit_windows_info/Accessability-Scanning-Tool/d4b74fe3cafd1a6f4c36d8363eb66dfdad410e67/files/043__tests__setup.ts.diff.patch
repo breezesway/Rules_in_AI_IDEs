@@ -1,0 +1,209 @@
+diff --git a/tests/setup.ts b/tests/setup.ts
+index 70c4fc9..ad6dc01 100644
+--- a/tests/setup.ts
++++ b/tests/setup.ts
+@@ -230,5 +230,203 @@ afterAll(async () => {
+         } catch (error) {
+             return 0;
+         }
++    },
++
++    // Database cleanup utilities
++    database: {
++        // Helper to set up test database environment
++        setupTestEnvironment: () => {
++            // Set test-specific environment variables
++            process.env['NODE_ENV'] = 'test';
++            process.env['MONGODB_URL'] = 'mongodb://localhost:27017';
++            process.env['MONGODB_DB_NAME'] = 'test_accessibility_db';
++
++            // Ensure test database name is used
++            if (!process.env['MONGODB_DB_NAME']?.includes('test')) {
++                process.env['MONGODB_DB_NAME'] = 'test_accessibility_db';
++            }
++        },
++
++        // Helper to clean up test database data
++        cleanupTestData: async () => {
++            try {
++                // Import the cleanup service dynamically to avoid circular dependencies
++                const { DatabaseCleanupService } = await import('@/utils/services/database-cleanup-service');
++                const cleanupService = DatabaseCleanupService.getInstance();
++
++                // Perform test data cleanup
++                const result = await cleanupService.performCleanup({
++                    testData: true,
++                    orphanedReports: true,
++                    expiredReports: false, // Don't clean up expired reports in tests
++                    dryRun: false
++                });
++
++                if (result.success) {
++                    console.log(`Database cleanup completed: ${result.recordsCleaned || 0} records cleaned`);
++                } else {
++                    console.warn('Database cleanup failed:', result.message);
++                }
++
++                return result;
++            } catch (error) {
++                console.warn('Database cleanup error:', error);
++                return {
++                    success: false,
++                    message: 'Database cleanup failed',
++                    data: null
++                };
++            }
++        },
++
++        // Helper to reset test database
++        resetTestDatabase: async () => {
++            try {
++                const { DatabaseCleanupService } = await import('@/utils/services/database-cleanup-service');
++                const cleanupService = DatabaseCleanupService.getInstance();
++
++                const result = await cleanupService.resetDatabase();
++
++                if (result.success) {
++                    console.log('Test database reset completed');
++                } else {
++                    console.warn('Test database reset failed:', result.message);
++                }
++
++                return result;
++            } catch (error) {
++                console.warn('Test database reset error:', error);
++                return {
++                    success: false,
++                    message: 'Test database reset failed',
++                    data: null
++                };
++            }
++        },
++
++        // Helper to get database statistics
++        getTestDatabaseStats: async () => {
++            try {
++                const { DatabaseCleanupService } = await import('@/utils/services/database-cleanup-service');
++                const cleanupService = DatabaseCleanupService.getInstance();
++
++                return await cleanupService.getDatabaseStatistics();
++            } catch (error) {
++                console.warn('Database statistics error:', error);
++                return {
++                    success: false,
++                    message: 'Database statistics failed',
++                    data: null
++                };
++            }
++        },
++
++        // Helper to create test data in database
++        createTestData: async (testData: any) => {
++            try {
++                const { DatabaseService } = await import('@/utils/services/database-service');
++                const databaseService = DatabaseService.getInstance();
++
++                // Initialize database if needed
++                if (!databaseService.isInitialized()) {
++                    await databaseService.initialize();
++                }
++
++                // Store test data
++                if (testData.siteUrl) {
++                    // Site-wide report
++                    return await databaseService.storeSiteWideReport(testData);
++                } else {
++                    // Single page report
++                    return await databaseService.storeSinglePageReport(testData);
++                }
++            } catch (error) {
++                console.warn('Test data creation error:', error);
++                return {
++                    success: false,
++                    message: 'Test data creation failed',
++                    data: null
++                };
++            }
++        },
++
++        // Helper to verify test data was cleaned up
++        verifyCleanup: async () => {
++            try {
++                const stats = await (global as any).testUtils.database.getTestDatabaseStats();
++                if (stats.success && stats.data) {
++                    const totalReports = stats.data.totalReports || 0;
++                    if (totalReports > 0) {
++                        console.warn(`Warning: ${totalReports} reports still exist in test database`);
++                        return false;
++                    }
++                    return true;
++                }
++                return true; // Assume clean if we can't verify
++            } catch (error) {
++                console.warn('Cleanup verification error:', error);
++                return true; // Assume clean if we can't verify
++            }
++        }
++    },
++
++    // Test data creation helpers
++    createTestData: {
++        // Create mock site-wide report for testing
++        createMockSiteWideReport: (overrides: Partial<any> = {}): any => ({
++            siteUrl: 'https://test-example.com',
++            pages: [
++                {
++                    url: 'https://test-example.com',
++                    title: 'Test Page',
++                    violations: [],
++                    summary: {
++                        totalViolations: 0,
++                        criticalViolations: 0,
++                        seriousViolations: 0,
++                        moderateViolations: 0,
++                        minorViolations: 0
++                    }
++                }
++            ],
++            summary: {
++                totalPages: 1,
++                totalViolations: 0,
++                compliancePercentage: 100,
++                wcagLevel: 'AA'
++            },
++            metadata: {
++                scanId: 'test-scan-' + Date.now(),
++                scanType: 'test',
++                scanStartedAt: new Date(),
++                scanCompletedAt: new Date(),
++                toolsUsed: ['axe-core'],
++                ...overrides['metadata']
++            },
++            ...overrides
++        }),
++
++        // Create mock single page report for testing
++        createMockSinglePageReport: (overrides: Partial<any> = {}): any => ({
++            url: 'https://test-example.com',
++            title: 'Test Page',
++            violations: [],
++            summary: {
++                totalViolations: 0,
++                criticalViolations: 0,
++                seriousViolations: 0,
++                moderateViolations: 0,
++                minorViolations: 0
++            },
++            metadata: {
++                scanId: 'test-scan-' + Date.now(),
++                scanType: 'test',
++                scanStartedAt: new Date(),
++                scanCompletedAt: new Date(),
++                toolsUsed: ['axe-core'],
++                ...overrides['metadata']
++            },
++            ...overrides
++        })
+     }
+ }; 
+\ No newline at end of file

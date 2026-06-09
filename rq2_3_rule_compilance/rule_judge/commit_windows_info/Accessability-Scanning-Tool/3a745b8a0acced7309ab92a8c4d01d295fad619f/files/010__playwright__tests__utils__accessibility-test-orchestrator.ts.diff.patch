@@ -1,0 +1,100 @@
+diff --git a/playwright/tests/utils/accessibility-test-orchestrator.ts b/playwright/tests/utils/accessibility-test-orchestrator.ts
+index 01e3a96..45dbf28 100644
+--- a/playwright/tests/utils/accessibility-test-orchestrator.ts
++++ b/playwright/tests/utils/accessibility-test-orchestrator.ts
+@@ -262,14 +262,15 @@ export class AccessibilityTestOrchestrator {
+     url: string,
+     testSuite: string,
+     browser: string = 'chromium',
+-    viewport: string = 'Desktop'
++    viewport: string = 'Desktop',
++    captureScreenshots: boolean = true
+   ): Promise<ServiceResult<AccessibilityReport>> {
+     return this.errorHandler.executeWithErrorHandling(async () => {
+       this.errorHandler.logInfo(`Generating accessibility report for: ${url}`);
+ 
+       // Run comprehensive analysis and page analysis in parallel
+       const [violationsResult, pageAnalysisResult] = await Promise.all([
+-        this.runComprehensiveAnalysis(true),
++        this.runComprehensiveAnalysis(captureScreenshots),
+         this.pageAnalyzer.analyzeCurrentPage(),
+       ]);
+ 
+@@ -315,22 +316,35 @@ export class AccessibilityTestOrchestrator {
+       maxConcurrency = this.config.getReportingConfiguration().maxConcurrency,
+       delayBetweenPages = this.config.getReportingConfiguration().delayBetweenPages,
+       skipErrors = true,
+-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+-      _handleRedirects = true,
+-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+-      _captureScreenshots = true,
++      handleRedirects = true,
++      captureScreenshots = true,
+     } = options;
+ 
+     return this.errorHandler.executeWithErrorHandling(async () => {
+       this.errorHandler.logInfo(`Testing ${urls.length} pages with concurrency: ${maxConcurrency}`);
+ 
++      if (handleRedirects) {
++        this.errorHandler.logInfo('Redirect handling enabled - will track URL changes during navigation');
++      }
++
++      if (!captureScreenshots) {
++        this.errorHandler.logInfo('Screenshot capture disabled for performance optimization');
++      }
++
+       const reports: AccessibilityReport[] = [];
+       const semaphore = new Array(maxConcurrency).fill(null);
++      const processedUrls = new Set<string>(); // Track processed URLs for redirect handling
+ 
+       const processUrl = async (url: string, index: number): Promise<void> => {
+         try {
+           this.errorHandler.logInfo(`Processing page ${index + 1}/${urls.length}: ${url}`);
+ 
++          // Check for redirect handling
++          if (handleRedirects && processedUrls.has(url)) {
++            this.errorHandler.logInfo(`Skipping already processed URL: ${url}`);
++            return;
++          }
++
+           // Navigate to URL
+           await this.testSetup.setupAccessibilityTest(this.page, {
+             url,
+@@ -338,6 +352,16 @@ export class AccessibilityTestOrchestrator {
+             waitForNetworkIdle: true,
+           });
+ 
++          // Track URL after navigation (in case of redirects)
++          if (handleRedirects) {
++            const currentUrl = this.page.url();
++            if (currentUrl !== url) {
++              this.errorHandler.logInfo(`Redirect detected: ${url} → ${currentUrl}`);
++              processedUrls.add(currentUrl);
++            }
++            processedUrls.add(url);
++          }
++
+           // Wait for page to be ready
+           await this.testSetup.waitForPageReady(this.page);
+ 
+@@ -346,7 +370,8 @@ export class AccessibilityTestOrchestrator {
+             url,
+             testSuite,
+             'chromium',
+-            'Desktop'
++            'Desktop',
++            captureScreenshots
+           );
+ 
+           if (this.errorHandler.isSuccess(reportResult)) {
+@@ -441,8 +466,8 @@ export class AccessibilityTestOrchestrator {
+       compliancePercentage:
+         reports.length > 0
+           ? ((reports.length - reports.filter(r => r.violations.length > 0).length) /
+-              reports.length) *
+-            100
++            reports.length) *
++          100
+           : 0,
+       mostCommonViolations: Object.entries(violationsByType)
+         .sort(([, a], [, b]) => b.totalOccurrences - a.totalOccurrences)

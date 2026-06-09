@@ -1,0 +1,125 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech_stack.md
+- Change Type: modified
+- Target Rule Content:
+- Immutable Ledger: Amazon QLDB
++ Immutable Ledger: Amazon Aurora PostgreSQL
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency management files (e.g., package.json, requirements.txt, pom.xml), configuration files (e.g., .env, application.yaml), and Infrastructure-as-Code (IaC) files (e.g., Terraform .tf files, CloudFormation templates).
+- Suggested Logic: 1. Check dependency manifests for the removal of QLDB-specific SDKs (e.g., @aws-sdk/client-qldb, amazon-qldb-driver-nodejs) and the addition of PostgreSQL drivers (e.g., 'pg', 'psycopg2', 'jdbc:postgresql'). 2. Scan configuration and IaC files to ensure that database connection strings or resource definitions point to Amazon Aurora/RDS (PostgreSQL) instead of AWS::QLDB::Ledger resources.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: fix: Refactor S3 event notifications to correctly trigger workflow
+- Changed Files List: 
+infrastructure/lib/grace-foundation-stack.ts	+1	-4	after_lines=159
+infrastructure/lib/grace-orchestration-stack.ts	+5	-1	after_lines=76
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── README.md
+│   ├── specs
+│   │   └── core-audit-workflow
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── project_conventions.md
+│       └── tech_stack.md
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── GRACE_ARCHITECTURE.md
+│   ├── GRACE_DEPLOYMENT_GUIDE.md
+│   ├── GRACE_GLOBAL_STRATEGY.md
+│   ├── GRACE_MODEL_SPEC.md
+│   └── dataset_manifest.md
+├── infrastructure
+│   ├── README.md
+│   ├── additional-permissions.json
+│   ├── bin
+│   │   ├── grace-app.ts
+│   │   └── s3-app.ts
+│   ├── bootstrap-instructions.md
+│   ├── cdk-bootstrap-permissions.json
+│   ├── cdk.context.json
+│   ├── cdk.json
+│   ├── configure-s3.sh
+│   ├── create-s3-bucket.sh
+│   ├── deploy.sh
+│   ├── lambda
+│   │   ├── db-init
+│   │   │   ├── cfnresponse.py
+│   │   │   ├── index.py
+│   │   │   └── requirements.txt
+│   │   ├── dependencies
+│   │   │   ├── README.md
+│   │   │   └── build_layer.sh
+│   │   ├── index.js
+│   │   └── provenance_logger
+│   │       ├── index.py
+│   │       └── requirements.txt
+│   ├── lib
+│   │   ├── grace-api-stack.ts
+│   │   ├── grace-foundation-stack.ts
+│   │   ├── grace-foundation-stack.ts.original
+│   │   ├── grace-logic-stack.ts
+│   │   ├── grace-orchestration-stack.ts
+│   │   ├── s3-stack.ts
+│   │   └── simple-s3-stack.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── s3-config.json
+│   ├── sql
+│   │   └── init-audit-schema.sql
+│   ├── tsconfig.json
+│   └── update-s3-policy.sh
+└── scripts
+    └── verify_dataset.sh
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: infrastructure/lib/grace-foundation-stack.ts ---
+diff --git a/infrastructure/lib/grace-foundation-stack.ts b/infrastructure/lib/grace-foundation-stack.ts
+index f510bae..56586cc 100644
+--- a/infrastructure/lib/grace-foundation-stack.ts
++++ b/infrastructure/lib/grace-foundation-stack.ts
+@@ -107,10 +107,7 @@ export class GraceFoundationStack extends cdk.Stack {
+     });
+ 
+     // Enable EventBridge notifications for the S3 bucket
+-    const cfnBucket = this.dataBucket.node.defaultChild as s3.CfnBucket;
+-    cfnBucket.addPropertyOverride('NotificationConfiguration', {
+-      EventBridgeConfiguration: {}
+-    });
++    this.dataBucket.enableEventBridgeNotification();
+     
+     // Create a rule to forward S3 events to our custom event bus
+     new events.Rule(this, 'S3EventsToCustomBus', {
+
+--- FILE: infrastructure/lib/grace-orchestration-stack.ts ---
+diff --git a/infrastructure/lib/grace-orchestration-stack.ts b/infrastructure/lib/grace-orchestration-stack.ts
+index 688e194..4f884f0 100644
+--- a/infrastructure/lib/grace-orchestration-stack.ts
++++ b/infrastructure/lib/grace-orchestration-stack.ts
+@@ -58,7 +58,11 @@ export class GraceOrchestrationStack extends cdk.NestedStack {
+       eventPattern: {
+         source: ['aws.s3'],
+         detailType: ['Object Created'],
+-        resources: [props.dataBucket.bucketArn]
++        detail: {
++          bucket: {
++            name: [props.dataBucket.bucketName]
++          }
++        }
+       },
+       targets: [new targets.SfnStateMachine(this.stateMachine)]
+     });
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

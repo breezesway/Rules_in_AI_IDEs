@@ -1,0 +1,357 @@
+diff --git a/src/components/molecules/comparative-analysis.tsx b/src/components/molecules/comparative-analysis.tsx
+index e97937e..f15f220 100644
+--- a/src/components/molecules/comparative-analysis.tsx
++++ b/src/components/molecules/comparative-analysis.tsx
+@@ -1,16 +1,21 @@
+-"use client";
++'use client';
+ 
+ import { useState } from 'react';
+ import { motion } from 'framer-motion';
+ import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+-import { Button } from "@/components/ui/button";
+-import { Badge } from "@/components/ui/badge";
+-import { ScoreCircle } from "@/components/atoms/score-circle";
+-import { cn } from "@/lib/utils";
+-import { getStatusFromScore } from "@/lib/utils/scores";
++import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
++import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
++import {
++  Select,
++  SelectContent,
++  SelectItem,
++  SelectTrigger,
++  SelectValue,
++} from '@/components/ui/select';
++import { Badge } from '@/components/ui/badge';
++import { ScoreCircle } from '@/components/atoms/score-circle';
++import { cn } from '@/lib/utils';
++import { getStatusFromScore } from '@/lib/utils/scores';
+ 
+ // Type definities
+ export interface ModuleScore {
+@@ -36,7 +41,9 @@ interface ComparativeAnalysisProps {
+ }
+ 
+ // Helper functie om status naar variant om te zetten
+-const getVariantFromStatus = (status: 'success' | 'warning' | 'danger'): 'default' | 'secondary' | 'destructive' => {
++const getVariantFromStatus = (
++  status: 'success' | 'warning' | 'danger'
++): 'default' | 'secondary' | 'destructive' => {
+   switch (status) {
+     case 'success':
+       return 'default';
+@@ -50,10 +57,10 @@ const getVariantFromStatus = (status: 'success' | 'warning' | 'danger'): 'defaul
+ };
+ 
+ // Helper functie om score percentage te berekenen en status te bepalen
+-const calculateStatus = (score: number, maxScore: number) => {
+-  const percentage = Math.round((score / maxScore) * 100);
+-  return getStatusFromScore(percentage);
+-};
++// const calculateStatus = (score: number, maxScore: number) => { // Commented out as it's unused
++// const percentage = Math.round((score / maxScore) * 100);
++// return getStatusFromScore(percentage);
++// };
+ 
+ export function ComparativeAnalysis({ scans, primaryScanId, className }: ComparativeAnalysisProps) {
+   // Als er geen primaryScanId is opgegeven, gebruik de meest recente scan
+@@ -68,7 +75,9 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+     return (
+       <Card className={className}>
+         <CardContent className="pt-6">
+-          <p className="text-center text-muted-foreground">Geen scan gegevens beschikbaar voor vergelijking.</p>
++          <p className="text-center text-muted-foreground">
++            Geen scan gegevens beschikbaar voor vergelijking.
++          </p>
+         </CardContent>
+       </Card>
+     );
+@@ -86,15 +95,15 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+     return {
+       value: diff,
+       isPositive: diff > 0,
+-      percentage
++      percentage,
+     };
+   };
+ 
+   // Functie om kleur op basis van verschil te bepalen
+   const getComparisonColor = (diff: number) => {
+-    if (diff > 0) return "text-green-600";
+-    if (diff < 0) return "text-red-600";
+-    return "text-gray-500";
++    if (diff > 0) return 'text-green-600';
++    if (diff < 0) return 'text-red-600';
++    return 'text-gray-500';
+   };
+ 
+   // Functie om icoon op basis van verschil te bepalen
+@@ -117,7 +126,7 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+     return date.toLocaleDateString('nl-NL', {
+       day: '2-digit',
+       month: '2-digit',
+-      year: 'numeric'
++      year: 'numeric',
+     });
+   };
+ 
+@@ -125,25 +134,26 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+   const moduleComparisons = primaryScan.modules.map(module => {
+     const comparisonModule = comparisonScan?.modules.find(m => m.id === module.id);
+     const difference = calculateDifference(module.score, comparisonModule?.score);
+-    
++
+     return {
+       ...module,
+       comparisonScore: comparisonModule?.score,
+-      difference
++      difference,
+     };
+   });
+ 
+   // Bereken het totale verschil
+-  const overallDifference = calculateDifference(primaryScan.overallScore, comparisonScan?.overallScore);
++  const overallDifference = calculateDifference(
++    primaryScan.overallScore,
++    comparisonScan?.overallScore
++  );
+ 
+   return (
+-    <Card className={cn("w-full", className)}>
++    <Card className={cn('w-full', className)}>
+       <CardHeader>
+         <CardTitle className="text-xl font-bold">Vergelijkende Analyse</CardTitle>
+-        <CardDescription>
+-          Vergelijk scan resultaten om voortgang te zien
+-        </CardDescription>
+-        
++        <CardDescription>Vergelijk scan resultaten om voortgang te zien</CardDescription>
++
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+           <div>
+             <label className="text-sm font-medium text-gray-700 mb-1 block">Primaire Scan</label>
+@@ -160,7 +170,7 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+               </SelectContent>
+             </Select>
+           </div>
+-          
++
+           <div>
+             <label className="text-sm font-medium text-gray-700 mb-1 block">Vergelijking met</label>
+             <Select value={selectedComparisonScanId} onValueChange={setSelectedComparisonScanId}>
+@@ -174,14 +184,13 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                     <SelectItem key={scan.id} value={scan.id}>
+                       {scan.url} ({formatDate(scan.date)})
+                     </SelectItem>
+-                  ))
+-                }
++                  ))}
+               </SelectContent>
+             </Select>
+           </div>
+         </div>
+       </CardHeader>
+-      
++
+       <CardContent>
+         <Tabs defaultValue="overview">
+           <TabsList className="mb-4">
+@@ -189,7 +198,7 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+             <TabsTrigger value="modules">Per Module</TabsTrigger>
+             <TabsTrigger value="trends">Trends</TabsTrigger>
+           </TabsList>
+-          
++
+           <TabsContent value="overview">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg">
+@@ -197,15 +206,23 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                 <p className="text-xs text-gray-500 mb-4">{formatDate(primaryScan.date)}</p>
+                 <ScoreCircle score={primaryScan.overallScore} maxScore={100} size="lg" />
+               </div>
+-              
++
+               {comparisonScan && (
+                 <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg">
+                   <div className="flex items-center space-x-2 mb-1">
+-                    <p className="text-sm font-medium text-gray-700">Verschil t.o.v. {formatDate(comparisonScan.date)}</p>
++                    <p className="text-sm font-medium text-gray-700">
++                      Verschil t.o.v. {formatDate(comparisonScan.date)}
++                    </p>
+                     {getTrendIcon(overallDifference.value)}
+                   </div>
+-                  <div className={cn("text-2xl font-bold mb-4", getComparisonColor(overallDifference.value))}>
+-                    {overallDifference.value > 0 ? '+' : ''}{overallDifference.value} punten
++                  <div
++                    className={cn(
++                      'text-2xl font-bold mb-4',
++                      getComparisonColor(overallDifference.value)
++                    )}
++                  >
++                    {overallDifference.value > 0 ? '+' : ''}
++                    {overallDifference.value} punten
+                   </div>
+                   <div className="flex items-center space-x-8">
+                     <div className="text-center">
+@@ -221,7 +238,7 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+               )}
+             </div>
+           </TabsContent>
+-          
++
+           <TabsContent value="modules">
+             <div className="space-y-4">
+               {moduleComparisons.map(module => (
+@@ -232,29 +249,39 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                       {module.score}/{module.maxScore}
+                     </Badge>
+                   </div>
+-                  
++
+                   {comparisonScan && (
+                     <div className="mt-3">
+                       <div className="flex items-center space-x-2">
+-                        <div className={cn("flex items-center", getComparisonColor(module.difference.value))}>
++                        <div
++                          className={cn(
++                            'flex items-center',
++                            getComparisonColor(module.difference.value)
++                          )}
++                        >
+                           {getComparisonIcon(module.difference.value)}
+                           <span className="ml-1">
+-                            {module.difference.value > 0 ? '+' : ''}{module.difference.value} punten
++                            {module.difference.value > 0 ? '+' : ''}
++                            {module.difference.value} punten
+                           </span>
+                         </div>
+                         <span className="text-xs text-gray-500">
+-                          {module.comparisonScore !== undefined && `(${module.comparisonScore} → ${module.score})`}
++                          {module.comparisonScore !== undefined &&
++                            `(${module.comparisonScore} → ${module.score})`}
+                         </span>
+                       </div>
+                     </div>
+                   )}
+-                  
++
+                   <div className="mt-2 bg-gray-100 h-2 rounded-full overflow-hidden">
+-                    <div 
++                    <div
+                       className={cn(
+-                        "h-full rounded-full",
+-                        getVariantFromStatus(module.status) === 'default' ? 'bg-green-500' :
+-                        getVariantFromStatus(module.status) === 'secondary' ? 'bg-amber-500' : 'bg-red-500'
++                        'h-full rounded-full',
++                        getVariantFromStatus(module.status) === 'default'
++                          ? 'bg-green-500'
++                          : getVariantFromStatus(module.status) === 'secondary'
++                            ? 'bg-amber-500'
++                            : 'bg-red-500'
+                       )}
+                       style={{ width: `${(module.score / module.maxScore) * 100}%` }}
+                     ></div>
+@@ -263,14 +290,15 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+               ))}
+             </div>
+           </TabsContent>
+-          
++
+           <TabsContent value="trends">
+             {comparisonScan ? (
+               <div className="space-y-4">
+                 <p className="text-sm text-gray-700">
+-                  Resultaten van {formatDate(comparisonScan.date)} vergeleken met {formatDate(primaryScan.date)}
++                  Resultaten van {formatDate(comparisonScan.date)} vergeleken met{' '}
++                  {formatDate(primaryScan.date)}
+                 </p>
+-                
++
+                 {/* Verbeterde modules */}
+                 <div className="p-4 border rounded-lg">
+                   <h3 className="font-medium text-green-600 mb-2">Verbeterde Modules</h3>
+@@ -280,18 +308,22 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                         .filter(m => m.difference.value > 0)
+                         .sort((a, b) => b.difference.value - a.difference.value)
+                         .map(module => (
+-                          <div key={module.id} className="flex justify-between items-center p-2 bg-green-50 rounded">
++                          <div
++                            key={module.id}
++                            className="flex justify-between items-center p-2 bg-green-50 rounded"
++                          >
+                             <span>{module.name}</span>
+-                            <span className="text-green-600 font-medium">+{module.difference.value} punten</span>
++                            <span className="text-green-600 font-medium">
++                              +{module.difference.value} punten
++                            </span>
+                           </div>
+-                        ))
+-                      }
++                        ))}
+                     </div>
+                   ) : (
+                     <p className="text-sm text-gray-500">Geen verbeteringen gevonden</p>
+                   )}
+                 </div>
+-                
++
+                 {/* Verslechterde modules */}
+                 <div className="p-4 border rounded-lg">
+                   <h3 className="font-medium text-red-600 mb-2">Verslechterde Modules</h3>
+@@ -301,18 +333,22 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                         .filter(m => m.difference.value < 0)
+                         .sort((a, b) => a.difference.value - b.difference.value)
+                         .map(module => (
+-                          <div key={module.id} className="flex justify-between items-center p-2 bg-red-50 rounded">
++                          <div
++                            key={module.id}
++                            className="flex justify-between items-center p-2 bg-red-50 rounded"
++                          >
+                             <span>{module.name}</span>
+-                            <span className="text-red-600 font-medium">{module.difference.value} punten</span>
++                            <span className="text-red-600 font-medium">
++                              {module.difference.value} punten
++                            </span>
+                           </div>
+-                        ))
+-                      }
++                        ))}
+                     </div>
+                   ) : (
+                     <p className="text-sm text-gray-500">Geen verslechteringen gevonden</p>
+                   )}
+                 </div>
+-                
++
+                 {/* Ongewijzigde modules */}
+                 <div className="p-4 border rounded-lg">
+                   <h3 className="font-medium text-gray-600 mb-2">Ongewijzigde Modules</h3>
+@@ -321,12 +357,14 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+                       {moduleComparisons
+                         .filter(m => m.difference.value === 0)
+                         .map(module => (
+-                          <div key={module.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
++                          <div
++                            key={module.id}
++                            className="flex justify-between items-center p-2 bg-gray-50 rounded"
++                          >
+                             <span>{module.name}</span>
+                             <span className="text-gray-600 font-medium">{module.score} punten</span>
+                           </div>
+-                        ))
+-                      }
++                        ))}
+                     </div>
+                   ) : (
+                     <p className="text-sm text-gray-500">Geen ongewijzigde modules gevonden</p>
+@@ -343,4 +381,4 @@ export function ComparativeAnalysis({ scans, primaryScanId, className }: Compara
+       </CardContent>
+     </Card>
+   );
+-} 
+\ No newline at end of file
++}

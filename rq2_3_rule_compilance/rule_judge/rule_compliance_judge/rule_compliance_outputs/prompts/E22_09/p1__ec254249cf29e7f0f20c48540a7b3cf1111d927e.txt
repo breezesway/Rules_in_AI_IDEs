@@ -1,0 +1,603 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- `*_route.dart` - Typed route class extending AppRoute for type-safe navigation
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File names in the repository and source code contents of Dart files.
+- Suggested Logic: 1. Identify all files matching the pattern '*_route.dart'. 
+2. For each identified file, use a simple AST parser or regex to verify that it contains a class definition extending 'AppRoute' (e.g., matching the pattern `class \w+ extends AppRoute`).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: feat: implement modular navigation core infrastructure
+
+- Add AppRoute base class with navigation methods (push, go, replace)
+- Add RouteProvider interface for modular route configuration
+- Add RouteCollectionService to gather routes via dependency injection
+- Fix TimerService DI registration to use interface pattern
+- Add comprehensive unit tests for routing infrastructure
+- All tests passing (119 total)
+
+Implements task 1 from modular-navigation-architecture spec:
+- Requirements 2.2, 2.3, 5.3, 5.4 satisfied
+- Foundation ready for typed route implementations
+- Changed Files List: 
+lib/src/init.config.dart	+5	-3	after_lines=85
+lib/src/routing/app_route.dart	+24	-0	after_lines=24
+lib/src/routing/route_collection_service.dart	+23	-0	after_lines=23
+lib/src/routing/route_provider.dart	+8	-0	after_lines=8
+lib/src/routing/routing.dart	+4	-0	after_lines=4
+lib/src/services/timer_service.dart	+1	-1	after_lines=21
+test/routing/app_route_test.dart	+74	-0	after_lines=74
+test/routing/route_collection_service_test.dart	+68	-0	after_lines=68
+test/routing/route_collection_service_test.mocks.dart	+52	-0	after_lines=52
+
+- Project Directory Tree (Snapshot after commit):
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   └── home_viewmodel.graphql
+│       │   ├── loading_screen
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_screen.dart
+│       │   │   └── login_viewmodel.dart
+│       │   └── user_details
+│       │       └── user_details_screen.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── home_screen
+    │   │   ├── home_screen_test.dart
+    │   │   ├── home_screen_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   └── home_viewmodel_test.mocks.dart
+    │   ├── loading_screen
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   └── login_screen
+    │       ├── login_screen_test.dart
+    │       ├── login_screen_test.mocks.dart
+    │       ├── login_viewmodel_test.dart
+    │       └── login_viewmodel_test.mocks.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: lib/src/init.config.dart ---
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index c3d62a9..48ec81e 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -12,6 +12,7 @@
+ import 'package:ferry/ferry.dart' as _i25;
+ import 'package:get_it/get_it.dart' as _i174;
+ import 'package:gh3/src/env/env.dart' as _i589;
++import 'package:gh3/src/routing/route_collection_service.dart' as _i482;
+ import 'package:gh3/src/screens/home_screen/home_viewmodel.dart' as _i630;
+ import 'package:gh3/src/services/auth_service.dart' as _i336;
+ import 'package:gh3/src/services/ferry_client_service.dart' as _i564;
+@@ -33,11 +34,12 @@ extension GetItInjectableX on _i174.GetIt {
+     final envModule = _$EnvModule();
+     final githubAuthHttpClientModule = _$GithubAuthHttpClientModule();
+     final ferryModule = _$FerryModule();
++    gh.factory<_i482.RouteCollectionService>(
++      () => _i482.RouteCollectionService(),
++    );
+     gh.lazySingleton<_i589.Env>(() => envModule.env);
+     gh.lazySingleton<_i519.Client>(() => githubAuthHttpClientModule.httpClient);
+-    gh.lazySingleton<_i1066.DefaultTimerService>(
+-      () => _i1066.DefaultTimerService(),
+-    );
++    gh.lazySingleton<_i1066.TimerService>(() => _i1066.DefaultTimerService());
+     gh.lazySingleton<_i895.ITokenStorage>(() => _i895.PrefsTokenStorage());
+     gh.factory<String>(
+       () => envModule.githubClientId,
+
+--- FILE: lib/src/routing/app_route.dart ---
+diff --git a/lib/src/routing/app_route.dart b/lib/src/routing/app_route.dart
+new file mode 100644
+index 0000000..1a1689c
+--- /dev/null
++++ b/lib/src/routing/app_route.dart
+@@ -0,0 +1,24 @@
++import 'package:flutter/material.dart';
++import 'package:go_router/go_router.dart';
++
++/// Base class for all typed routes in the application.
++/// Provides common navigation methods for type-safe routing.
++abstract class AppRoute {
++  /// The path for this route
++  String get path;
++
++  /// Navigate to this route by pushing it onto the navigation stack
++  void push(BuildContext context) {
++    context.push(path);
++  }
++
++  /// Navigate to this route by replacing the current location
++  void go(BuildContext context) {
++    context.go(path);
++  }
++
++  /// Replace the current route with this route
++  void replace(BuildContext context) {
++    context.replace(path);
++  }
++}
+
+--- FILE: lib/src/routing/route_collection_service.dart ---
+diff --git a/lib/src/routing/route_collection_service.dart b/lib/src/routing/route_collection_service.dart
+new file mode 100644
+index 0000000..d6e55cc
+--- /dev/null
++++ b/lib/src/routing/route_collection_service.dart
+@@ -0,0 +1,23 @@
++import 'package:go_router/go_router.dart';
++import 'package:injectable/injectable.dart';
++import 'package:get_it/get_it.dart';
++import 'route_provider.dart';
++
++/// Service that collects routes from all registered RouteProvider instances
++/// via dependency injection. This enables modular route configuration.
++@injectable
++class RouteCollectionService {
++  RouteCollectionService();
++
++  /// Collects all routes from registered RouteProvider instances
++  List<RouteBase> collectRoutes() {
++    try {
++      final routeProviders = GetIt.instance.getAll<RouteProvider>();
++      return routeProviders.map((provider) => provider.getRoute()).toList();
++    } catch (e) {
++      // If no route providers are registered yet, return empty list
++      // This allows the app to start even if route providers aren't ready
++      return <RouteBase>[];
++    }
++  }
++}
+
+--- FILE: lib/src/routing/route_provider.dart ---
+diff --git a/lib/src/routing/route_provider.dart b/lib/src/routing/route_provider.dart
+new file mode 100644
+index 0000000..6013f6a
+--- /dev/null
++++ b/lib/src/routing/route_provider.dart
+@@ -0,0 +1,8 @@
++import 'package:go_router/go_router.dart';
++
++/// Interface for providing route configurations in a modular way.
++/// Each screen module should implement this interface to define its routes.
++abstract class RouteProvider {
++  /// Returns the route configuration for this provider
++  RouteBase getRoute();
++}
+
+--- FILE: lib/src/routing/routing.dart ---
+diff --git a/lib/src/routing/routing.dart b/lib/src/routing/routing.dart
+new file mode 100644
+index 0000000..00a570a
+--- /dev/null
++++ b/lib/src/routing/routing.dart
+@@ -0,0 +1,4 @@
++// Routing infrastructure exports
++export 'app_route.dart';
++export 'route_provider.dart';
++export 'route_collection_service.dart';
+
+--- FILE: lib/src/services/timer_service.dart ---
+diff --git a/lib/src/services/timer_service.dart b/lib/src/services/timer_service.dart
+index 7b06675..e19a812 100644
+--- a/lib/src/services/timer_service.dart
++++ b/lib/src/services/timer_service.dart
+@@ -12,7 +12,7 @@ abstract class TimerService {
+ }
+ 
+ /// Default implementation of TimerService using dart:async.
+-@lazySingleton
++@LazySingleton(as: TimerService)
+ class DefaultTimerService implements TimerService {
+   @override
+   Future<void> delay(Duration duration) async {
+
+--- FILE: test/routing/app_route_test.dart ---
+diff --git a/test/routing/app_route_test.dart b/test/routing/app_route_test.dart
+new file mode 100644
+index 0000000..51bf2bb
+--- /dev/null
++++ b/test/routing/app_route_test.dart
+@@ -0,0 +1,74 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:go_router/go_router.dart';
++
++import 'package:gh3/src/routing/routing.dart';
++
++// Test implementation of AppRoute
++class TestRoute extends AppRoute {
++  final String _path;
++
++  TestRoute(this._path);
++
++  @override
++  String get path => _path;
++}
++
++void main() {
++  group('AppRoute', () {
++    late TestRoute route;
++    late GoRouter router;
++    late Widget testApp;
++
++    setUp(() {
++      route = TestRoute('/test');
++      router = GoRouter(
++        routes: [
++          GoRoute(
++            path: '/',
++            builder: (context, state) => const Scaffold(body: Text('Home')),
++          ),
++          GoRoute(
++            path: '/test',
++            builder: (context, state) => const Scaffold(body: Text('Test')),
++          ),
++        ],
++      );
++      testApp = MaterialApp.router(routerConfig: router);
++    });
++
++    testWidgets('should have correct path', (tester) async {
++      expect(route.path, equals('/test'));
++    });
++
++    testWidgets('push should navigate to route', (tester) async {
++      await tester.pumpWidget(testApp);
++
++      final context = tester.element(find.byType(Scaffold));
++      route.push(context);
++
++      await tester.pumpAndSettle();
++      expect(find.text('Test'), findsOneWidget);
++    });
++
++    testWidgets('go should navigate to route', (tester) async {
++      await tester.pumpWidget(testApp);
++
++      final context = tester.element(find.byType(Scaffold));
++      route.go(context);
++
++      await tester.pumpAndSettle();
++      expect(find.text('Test'), findsOneWidget);
++    });
++
++    testWidgets('replace should navigate to route', (tester) async {
++      await tester.pumpWidget(testApp);
++
++      final context = tester.element(find.byType(Scaffold));
++      route.replace(context);
++
++      await tester.pumpAndSettle();
++      expect(find.text('Test'), findsOneWidget);
++    });
++  });
++}
+
+--- FILE: test/routing/route_collection_service_test.dart ---
+diff --git a/test/routing/route_collection_service_test.dart b/test/routing/route_collection_service_test.dart
+new file mode 100644
+index 0000000..634b023
+--- /dev/null
++++ b/test/routing/route_collection_service_test.dart
+@@ -0,0 +1,68 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:mockito/mockito.dart';
++import 'package:mockito/annotations.dart';
++import 'package:go_router/go_router.dart';
++import 'package:get_it/get_it.dart';
++
++import 'package:gh3/src/routing/routing.dart';
++
++import 'route_collection_service_test.mocks.dart';
++
++@GenerateMocks([RouteProvider])
++void main() {
++  group('RouteCollectionService', () {
++    late RouteCollectionService service;
++    late GetIt getIt;
++
++    setUp(() {
++      getIt = GetIt.instance;
++      getIt.reset();
++      service = RouteCollectionService();
++    });
++
++    tearDown(() {
++      getIt.reset();
++    });
++
++    test('should return empty list when no route providers are registered', () {
++      final routes = service.collectRoutes();
++      expect(routes, isEmpty);
++    });
++
++    test('should collect routes from registered providers', () {
++      // Arrange
++      final mockProvider1 = MockRouteProvider();
++      final mockProvider2 = MockRouteProvider();
++
++      final route1 = GoRoute(
++        path: '/test1',
++        builder: (context, state) => const SizedBox(),
++      );
++      final route2 = GoRoute(
++        path: '/test2',
++        builder: (context, state) => const SizedBox(),
++      );
++
++      when(mockProvider1.getRoute()).thenReturn(route1);
++      when(mockProvider2.getRoute()).thenReturn(route2);
++
++      getIt.registerSingleton<RouteProvider>(
++        mockProvider1,
++        instanceName: 'provider1',
++      );
++      getIt.registerSingleton<RouteProvider>(
++        mockProvider2,
++        instanceName: 'provider2',
++      );
++
++      // Act
++      final routes = service.collectRoutes();
++
++      // Assert
++      expect(routes, hasLength(2));
++      expect(routes, contains(route1));
++      expect(routes, contains(route2));
++    });
++  });
++}
+
+--- FILE: test/routing/route_collection_service_test.mocks.dart ---
+diff --git a/test/routing/route_collection_service_test.mocks.dart b/test/routing/route_collection_service_test.mocks.dart
+new file mode 100644
+index 0000000..1ede2d4
+--- /dev/null
++++ b/test/routing/route_collection_service_test.mocks.dart
+@@ -0,0 +1,52 @@
++// Mocks generated by Mockito 5.4.6 from annotations
++// in gh3/test/routing/route_collection_service_test.dart.
++// Do not manually edit this file.
++
++// ignore_for_file: no_leading_underscores_for_library_prefixes
++import 'package:flutter/src/foundation/diagnostics.dart' as _i3;
++import 'package:gh3/src/routing/route_provider.dart' as _i4;
++import 'package:go_router/go_router.dart' as _i2;
++import 'package:mockito/mockito.dart' as _i1;
++
++// ignore_for_file: type=lint
++// ignore_for_file: avoid_redundant_argument_values
++// ignore_for_file: avoid_setters_without_getters
++// ignore_for_file: comment_references
++// ignore_for_file: deprecated_member_use
++// ignore_for_file: deprecated_member_use_from_same_package
++// ignore_for_file: implementation_imports
++// ignore_for_file: invalid_use_of_visible_for_testing_member
++// ignore_for_file: must_be_immutable
++// ignore_for_file: prefer_const_constructors
++// ignore_for_file: unnecessary_parenthesis
++// ignore_for_file: camel_case_types
++// ignore_for_file: subtype_of_sealed_class
++
++class _FakeRouteBase_0 extends _i1.SmartFake implements _i2.RouteBase {
++  _FakeRouteBase_0(Object parent, Invocation parentInvocation)
++    : super(parent, parentInvocation);
++
++  @override
++  String toString({_i3.DiagnosticLevel? minLevel = _i3.DiagnosticLevel.info}) =>
++      super.toString();
++}
++
++/// A class which mocks [RouteProvider].
++///
++/// See the documentation for Mockito's code generation for more information.
++class MockRouteProvider extends _i1.Mock implements _i4.RouteProvider {
++  MockRouteProvider() {
++    _i1.throwOnMissingStub(this);
++  }
++
++  @override
++  _i2.RouteBase getRoute() =>
++      (super.noSuchMethod(
++            Invocation.method(#getRoute, []),
++            returnValue: _FakeRouteBase_0(
++              this,
++              Invocation.method(#getRoute, []),
++            ),
++          )
++          as _i2.RouteBase);
++}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

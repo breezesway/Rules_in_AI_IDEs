@@ -1,0 +1,720 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+# Technology Stack (Monorepo)
+
+## Core
+- VS Code API: ^1.100.3
+- TypeScript: ^5.9.2
+- Preact (webviews): ^10.27.1
+- Vite (webviews): ^7.1.4 with @preact/preset-vite and manifest
+- esbuild (MCP bundling): ^0.23.0
+- Turborepo: ^2.5.6 (task orchestration)
+- pnpm: workspace manager (pnpm-workspace.yaml)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json (root and workspaces), pnpm-workspace.yaml, vite.config.ts (or vite.config.js), and turbo.json.
+- Suggested Logic: 1. Verify dependency versions in all package.json files match the specified ranges (e.g., typescript ^5.9.2, preact ^10.27.1). 2. Check for the existence of 'pnpm-workspace.yaml' at the root. 3. Check Vite configuration files to ensure '@preact/preset-vite' is imported and used in the plugins array. 4. Verify the presence of 'turbo.json' to confirm Turborepo usage.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: feat: implement dependency graph loading and visualization in health dashboard
+- Changed Files List: 
+packages/extension/src/services/dep-graph.service.ts	+214	-0	after_lines=214
+packages/extension/src/shared/runtime.ts	+8	-0	after_lines=44
+packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts	+21	-0	after_lines=88
+packages/shared/src/shared/events.ts	+8	-0	after_lines=36
+packages/webview/package.json	+5	-1	after_lines=21
+packages/webview/src/views/HealthDashboard/HealthDashboard.module.css	+14	-5	after_lines=15
+packages/webview/src/views/HealthDashboard/HealthDashboard.tsx	+95	-5	after_lines=103
+pnpm-lock.yaml	+27	-0	after_lines=4719
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── server-extension-mcp.md
+│       ├── structure.md
+│       ├── tech.md
+│       └── web-ui-preact.md
+├── .turbo
+│   └── cache
+│       ├── 395e09f7cbff983c-meta.json
+│       ├── 395e09f7cbff983c.tar.zst
+│       ├── 3c0cebe33d07e2b9-meta.json
+│       ├── 3c0cebe33d07e2b9.tar.zst
+│       ├── aa678af485ed0301-meta.json
+│       ├── aa678af485ed0301.tar.zst
+│       ├── de46b90a178129f9-meta.json
+│       └── de46b90a178129f9.tar.zst
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── LICENSE
+├── README.md
+├── docs
+│   ├── build-and-bundling.md
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── mcp
+│   │   ├── architecture.md
+│   │   ├── overview.md
+│   │   └── tools.md
+│   ├── message-bus.md
+│   ├── messaging.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── esbuild.mcp.config.js
+├── eslint.config.mjs
+├── package.json
+├── packages
+│   ├── extension
+│   │   ├── LICENSE
+│   │   ├── README.md
+│   │   ├── media
+│   │   │   ├── global.css
+│   │   │   └── kiro.svg
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── extension.ts
+│   │   │   ├── mcp
+│   │   │   │   └── mcp.provider.ts
+│   │   │   ├── services
+│   │   │   │   ├── dep-graph.service.ts
+│   │   │   │   ├── dependency-cruiser.service.ts
+│   │   │   │   ├── http-bridge.service.ts
+│   │   │   │   ├── message-bus.service.ts
+│   │   │   │   └── webview-bus-register.utils.ts
+│   │   │   ├── shared
+│   │   │   │   └── runtime.ts
+│   │   │   └── ui-providers
+│   │   │       ├── asset-manifest.ts
+│   │   │       ├── health-dashboard
+│   │   │       │   ├── health-dashboard.panel.ts
+│   │   │       │   └── index.ts
+│   │   │       └── sidebar
+│   │   │           ├── index.ts
+│   │   │           └── sidebar.provider.ts
+│   │   ├── test
+│   │   │   └── test
+│   │   │       └── extension.test.ts
+│   │   └── tsconfig.json
+│   ├── mcp-server
+│   │   ├── package.json
+│   │   └── src
+│   │       └── server.ts
+│   ├── shared
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── index.ts
+│   │   │   ├── shared
+│   │   │   │   ├── commands.ts
+│   │   │   │   ├── events.ts
+│   │   │   │   └── utils
+│   │   │   │       └── generate-nonce.utils.ts
+│   │   │   └── types
+│   │   │       └── mcp-shims.d.ts
+│   │   └── tsconfig.json
+│   └── webview
+│       ├── bundle-stats.html
+│       ├── package.json
+│       ├── src
+│       │   ├── components
+│       │   │   └── molecules
+│       │   │       └── Button.tsx
+│       │   ├── main-dashboard.tsx
+│       │   ├── main-sidebar.tsx
+│       │   ├── services
+│       │   │   └── message-bus.service.ts
+│       │   ├── types
+│       │   │   └── cssmodule.d.ts
+│       │   ├── views
+│       │   │   ├── HealthDashboard
+│       │   │   │   ├── HealthDashboard.module.css
+│       │   │   │   └── HealthDashboard.tsx
+│       │   │   └── Sidebar
+│       │   │       ├── Sidebar.module.css
+│       │   │       └── Sidebar.tsx
+│       │   └── vscode.ts
+│       ├── tsconfig.json
+│       └── vite.config.ts
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── scripts
+│   ├── analyze-bundles.sh
+│   └── prepare-vsix.sh
+├── tsconfig.base.json
+├── tsconfig.json
+└── turbo.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: packages/extension/src/services/dep-graph.service.ts ---
+diff --git a/packages/extension/src/services/dep-graph.service.ts b/packages/extension/src/services/dep-graph.service.ts
+new file mode 100644
+index 0000000..e74b4b8
+--- /dev/null
++++ b/packages/extension/src/services/dep-graph.service.ts
+@@ -0,0 +1,214 @@
++import * as vscode from 'vscode';
++import * as path from 'path';
++import * as fs from 'fs/promises';
++import { CONSTELLATION_DIR, CONSTELLATION_DATA_DIR, GraphNode, GraphEdge } from '../shared/runtime';
++import { DependencyCruiserService } from './dependency-cruiser.service';
++
++interface DepCruiserModule {
++  source: string;
++  dependencies?: Array<{
++    resolved: string;
++  }>;
++}
++
++interface DepCruiserOutput {
++  modules?: DepCruiserModule[];
++}
++
++/**
++ * Loads dependency graph data from existing file or triggers a scan.
++ * Returns Cytoscape-compatible elements or null on failure.
++ */
++export async function loadDependencyGraphElements(
++  context: vscode.ExtensionContext
++): Promise<{ nodes: GraphNode[]; edges: GraphEdge[] } | null> {
++  const baseDir = await resolveBaseDir(context);
++  if (!baseDir) {
++    console.warn('[DepGraph] No workspace open and not in dev mode. Cannot load graph data.');
++    return null;
++  }
++
++  const dataPath = path.join(baseDir, CONSTELLATION_DIR, CONSTELLATION_DATA_DIR, 'dependency-analysis.json');
++  console.log('[DepGraph] Using data path:', dataPath);
++
++  let jsonData: DepCruiserOutput | null = null;
++
++  try {
++    // Try to read existing file
++    const content = await fs.readFile(dataPath, 'utf-8');
++    jsonData = JSON.parse(content) as DepCruiserOutput;
++    console.log('[DepGraph] Loaded existing data.');
++  } catch {
++    // File doesn't exist or invalid; trigger a scan
++    console.log('[DepGraph] No existing data, triggering scan...');
++    const scanner = new DependencyCruiserService(context);
++    await scanner.analyze();
++    
++    // Try reading again after scan
++    try {
++      const content = await fs.readFile(dataPath, 'utf-8');
++      jsonData = JSON.parse(content) as DepCruiserOutput;
++      console.log('[DepGraph] Loaded data after scan.');
++    } catch (e) {
++      console.error('[DepGraph] Failed to read data after scan:', e);
++      return null;
++    }
++  }
++
++  if (!jsonData || !jsonData.modules) {
++    console.warn('[DepGraph] No modules present in data.');
++    return { nodes: [], edges: [] };
++  }
++
++  return transformToGraphElements(jsonData.modules);
++}
++
++/**
++ * Transforms dependency-cruiser modules into Cytoscape elements.
++ * Uses intelligent aggregation based on common patterns.
++ */
++function transformToGraphElements(modules: DepCruiserModule[]): { nodes: GraphNode[]; edges: GraphEdge[] } {
++  const nodeMap = new Map<string, GraphNode>();
++  const edgeMap = new Map<string, GraphEdge>();
++  const NODE_CAP = 300;
++
++  // First, determine aggregation level based on module count
++  const aggregationLevel = determineAggregationLevel(modules);
++
++  for (const module of modules) {
++    const fromId = aggregateModulePath(module.source, aggregationLevel);
++    
++    // Add node if not exists
++    if (!nodeMap.has(fromId)) {
++      nodeMap.set(fromId, {
++        id: fromId,
++        label: fromId,
++        group: getModuleGroup(fromId)
++      });
++    }
++
++    if (module.dependencies) {
++      for (const dep of module.dependencies) {
++        const toId = aggregateModulePath(dep.resolved, aggregationLevel);
++        
++        // Skip self-references
++        if (fromId === toId) continue;
++        
++        // Add target node if not exists
++        if (!nodeMap.has(toId)) {
++          nodeMap.set(toId, {
++            id: toId,
++            label: toId,
++            group: getModuleGroup(toId)
++          });
++        }
++
++        // Add edge (dedupe by key)
++        const edgeId = `${fromId}->${toId}`;
++        if (!edgeMap.has(edgeId)) {
++          edgeMap.set(edgeId, {
++            id: edgeId,
++            source: fromId,
++            target: toId
++          });
++        }
++      }
++    }
++
++    // Apply node cap for performance
++    if (nodeMap.size >= NODE_CAP) {
++      console.warn(`[DepGraph] Node cap of ${NODE_CAP} reached, stopping processing`);
++      break;
++    }
++  }
++
++  const nodes = Array.from(nodeMap.values());
++  const edges = Array.from(edgeMap.values());
++  console.log(`[DepGraph] Built elements: nodes=${nodes.length}, edges=${edges.length}`);
++  return { nodes, edges };
++}
++
++/**
++ * Determines the appropriate aggregation level based on module count and patterns.
++ */
++function determineAggregationLevel(modules: DepCruiserModule[]): 'file' | 'directory' | 'package' {
++  const moduleCount = modules.length;
++  // POC policy: avoid package-level aggregation to support varied repo shapes (src, lib, etc.)
++  if (moduleCount > 500) {
++    return 'directory';
++  }
++  return 'file';
++}
++
++/**
++ * Aggregates a module path based on the specified level.
++ */
++function aggregateModulePath(modulePath: string, level: 'file' | 'directory' | 'package'): string {
++  // Clean up the path
++  let clean = modulePath
++    .replace(/^\.\//, '')
++    .replace(/\\/g, '/')
++    .replace(/\.(ts|tsx|js|jsx|mjs|cjs|vue|svelte)$/, '');
++
++  if (level === 'file') {
++    return clean;
++  }
++
++  const parts = clean.split('/');
++  
++  if (level === 'package') {
++    // For monorepo packages
++    if (parts[0] === 'packages' && parts.length >= 2) {
++      return `packages/${parts[1]}`;
++    }
++    // For standard projects, aggregate to top-level directory
++    if (parts.length > 1) {
++      return parts[0];
++    }
++    return clean;
++  }
++
++  if (level === 'directory') {
++    // Aggregate to parent directory
++    if (parts.length > 1) {
++      return parts.slice(0, -1).join('/');
++    }
++    return clean;
++  }
++
++  return clean;
++}
++
++async function resolveBaseDir(context: vscode.ExtensionContext): Promise<string | null> {
++  const wf = vscode.workspace.workspaceFolders;
++  if (wf && wf.length > 0) {
++    return wf[0].uri.fsPath;
++  }
++  if (context.extensionMode === vscode.ExtensionMode.Development) {
++    const repoRoot = path.resolve(context.extensionPath, '..', '..');
++    return repoRoot;
++  }
++  return null;
++}
++
++/**
++ * Determines the group/category for a module (for potential styling).
++ */
++function getModuleGroup(modulePath: string): string {
++  if (modulePath.includes('test') || modulePath.includes('spec')) {
++    return 'test';
++  }
++  if (modulePath.includes('node_modules')) {
++    return 'external';
++  }
++  if (modulePath.startsWith('packages/')) {
++    const parts = modulePath.split('/');
++    if (parts.length >= 2) {
++      return parts[1]; // package name
++    }
++  }
++  if (modulePath.startsWith('src/')) {
++    return 'source';
++  }
++  return 'other';
++}
+
+--- FILE: packages/extension/src/shared/runtime.ts ---
+diff --git a/packages/extension/src/shared/runtime.ts b/packages/extension/src/shared/runtime.ts
+index b53107a..fa5bf39 100644
+--- a/packages/extension/src/shared/runtime.ts
++++ b/packages/extension/src/shared/runtime.ts
+@@ -1,8 +1,14 @@
++// Graph element contracts used by the extension runtime
++export type GraphNode = { id: string; label?: string; group?: string };
++export type GraphEdge = { id: string; source: string; target: string };
++
+ export const Events = {
+   OpenDashboard: 'openDashboard',
+   UiEmitToast: 'ui:emitToast',
+   DashboardOpened: 'dashboard:opened',
+   DashboardClosed: 'dashboard:closed',
++  DepsRequestGraph: 'deps:requestGraph',
++  DepsGraphData: 'deps:graphData',
+ } as const;
+ 
+ export type EventType = typeof Events[keyof typeof Events];
+@@ -12,6 +18,8 @@ export type EventPayloads = {
+   [Events.UiEmitToast]: { text: string };
+   [Events.DashboardOpened]: { via: 'commandPalette' | 'other' };
+   [Events.DashboardClosed]: { } | undefined;
++  [Events.DepsRequestGraph]: { } | undefined;
++  [Events.DepsGraphData]: { nodes: GraphNode[]; edges: GraphEdge[] };
+ };
+ 
+ export type BusEvent<K extends EventType = EventType> = {
+
+--- FILE: packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts ---
+diff --git a/packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts b/packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts
+index 72cef03..2e35740 100644
+--- a/packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts
++++ b/packages/extension/src/ui-providers/health-dashboard/health-dashboard.panel.ts
+@@ -3,6 +3,7 @@ import { getNonce, Events } from '../../shared/runtime';
+ import { getEntryUris } from '../asset-manifest';
+ import { messageBus } from '../../services/message-bus.service';
+ import { registerWebviewWithBus } from '../../services/webview-bus-register.utils';
++import { loadDependencyGraphElements } from '../../services/dep-graph.service';
+ 
+ let currentPanel: vscode.WebviewPanel | undefined;
+ 
+@@ -41,6 +42,26 @@ export function showHealthDashboard(context: vscode.ExtensionContext) {
+         registration.dispose();
+     });
+ 
++    // Immediately try to load and send graph data
++    void sendGraphDataToDashboard(context);
++
++    // Listen for explicit graph requests from webview
++    context.subscriptions.push(
++        messageBus.on(Events.DepsRequestGraph, async () => {
++            await sendGraphDataToDashboard(context);
++        })
++    );
++}
++
++async function sendGraphDataToDashboard(context: vscode.ExtensionContext) {
++    try {
++        const elements = await loadDependencyGraphElements(context);
++        const payload = elements ?? { nodes: [], edges: [] };
++        await messageBus.sendTo('dashboard', { type: Events.DepsGraphData, payload });
++    } catch (e) {
++        console.error('[Dashboard] Failed to load graph data:', e);
++        void vscode.window.showInformationMessage('Kiro: Could not load dependency graph.');
++    }
+ }
+ 
+ function getHtml(context: vscode.ExtensionContext, webview: vscode.Webview): string {
+
+--- FILE: packages/shared/src/shared/events.ts ---
+diff --git a/packages/shared/src/shared/events.ts b/packages/shared/src/shared/events.ts
+index 9d84946..8d06af8 100644
+--- a/packages/shared/src/shared/events.ts
++++ b/packages/shared/src/shared/events.ts
+@@ -1,11 +1,17 @@
+ // Centralized, typed message/event contracts shared by extension and webviews.
+ 
++// Minimal graph element contracts used by Cytoscape in the webview
++export type GraphNode = { id: string; label?: string; group?: string };
++export type GraphEdge = { id: string; source: string; target: string };
++
+ // Event name constants (no hard-coded strings scattered around)
+ export const Events = {
+   OpenDashboard: 'openDashboard',
+   UiEmitToast: 'ui:emitToast',
+   DashboardOpened: 'dashboard:opened',
+   DashboardClosed: 'dashboard:closed',
++  DepsRequestGraph: 'deps:requestGraph',
++  DepsGraphData: 'deps:graphData',
+ } as const;
+ 
+ export type EventType = typeof Events[keyof typeof Events];
+@@ -16,6 +22,8 @@ export type EventPayloads = {
+   [Events.UiEmitToast]: { text: string };
+   [Events.DashboardOpened]: { via: 'commandPalette' | 'other' };
+   [Events.DashboardClosed]: { /* no payload */ } | undefined;
++  [Events.DepsRequestGraph]: { /* no payload */ } | undefined;
++  [Events.DepsGraphData]: { nodes: GraphNode[]; edges: GraphEdge[] };
+ };
+ 
+ // Generic bus event type
+
+--- FILE: packages/webview/package.json ---
+diff --git a/packages/webview/package.json b/packages/webview/package.json
+index 54c783c..3a2ef26 100644
+--- a/packages/webview/package.json
++++ b/packages/webview/package.json
+@@ -11,7 +11,11 @@
+   },
+   "dependencies": {
+     "@kiro/shared": "workspace:*",
+-    "preact": "^10.27.1"
++    "preact": "^10.27.1",
++    "cytoscape": "^3.28.1"
++  },
++  "devDependencies": {
++    "@types/cytoscape": "^3.21.0"
+   }
+ }
+
+--- FILE: packages/webview/src/views/HealthDashboard/HealthDashboard.module.css ---
+diff --git a/packages/webview/src/views/HealthDashboard/HealthDashboard.module.css b/packages/webview/src/views/HealthDashboard/HealthDashboard.module.css
+index f09ceda..55b7a63 100644
+--- a/packages/webview/src/views/HealthDashboard/HealthDashboard.module.css
++++ b/packages/webview/src/views/HealthDashboard/HealthDashboard.module.css
+@@ -1,6 +1,15 @@
+-.card {
+-    border: 1px solid var(--vscode-panel-border);
+-    border-radius: 6px;
+-    padding: 12px;
+-    background-color: red;
++.root {
++  height: 100vh;
++  display: grid;
++  grid-template-rows: auto 1fr;
++}
++
++.banner {
++  padding: 8px 12px;
++  color: var(--vscode-descriptionForeground);
++}
++
++.graph {
++  height: 100%;
++  border-top: 1px solid var(--vscode-panel-border);
+ }
+
+--- FILE: packages/webview/src/views/HealthDashboard/HealthDashboard.tsx ---
+diff --git a/packages/webview/src/views/HealthDashboard/HealthDashboard.tsx b/packages/webview/src/views/HealthDashboard/HealthDashboard.tsx
+index 1ba3f6b..95a9cd0 100644
+--- a/packages/webview/src/views/HealthDashboard/HealthDashboard.tsx
++++ b/packages/webview/src/views/HealthDashboard/HealthDashboard.tsx
+@@ -1,13 +1,103 @@
+ import { h } from 'preact';
++import { useEffect, useRef, useState } from 'preact/hooks';
++import cytoscape from 'cytoscape';
+ import styles from './HealthDashboard.module.css';
++import { messageBus, events } from '../../services/message-bus.service';
+ 
+ export function HealthDashboard() {
++  const containerRef = useRef<HTMLDivElement>(null);
++  const cyRef = useRef<cytoscape.Core | null>(null);
++  const [status, setStatus] = useState<'loading' | 'ready' | 'empty'>('loading');
++
++  useEffect(() => {
++    // Listen for graph data from the extension
++    const off = messageBus.on(events.DepsGraphData, (e) => {
++      const payload = e.payload as any;
++      if (!payload || !Array.isArray(payload.nodes)) {
++        setStatus('empty');
++        return;
++      }
++      if ((payload.nodes?.length ?? 0) === 0 && (payload.edges?.length ?? 0) === 0) {
++        setStatus('empty');
++        return;
++      }
++      setStatus('ready');
++      ensureCytoscapeInstance();
++      const cy = cyRef.current!;
++      cy.batch(() => {
++        cy.elements().remove();
++        const elements = [
++          ...payload.nodes.map((n: any) => ({ data: { id: n.id, label: n.label || n.id, group: n.group } })),
++          ...payload.edges.map((ed: any) => ({ data: { id: ed.id, source: ed.source, target: ed.target } }))
++        ];
++        cy.add(elements as any);
++      });
++      cy.layout({ name: 'cose', fit: true }).run();
++      cy.resize();
++    });
++
++    // Request graph data if none was sent yet
++    messageBus.emit(events.DepsRequestGraph, undefined as any);
++
++    const onResize = () => {
++      if (cyRef.current) cyRef.current.resize();
++    };
++    window.addEventListener('resize', onResize);
++
++    return () => {
++      off();
++      window.removeEventListener('resize', onResize);
++      if (cyRef.current) {
++        cyRef.current.destroy();
++        cyRef.current = null;
++      }
++    };
++  }, []);
++
++  function ensureCytoscapeInstance() {
++    if (cyRef.current || !containerRef.current) return;
++    cyRef.current = cytoscape({
++      container: containerRef.current,
++      style: [
++        {
++          selector: 'node',
++          style: {
++            'background-color': '#4ea1ff',
++            'label': 'data(label)',
++            'font-size': '10px',
++            'text-wrap': 'wrap',
++            'text-max-width': '160px',
++            'color': 'var(--vscode-foreground)',
++            'text-halign': 'center',
++            'text-valign': 'center',
++            'shape': 'round-rectangle',
++            'width': 'label',
++            'height': 'label',
++            // 'padding': '6px'
++          }
++        },
++        {
++          selector: 'edge',
++          style: {
++            'width': 1,
++            'curve-style': 'bezier',
++            'target-arrow-shape': 'triangle',
++            'line-color': 'var(--vscode-editor-foreground)',
++            'target-arrow-color': 'var(--vscode-editor-foreground)'
++          }
++        }
++      ],
++    });
++  }
++
+   return (
+-    <div>
+-      <h2>Health Dashboard</h2>
+-      <div className={styles.card}>
+-        <p>This is a starter dashboard webview. You can render status, metrics, or logs here.</p>
+-      </div>
++    <div className={styles.root}>
++      {status !== 'ready' && (
++        <div className={styles.banner}>
++          {status === 'loading' ? 'Loading dependency graph…' : 'No dependency graph data available'}
++        </div>
++      )}
++      <div ref={containerRef} className={styles.graph} />
+     </div>
+   );
+ }
+
+--- FILE: pnpm-lock.yaml ---
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index e0fa5a0..c6fa787 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -78,9 +78,16 @@ importers:
+       '@kiro/shared':
+         specifier: workspace:*
+         version: link:../shared
++      cytoscape:
++        specifier: ^3.28.1
++        version: 3.28.1
+       preact:
+         specifier: ^10.27.1
+         version: 10.27.1
++    devDependencies:
++      '@types/cytoscape':
++        specifier: ^3.21.0
++        version: 3.21.0
+ 
+ packages:
+ 
+@@ -1288,6 +1295,10 @@ packages:
+     dev: true
+     optional: true
+ 
++  /@types/cytoscape@3.21.0:
++    resolution: {integrity: sha512-RN5SPiyVDpUP+LoOlxxlOYAMzkE7iuv3gA1jt3Hx2qTwArpZVPPdO+SI0hUj49OAn4QABR7JK9Gi0hibzGE0Aw==}
++    dev: true
++
+   /@types/estree@1.0.8:
+     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+     dev: true
+@@ -2047,6 +2058,14 @@ packages:
+     engines: {node: '>= 6'}
+     dev: true
+ 
++  /cytoscape@3.28.1:
++    resolution: {integrity: sha512-xyItz4O/4zp9/239wCcH8ZcFuuZooEeF8KHRmzjDfGdXsj3OG9MFSMA0pJE0uX3uCN/ygof6hHf4L7lst+JaDg==}
++    engines: {node: '>=0.10'}
++    dependencies:
++      heap: 0.2.7
++      lodash: 4.17.21
++    dev: false
++
+   /debug@4.4.1(supports-color@8.1.1):
+     resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+     engines: {node: '>=6.0'}
+@@ -2827,6 +2846,10 @@ packages:
+     hasBin: true
+     dev: true
+ 
++  /heap@0.2.7:
++    resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
++    dev: false
++
+   /hosted-git-info@4.1.0:
+     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
+     engines: {node: '>=10'}
+@@ -3242,6 +3265,10 @@ packages:
+     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
+     dev: true
+ 
++  /lodash@4.17.21:
++    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
++    dev: false
++
+   /log-symbols@4.1.0:
+     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
+     engines: {node: '>=10'}
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,281 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: Implement basic http server for mcp to extension events
+- Changed Files List: 
+src/extension.ts	+7	-2	after_lines=130
+src/mcp.server.ts	+14	-1	after_lines=64
+src/services/http-bridge.service.ts	+58	-0	after_lines=58
+src/services/mcp-config.service.ts	+4	-4	after_lines=105
+
+- Project Directory Tree (Snapshot after commit):
+├── .constellation
+│   └── data
+│       └── codebase-dependencies.json
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   └── Button.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index 9be292d..ba76485 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -4,6 +4,7 @@ import { upsertUserMcpConfig, maybeWriteWorkspaceConfig, selfTest } from "./serv
+ import { isNodeVersionSupported } from "./services/node-version.service.js";
+ import { SidePanelViewProvider } from "./side-panel-view-provider.js";
+ import { runScan } from "./services/dependency-cruiser.service.js";
++import { startHttpBridge } from "./services/http-bridge.service.js";
+ 
+ let graphPanel: vscode.WebviewPanel | undefined;
+ 
+@@ -30,15 +31,19 @@ export async function activate(context: vscode.ExtensionContext) {
+         // Path to compiled MCP server file
+         const serverJs = vscode.Uri.joinPath(context.extensionUri, "out", "mcp.server.js").fsPath;
+ 
++        // Start local HTTP bridge for webview commands
++        const { port: bridgePort, token: bridgeToken } = await startHttpBridge(context);
++
+         // Server ID (namespacing)
+         const serverId = getEffectiveServerId();
+ 
+         // Write/merge Kiro MCP user config
+         const nodeBin = resolveNodeBin();
+-        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId);
++        const extraEnv = { CONSTELLATION_BRIDGE_PORT: String(bridgePort), CONSTELLATION_BRIDGE_TOKEN: bridgeToken };
++        const userCfgPath = await upsertUserMcpConfig(nodeBin, serverJs, serverId, extraEnv);
+ 
+         // Optionally write workspace config
+-        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId);
++        await maybeWriteWorkspaceConfig(nodeBin, serverJs, serverId, extraEnv);
+ 
+         // Self-test: can we boot the server quickly?
+         const okTest = await selfTest(nodeBin, serverJs);
+
+--- FILE: src/mcp.server.ts ---
+diff --git a/src/mcp.server.ts b/src/mcp.server.ts
+index 89f8617..94d0522 100644
+--- a/src/mcp.server.ts
++++ b/src/mcp.server.ts
+@@ -18,7 +18,20 @@ server.registerTool(
+     description: "Responds with 'pong'.",
+     inputSchema: {},
+   },
+-  async () => ({ content: [{ type: "text", text: "pong" }] })
++  async () => {
++    // Attempt to notify the extension to open the Graph view via HTTP bridge
++    try {
++      const port = process.env.CONSTELLATION_BRIDGE_PORT;
++      const token = process.env.CONSTELLATION_BRIDGE_TOKEN;
++      if (port && token) {
++        await fetch(`http://127.0.0.1:${port}/open-graph`, {
++          method: "POST",
++          headers: { Authorization: `Bearer ${token}` },
++        }).catch(() => {});
++      }
++    } catch {}
++    return { content: [{ type: "text", text: "pong" }] };
++  }
+ );
+ 
+ // echo -> returns what you sent
+
+--- FILE: src/services/http-bridge.service.ts ---
+diff --git a/src/services/http-bridge.service.ts b/src/services/http-bridge.service.ts
+new file mode 100644
+index 0000000..07f4b2d
+--- /dev/null
++++ b/src/services/http-bridge.service.ts
+@@ -0,0 +1,58 @@
++import * as vscode from "vscode";
++import * as http from "node:http";
++import { randomBytes } from "node:crypto";
++
++export interface BridgeInfo {
++  port: number;
++  token: string;
++}
++
++export async function startHttpBridge(context: vscode.ExtensionContext): Promise<BridgeInfo> {
++  const token = randomBytes(32).toString("base64url");
++
++  const server = http.createServer(async (req, res) => {
++    try {
++      // Only allow loopback requests
++      const host = req.socket.remoteAddress || "";
++      // IPv6 loopback can be ::1, IPv4 127.0.0.1
++      const isLoopback = host === "127.0.0.1" || host === "::1" || host === "::ffff:127.0.0.1";
++      if (!isLoopback) {
++        res.statusCode = 403; res.end(); return;
++      }
++
++      // Very small router
++      if (req.method !== "POST") { res.statusCode = 405; res.end(); return; }
++      if (!req.url) { res.statusCode = 404; res.end(); return; }
++
++      // Auth
++      const auth = req.headers["authorization"] || "";
++      const expected = `Bearer ${token}`;
++      if (auth !== expected) { res.statusCode = 401; res.end(); return; }
++
++      if (req.url.startsWith("/open-graph")) {
++        // Reveal or open the graph view via the existing command
++        await vscode.commands.executeCommand("constellation.openGraphView");
++        res.statusCode = 204; // No Content
++        res.end();
++        return;
++      }
++
++      res.statusCode = 404; res.end();
++    } catch {
++      try { res.statusCode = 500; res.end(); } catch {}
++    }
++  });
++
++  await new Promise<void>((resolve, reject) => {
++    server.once("error", reject);
++    server.listen(0, "127.0.0.1", () => resolve());
++  });
++
++  const address = server.address();
++  const port = typeof address === "object" && address?.port ? address.port : 0;
++
++  // Dispose on deactivate
++  context.subscriptions.push({ dispose: () => server.close() });
++
++  return { port, token };
++}
+
+--- FILE: src/services/mcp-config.service.ts ---
+diff --git a/src/services/mcp-config.service.ts b/src/services/mcp-config.service.ts
+index fca2bbd..a82c94b 100644
+--- a/src/services/mcp-config.service.ts
++++ b/src/services/mcp-config.service.ts
+@@ -4,7 +4,7 @@ import * as os from "node:os";
+ import * as path from "node:path";
+ import { spawn } from "node:child_process";
+ 
+-export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string): Promise<string> {
++export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, serverId: string, extraEnv: Record<string, string> = {}): Promise<string> {
+   const userDir = path.join(os.homedir(), ".kiro", "settings");
+   const userCfgPath = path.join(userDir, "mcp.json");
+   await fs.mkdir(userDir, { recursive: true });
+@@ -21,7 +21,7 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
+   cfg.mcpServers[serverId] = {
+     command: nodeBin,
+     args: [serverJs],
+-    env: { CONSTELLATION_SERVER_ID: serverId },
++    env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
+     disabled: false,
+     autoApprove: ["ping", "echo"],
+   };
+@@ -30,7 +30,7 @@ export async function upsertUserMcpConfig(nodeBin: string, serverJs: string, ser
+   return userCfgPath;
+ }
+ 
+-export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string, serverId: string): Promise<void> {
++export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: string, serverId: string, extraEnv: Record<string, string> = {}): Promise<void> {
+   const writeWorkspace = vscode.workspace
+     .getConfiguration("constellation")
+     .get<boolean>("writeWorkspaceMcpConfig", false);
+@@ -59,7 +59,7 @@ export async function maybeWriteWorkspaceConfig(nodeBin: string, serverJs: strin
+     cfg.mcpServers[serverId] = {
+       command: nodeBin,
+       args: [serverJs],
+-      env: { CONSTELLATION_SERVER_ID: serverId },
++      env: { CONSTELLATION_SERVER_ID: serverId, ...extraEnv },
+       disabled: false,
+       autoApprove: ["ping", "echo"],
+     };
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

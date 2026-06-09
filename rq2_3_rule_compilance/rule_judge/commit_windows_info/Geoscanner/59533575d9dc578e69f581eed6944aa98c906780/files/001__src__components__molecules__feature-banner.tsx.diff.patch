@@ -1,0 +1,31 @@
+diff --git a/src/components/molecules/feature-banner.tsx b/src/components/molecules/feature-banner.tsx
+index 24bde1d..e1f8eb6 100644
+--- a/src/components/molecules/feature-banner.tsx
++++ b/src/components/molecules/feature-banner.tsx
+@@ -1,6 +1,6 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useEffect } from 'react';
+ import { motion } from 'framer-motion';
+ import { BarChart2, X } from 'lucide-react';
+ import { Button } from '@/components/ui/button';
+@@ -12,6 +12,18 @@ interface FeatureBannerProps {
+ 
+ export function FeatureBanner({ className }: FeatureBannerProps) {
+   const [isVisible, setIsVisible] = useState(true);
++  const [isMounted, setIsMounted] = useState(false);
++  
++  // Client-side alleen - voorkomt hydration mismatch
++  useEffect(() => {
++    setIsMounted(true);
++    console.log('🎌 FeatureBanner component gemount');
++  }, []);
++  
++  // Render niks tijdens SSR
++  if (!isMounted) {
++    return null;
++  }
+ 
+   if (!isVisible) return null;
+ 

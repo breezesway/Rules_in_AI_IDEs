@@ -1,0 +1,171 @@
+<script setup lang="ts">
+import { ref, nextTick } from "vue";
+import { cn } from "@/lib/utils";
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  timestamp: Date;
+  sender: "user" | "bot";
+  avatar?: string;
+}
+
+defineProps<{
+  /**
+   * CSS class for styling the chat widget container
+   */
+  class?: string;
+  /**
+   * Whether the chat widget is initially minimized
+   */
+  minimized?: boolean;
+  /**
+   * Title displayed in the chat header
+   */
+  title?: string;
+}>();
+
+const emit = defineEmits<{
+  messagesSent: [messages: ChatMessage[]];
+  minimizeToggle: [minimized: boolean];
+}>();
+
+// Local state
+const messages = ref<ChatMessage[]>([
+  {
+    id: "1",
+    content: "Hello! How can I help you today?",
+    timestamp: new Date(),
+    sender: "bot",
+  },
+]);
+
+const newMessage = ref("");
+const isMinimized = ref(false);
+const messagesContainer = ref<HTMLElement>();
+
+// Auto-responses for demo purposes
+const botResponses = [
+  "That's an interesting question! Let me think about that.",
+  "I understand what you're asking. Here's my perspective:",
+  "Thanks for sharing that with me. I'd be happy to help!",
+  "That's a great point. Let me provide some additional context.",
+  "I see what you mean. Here's what I would suggest:",
+];
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim()) return;
+
+  // Add user message
+  const userMessage: ChatMessage = {
+    id: Date.now().toString(),
+    content: newMessage.value.trim(),
+    timestamp: new Date(),
+    sender: "user",
+  };
+
+  messages.value.push(userMessage);
+  newMessage.value = "";
+
+  // Scroll to bottom
+  await nextTick();
+  scrollToBottom();
+
+  // Simulate bot response after a short delay
+  setTimeout(() => {
+    const botMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      content: botResponses[Math.floor(Math.random() * botResponses.length)],
+      timestamp: new Date(),
+      sender: "bot",
+    };
+    messages.value.push(botMessage);
+
+    nextTick(() => {
+      scrollToBottom();
+    });
+  }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+
+  emit("messagesSent", messages.value);
+};
+
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  }
+};
+
+const toggleMinimize = () => {
+  isMinimized.value = !isMinimized.value;
+  emit("minimizeToggle", isMinimized.value);
+};
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+</script>
+
+<template>
+  <Card
+    :class="
+      cn(
+        'w-96 h-[500px] flex flex-col transition-all duration-300 bg-background border shadow-lg',
+        isMinimized && 'h-14',
+        $props.class
+      )
+    "
+  >
+    <!-- Header -->
+    <div
+      class="flex items-center justify-between p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+      @click="toggleMinimize"
+    >
+      <div class="flex items-center gap-3">
+        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+        <h3 class="font-semibold text-sm">{{ title || "Chat Support" }}</h3>
+      </div>
+      <Button variant="ghost" size="sm" class="h-6 w-6 p-0">
+        <Icon
+          :name="isMinimized ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+          class="h-4 w-4"
+        />
+      </Button>
+    </div>
+
+    <!-- Chat content - hidden when minimized -->
+    <div v-show="!isMinimized" class="flex flex-col flex-1 min-h-0">
+      <!-- Messages area -->
+      <div
+        ref="messagesContainer"
+        class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
+      >
+        <ChatWidgetMessage
+          v-for="message in messages"
+          :key="message.id"
+          :message="message"
+        />
+      </div>
+
+      <!-- Input area -->
+      <div class="p-4 border-t bg-muted/20">
+        <div class="flex gap-2">
+          <Input
+            v-model="newMessage"
+            placeholder="Type your message..."
+            class="flex-1"
+            @keypress="handleKeyPress"
+          />
+          <Button :disabled="!newMessage.trim()" size="sm" @click="sendMessage">
+            <Icon name="lucide:send" class="h-4 w-4" />
+          </Button>
+        </div>
+        <p class="text-xs text-muted-foreground mt-2 text-center">
+          Press Enter to send • Shift+Enter for new line
+        </p>
+      </div>
+    </div>
+  </Card>
+</template>

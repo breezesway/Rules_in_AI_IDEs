@@ -1,0 +1,92 @@
+diff --git a/src/hooks/use-dropzone.tsx b/src/hooks/use-dropzone.tsx
+deleted file mode 100644
+index f3caa47..0000000
+--- a/src/hooks/use-dropzone.tsx
++++ /dev/null
+@@ -1,85 +0,0 @@
+-import React, { useCallback, useState } from "react"
+-
+-interface DropzoneOptions {
+-  onDrop: (files: File[]) => void
+-  accept?: Record<string, string[]>
+-}
+-
+-export function useDropzone({ onDrop, accept }: DropzoneOptions) {
+-  const [isDragActive, setIsDragActive] = useState(false)
+-
+-  const onDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+-    e.preventDefault()
+-    e.stopPropagation()
+-    setIsDragActive(true)
+-  }, [])
+-
+-  const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+-    e.preventDefault()
+-    e.stopPropagation()
+-    if (e.dataTransfer) {
+-      e.dataTransfer.dropEffect = "copy"
+-    }
+-    setIsDragActive(true)
+-  }, [])
+-
+-  const onDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+-    e.preventDefault()
+-    e.stopPropagation()
+-    setIsDragActive(false)
+-  }, [])
+-
+-  const onDropCallback = useCallback(
+-    (e: React.DragEvent<HTMLDivElement>) => {
+-      e.preventDefault()
+-      e.stopPropagation()
+-      setIsDragActive(false)
+-
+-      if (e.dataTransfer) {
+-        const files = Array.from(e.dataTransfer.files) as File[]
+-
+-        // Filter files based on accept prop if provided
+-        if (accept) {
+-          const acceptedFiles = files.filter((file: File) => {
+-            // Check if file type is in accept object
+-            for (const [type, extensions] of Object.entries(accept)) {
+-              if (file.type === type) return true
+-
+-              // Check file extension
+-              const fileExtension = `.${file.name.split(".").pop()?.toLowerCase()}`
+-              if (extensions.includes(fileExtension)) return true
+-            }
+-            return false
+-          })
+-
+-          onDrop(acceptedFiles)
+-        } else {
+-          onDrop(files)
+-        }
+-      }
+-    },
+-    [onDrop, accept],
+-  )
+-
+-  const getRootProps = () => ({
+-    onDragEnter,
+-    onDragOver,
+-    onDragLeave,
+-    onDrop: onDropCallback,
+-  })
+-
+-  const getInputProps = () => ({
+-    accept: accept
+-      ? Object.entries(accept)
+-          .map(([type, extensions]) => extensions.join(", "))
+-          .join(", ")
+-      : undefined,
+-    multiple: true,
+-  })
+-
+-  return {
+-    getRootProps,
+-    getInputProps,
+-    isDragActive,
+-  }
+-} 
+\ No newline at end of file

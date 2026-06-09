@@ -1,0 +1,528 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: feat: implement drag and drop functionality for layers in Sidebar
+
+    * Add dnd-kit library for drag and drop support
+    * Create SortableLayerItem component for draggable layers
+    * Update Sidebar to handle layer reordering with drag and drop
+    * Enhance rendering logic in Canvas to merge layers correctly
+    * Update .cursorrules to include bun for package management
+- Changed Files List: 
+.cursorrules	+2	-1	after_lines=17
+bun.lock	+11	-0	after_lines=878
+conversations/3-adjust-layers-rendering.md	+54	-0	after_lines=54
+conversations/4-implement-drag-drop-layers.md	+77	-0	after_lines=77
+package.json	+3	-0	after_lines=36
+src/components/Canvas.tsx	+43	-24	after_lines=372
+src/components/Sidebar.tsx	+107	-15	after_lines=138
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 3-adjust-layers-rendering.md
+│   └── 4-implement-drag-drop-layers.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursorrules ---
+diff --git a/.cursorrules b/.cursorrules
+index 9b225b8..309904c 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -13,4 +13,5 @@
+ ## Project Context
+ - This is an ASCII Canvas project with Next.js
+ - Main components: Canvas, CanvasContainer, CanvasToolbar, Sidebar
+-- Uses TypeScript and modern React patterns 
+\ No newline at end of file
++- Uses TypeScript and modern React patterns
++- Use bun for package management (bun add, bun install, etc.) 
+\ No newline at end of file
+
+--- FILE: bun.lock ---
+diff --git a/bun.lock b/bun.lock
+index 9535be2..e4bbedc 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -4,6 +4,9 @@
+     "": {
+       "name": "ascii-canvas",
+       "dependencies": {
++        "@dnd-kit/core": "^6.3.1",
++        "@dnd-kit/sortable": "^10.0.0",
++        "@dnd-kit/utilities": "^3.2.2",
+         "class-variance-authority": "^0.7.1",
+         "clsx": "^2.1.1",
+         "lucide-react": "^0.525.0",
+@@ -32,6 +35,14 @@
+ 
+     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
+ 
++    "@dnd-kit/accessibility": ["@dnd-kit/accessibility@3.1.1", "", { "dependencies": { "tslib": "^2.0.0" }, "peerDependencies": { "react": ">=16.8.0" } }, "sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw=="],
++
++    "@dnd-kit/core": ["@dnd-kit/core@6.3.1", "", { "dependencies": { "@dnd-kit/accessibility": "^3.1.1", "@dnd-kit/utilities": "^3.2.2", "tslib": "^2.0.0" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-xkGBRQQab4RLwgXxoqETICr6S5JlogafbhNsidmrkVv2YRs5MLwpjoF2qpiGjQt8S9AoxtIV603s0GIUpY5eYQ=="],
++
++    "@dnd-kit/sortable": ["@dnd-kit/sortable@10.0.0", "", { "dependencies": { "@dnd-kit/utilities": "^3.2.2", "tslib": "^2.0.0" }, "peerDependencies": { "@dnd-kit/core": "^6.3.0", "react": ">=16.8.0" } }, "sha512-+xqhmIIzvAYMGfBYYnbKuNicfSsk4RksY2XdmJhT+HAC01nix6fHCztU68jooFiMUB01Ky3F0FyOvhG/BZrWkg=="],
++
++    "@dnd-kit/utilities": ["@dnd-kit/utilities@3.2.2", "", { "dependencies": { "tslib": "^2.0.0" }, "peerDependencies": { "react": ">=16.8.0" } }, "sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg=="],
++
+     "@emnapi/core": ["@emnapi/core@1.4.3", "", { "dependencies": { "@emnapi/wasi-threads": "1.0.2", "tslib": "^2.4.0" } }, "sha512-4m62DuCE07lw01soJwPiBGC0nAww0Q+RY70VZ+n49yDIO13yyinhbWCeNnaob0lakDtWQzSdtNWzJeOJt2ma+g=="],
+ 
+     "@emnapi/runtime": ["@emnapi/runtime@1.4.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-pBPWdu6MLKROBX05wSNKcNb++m5Er+KQ9QkB+WVM+pW2Kx9hoSrVTnu3BdkI5eBLZoKu/J6mW/B6i6bJB2ytXQ=="],
+
+--- FILE: conversations/3-adjust-layers-rendering.md ---
+diff --git a/conversations/3-adjust-layers-rendering.md b/conversations/3-adjust-layers-rendering.md
+new file mode 100644
+index 0000000..750e6ee
+--- /dev/null
++++ b/conversations/3-adjust-layers-rendering.md
+@@ -0,0 +1,54 @@
++# Conversation 3: Adjust Layers Rendering
++
++**Date:** Current session  
++**Participants:** Chuang, Cursor
++
++## Summary
++Fixed layer rendering logic to ensure newer layers properly overwrite older ones, with each canvas cell containing only one character.
++
++## Problem
++The canvas was drawing all layers sequentially, which meant newer layers didn't properly overwrite older ones. Each cell could potentially contain multiple characters from different layers.
++
++## Solution
++- Added `mergeLayers()` function that combines all layers into a single canvas array
++- Updated rendering logic in both `handleMouseMove` and `useEffect` to use merged layers
++- Ensured newer layers take precedence over older ones
++
++## Code Changes Made
++
++### Added mergeLayers() Function
++```typescript
++const mergeLayers = () => {
++  const mergedCanvas = Array.from({ length: CANVAS_ROWS }, () =>
++    Array.from({ length: CANVAS_COLS }, () => " ")
++  );
++
++  // Process layers in order (older first, newer last)
++  // Newer layers will overwrite older ones
++  layers.forEach((layer) => {
++    layer.canvas.forEach((row, rowIndex) => {
++      row.forEach((cell, colIndex) => {
++        if (cell !== " ") {
++          mergedCanvas[rowIndex][colIndex] = cell;
++        }
++      });
++    });
++  });
++
++  return mergedCanvas;
++};
++```
++
++### Updated Rendering Logic
++- Modified `handleMouseMove` to use `mergeLayers()` instead of drawing each layer separately
++- Modified `useEffect` to use `mergeLayers()` for main canvas rendering
++- Both preview and final rendering now use consistent merged layer logic
++
++## Benefits
++- **Proper layering**: Newer shapes correctly overwrite older ones
++- **Single character per cell**: Each canvas position contains only one character
++- **Consistent rendering**: Preview and final rendering use the same logic
++- **Performance**: More efficient than drawing each layer separately
++
++## Files Modified
++- `src/components/Canvas.tsx`: Added mergeLayers function and updated rendering logic 
+\ No newline at end of file
+
+--- FILE: conversations/4-implement-drag-drop-layers.md ---
+diff --git a/conversations/4-implement-drag-drop-layers.md b/conversations/4-implement-drag-drop-layers.md
+new file mode 100644
+index 0000000..88108f2
+--- /dev/null
++++ b/conversations/4-implement-drag-drop-layers.md
+@@ -0,0 +1,77 @@
++# Conversation 4: Implement Drag/Drop for Layers
++
++**Date**: Current session
++
++## Summary
++Implemented drag and drop functionality for layers in the sidebar using dnd-kit library. Users can now reorder layers by dragging them up and down, with visual feedback and keyboard accessibility support.
++
++## Chuang:
++Support drag/drop of layers. Use dnd-kit for UX. Use the methods defined in @/store to reorder them.
++
++## Cursor:
++I'll help you implement drag and drop functionality for layers using dnd-kit. First, let me examine the store to understand the available methods for reordering layers.
++
++[Examined store/index.ts and found reorderLayers method]
++
++Perfect! I can see that the store already has a `reorderLayers` method that takes `fromIndex` and `toIndex` parameters. Now I need to install dnd-kit and implement the drag and drop functionality in the Sidebar component.
++
++## Chuang:
++Use bun to manage libs. (add this to @.cursorrules too)
++
++## Cursor:
++I'll use bun to install the dnd-kit libraries and also update the .cursorrules file to include the bun preference.
++
++[Installed @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities using bun]
++
++[Updated .cursorrules to include bun preference]
++
++Now I'll implement the drag and drop functionality in the Sidebar component using dnd-kit:
++
++[Implemented complete drag and drop functionality with:
++- DndContext and SortableContext wrappers
++- Custom SortableLayerItem component
++- Drag sensors for pointer and keyboard
++- Visual feedback during drag operations
++- Integration with store's reorderLayers method]
++
++Perfect! I've successfully implemented drag and drop functionality for the layers using dnd-kit. Here's what I've added:
++
++## Key Features Implemented:
++
++1. **Drag and Drop Support**: Layers can now be reordered by dragging them up and down in the sidebar
++2. **Visual Feedback**: 
++   - Layers become semi-transparent (50% opacity) while being dragged
++   - Hover effects on layer items
++   - Smooth transitions during drag operations
++3. **Accessibility**: Keyboard support for drag and drop operations
++4. **Integration with Store**: Uses the existing `reorderLayers` method from the store to persist changes
++
++## Technical Implementation:
++
++- **DndContext**: Wraps the sortable list and handles drag events
++- **SortableContext**: Manages the sortable items and their strategy
++- **SortableLayerItem**: A custom component that wraps each layer with drag functionality
++- **Sensors**: Configured for both pointer (mouse/touch) and keyboard interactions
++- **Event Handling**: The `handleDragEnd` function calculates the old and new indices and calls the store's `reorderLayers` method
++
++The implementation maintains all existing functionality (add, remove, clear all layers) while adding the new drag and drop capability. The UI has been enhanced with better styling for the draggable items, including a move cursor and hover effects.
++
++## Chuang:
++Yes save it.
++
++## Code Changes Made:
++1. **Installed dependencies**: Added @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities using bun
++2. **Updated .cursorrules**: Added note about using bun for package management
++3. **Enhanced Sidebar.tsx**: 
++   - Added dnd-kit imports and components
++   - Created SortableLayerItem component for drag functionality
++   - Implemented DndContext and SortableContext wrappers
++   - Added drag sensors and event handlers
++   - Enhanced UI with better styling and visual feedback
++   - Integrated with store's reorderLayers method
++   - Fixed linter error by removing unused arrayMove import
++
++## Files Modified:
++- `.cursorrules` - Added bun package management preference
++- `src/components/Sidebar.tsx` - Complete drag and drop implementation
++- `package.json` - Added dnd-kit dependencies (via bun) 
+\ No newline at end of file
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 7831c66..5bfc7af 100644
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,9 @@
+     "lint": "next lint"
+   },
+   "dependencies": {
++    "@dnd-kit/core": "^6.3.1",
++    "@dnd-kit/sortable": "^10.0.0",
++    "@dnd-kit/utilities": "^3.2.2",
+     "class-variance-authority": "^0.7.1",
+     "clsx": "^2.1.1",
+     "lucide-react": "^0.525.0",
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+index 400044b..4e3d6e6 100644
+--- a/src/components/Canvas.tsx
++++ b/src/components/Canvas.tsx
+@@ -189,6 +189,27 @@ export default function Canvas() {
+     return canvas;
+   };
+ 
++  // Merge all layers into a single canvas array
++  const mergeLayers = () => {
++    const mergedCanvas = Array.from({ length: CANVAS_ROWS }, () =>
++      Array.from({ length: CANVAS_COLS }, () => " ")
++    );
++
++    // Process layers in order (older first, newer last)
++    // Newer layers will overwrite older ones
++    layers.forEach((layer) => {
++      layer.canvas.forEach((row, rowIndex) => {
++        row.forEach((cell, colIndex) => {
++          if (cell !== " ") {
++            mergedCanvas[rowIndex][colIndex] = cell;
++          }
++        });
++      });
++    });
++
++    return mergedCanvas;
++  };
++
+   // Handle mouse down
+   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+     if (!selectedShape) return;
+@@ -218,18 +239,17 @@ export default function Canvas() {
+     ctx.fillStyle = "#ffffff";
+     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+ 
+-    // Draw existing layers
+-    layers.forEach((layer) => {
+-      layer.canvas.forEach((row, rowIndex) => {
+-        row.forEach((cell, colIndex) => {
+-          if (cell !== " ") {
+-            ctx.fillStyle = "#000000";
+-            ctx.font = `${CELL_HEIGHT}px monospace`;
+-            ctx.textAlign = "left";
+-            ctx.textBaseline = "top";
+-            ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
+-          }
+-        });
++    // Draw merged layers
++    const mergedCanvas = mergeLayers();
++    mergedCanvas.forEach((row, rowIndex) => {
++      row.forEach((cell, colIndex) => {
++        if (cell !== " ") {
++          ctx.fillStyle = "#000000";
++          ctx.font = `${CELL_HEIGHT}px monospace`;
++          ctx.textAlign = "left";
++          ctx.textBaseline = "top";
++          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++        }
+       });
+     });
+ 
+@@ -323,18 +343,17 @@ export default function Canvas() {
+     ctx.fillStyle = "#ffffff";
+     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+ 
+-    // Draw each layer
+-    layers.forEach((layer) => {
+-      layer.canvas.forEach((row, rowIndex) => {
+-        row.forEach((cell, colIndex) => {
+-          if (cell !== " ") {
+-            ctx.fillStyle = "#000000";
+-            ctx.font = `${CELL_HEIGHT}px monospace`;
+-            ctx.textAlign = "left";
+-            ctx.textBaseline = "top";
+-            ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
+-          }
+-        });
++    // Draw merged layers
++    const mergedCanvas = mergeLayers();
++    mergedCanvas.forEach((row, rowIndex) => {
++      row.forEach((cell, colIndex) => {
++        if (cell !== " ") {
++          ctx.fillStyle = "#000000";
++          ctx.font = `${CELL_HEIGHT}px monospace`;
++          ctx.textAlign = "left";
++          ctx.textBaseline = "top";
++          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++        }
+       });
+     });
+   }, [layers]);
+
+--- FILE: src/components/Sidebar.tsx ---
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+index d0b51d5..63295b8 100644
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -1,37 +1,129 @@
+ "use client";
+ 
+ import { useLayersStore } from "@/store";
++import {
++  DndContext,
++  closestCenter,
++  KeyboardSensor,
++  PointerSensor,
++  useSensor,
++  useSensors,
++  DragEndEvent,
++} from "@dnd-kit/core";
++import {
++  SortableContext,
++  sortableKeyboardCoordinates,
++  verticalListSortingStrategy,
++} from "@dnd-kit/sortable";
++import {
++  useSortable,
++} from "@dnd-kit/sortable";
++import { CSS } from "@dnd-kit/utilities";
++
++interface SortableLayerItemProps {
++  layer: { id: string; canvas: string[][] };
++  onRemove: (id: string) => void;
++}
++
++function SortableLayerItem({ layer, onRemove }: SortableLayerItemProps) {
++  const {
++    attributes,
++    listeners,
++    setNodeRef,
++    transform,
++    transition,
++    isDragging,
++  } = useSortable({ id: layer.id });
++
++  const style = {
++    transform: CSS.Transform.toString(transform),
++    transition,
++    opacity: isDragging ? 0.5 : 1,
++  };
++
++  return (
++    <li
++      ref={setNodeRef}
++      style={style}
++      className="flex items-center justify-between bg-gray-700 p-3 rounded cursor-move hover:bg-gray-600 transition-colors"
++      {...attributes}
++      {...listeners}
++    >
++      <span className="text-white">{layer.id}</span>
++      <button
++        className="text-red-500 hover:text-red-700 ml-2"
++        onClick={(e) => {
++          e.stopPropagation();
++          onRemove(layer.id);
++        }}
++      >
++        Remove
++      </button>
++    </li>
++  );
++}
+ 
+ export default function Sidebar() {
+   const layers = useLayersStore((state) => state.layers);
++  const reorderLayers = useLayersStore((state) => state.reorderLayers);
++  const removeLayer = useLayersStore((state) => state.removeLayer);
++  const addLayer = useLayersStore((state) => state.addLayer);
++  const clearAllLayers = useLayersStore((state) => state.clearAllLayers);
++
++  const sensors = useSensors(
++    useSensor(PointerSensor),
++    useSensor(KeyboardSensor, {
++      coordinateGetter: sortableKeyboardCoordinates,
++    })
++  );
++
++  function handleDragEnd(event: DragEndEvent) {
++    const { active, over } = event;
++
++    if (active.id !== over?.id) {
++      const oldIndex = layers.findIndex((layer) => layer.id === active.id);
++      const newIndex = layers.findIndex((layer) => layer.id === over?.id);
++      
++      reorderLayers(oldIndex, newIndex);
++    }
++  }
+ 
+   return (
+     <div className="flex h-full w-64 flex-col bg-gray-800 p-4 text-white shrink-0">
+       <button
+         className="mb-4 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+-        onClick={() => useLayersStore.getState().clearAllLayers()}
++        onClick={clearAllLayers}
+         disabled={layers.length === 0}
+       >
+         Clear All Layers
+       </button>
+       <h2 className="mb-4 text-xl font-bold">Layers</h2>
+-      <ul className="space-y-2">
+-        {layers.map((layer) => (
+-          <li key={layer.id} className="flex items-center justify-between">
+-            <span>{layer.id}</span>
+-            <button
+-              className="text-red-500 hover:text-red-700"
+-              onClick={() => useLayersStore.getState().removeLayer(layer.id)}
+-            >
+-              Remove
+-            </button>
+-          </li>
+-        ))}
+-      </ul>
++      
++      <DndContext
++        sensors={sensors}
++        collisionDetection={closestCenter}
++        onDragEnd={handleDragEnd}
++      >
++        <SortableContext
++          items={layers.map(layer => layer.id)}
++          strategy={verticalListSortingStrategy}
++        >
++          <ul className="space-y-2">
++            {layers.map((layer) => (
++              <SortableLayerItem
++                key={layer.id}
++                layer={layer}
++                onRemove={removeLayer}
++              />
++            ))}
++          </ul>
++        </SortableContext>
++      </DndContext>
++
+       <button
+         className="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+         onClick={() =>
+-          useLayersStore.getState().addLayer({
++          addLayer({
+             id: `layer-${layers.length}`,
+             canvas: Array.from({ length: 100 }, () =>
+               Array(100).fill(Math.random() > 0.5 ? "X" : "O"),
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

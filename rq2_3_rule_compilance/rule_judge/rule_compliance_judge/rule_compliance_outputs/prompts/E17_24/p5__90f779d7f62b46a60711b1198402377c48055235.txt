@@ -1,0 +1,59 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: modified
+- Target Rule Content:
+-   - Prefer table-driven tests for multiple cases
++   - Prefer table-driven tests for multiple cases; avoid multiple calls to t.Run in the same function
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Go source code files, specifically test files (e.g., *_test.go).
+- Suggested Logic: Scan test functions (functions starting with 'Test' and accepting '*testing.T') to count the number of calls to the '.Run' method (e.g., 't.Run(...)'). If a single test function contains more than one call to 't.Run' outside of a loop structure, it violates the rule against multiple calls in favor of table-driven tests.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: Add watch command
+- Changed Files List: 
+Makefile	+5	-1	after_lines=25
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: Makefile ---
+diff --git a/Makefile b/Makefile
+index c976481..b45f7d5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,7 +7,7 @@ $(WASMFILE): $(GOFILES)
+ 
+ .PHONY: test
+ test:
+-	go test -v ./...
++	go test ./...
+ 
+ $(WASMEXEC):
+ 	cp "$(shell go env GOROOT)/lib/wasm/wasm_exec.js" $(WASMEXEC)
+@@ -19,3 +19,7 @@ serve:
+ .PHONY: setup
+ setup: $(WASMEXEC) $(WASMFILE)
+ 
++.PHONY: watch
++watch:
++	fswatch -o . -e ".*" -i "\\.go$$" | xargs -n1 -I{} make
++
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

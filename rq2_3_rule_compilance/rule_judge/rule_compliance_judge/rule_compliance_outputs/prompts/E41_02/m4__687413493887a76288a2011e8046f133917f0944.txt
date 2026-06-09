@@ -1,0 +1,205 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-│ │ ├── lib.rs # Main Worker entry point
++│ │ ├── index.ts # Main Worker entry point
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure.
+- Suggested Logic: Verify that the file 'index.ts' exists in the worker's directory and that 'lib.rs' has been removed or replaced as the entry point in that specific path.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: Enable Analytics Engine binding for development environment
+
+- Uncommented analytics_engine_datasets binding in wrangler.toml
+- This enables observability features in local development
+- Analytics tracking is now active for health checks, file operations, and error monitoring
+- Changed Files List: 
+worker/src/index.ts	+57	-1	after_lines=311
+worker/wrangler.toml	+3	-3	after_lines=83
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/src/index.ts ---
+diff --git a/worker/src/index.ts b/worker/src/index.ts
+index b126856..cb45edf 100644
+--- a/worker/src/index.ts
++++ b/worker/src/index.ts
+@@ -36,7 +36,16 @@ app.use('*', async (c, next) => {
+ })
+ 
+ // Health check endpoint
+-app.get('/health', (c) => {
++app.get('/health', async (c) => {
++    // Track health check analytics
++    if (c.env.ANALYTICS) {
++        c.env.ANALYTICS.writeDataPoint({
++            blobs: ['health_check'],
++            doubles: [1],
++            indexes: [c.env.ENVIRONMENT]
++        })
++    }
++
+     return c.json({
+         status: 'healthy',
+         timestamp: new Date().toISOString(),
+@@ -83,6 +92,15 @@ app.get('/api/files', async (c) => {
+ 
+         const objects = await bucket.list({ prefix })
+ 
++        // Track file listing analytics
++        if (c.env.ANALYTICS) {
++            c.env.ANALYTICS.writeDataPoint({
++                blobs: ['file_list'],
++                doubles: [objects.objects.length],
++                indexes: [c.env.ENVIRONMENT, prefix || 'root']
++            })
++        }
++
+         return c.json({
+             success: true,
+             objects: objects.objects.map(obj => ({
+@@ -96,6 +114,16 @@ app.get('/api/files', async (c) => {
+         })
+     } catch (error) {
+         console.error('Error listing files:', error)
++        
++        // Track error analytics
++        if (c.env.ANALYTICS) {
++            c.env.ANALYTICS.writeDataPoint({
++                blobs: ['file_list_error'],
++                doubles: [1],
++                indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++            })
++        }
++
+         return c.json({
+             success: false,
+             error: 'Failed to list files'
+@@ -113,6 +141,15 @@ app.post('/api/files/upload', async (c) => {
+ 
+         // Check file size
+         if (body.size > maxSizeMB * 1024 * 1024) {
++            // Track file size exceeded analytics
++            if (c.env.ANALYTICS) {
++                c.env.ANALYTICS.writeDataPoint({
++                    blobs: ['file_upload_size_exceeded'],
++                    doubles: [body.size / (1024 * 1024)], // Size in MB
++                    indexes: [c.env.ENVIRONMENT, maxSizeMB.toString()]
++                })
++            }
++
+             return c.json({
+                 success: false,
+                 error: `File size exceeds maximum of ${maxSizeMB}MB`
+@@ -125,6 +162,15 @@ app.post('/api/files/upload', async (c) => {
+         // Upload to R2
+         await bucket.put(filename, body)
+ 
++        // Track successful file upload analytics
++        if (c.env.ANALYTICS) {
++            c.env.ANALYTICS.writeDataPoint({
++                blobs: ['file_upload_success'],
++                doubles: [body.size / (1024 * 1024)], // Size in MB
++                indexes: [c.env.ENVIRONMENT, filename.split('.').pop() || 'unknown'] // File extension
++            })
++        }
++
+         return c.json({
+             success: true,
+             message: 'File uploaded successfully',
+@@ -133,6 +179,16 @@ app.post('/api/files/upload', async (c) => {
+         })
+     } catch (error) {
+         console.error('Error uploading file:', error)
++
++        // Track upload error analytics
++        if (c.env.ANALYTICS) {
++            c.env.ANALYTICS.writeDataPoint({
++                blobs: ['file_upload_error'],
++                doubles: [1],
++                indexes: [c.env.ENVIRONMENT, error instanceof Error ? error.message : 'unknown']
++            })
++        }
++
+         return c.json({
+             success: false,
+             error: 'Failed to upload file'
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 4b13f20..7bd4ce0 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -18,9 +18,9 @@ binding = "KV_SESSIONS"
+ id = "file-explorer-sessions-dev"
+ preview_id = "file-explorer-sessions-dev-preview"
+ 
+-# Analytics Engine binding for observability (disabled in local dev)
+-# [[analytics_engine_datasets]]
+-# binding = "ANALYTICS"
++# Analytics Engine binding for observability
++[[analytics_engine_datasets]]
++binding = "ANALYTICS"
+ 
+ # Development environment variables
+ [vars]
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

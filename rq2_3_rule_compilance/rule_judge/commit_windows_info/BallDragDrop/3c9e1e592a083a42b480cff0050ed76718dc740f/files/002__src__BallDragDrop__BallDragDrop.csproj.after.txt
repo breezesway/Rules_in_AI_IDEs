@@ -1,0 +1,81 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Config.Net" Version="5.2.0" />
+    <PackageReference Include="log4net" Version="3.0.1" />
+    <PackageReference Include="Castle.Core" Version="5.1.1" />
+    <PackageReference Include="Stateless" Version="5.16.0" />
+
+    <!-- Code Analysis and Standards Enforcement -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Custom Analyzer Project Reference -->
+    <ProjectReference Include="..\BallDragDrop.CodeAnalysis\BallDragDrop.CodeAnalysis.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\Images\Ball01.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Cursors\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Import custom MSBuild targets for coding standards validation -->
+  <Import Project="Build\CodingStandards.targets" />
+
+  <!-- Properties for coding standards integration -->
+  <PropertyGroup>
+    <!-- Enable/disable coding standards validation during build -->
+    <EnableCodingStandardsValidation Condition="'$(Configuration)' == 'Debug'">true</EnableCodingStandardsValidation>
+    <EnableCodingStandardsValidation Condition="'$(Configuration)' == 'Release'">true</EnableCodingStandardsValidation>
+
+    <!-- Configure whether to fail build on critical violations -->
+    <!-- Set to true to enforce enhanced standards -->
+    <FailBuildOnCriticalViolations>false</FailBuildOnCriticalViolations>
+
+    <!-- Enhanced standards enforcement -->
+    <EnforceEnhancedStandards>true</EnforceEnhancedStandards>
+    <TreatThisQualifierViolationsAsErrors>true</TreatThisQualifierViolationsAsErrors>
+    <TreatClassFileOrganizationViolationsAsErrors>true</TreatClassFileOrganizationViolationsAsErrors>
+
+    <!-- Generate XML documentation for better analysis -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>

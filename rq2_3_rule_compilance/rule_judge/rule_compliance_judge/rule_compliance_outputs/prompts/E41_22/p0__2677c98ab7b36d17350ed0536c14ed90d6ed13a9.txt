@@ -1,0 +1,211 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+Define interfaces in types/ directories
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing interface definitions and the file system directory structure.
+- Suggested Logic: Scan the repository for interface definitions (using language-specific keywords like 'interface'). For every file where an interface is defined, verify that its file path includes a directory named 'types/'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: Update tech steering guidelines with comprehensive development standards
+
+- Restructure tech.md with proper frontmatter for always inclusion
+- Add detailed TypeScript, backend, and frontend architecture patterns
+- Include security requirements and performance guidelines
+- Expand testing standards and development workflow
+- Add consistent error handling conventions
+- Changed Files List: 
+.kiro/steering/tech.md	+59	-59	after_lines=63
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 9c3a273..97d21bc 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -1,63 +1,63 @@
+-# Technology Stack
+-
+-## Frontend
+-- **Framework**: React 18 with TypeScript
+-- **Routing**: React Router for navigation
+-- **State Management**: React Query for API state and caching
+-- **Styling**: Tailwind CSS
+-- **File Uploads**: React Dropzone
+-- **HTTP Client**: Fetch API
+-
+-## Backend
+-- **Runtime**: Cloudflare Workers
+-- **Language**: JavaScript/TypeScript with Hono framework
+-- **Storage**: Direct R2 bindings (no S3 SDK needed)
+-- **Session Storage**: Cloudflare KV
+-- **Authentication**: JWT tokens
+-
+-## Infrastructure
+-- **Compute**: Cloudflare Workers (serverless, global edge)
+-- **Storage**: Cloudflare R2 for object storage
+-- **Session Management**: Cloudflare KV
+-- **Frontend Hosting**: Cloudflare Workers with Static Assets
+-- **CDN**: Cloudflare global network
+-
+-## Development Tools
+-- **Local Development**: Wrangler CLI for Workers development
+-- **Package Manager**: npm/yarn for both frontend and backend
+-- **Testing**: Jest + React Testing Library (frontend), Vitest (backend)
+-
+-## Observability
+-- **API Observability**: Workers Analytics Engine for data points
++---
++inclusion: always
++---
++
++# Technology Stack & Development Guidelines
++
++## Core Technologies
++- **Frontend**: React 18 + TypeScript, Tailwind CSS, React Query
++- **Backend**: Cloudflare Workers with Hono framework, TypeScript
++- **Storage**: Cloudflare R2 (direct bindings only), Cloudflare KV for sessions
++- **Authentication**: JWT tokens with KV-based session storage
++
++## Code Standards
++
++### TypeScript
++- Use strict TypeScript with proper type definitions
++- Define interfaces in `types/` directories
++- Never use `any` - create explicit types
++- Export types from dedicated index files
++
++### Backend Architecture (Hono + Workers)
++- Handlers in `handlers/` directory, organized by feature
++- Business logic in `services/` directory
++- Use Hono's built-in middleware (CORS, JWT, error handling)
++- Direct R2 bindings only - no S3 SDK compatibility
++- Stream large file operations
++- Validate all inputs with proper error responses
++
++### Frontend Architecture (React)
++- Components in `components/` directory by feature
++- Custom hooks in `hooks/` directory
++- API calls centralized in `services/` directory
++- React Query for server state and caching
++- Error boundaries for graceful failures
++
++## Security & Performance
++- Never store credentials in browser storage
++- JWT sessions with KV storage backend
++- Proper CORS headers for cross-origin requests
++- Streaming uploads for large files
++- Virtual scrolling for large lists
++- Bundle optimization with tree shaking
++
++## Error Handling
++- Consistent format: `{ error: string, code?: string }`
++- User-friendly messages in frontend
++- No sensitive data in logs
++- Graceful network failure handling with retry logic
+ 
+ ## Testing
+-- **Testing**: Local unit tests are created as functionality is modified
++- Unit tests for all new functionality
++- Frontend: Jest + React Testing Library
++- Backend: Vitest for Workers
++- Mock external dependencies (R2, KV)
++- Test error scenarios and edge cases
+ 
+-## Common Commands
+-
+-### Development
+-```bash
+-# Start local development
+-wrangler dev                    # Start Worker locally
+-npm run dev                     # Start React dev server
+-
+-# Build
+-npm run build                   # Build frontend
+-wrangler publish               # Deploy Worker
+-
+-# Testing
+-npm test                       # Run frontend tests
+-npm run test:worker            # Run Worker tests
+-```
+-
+-### Deployment
++## Development Commands
+ ```bash
+-# Build frontend and deploy Worker with static assets
+-cd frontend && npm run build
+-cd ../worker && wrangler deploy --env production
+-```
+-
+-## Configuration Files
+-- `wrangler.toml` - Worker configuration and bindings
+-- `package.json` - Frontend and Worker dependencies and scripts
+-- `tsconfig.json` - TypeScript configuration
+\ No newline at end of file
++wrangler dev        # Start Worker with hot reload
++npm run dev         # Start React dev server
++npm test           # Run all tests
++npm run test:watch # Watch mode
++```
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

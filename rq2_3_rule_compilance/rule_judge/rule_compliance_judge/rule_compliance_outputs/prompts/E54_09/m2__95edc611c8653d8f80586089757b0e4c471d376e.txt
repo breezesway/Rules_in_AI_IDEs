@@ -1,0 +1,137 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Version Control
+- Rule File Path: .cursor/rules/commit-rules.mdc
+- Change Type: added
+- Target Rule Content:
+## ブランチ命名規則
+
+- `feature/<機能名>`: 新機能開発
+- `fix/<問題名>`: バグ修正
+- `docs/<ドキュメント名>`: ドキュメント更新
+- `refactor/<リファクタリング対象>`: リファクタリング
+- `test/<テスト対象>`: テスト追加・修正
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Git history and repository metadata (specifically branch names).
+- Suggested Logic: Verify that all branch names follow the specified prefix patterns: they must start with 'feature/', 'fix/', 'docs/', 'refactor/', or 'test/'. This can be checked using a regular expression such as '^(feature|fix|docs|refactor|test)\/'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: Fix: スライダー操作時に他の選択肢の比率を維持するように修正
+- Changed Files List: 
+app/page.tsx	+34	-17	after_lines=715
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── commit-rules.mdc
+│       ├── github-workflow-rules.mdc
+│       └── roulette-app-rules.mdc
+├── .github
+│   ├── ISSUE_TEMPLATE
+│   │   ├── bug_report.md
+│   │   └── feature_request.md
+│   ├── pull_request_template.md
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── README.md
+├── app
+│   ├── components
+│   │   └── Roulette.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── pages
+│       └── index.tsx
+├── eslint.config.mjs
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── tailwind.config.js
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: app/page.tsx ---
+diff --git a/app/page.tsx b/app/page.tsx
+index a29c46c..9ade8c1 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -192,31 +192,48 @@ export default function Home() {
+     
+     // 他の選択肢がある場合は調整
+     if (otherValidIndices.length > 0) {
+-      // 合計で100%になるように他の選択肢の重みを均等に調整
++      // 合計で100%になるように他の選択肢の重みを比率を保ちながら調整
+       // まず対象の選択肢の重みを更新
+       newOptions[index].weight = newWeight;
+       
+       // 残りの重み
+       const remainingWeight = 100 - newWeight;
+       
+-      // 残りの重みを他の選択肢に均等に分配
++      // 残りの重みを他の選択肢に元の比率を保ちながら分配
+       if (remainingWeight > 0) {
+-        // 均等な重み（小数点第一位まで計算）
+-        const equalShare = Math.round((remainingWeight / otherValidIndices.length) * 10) / 10;
+-        // 合計を計算して余りを調整
+-        const totalShares = equalShare * (otherValidIndices.length - 1);
+-        // 最後の要素の値（100%になるように調整）
+-        const lastShare = Math.round((remainingWeight - totalShares) * 10) / 10;
++        // 他の選択肢の現在の重みの合計
++        const otherTotalWeight = otherValidIndices.reduce((sum, i) => sum + newOptions[i].weight, 0);
+         
+-        // 各選択肢に重みを設定
+-        otherValidIndices.forEach((i, idx) => {
+-          if (idx === otherValidIndices.length - 1) {
+-            // 最後の選択肢には調整値を設定
+-            newOptions[i].weight = lastShare;
+-          } else {
+-            newOptions[i].weight = equalShare;
+-          }
+-        });
++        if (otherTotalWeight > 0) {
++          // 各選択肢の元の比率を計算し、残りの重みを分配
++          otherValidIndices.forEach((i, idx) => {
++            const ratio = newOptions[i].weight / otherTotalWeight;
++            if (idx === otherValidIndices.length - 1) {
++              // 最後の選択肢は丸め誤差を防ぐために、残りを全て割り当て
++              const allocatedWeight = otherValidIndices.slice(0, -1).reduce(
++                (sum, j) => sum + newOptions[j].weight, 
++                newWeight
++              );
++              newOptions[i].weight = Math.round((100 - allocatedWeight) * 10) / 10;
++            } else {
++              // 元の比率に基づいて重みを再分配（小数点第一位まで計算）
++              newOptions[i].weight = Math.round((remainingWeight * ratio) * 10) / 10;
++            }
++          });
++        } else {
++          // 他の選択肢の重みが全て0の場合は均等分配
++          const equalShare = Math.round((remainingWeight / otherValidIndices.length) * 10) / 10;
++          const totalShares = equalShare * (otherValidIndices.length - 1);
++          const lastShare = Math.round((remainingWeight - totalShares) * 10) / 10;
++          
++          otherValidIndices.forEach((i, idx) => {
++            if (idx === otherValidIndices.length - 1) {
++              newOptions[i].weight = lastShare;
++            } else {
++              newOptions[i].weight = equalShare;
++            }
++          });
++        }
+       } else {
+         // 残りの重みがない場合（100%を超えている場合）
+         // 各選択肢の重みを最小値に設定
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,188 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursor/rules/general/engineer.mdc
+- Change Type: modified
+- Target Rule Content:
+- Styling: SCSS, Tailwind CSS
++ Styling: SCSS, CSS
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, file extensions (.css, .scss), and source code content (CSS/SCSS files).
+- Suggested Logic: 1. Check package.json to ensure 'tailwindcss' is not listed in dependencies or devDependencies.
+2. Verify the existence of .css and .scss files in the repository.
+3. Scan CSS and SCSS files for the absence of Tailwind-specific directives like '@tailwind' or '@apply'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: update email button
+- Changed Files List: 
+src/components/Contact/Contact.jsx	+13	-8	after_lines=48
+src/components/Contact/contact.css	+44	-5	after_lines=72
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── design
+│       │   ├── site.mdc
+│       │   └── structure.mdc
+│       └── general
+│           ├── behavior.mdc
+│           ├── clean-code.mdc
+│           ├── code-quality.mdc
+│           ├── engineer.mdc
+│           ├── guidance.mdc
+│           └── typescript.mdc
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── postcss.config.cjs
+├── prompt-materials
+│   └── one-site-prompt-design.png
+├── src
+│   ├── App.jsx
+│   ├── assets
+│   │   ├── favicon.ico
+│   │   └── jm_logo.webp
+│   ├── components
+│   │   ├── Bio
+│   │   │   ├── Bio.jsx
+│   │   │   └── bio.css
+│   │   ├── Contact
+│   │   │   ├── Contact.jsx
+│   │   │   └── contact.css
+│   │   ├── Header
+│   │   │   ├── Header.jsx
+│   │   │   └── header.css
+│   │   └── Wrapper
+│   │       └── Wrapper.jsx
+│   ├── index.css
+│   └── main.jsx
+├── tailwind.config.cjs
+└── vite.config.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/components/Contact/Contact.jsx ---
+diff --git a/src/components/Contact/Contact.jsx b/src/components/Contact/Contact.jsx
+index ce4b884..ce7b277 100644
+--- a/src/components/Contact/Contact.jsx
++++ b/src/components/Contact/Contact.jsx
+@@ -9,24 +9,29 @@ const LinkedInSVG = () => (
+ 
+ const Contact = () => {
+ 	const [copied, setCopied] = useState(false);
++	const [hovered, setHovered] = useState(false);
+ 	const handleCopy = () => {
+ 		navigator.clipboard.writeText('josephmanghan@gmail.com');
+ 		setCopied(true);
+-		setTimeout(() => setCopied(false), 1800);
++		setTimeout(() => setCopied(false), 3000);
+ 	};
+ 	return (
+ 		<div className="contact-section">
+-			<button
++			<p
+ 				onClick={handleCopy}
+-				className="contact-btn"
++				onMouseEnter={() => setHovered(true)}
++				onMouseLeave={() => setHovered(false)}
++				className="contact-email-row"
+ 				aria-label="Copy email address"
+ 			>
+ 				<span className="material-icons contact-icon">mail</span>
+-				<span className="contact-email">josephmanghan@gmail.com</span>
+-				{copied && (
+-					<span className="contact-copied">Copied!</span>
+-				)}
+-			</button>
++				<span className="contact-email-wrapper">
++					<span className="contact-email">josephmanghan@gmail.com</span>
++					{(hovered || copied) && (
++						<span className="contact-tooltip">{copied ? 'Copied!' : 'Copy to clipboard'}</span>
++					)}
++				</span>
++			</p>
+ 			<a
+ 				href={LINKEDIN_URL}
+ 				target="_blank"
+
+--- FILE: src/components/Contact/contact.css ---
+diff --git a/src/components/Contact/contact.css b/src/components/Contact/contact.css
+index 9cc0e5c..e3dba29 100644
+--- a/src/components/Contact/contact.css
++++ b/src/components/Contact/contact.css
+@@ -2,7 +2,47 @@
+   margin-top: 0.5rem;
+   text-align: left;
+ }
+-.contact-btn, .contact-link {
++
++.contact-email-row {
++  cursor: pointer;
++  display: flex;
++  align-items: center;
++  font-family: inherit;
++  font-size: 1.125rem;
++  color: #222;
++  font-weight: 400;
++  margin-bottom: 0.5rem;
++  position: relative;
++  user-select: none;
++}
++
++.contact-email-wrapper {
++  position: relative;
++  display: flex;
++  align-items: center;
++}
++
++.contact-tooltip {
++  position: absolute;
++  left: 50%;
++  bottom: 70%;
++  transform: translateX(-50%) translateY(-0.5em);
++  background: #fff;
++  color: #222;
++  border: 1px solid #e0e0e0;
++  border-radius: 4px;
++  padding: 0.2em 0.7em;
++  font-size: 0.95rem;
++  font-weight: 400;
++  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
++  white-space: nowrap;
++  pointer-events: none;
++  opacity: 0.95;
++  z-index: 10;
++  user-select: none;
++}
++
++.contact-link {
+   display: flex;
+   align-items: center;
+   font-size: 1.125rem;
+@@ -14,17 +54,16 @@
+   margin-bottom: 0.5rem;
+   cursor: pointer;
+ }
+-.contact-btn:focus {
+-  outline: 2px solid #089e8e;
+-}
++
+ .contact-icon {
+   font-size: 2rem;
+   color: #666;
+ }
++
+ .contact-email, .contact-linkedin {
+   margin-left: 0.5rem;
+-  user-select: all;
+ }
++
+ .contact-copied {
+   margin-left: 0.5rem;
+   color: #089e8e;
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

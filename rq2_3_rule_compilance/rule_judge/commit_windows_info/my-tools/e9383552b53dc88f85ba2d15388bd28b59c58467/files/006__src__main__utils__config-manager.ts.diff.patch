@@ -1,0 +1,61 @@
+diff --git a/src/main/utils/config-manager.ts b/src/main/utils/config-manager.ts
+new file mode 100644
+index 0000000..800f1af
+--- /dev/null
++++ b/src/main/utils/config-manager.ts
+@@ -0,0 +1,54 @@
++import { app } from 'electron';
++import path from 'node:path';
++import fs from 'node:fs/promises';
++import { AppConfig } from './types';
++
++export class ConfigManager {
++  private configFilePath: string;
++  private defaultConfig: AppConfig;
++
++  constructor() {
++    const userDataPath = app.getPath('userData');
++    this.configFilePath = path.join(userDataPath, 'app-config.json');
++    this.defaultConfig = {
++      autoNumberDuplicateFiles: true,
++      defaultSaveLocation: app.getPath('downloads')
++    };
++  }
++
++  async getConfig(): Promise<AppConfig> {
++    try {
++      const data = await fs.readFile(this.configFilePath, 'utf-8');
++      const config = JSON.parse(data) as AppConfig;
++      return { ...this.defaultConfig, ...config };
++    } catch (error) {
++      return this.defaultConfig;
++    }
++  }
++
++  async updateConfig(config: Partial<AppConfig>): Promise<void> {
++    try {
++      const currentConfig = await this.getConfig();
++      const newConfig = { ...currentConfig, ...config };
++      
++      await fs.mkdir(path.dirname(this.configFilePath), { recursive: true });
++      await fs.writeFile(this.configFilePath, JSON.stringify(newConfig, null, 2));
++    } catch (error) {
++      console.error('保存配置失败:', error);
++      throw error;
++    }
++  }
++
++  async resetConfig(): Promise<void> {
++    try {
++      await fs.writeFile(this.configFilePath, JSON.stringify(this.defaultConfig, null, 2));
++    } catch (error) {
++      console.error('重置配置失败:', error);
++      throw error;
++    }
++  }
++
++  getDefaultConfig(): AppConfig {
++    return this.defaultConfig;
++  }
++} 
+\ No newline at end of file

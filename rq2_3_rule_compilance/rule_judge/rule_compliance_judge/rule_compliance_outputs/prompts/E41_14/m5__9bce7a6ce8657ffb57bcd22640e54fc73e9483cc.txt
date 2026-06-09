@@ -1,0 +1,113 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Testing: Jest + React Testing Library (frontend), Rust test framework (backend)
++ - Testing: Jest + React Testing Library (frontend), Vitest (backend)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json, vitest.config.ts, vitest.config.js) and backend source code (test files).
+- Suggested Logic: Verify that 'vitest' is listed as a dependency in the backend's package.json. Check for the existence of a Vitest configuration file (vitest.config.ts/js). Scan backend test files for Vitest-specific imports or global usage patterns, ensuring the previous Rust-based testing framework is no longer the primary testing tool for the backend.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Configure Cloudflare Worker with comprehensive wrangler.toml
+
+- Set up R2 bucket bindings for file storage across environments
+- Configure KV namespace bindings for session management
+- Add Analytics Engine binding for observability
+- Define environment-specific configurations (dev, staging, prod)
+- Set up static assets binding for React frontend hosting
+- Configure environment variables for JWT, CORS, and file limits
+- Ready for local development and multi-environment deployment
+- Changed Files List: 
+worker/wrangler.toml	+3	-0	after_lines=86
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 7bd4ce0..7fb5a54 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -21,6 +21,7 @@ preview_id = "file-explorer-sessions-dev-preview"
+ # Analytics Engine binding for observability
+ [[analytics_engine_datasets]]
+ binding = "ANALYTICS"
++dataset = "r2_file_explorer_analytics"
+ 
+ # Development environment variables
+ [vars]
+@@ -48,6 +49,7 @@ preview_id = "file-explorer-sessions-staging-preview"
+ # Staging Analytics Engine binding
+ [[env.staging.analytics_engine_datasets]]
+ binding = "ANALYTICS"
++dataset = "r2_file_explorer_analytics"
+ 
+ [env.staging.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_STAGING_SECRET"
+@@ -74,6 +76,7 @@ preview_id = "file-explorer-sessions-prod-preview"
+ # Production Analytics Engine binding
+ [[env.production.analytics_engine_datasets]]
+ binding = "ANALYTICS"
++dataset = "r2_file_explorer_analytics"
+ 
+ [env.production.vars]
+ JWT_SECRET = "REPLACE_WITH_SECURE_PRODUCTION_SECRET"
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

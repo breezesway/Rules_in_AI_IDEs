@@ -1,0 +1,91 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Git Workflow Best Practices
+
+## Overview
+
+This rule ensures proper version control throughout the project using Git. It establishes a consistent workflow for tracking changes, managing branches, and maintaining a clean repository history.
+
+## Implementation Requirements
+
+### 1. Repository Initialization
+
+- Initialize a Git repository at the start of any new project
+- Create a proper `.gitignore` file appropriate for the project type
+- Make an initial commit with the base project structure
+
+```bash
+git init
+# Create appropriate .gitignore
+git add .
+git commit -m "Initial project structure"
+```
+
+### 2. Commit Strategy
+
+- Make small, focused commits with clear purposes
+- Write descriptive commit messages following this format:
+  - First line: Concise summary (50 chars or less)
+  - Body: Detailed explanation if needed (wrap at 72 chars)
+- Commit after each significant change or milestone completion
+- Include references to tasks or issues in commit messages when applicable
+
+### 3. Branching Model
+
+- Maintain a stable `main` branch with working code
+- Create feature branches for new development work:
+  - Use descriptive branch names (e.g., `feature/user-authentication`, `fix/login-error`)
+  - Keep branches focused on single features or fixes
+- Merge completed work back to main using pull requests or direct merges when appropriate
+
+### 4. Code Reviews
+
+- Review code changes before merging to main
+- Address any identified issues or feedback
+- Ensure all tests pass before merging
+
+### 5. Tagging and Releases
+
+- Tag significant milestones and releases
+- Use Conventional Commits, when appropriate (see below)
+- Include release notes with each tag
+
+### 6. Repository Maintenance
+
+- Keep commit history clean and meaningful
+
+## Git Commands
+
+When running multiple git commands in sequence, it's typically preferred to combine them into a single command, unless that would break the intention of the command.
+
+```bash
+# Standard Example
+git add . && git commit -m "feat: detailed message about commit changes" && git status
+```
+
+## Conventional Commits
+
+Use the Conventional Commits convention of structuring commit messages (https://www.conventionalcommits.org/en/v1.0.0/):
+
+The commit message should be structured as follows:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+The commit contains the following structural elements, to communicate intent to the consumers of your library:
+
+1. fix: a commit of the type `fix` patches a bug in your codebase (this correlates with `PATCH` in Semantic Versioning).
+2. feat: a commit of the type feat introduces a new feature to the codebase (this correlates with `MINOR` in Semantic Versioning).
+3. BREAKING CHANGE: a commit that has a footer `BREAKING CHANGE:`, or appends a ! after the type/scope, introduces a breaking API change (correlating with `MAJOR` in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
+4. types other than `fix:` and `feat:` are allowed, for example [@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) (based on the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines)) recommends `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.
+5. footers other than `BREAKING CHANGE: <description>` may be provided and follow a convention similar to [git trailer format](https://git-scm.com/docs/git-interpret-trailers).
+
+Additional types are not mandated by the Conventional Commits specification, and have no implicit effect in Semantic Versioning (unless they include a BREAKING CHANGE). A scope may be provided to a commit’s type, to provide additional contextual information and is contained within parenthesis, e.g., `feat(parser): add ability to parse arrays`.

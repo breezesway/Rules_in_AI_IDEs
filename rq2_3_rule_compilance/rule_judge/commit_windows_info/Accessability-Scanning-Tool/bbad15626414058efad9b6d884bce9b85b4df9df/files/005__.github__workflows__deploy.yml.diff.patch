@@ -1,0 +1,298 @@
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+deleted file mode 100644
+index fe218cf..0000000
+--- a/.github/workflows/deploy.yml
++++ /dev/null
+@@ -1,291 +0,0 @@
+-name: Deploy Pipeline
+-
+-on:
+-  push:
+-    branches: [ main ]
+-
+-env:
+-  NODE_VERSION: '18'
+-  PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+-
+-jobs:
+-  pre-deployment-tests:
+-    name: Pre-deployment Tests
+-    runs-on: ubuntu-latest
+-    
+-    steps:
+-    - name: Checkout code
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-
+-    - name: Setup Node.js
+-      uses: actions/setup-node@v4
+-      with:
+-        node-version: ${{ env.NODE_VERSION }}
+-        cache: 'npm'
+-
+-    - name: Cache Playwright browsers
+-      uses: actions/cache@v4
+-      with:
+-        path: ~/.cache/ms-playwright
+-        key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+-        restore-keys: |
+-          playwright-${{ runner.os }}-
+-
+-    - name: Cache Jest cache
+-      uses: actions/cache@v4
+-      with:
+-        path: .jest-cache
+-        key: jest-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+-        restore-keys: |
+-          jest-${{ runner.os }}-
+-
+-    - name: Install dependencies
+-      run: npm run install:robust
+-
+-    - name: Install Playwright browsers
+-      run: npx playwright install --with-deps
+-
+-    - name: Run critical tests
+-      run: npm test
+-      env:
+-        CI: true
+-
+-    - name: Build application
+-      run: npm run build
+-
+-    - name: Run E2E tests
+-      run: npm run test:e2e
+-      env:
+-        CI: true
+-        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
+-
+-  build:
+-    name: Build Application
+-    runs-on: ubuntu-latest
+-    needs: pre-deployment-tests
+-    
+-    steps:
+-    - name: Checkout code
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-
+-    - name: Setup Node.js
+-      uses: actions/setup-node@v4
+-      with:
+-        node-version: ${{ env.NODE_VERSION }}
+-        cache: 'npm'
+-
+-    - name: Cache TypeScript build
+-      uses: actions/cache@v4
+-      with:
+-        path: dist
+-        key: typescript-build-${{ runner.os }}-${{ hashFiles('**/*.ts', '**/tsconfig.json') }}
+-        restore-keys: |
+-          typescript-build-${{ runner.os }}-
+-
+-    - name: Cache Storybook build
+-      uses: actions/cache@v4
+-      with:
+-        path: storybook-static
+-        key: storybook-build-${{ runner.os }}-${{ hashFiles('**/*.ts', '**/*.js', '**/package-lock.json') }}
+-        restore-keys: |
+-          storybook-build-${{ runner.os }}-
+-
+-    - name: Install dependencies
+-      run: npm run install:robust
+-
+-    - name: Install dev dependencies for Storybook
+-      run: npm run install:storybook
+-
+-    - name: Build application
+-      run: npm run build
+-
+-    - name: Build Storybook
+-      run: npm run build-storybook
+-
+-    - name: Upload build artifacts
+-      uses: actions/upload-artifact@v4
+-      with:
+-        name: production-build
+-        path: |
+-          dist/
+-          storybook-static/
+-        retention-days: 30
+-
+-  security-scan:
+-    name: Security Scan
+-    runs-on: ubuntu-latest
+-    needs: build
+-    
+-    steps:
+-    - name: Checkout code
+-      uses: actions/checkout@v4
+-
+-    - name: Setup Node.js
+-      uses: actions/setup-node@v4
+-      with:
+-        node-version: ${{ env.NODE_VERSION }}
+-        cache: 'npm'
+-
+-    - name: Install dependencies
+-      run: npm run install:robust
+-
+-    - name: Run security audit
+-      run: npm audit --audit-level=moderate
+-
+-    - name: Run dependency check
+-      run: npx audit-ci --moderate
+-
+-    - name: Run Snyk security scan
+-      uses: snyk/actions/node@master
+-      env:
+-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+-      with:
+-        args: --severity-threshold=high
+-
+-  documentation-update:
+-    name: Documentation Update
+-    runs-on: ubuntu-latest
+-    needs: build
+-    
+-    steps:
+-    - name: Checkout code
+-      uses: actions/checkout@v4
+-      with:
+-        token: ${{ secrets.GITHUB_TOKEN }}
+-
+-    - name: Setup Node.js
+-      uses: actions/setup-node@v4
+-      with:
+-        node-version: ${{ env.NODE_VERSION }}
+-        cache: 'npm'
+-
+-    - name: Cache documentation build
+-      uses: actions/cache@v4
+-      with:
+-        path: docs/.cache
+-        key: docs-cache-${{ runner.os }}-${{ hashFiles('docs/**/*.md') }}
+-        restore-keys: |
+-          docs-cache-${{ runner.os }}-
+-
+-    - name: Install dependencies
+-      run: npm run install:robust
+-
+-    - name: Update documentation
+-      run: |
+-        echo "Updating documentation timestamps..."
+-        echo "Last updated: $(date -u +'%Y-%m-%d %H:%M UTC')" > docs/LAST_UPDATED.txt
+-        echo "Build number: ${{ github.run_number }}" >> docs/LAST_UPDATED.txt
+-
+-    - name: Commit documentation updates
+-      run: |
+-        git config --local user.email "action@github.com"
+-        git config --local user.name "GitHub Action"
+-        git add docs/LAST_UPDATED.txt
+-        git commit -m "docs: Update build timestamp [skip ci]" || exit 0
+-        git push
+-
+-  create-release:
+-    name: Create Release
+-    runs-on: ubuntu-latest
+-    needs: [build, security-scan, documentation-update]
+-    if: github.ref == 'refs/heads/main'
+-    
+-    steps:
+-    - name: Checkout code
+-      uses: actions/checkout@v4
+-      with:
+-        fetch-depth: 0
+-
+-    - name: Download build artifacts
+-      uses: actions/download-artifact@v4
+-      with:
+-        name: production-build
+-        path: dist/
+-
+-    - name: Generate changelog
+-      id: changelog
+-      run: |
+-        echo "Generating changelog..."
+-        # Extract version from package.json
+-        VERSION=$(node -p "require('./package.json').version")
+-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+-        
+-        # Generate changelog from commits
+-        CHANGELOG=$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD)
+-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+-        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+-        echo "EOF" >> $GITHUB_OUTPUT
+-
+-    - name: Create GitHub Release
+-      uses: actions/create-release@v1
+-      env:
+-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+-      with:
+-        tag_name: v${{ steps.changelog.outputs.version }}
+-        release_name: Release v${{ steps.changelog.outputs.version }}
+-        body: |
+-          ## 🚀 Release v${{ steps.changelog.outputs.version }}
+-          
+-          ### 📋 Changes
+-          ${{ steps.changelog.outputs.changelog }}
+-          
+-          ### 🧪 Test Results
+-          - **Unit Tests:** 214 tests ✅
+-          - **Integration Tests:** 47 tests ✅
+-          - **E2E Tests:** 47 tests ✅
+-          - **Accessibility:** WCAG 2.1 AAA compliant ✅
+-          - **Security:** Audit passed ✅
+-          
+-          ### 📦 Artifacts
+-          - Application build
+-          - Storybook documentation
+-          - Test reports
+-          
+-          ### 🎯 Quality Gates
+-          - ✅ All tests passing
+-          - ✅ Security audit clean
+-          - ✅ Documentation updated
+-          - ✅ Accessibility compliant
+-        draft: false
+-        prerelease: false
+-
+-    - name: Upload release assets
+-      uses: actions/upload-release-asset@v1
+-      env:
+-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+-      with:
+-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+-        asset_path: ./dist/
+-        asset_name: accessibility-testing-app-v${{ steps.changelog.outputs.version }}.zip
+-        asset_content_type: application/zip
+-
+-  deployment-summary:
+-    name: Deployment Summary
+-    runs-on: ubuntu-latest
+-    needs: [build, security-scan, documentation-update, create-release]
+-    if: always()
+-    
+-    steps:
+-    - name: Generate deployment summary
+-      run: |
+-        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+-        echo "" >> $GITHUB_STEP_SUMMARY
+-        echo "### ✅ Deployment Completed Successfully" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Build Status:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Security Scan:** ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Documentation:** ${{ needs.documentation-update.result }}" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Release:** ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
+-        echo "" >> $GITHUB_STEP_SUMMARY
+-        echo "### 📦 Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+-        echo "- Application build (dist/)" >> $GITHUB_STEP_SUMMARY
+-        echo "- Storybook documentation" >> $GITHUB_STEP_SUMMARY
+-        echo "- GitHub release with assets" >> $GITHUB_STEP_SUMMARY
+-        echo "" >> $GITHUB_STEP_SUMMARY
+-        echo "### 🚀 Performance Optimizations" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Caching:** Dependencies, browsers, builds, documentation" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Parallel Jobs:** Optimized execution order" >> $GITHUB_STEP_SUMMARY
+-        echo "- **Artifact Reuse:** Efficient storage and retrieval" >> $GITHUB_STEP_SUMMARY 
+\ No newline at end of file

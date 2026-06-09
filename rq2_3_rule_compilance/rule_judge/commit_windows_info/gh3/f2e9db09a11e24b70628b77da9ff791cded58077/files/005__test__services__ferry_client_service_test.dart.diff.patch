@@ -1,0 +1,118 @@
+diff --git a/test/services/ferry_client_service_test.dart b/test/services/ferry_client_service_test.dart
+index e2282c6..fa0879e 100644
+--- a/test/services/ferry_client_service_test.dart
++++ b/test/services/ferry_client_service_test.dart
+@@ -2,96 +2,50 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:mockito/mockito.dart';
+ import 'package:mockito/annotations.dart';
+ import 'package:gh3/src/services/ferry_client_service.dart';
+-import 'package:gh3/src/services/token_storage.dart';
++import 'package:gh3/src/services/auth_service.dart';
+ 
+ import 'ferry_client_service_test.mocks.dart';
+ 
+-@GenerateMocks([ITokenStorage])
++@GenerateMocks([AuthService])
+ void main() {
+   group('FerryClientService', () {
+-    late MockITokenStorage mockTokenStorage;
++    late MockAuthService mockAuthService;
+     late FerryClientService ferryClientService;
+ 
+     setUp(() {
+-      mockTokenStorage = MockITokenStorage();
+-      ferryClientService = FerryClientService(mockTokenStorage);
++      mockAuthService = MockAuthService();
++      ferryClientService = FerryClientService(mockAuthService);
+     });
+ 
+     tearDown(() {
+       ferryClientService.dispose();
+     });
+ 
+-    test('should create Ferry client with authentication token', () async {
+-      // Arrange
+-      const testToken = 'test-token-123';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => testToken);
+-
+-      // Act
++    test('should create Ferry client with authentication', () async {
++      when(mockAuthService.accessToken).thenReturn('test-token');
++      
+       final client = await ferryClientService.getClient();
+-
+-      // Assert
+       expect(client, isNotNull);
+-      verify(mockTokenStorage.getToken()).called(1);
+     });
+ 
+-    test(
+-      'should create Ferry client without token when none available',
+-      () async {
+-        // Arrange
+-        when(mockTokenStorage.getToken()).thenAnswer((_) async => null);
+-
+-        // Act
+-        final client = await ferryClientService.getClient();
+-
+-        // Assert
+-        expect(client, isNotNull);
+-        verify(mockTokenStorage.getToken()).called(1);
+-      },
+-    );
+-
+-    test('should reuse existing client on subsequent calls', () async {
+-      // Arrange
+-      const testToken = 'test-token-123';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => testToken);
+-
+-      // Act
+-      final client1 = await ferryClientService.getClient();
+-      final client2 = await ferryClientService.getClient();
+-
+-      // Assert
+-      expect(client1, same(client2));
+-      verify(mockTokenStorage.getToken()).called(1); // Only called once
++    test('should create Ferry client without token', () async {
++      when(mockAuthService.accessToken).thenReturn(null);
++      
++      final client = await ferryClientService.getClient();
++      expect(client, isNotNull);
+     });
+ 
+-    test('should recreate client when token is updated', () async {
+-      // Arrange
+-      const initialToken = 'initial-token';
+-      const newToken = 'new-token';
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => initialToken);
+-
+-      // Act
++    test('should reuse existing client', () async {
+       final client1 = await ferryClientService.getClient();
+-
+-      // Update token storage to return new token
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => newToken);
+-      await ferryClientService.updateAuthToken(newToken);
+       final client2 = await ferryClientService.getClient();
+-
+-      // Assert
+-      expect(client1, isNot(same(client2)));
+-      verify(mockTokenStorage.getToken()).called(2);
++      expect(client1, same(client2));
+     });
+ 
+-    test('should clear cache successfully', () async {
+-      // Arrange
+-      when(mockTokenStorage.getToken()).thenAnswer((_) async => 'token');
+-
+-      // Act & Assert - should not throw
++    test('should clear cache', () {
+       expect(() => ferryClientService.clearCache(), returnsNormally);
+     });
+ 
+-    test('should dispose resources properly', () {
+-      // Act & Assert - should not throw
++    test('should dispose resources', () {
+       expect(() => ferryClientService.dispose(), returnsNormally);
+     });
+   });

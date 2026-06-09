@@ -1,0 +1,236 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+## UI Framework Stack
+- Preact: Component-based UI library (10.24.3)
+- Vite: Build tool with @preact/preset-vite for optimal bundling
+- CSS: Global styles with component-scoped styling
+- TypeScript: Full type safety in UI components
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, vite.config.ts, tsconfig.json, and the file system structure (specifically file extensions like .tsx and .module.css).
+- Suggested Logic: 1. Verify that 'preact' version '10.24.3' and '@preact/preset-vite' are listed in the 'dependencies' or 'devDependencies' of package.json.
+2. Check vite.config.ts (or .js) to ensure the Preact preset plugin is imported and used in the configuration.
+3. Confirm the presence of tsconfig.json and that UI component files use the .tsx extension for TypeScript support.
+4. Check for the presence of CSS modules (e.g., *.module.css) or specific scoped styling patterns in the source code to verify component-scoped styling.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: Update docs
+- Changed Files List: 
+README.md	+3	-1	after_lines=38
+docs/README.md	+9	-0	after_lines=78
+docs/configuration.md	+3	-0	after_lines=44
+docs/development.md	+8	-0	after_lines=63
+docs/troubleshooting.md	+6	-0	after_lines=32
+docs/usage.md	+6	-0	after_lines=47
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── 01-dependency-cruiser-integration
+│   │       ├── depency-cruiser-implmentation-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   └── styles
+    │       └── global.css
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 6e2be6a..458afdb 100644
+--- a/README.md
++++ b/README.md
+@@ -9,7 +9,8 @@ On activation the extension:
+ 1. Verifies Node.js 18+.
+ 2. Upserts ~/.kiro/settings/mcp.json with an entry named `constellation-mcp` (or a namespaced dev ID).
+ 3. Smoke-tests the server (fast `--selftest`).
+-4. Shows a toast with quick actions to reload or open the MCP config.
++4. Runs a background dependency scan with dependency-cruiser and writes results to ./.constellation/data/codebase-dependencies.json.
++5. Shows a toast with quick actions to reload or open the MCP config.
+ 
+ Quick start (with side panel UI)
+ 
+@@ -24,6 +25,7 @@ Verify in Kiro and open the side panel
+ - Try: `#[constellation-mcp] ping` → pong
+ - Try: `#[constellation-mcp] echo Hello` → Hello
+ - Click the Constellation icon in the Activity Bar to open the side panel (webview). It should display "Hello world".
++- Dependency scan output: ./.constellation/data/codebase-dependencies.json (re-run via "Constellation: Scan Dependencies").
+ 
+ Docs
+ - docs/README.md — overview and layout (including UI layer)
+
+--- FILE: docs/README.md ---
+diff --git a/docs/README.md b/docs/README.md
+index ab5c2cf..121483b 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -29,6 +29,8 @@ kiro-constellation/
+ │  ├─ extension.ts                # activation, MCP config upsert, self-test, toasts, commands, registers webview provider
+ │  ├─ side-panel-view-provider.ts # WebviewViewProvider for the Activity Bar side panel
+ │  └─ mcp.server.ts               # minimal MCP server (stdio) with ping/echo + --selftest
++├─ src/services/
++│  └─ dependency-cruiser.service.ts # runScan() integrates dependency-cruiser (background scan)
+ ├─ webview-ui/                    # UI source (Preact + Vite)
+ │  ├─ index.html
+ │  ├─ vite.config.ts              # outputs to ../out/ui
+@@ -49,6 +51,13 @@ Side panel UI
+ - The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
+ - The UI assets are built into out/ui and loaded via webview.asWebviewUri.
+ 
++Dependency scan (background)
++- On activation the extension runs a background dependency scan of the first workspace folder using dependency-cruiser.
++- It auto-detects a dependency-cruiser config if present (.dependency-cruiser.{js,cjs,mjs} or dependency-cruiser.config.{js,cjs}); otherwise it runs with --no-config.
++- It also auto-detects tsconfig.json and passes it as --ts-config when present.
++- Output is written to ./.constellation/data/codebase-dependencies.json.
++- You can re-run the scan any time via the command palette: "Constellation: Scan Dependencies".
++
+ What the extension writes
+ - User-level MCP config: ~/.kiro/settings/mcp.json
+   - The entry is keyed constellation-mcp and runs the compiled server via Node.
+
+--- FILE: docs/configuration.md ---
+diff --git a/docs/configuration.md b/docs/configuration.md
+index 56228d8..a19e73a 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -28,6 +28,9 @@ Workspace config (optional)
+ - Enable the setting Constellation: Write Workspace MCP Config (constellation.writeWorkspaceMcpConfig).
+ - Ensure a ./.kiro folder exists in the workspace. If present, the extension will write ./.kiro/settings/mcp.json as well.
+ 
++Output files
++- Dependency scan: ./.constellation/data/codebase-dependencies.json (workspace relative)
++
+ Extension settings
+ - constellation.nodePath (string)
+   - Optional absolute path to the Node.js binary. Leave blank to use node from PATH.
+
+--- FILE: docs/development.md ---
+diff --git a/docs/development.md b/docs/development.md
+index 489e0ab..fb574b9 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -33,6 +33,14 @@ Server changes
+ Config changes
+ - For Node path / workspace write setting changes, reload the window so Kiro re-reads configs.
+ 
++Dependency scan (dev notes)
++- The scan runs in the background on activation and does not block the UI.
++- By default it excludes: node_modules|dist|out|build|coverage|.git|.vscode|.constellation
++- If a dependency-cruiser config exists in the workspace root it will be used (via --config). Otherwise we pass --no-config.
++- If tsconfig.json exists in the workspace root it will be passed as --ts-config <abs path>.
++- Output path: ./.constellation/data/codebase-dependencies.json
++- You can re-run the scan via command palette: "Constellation: Scan Dependencies".
++
+ Debug profiles
+ - Run Extension (Dev MCP)
+   - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.
+
+--- FILE: docs/troubleshooting.md ---
+diff --git a/docs/troubleshooting.md b/docs/troubleshooting.md
+index b1fcc40..cf54ae4 100644
+--- a/docs/troubleshooting.md
++++ b/docs/troubleshooting.md
+@@ -5,6 +5,12 @@ No tools appear in the MCP panel or side panel is blank
+ - Open ~/.kiro/settings/mcp.json and confirm the constellation-mcp entry exists with the correct absolute path.
+ - For the side panel, ensure out/ui/main.js and out/ui/style.css exist (run `npm run build:ui`). Reload the window.
+ 
++Dependency scan issues
++- Check the debug console for "Dependency scan stderr:" output for precise error messages.
++- If your project does not have a dependency-cruiser config, the extension runs with --no-config by default. If you prefer a custom setup, add one (e.g., `.dependency-cruiser.cjs`).
++- Ensure tsconfig.json is valid if present; the extension passes it to the CLI.
++- Very large repos might hit the scan timeout (60s). Re-run on a narrower subfolder or adjust excludes.
++
+ Self-test fails or setup toast shows an error
+ - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.
+ - If node isn’t on PATH, set Constellation: Node Path to an absolute Node binary path.
+
+--- FILE: docs/usage.md ---
+diff --git a/docs/usage.md b/docs/usage.md
+index fd7ab3d..74c803f 100644
+--- a/docs/usage.md
++++ b/docs/usage.md
+@@ -26,9 +26,15 @@ npm run build
+ - Click the Constellation icon in the Activity Bar to open the webview side panel.
+ - It should display "Hello world" via the Preact app.
+ 
++6) Dependency scan results
++- On activation a background scan runs (non-blocking). Results are written to:
++  - ./.constellation/data/codebase-dependencies.json
++- To re-run manually: open the command palette and run "Constellation: Scan Dependencies".
++
+ Helpful commands
+ - Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
+ - Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
++- Constellation: Scan Dependencies — Re-run dependency-cruiser on the workspace and overwrite the output file.
+ 
+ Where the config is
+ - User-level: ~/.kiro/settings/mcp.json (always updated by the extension)
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

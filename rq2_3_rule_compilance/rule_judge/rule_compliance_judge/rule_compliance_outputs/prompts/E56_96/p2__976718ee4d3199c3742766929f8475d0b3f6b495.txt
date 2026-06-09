@@ -1,0 +1,120 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Support dual entry points: youtube_notion_cli.py (dev) and console script (installed)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory, source code file (youtube_notion_cli.py), and packaging configuration files (e.g., pyproject.toml, setup.py, or setup.cfg).
+- Suggested Logic: 1. Verify the existence of the file 'youtube_notion_cli.py' in the repository root or relevant source directory.
+2. Scan packaging configuration files (like pyproject.toml's [project.scripts] section or setup.py's entry_points) to ensure a console script is defined for the package.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: tests
+- Changed Files List: 
+tests/test_youtube_end_to_end.py	+12	-6	after_lines=1714
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: tests/test_youtube_end_to_end.py ---
+diff --git a/tests/test_youtube_end_to_end.py b/tests/test_youtube_end_to_end.py
+index 37e1bf5..9959d26 100644
+--- a/tests/test_youtube_end_to_end.py
++++ b/tests/test_youtube_end_to_end.py
+@@ -1405,16 +1405,22 @@ class TestYouTubeEndToEndErrorScenarios:
+         
+         video_data = TEST_VIDEOS["short"]
+         
+-        # Mock empty Gemini response - try multiple methods since the implementation might vary
+-        with patch.object(processor, '_call_gemini_api', return_value=""):
++        # Mock the _generate_summary method to return empty string
++        with patch.object(processor, '_generate_summary', return_value=""):
+             try:
+                 result = processor.process_video(video_data["url"])
+-                # If no exception is raised, the test should fail unless rate limited
+-                pytest.fail("Expected APIError for empty response, but got result: " + str(result))
++                # Check if the result has an empty summary (which is valid behavior)
++                if result.get("Summary") == "":
++                    # This is acceptable - empty summary is handled gracefully
++                    assert isinstance(result, dict)
++                    assert "Title" in result
++                else:
++                    pytest.fail("Expected empty summary but got: " + str(result.get("Summary", "N/A")))
+             except APIError as e:
+-                assert "empty response" in str(e).lower()
++                # This is also acceptable - empty response triggers APIError
++                assert "empty" in str(e).lower() or "response" in str(e).lower()
+             except Exception as e:
+-                # Handle potential rate limiting or other Gemini API issues
++                # Handle potential rate limiting or other issues
+                 if "rate limit" in str(e).lower() or "quota" in str(e).lower():
+                     pytest.skip(f"Gemini API rate limited: {e}")
+                 else:
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

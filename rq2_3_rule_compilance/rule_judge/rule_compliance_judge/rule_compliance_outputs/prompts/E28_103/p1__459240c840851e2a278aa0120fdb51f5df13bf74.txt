@@ -1,0 +1,335 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- npm run build # Compile TypeScript
+- npm run watch # Watch mode compilation
+- npm run watch:dev # Watch with dev server ID
++ npm run build # Compile TypeScript + build UI
++ npm run compile # TypeScript compilation only
++ npm run build:ui # Build webview UI only
++ npm run watch # Watch mode for TypeScript
++ npm run watch:dev # Watch with dev server ID environment
++ npm run dev:ui # Watch mode for UI development
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json
+- Suggested Logic: Verify that the 'scripts' section in the root 'package.json' file contains the following keys: 'build', 'compile', 'build:ui', 'watch', 'watch:dev', and 'dev:ui'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Adds side panel UI with Preact/Vite
+
+Implements a side panel UI using Preact and Vite, accessible via an Activity Bar icon.
+
+This includes:
+- A new `side-panel-view-provider.ts` file to register the WebviewViewProvider.
+- A `webview-ui/` directory containing the Preact app, built with Vite, that renders the UI in the side panel.
+- Updates to documentation to reflect the new UI and associated build/run/verify instructions, dev loop details, and troubleshooting tips.
+
+The UI assets are built into `out/ui/` and loaded via `webview.asWebviewUri`.
+- Changed Files List: 
+README.md	+8	-7	after_lines=36
+docs/README.md	+21	-3	after_lines=69
+docs/development.md	+28	-20	after_lines=55
+docs/troubleshooting.md	+2	-1	after_lines=26
+docs/usage.md	+9	-6	after_lines=41
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── extension-config.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   └── node-version.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   ├── Button.tsx
+    │   │   └── GraphDashboard.tsx
+    │   ├── main.tsx
+    │   └── styles
+    │       └── global.css
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 137abfd..6e2be6a 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+ # Kiro Constellation
+ 
+-A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes two tools:
++A bare-bones Kiro/VS Code extension that installs a tiny local MCP (Model Context Protocol) server and auto-registers it in Kiro. It includes two tools and a side panel UI (Preact webview):
+ 
+ - ping → responds with "pong"
+ - echo → responds with the same text you send
+@@ -11,7 +11,7 @@ On activation the extension:
+ 3. Smoke-tests the server (fast `--selftest`).
+ 4. Shows a toast with quick actions to reload or open the MCP config.
+ 
+-Quick start
++Quick start (with side panel UI)
+ 
+ ```bash
+ npm install
+@@ -19,17 +19,18 @@ npm run build
+ # Press F5 → choose "Run Extension (Dev MCP)" for namespaced dev ID
+ ```
+ 
+-Verify in Kiro
++Verify in Kiro and open the side panel
+ - Open MCP panel → `constellation-mcp` (or `constellation-mcp-dev`) should be running
+ - Try: `#[constellation-mcp] ping` → pong
+ - Try: `#[constellation-mcp] echo Hello` → Hello
++- Click the Constellation icon in the Activity Bar to open the side panel (webview). It should display "Hello world".
+ 
+ Docs
+-- docs/README.md — overview
+-- docs/usage.md — build/run/verify
++- docs/README.md — overview and layout (including UI layer)
++- docs/usage.md — build/run/verify and open the side panel UI
+ - docs/configuration.md — user vs workspace config, settings
+-- docs/development.md — dev loop, watch tasks, debug profiles
+-- docs/troubleshooting.md — common issues
++- docs/development.md — dev loop, watchers (tsc + Vite), debug profiles
++- docs/troubleshooting.md — common issues (including blank side panel)
+ 
+ License
+ - MIT (or your preferred license)
+
+--- FILE: docs/README.md ---
+diff --git a/docs/README.md b/docs/README.md
+index 4271b9b..ab5c2cf 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -26,11 +26,29 @@ kiro-constellation/
+ ├─ package.json
+ ├─ tsconfig.json
+ ├─ src/
+-│  ├─ extension.ts          # activation, MCP config upsert, self-test, toasts, commands
+-│  └─ mcpServer.ts          # minimal MCP server (stdio) with ping/echo + --selftest
+-└─ out/                     # compiled JS (tsc)
++│  ├─ extension.ts                # activation, MCP config upsert, self-test, toasts, commands, registers webview provider
++│  ├─ side-panel-view-provider.ts # WebviewViewProvider for the Activity Bar side panel
++│  └─ mcp.server.ts               # minimal MCP server (stdio) with ping/echo + --selftest
++├─ webview-ui/                    # UI source (Preact + Vite)
++│  ├─ index.html
++│  ├─ vite.config.ts              # outputs to ../out/ui
++│  ├─ tsconfig.json
++│  └─ src/
++│     ├─ components/
++│     │  ├─ App.tsx
++│     │  ├─ GraphDashboard.tsx
++│     │  └─ Button.tsx
++│     └─ styles/global.css
++└─ out/
++   ├─ extension.js, mcp.server.js # compiled by tsc
++   └─ ui/                         # built webview assets (main.js, style.css)
+ ```
+ 
++Side panel UI
++- The extension contributes a Constellation icon to the Activity Bar which opens a side panel.
++- The side panel is a webview backed by a Preact app (bundled via Vite) that renders into #root.
++- The UI assets are built into out/ui and loaded via webview.asWebviewUri.
++
+ What the extension writes
+ - User-level MCP config: ~/.kiro/settings/mcp.json
+   - The entry is keyed constellation-mcp and runs the compiled server via Node.
+
+--- FILE: docs/development.md ---
+diff --git a/docs/development.md b/docs/development.md
+index 1b5a29a..489e0ab 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -4,44 +4,52 @@ Requirements
+ - Node.js 18+ (required by the MCP TypeScript SDK)
+ - ESM configuration: package.json has "type": "module" and tsconfig uses NodeNext.
+ 
++UI layer
++- Preact app bundled with Vite lives in webview-ui/.
++- Output goes to out/ui (main.js, style.css). The webview provider loads from there.
++- Components use PascalCase .tsx files (e.g., App.tsx, GraphDashboard.tsx, Button.tsx). Non-components use kebab-case .ts.
++
+ Edit–build loop
+-- Keep a background compile running:
++- F5 (Run Extension or Run Extension (Dev MCP)) starts two background tasks:
++  - TypeScript watch (tsc -w)
++  - UI watch (vite build --watch)
++- When UI code changes, the Vite watcher rebuilds out/ui; reload the window to pick up the new assets.
+ 
++Manual commands
+ ```bash
+-npm run watch
++# TypeScript compile once
++npm run compile
++
++# Build webview UI once
++npm run build:ui
++
++# Watch both (ts + UI) outside of F5
++npm run watch & npm run dev:ui
+ ```
+ 
+-- For MCP server code changes (src/mcpServer.ts):
+-  - After the file recompiles to out/mcpServer.js, use the MCP panel to restart constellation-mcp.
+-  - No window reload needed for code-only changes.
++Server changes
++- For changes in src/mcp.server.ts, rebuild (tsc should handle) and restart constellation-mcp from the MCP panel. No full window reload needed.
+ 
+-- For config-related changes (e.g., Node path setting, enabling workspace writes):
+-  - Reload the window so Kiro re-reads MCP configs.
++Config changes
++- For Node path / workspace write setting changes, reload the window so Kiro re-reads configs.
+ 
+ Debug profiles
+ - Run Extension (Dev MCP)
+-  - Uses a background watch task that sets CONSTELLATION_SERVER_ID=constellation-mcp-dev and launches the Extension Development Host with the same env var. The extension will write to the dev namespace in ~/.kiro/settings/mcp.json.
++  - Starts the combined watch tasks and sets CONSTELLATION_SERVER_ID=constellation-mcp-dev so user config writes to the dev namespace.
+ - Run Extension
+-  - Uses the default namespace from settings (constellation.serverId), no env override.
++  - Uses the default namespace from settings (constellation.serverId).
+ 
+ Useful commands (palette)
+-- Constellation: Self-test — Boots the server with --selftest and reports OK/FAILED.
+-- Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json.
+-
+-Testing locally
+-- Extension Development Host (F5) is the recommended way to iterate.
+-- The extension writes user-level config by default, which applies to all workspaces.
+-- If you need isolation, enable the workspace write setting and create a ./.kiro folder in your test workspace.
++- Constellation: Self-test — Boot the server with --selftest and report OK/FAILED.
++- Constellation: Open user MCP config — Open ~/.kiro/settings/mcp.json.
+ 
+ Packaging
+-
+ ```bash
+ npm run package
+ ```
+-
+-This produces a .vsix that you can install. Remember: the MCP config stores absolute paths to out/mcpServer.js — if the install location differs or you move folders, reactivate the extension to upsert the path.
++Produces a .vsix you can install. MCP config stores absolute paths to out/mcp.server.js; if the install location changes, reactivate the extension to upsert the path.
+ 
+ Gotchas
+ - Using __dirname in ESM: prefer fileURLToPath(import.meta.url) + dirname().
+-- Tests are excluded from the TS build (tsconfig exclude: src/test/**) to avoid pulling test runner types.
++- Tests are excluded from the TS build (tsconfig exclude: src/test/**).
+
+--- FILE: docs/troubleshooting.md ---
+diff --git a/docs/troubleshooting.md b/docs/troubleshooting.md
+index b28e834..b1fcc40 100644
+--- a/docs/troubleshooting.md
++++ b/docs/troubleshooting.md
+@@ -1,8 +1,9 @@
+ # Troubleshooting
+ 
+-No tools appear in the MCP panel
++No tools appear in the MCP panel or side panel is blank
+ - Did you reload the window after activation? Kiro re-reads MCP config on startup.
+ - Open ~/.kiro/settings/mcp.json and confirm the constellation-mcp entry exists with the correct absolute path.
++- For the side panel, ensure out/ui/main.js and out/ui/style.css exist (run `npm run build:ui`). Reload the window.
+ 
+ Self-test fails or setup toast shows an error
+ - Ensure Node 18+ is installed. The extension will refuse to proceed if Node is older.
+
+--- FILE: docs/usage.md ---
+diff --git a/docs/usage.md b/docs/usage.md
+index dc4a13a..fd7ab3d 100644
+--- a/docs/usage.md
++++ b/docs/usage.md
+@@ -3,14 +3,14 @@
+ Quick start (development)
+ 
+ 1) Install deps & compile
+-
+ ```bash
+ npm install
+ npm run build
+ ```
+ 
+ 2) Launch the Extension Development Host
+-- Press F5 (Run Extension) in Kiro/VS Code.
++- Press F5 (Run Extension or Run Extension (Dev MCP)).
++- This starts TypeScript watch and a Vite watch build for the webview UI.
+ - On activation you should see a toast: "Kiro Constellation is set up. Reload Kiro to start the MCP server."
+ 
+ 3) Reload the window
+@@ -22,17 +22,20 @@ npm run build
+   - #[constellation-mcp] ping → pong
+   - #[constellation-mcp] echo Hello → Hello
+ 
++5) Open the side panel UI
++- Click the Constellation icon in the Activity Bar to open the webview side panel.
++- It should display "Hello world" via the Preact app.
++
+ Helpful commands
+-- Constellation: Self-test
+-  - Spawns the MCP server with --selftest and reports OK/FAILED.
+-- Constellation: Open user MCP config
+-  - Opens ~/.kiro/settings/mcp.json in the editor.
++- Constellation: Self-test — Spawns the MCP server with --selftest and reports OK/FAILED.
++- Constellation: Open user MCP config — Opens ~/.kiro/settings/mcp.json in the editor.
+ 
+ Where the config is
+ - User-level: ~/.kiro/settings/mcp.json (always updated by the extension)
+ - Workspace-level (optional): ./.kiro/settings/mcp.json (only written if you enable the setting and ./.kiro exists)
+ 
+ Notes
++- The webview UI assets are built into out/ui. If the panel appears blank, run `npm run build:ui` and reload the window.
+ - You do not need to delete mcp.json during development. The extension upserts the constellation-mcp entry on activation.
+ - For code-only MCP server changes, you can restart just the server from the MCP panel—no full window reload needed.
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

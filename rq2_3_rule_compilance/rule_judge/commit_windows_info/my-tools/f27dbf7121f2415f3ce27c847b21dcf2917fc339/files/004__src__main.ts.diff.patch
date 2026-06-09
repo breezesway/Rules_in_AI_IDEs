@@ -1,0 +1,112 @@
+diff --git a/src/main.ts b/src/main.ts
+index 9c902fa..9b6017c 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -708,13 +708,47 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+            if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
+              sharpInstance = sharpInstance.jpeg({ quality });
+            } else if (outputFormat === 'png') {
++             // PNG格式使用压缩级别，质量越高压缩级别越低
++             const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
+              sharpInstance = sharpInstance.png({ 
+-               quality,
+-               compressionLevel: Math.round((100 - quality) / 10)
++               compressionLevel,
++               progressive: true
+              });
+            } else if (outputFormat === 'webp') {
+              sharpInstance = sharpInstance.webp({ quality });
+            }
++         } else if (settings.method === 'size') {
++           // 按文件大小压缩 - 通过调整质量来达到目标大小
++           const targetSizeKB = settings.targetSize || 500;
++           const targetSizeBytes = targetSizeKB * 1024;
++           
++           // 获取原始文件大小
++           const originalStats = await fs.stat(filePath);
++           const originalSize = originalStats.size;
++           
++           // 如果原始文件已经小于目标大小，使用较高质量
++           if (originalSize <= targetSizeBytes) {
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               sharpInstance = sharpInstance.jpeg({ quality: 85 });
++             } else if (outputFormat === 'png') {
++               sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++             } else if (outputFormat === 'webp') {
++               sharpInstance = sharpInstance.webp({ quality: 85 });
++             }
++           } else {
++                           // 估算需要的质量级别
++              const compressionRatio = targetSizeBytes / originalSize;
++              const estimatedQuality = Math.max(10, Math.min(90, Math.round(compressionRatio * 100)));
++             
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               sharpInstance = sharpInstance.jpeg({ quality: estimatedQuality });
++             } else if (outputFormat === 'png') {
++               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - estimatedQuality) / 10)));
++               sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++             } else if (outputFormat === 'webp') {
++               sharpInstance = sharpInstance.webp({ quality: estimatedQuality });
++             }
++           }
+          } else if (settings.method === 'dimension') {
+            // 按尺寸压缩
+            const maxDimension = settings.maxDimension || 1920;
+@@ -722,10 +756,55 @@ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+              fit: 'inside',
+              withoutEnlargement: true
+            });
++           
++           // 尺寸压缩时也应用适中的质量设置
++           if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++             sharpInstance = sharpInstance.jpeg({ quality: 80 });
++           } else if (outputFormat === 'png') {
++             sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++           } else if (outputFormat === 'webp') {
++             sharpInstance = sharpInstance.webp({ quality: 80 });
++           }
+          }
+          
+-         // 保存处理后的图片
+-         await sharpInstance.toFile(finalOutputPath);
++         // 对于高质量设置，添加文件大小检查以避免文件变大
++         if (settings.method === 'quality' && (settings.quality || 70) > 85) {
++           const originalStats = await fs.stat(filePath);
++           const originalSize = originalStats.size;
++           
++           // 先保存到临时文件检查大小
++           const tempPath = finalOutputPath + '.tmp';
++           await sharpInstance.toFile(tempPath);
++           
++           const tempStats = await fs.stat(tempPath);
++           const compressedSize = tempStats.size;
++           
++           // 如果压缩后文件更大，使用原始文件或降低质量
++           if (compressedSize > originalSize) {
++             await fs.unlink(tempPath); // 删除临时文件
++             
++             // 使用更低的质量重新压缩
++             const adjustedQuality = Math.max(70, (settings.quality || 70) - 15);
++             let adjustedInstance = sharp.default(filePath);
++             
++             if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++               adjustedInstance = adjustedInstance.jpeg({ quality: adjustedQuality });
++             } else if (outputFormat === 'png') {
++               const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - adjustedQuality) / 10)));
++               adjustedInstance = adjustedInstance.png({ compressionLevel, progressive: true });
++             } else if (outputFormat === 'webp') {
++               adjustedInstance = adjustedInstance.webp({ quality: adjustedQuality });
++             }
++             
++             await adjustedInstance.toFile(finalOutputPath);
++           } else {
++             // 压缩后文件更小，重命名临时文件为最终文件
++             await fs.rename(tempPath, finalOutputPath);
++           }
++         } else {
++           // 正常保存
++           await sharpInstance.toFile(finalOutputPath);
++         }
+         
+         processedCount++;
+         

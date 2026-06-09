@@ -1,0 +1,224 @@
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import started from 'electron-squirrel-startup';
+import { PDFDocument } from 'pdf-lib';
+
+// 声明 Vite 环境变量
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) {
+  app.quit();
+}
+
+
+
+const createWindow = () => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+
+  // Open the DevTools (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
+
+
+};
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow);
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+// PDF合并功能
+ipcMain.handle('merge-pdfs', async (event, options: {
+  filePaths: string[];
+  outputPath: string;
+  outputFileName: string;
+}) => {
+  try {
+    const { filePaths, outputPath, outputFileName } = options;
+    
+    // 创建新的PDF文档
+    const mergedPdf = await PDFDocument.create();
+    
+    // 逐个读取并合并PDF文件
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
+      
+      // 发送进度更新
+      event.sender.send('merge-progress', {
+        current: i + 1,
+        total: filePaths.length,
+        currentFile: path.basename(filePath),
+        progress: Math.round(((i + 1) / filePaths.length) * 100)
+      });
+      
+      try {
+        // 读取PDF文件
+        const pdfBytes = await fs.readFile(filePath);
+        const pdf = await PDFDocument.load(pdfBytes);
+        
+        // 获取所有页面
+        const pageIndices = pdf.getPageIndices();
+        
+        // 复制页面到合并的PDF
+        const pages = await mergedPdf.copyPages(pdf, pageIndices);
+        pages.forEach((page) => mergedPdf.addPage(page));
+        
+      } catch (fileError) {
+        console.error(`处理文件 ${filePath} 时出错:`, fileError);
+        throw new Error(`文件 ${path.basename(filePath)} 可能已损坏或不是有效的PDF文件`);
+      }
+    }
+    
+    // 生成合并后的PDF字节
+    const pdfBytes = await mergedPdf.save();
+    
+    // 确保输出目录存在
+    await fs.mkdir(outputPath, { recursive: true });
+    
+    // 构建完整的输出文件路径
+    const fullOutputPath = path.join(outputPath, outputFileName);
+    
+    // 检查文件是否已存在
+    try {
+      await fs.access(fullOutputPath);
+      // 文件存在，询问用户是否覆盖
+      const result = await dialog.showMessageBox({
+        type: 'question',
+        buttons: ['覆盖', '取消'],
+        defaultId: 0,
+        message: '文件已存在',
+        detail: `文件 "${outputFileName}" 已存在，是否要覆盖？`
+      });
+      
+      if (result.response !== 0) {
+        throw new Error('用户取消了操作');
+      }
+    } catch (error) {
+      // 文件不存在，继续
+    }
+    
+    // 写入合并后的PDF文件
+    await fs.writeFile(fullOutputPath, pdfBytes);
+
+    return {
+      success: true,
+      outputPath: fullOutputPath,
+      message: `PDF文件已成功合并为 "${outputFileName}"`
+    };
+    
+  } catch (error) {
+    console.error('PDF合并错误:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '合并PDF时发生未知错误'
+    };
+  }
+});
+
+// 选择保存位置
+ipcMain.handle('select-save-path', async () => {
+  const result = await dialog.showSaveDialog({
+    title: '选择保存位置',
+    defaultPath: 'merged-document.pdf',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ]
+  });
+  
+  if (result.canceled) {
+    return null;
+  }
+  
+  return {
+    filePath: result.filePath,
+    directory: path.dirname(result.filePath!),
+    fileName: path.basename(result.filePath!)
+  };
+});
+
+// 获取默认下载目录
+ipcMain.handle('get-downloads-path', async () => {
+  return app.getPath('downloads');
+});
+
+// 选择PDF文件
+ipcMain.handle('select-pdf-files', async () => {
+  const result = await dialog.showOpenDialog({
+    title: '选择PDF文件',
+    filters: [
+      { name: 'PDF文件', extensions: ['pdf'] }
+    ],
+    properties: ['openFile', 'multiSelections']
+  });
+  
+  if (result.canceled || !result.filePaths.length) {
+    return null;
+  }
+  
+  // 返回文件信息
+  const fileInfos = await Promise.all(
+    result.filePaths.map(async (filePath) => {
+      try {
+        const stats = await fs.stat(filePath);
+        return {
+          path: filePath,
+          name: path.basename(filePath),
+          size: stats.size,
+        };
+      } catch (error) {
+        console.error(`获取文件信息失败: ${filePath}`, error);
+        return null;
+      }
+    })
+  );
+  
+  return fileInfos.filter(info => info !== null);
+});
+
+
+
+// 打开文件位置
+ipcMain.handle('open-file-location', async (event, filePath: string) => {
+  try {
+    shell.showItemInFolder(filePath);
+  } catch (error) {
+    console.error('打开文件位置失败:', error);
+  }
+});

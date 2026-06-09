@@ -1,0 +1,949 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Language Features
+- Rule File Path: .cursor/rules/develop.mdc
+- Change Type: added
+- Target Rule Content:
+- **类型安全** - 使用 `ThemeMode` 类型定义：`'light' | 'dark' | 'system'`
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files (e.g., TypeScript, Dart, or Python files defining type aliases or enums).
+- Suggested Logic: Search for the declaration of a type, interface, enum, or alias named 'ThemeMode'. Verify that its definition strictly matches the union or set of values: 'light', 'dark', and 'system'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: 修复图片压缩预览功能语法错误并更新项目规范
+
+主要修复:
+- 修复 src/main.ts 中预览生成的语法错误
+- 解决调试日志对象结构问题，outputFormat 和 tempExt 字段位置错误
+- 优化代码格式和可读性，规范临时文件路径生成逻辑
+
+文档更新:
+- 在 product.md 中添加语法错误修复记录
+- 更新压缩预览功能状态为已修复
+- 在 project.mdc 中新增代码质量和调试规范
+- 统一所有命令使用 pnpm (start/lint/package)
+- 完善开发命令规范和检查清单
+
+技术改进:
+- 确保应用可以正常启动，通过语法检查
+- 为压缩预览功能的正常工作奠定基础
+- 提高代码维护性和开发规范一致性
+- Changed Files List: 
+.cursor/rules/project.mdc	+70	-2	after_lines=197
+product.md	+36	-2	after_lines=673
+src/components/image-compressor.tsx	+119	-8	after_lines=437
+src/main.ts	+208	-0	after_lines=1236
+src/preload.ts	+7	-1	after_lines=90
+src/types/electron.d.ts	+36	-0	after_lines=165
+src/ui/image-preview.tsx	+206	-0	after_lines=206
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── project.mdc
+├── .eslintrc.json
+├── .gitignore
+├── .npmrc
+├── README.md
+├── forge.config.ts
+├── forge.env.d.ts
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.js
+├── product.md
+├── src
+│   ├── App.tsx
+│   ├── components
+│   │   ├── app-settings.tsx
+│   │   ├── image-compressor.tsx
+│   │   ├── operation-history.tsx
+│   │   └── pdf-merger.tsx
+│   ├── hooks
+│   │   └── use-dropzone.ts
+│   ├── index.css
+│   ├── lib
+│   │   └── utils.ts
+│   ├── main.ts
+│   ├── preload.ts
+│   ├── renderer.ts
+│   ├── types
+│   │   └── electron.d.ts
+│   └── ui
+│       ├── button.tsx
+│       ├── feature-card.tsx
+│       ├── image-preview.tsx
+│       ├── modal.tsx
+│       └── save-location-selector.tsx
+├── tailwind.config.js
+├── tsconfig.json
+├── vite.main.config.ts
+├── vite.preload.config.ts
+└── vite.renderer.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/project.mdc ---
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index 16584cf..6f59024 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -89,6 +89,12 @@ src/
+ - **预加载脚本配置** - `vite.preload.config.ts` 处理预加载脚本配置
+ - **外部依赖管理** - 合理配置 `rollupOptions.external` 避免打包问题
+ 
++### 开发命令规范
++- **开发启动** - `pnpm start` - 启动开发服务器和 Electron 应用
++- **代码检查** - `pnpm lint` - 运行 ESLint 检查代码质量
++- **项目构建** - `pnpm package` - 构建可分发的应用程序
++- **依赖管理** - 使用 `pnpm` 作为包管理器，确保依赖版本一致性
++
+ ### 代码重构指导
+ 当发现以下情况时，应该进行重构：
+ - 单个文件包含多个组件定义
+@@ -98,6 +104,62 @@ src/
+ - 有lint警告或错误
+ - 原生模块使用静态导入
+ - 缺少构建配置优化
++- 代码格式不规范，影响可读性
++- 对象结构不完整，导致语法错误
++
++### 应用配置管理规范
++- **集中配置管理** - 核心设置统一在应用级别管理，避免工具间重复配置
++- **配置实时同步** - 工具组件每次打开时重新获取最新配置，确保设置立即生效
++- **正确的依赖管理** - useEffect 依赖数组要准确，避免缓存导致的配置不更新问题
++- **配置初始化模式**：
++  ```typescript
++  // ✅ 正确的配置获取方式
++  React.useEffect(() => {
++    if (isOpen) {
++      getAppConfig().then(config => {
++        // 应用配置，包括清理旧设置
++      });
++    }
++  }, [isOpen]); // 只依赖 isOpen
++  
++  // ❌ 错误的配置获取方式
++  React.useEffect(() => {
++    if (isOpen && !currentConfig) { // 条件错误
++      // 获取配置...
++    }
++  }, [isOpen, currentConfig]); // 依赖项导致缓存问题
++  ```
++
++### 图片压缩质量控制规范
++- **格式特定参数** - 不同格式使用正确的压缩参数
++  - JPEG/WebP: 使用 `quality` 参数
++  - PNG: 使用 `compressionLevel` 参数，不支持 quality
++- **智能质量保护** - 高质量设置时检查输出文件大小，防止文件变大
++- **临时文件机制** - 使用临时文件验证压缩效果，确保满足预期
++- **多种压缩方式** - 支持按质量、按文件大小、按尺寸三种压缩方式
++
++### 代码质量和调试规范
++- **对象结构完整性** - 确保对象字面量语法正确，字段位置准确
++  ```typescript
++  // ✅ 正确的对象结构
++  console.log('调试信息:', {
++    field1: value1,
++    field2: value2,
++    field3: value3  // 最后一个字段不需要逗号，但可以加上
++  });
++  
++  // ❌ 错误的对象结构
++  console.log('调试信息:', {
++    field1: value1,
++    field2: value2
++  });
++  field3: value3,  // 字段在对象外部，语法错误
++  ```
++- **代码格式一致性** - 保持缩进、空行、注释的一致性
++- **变量声明位置** - 变量声明应在使用前的合适位置，避免作用域混乱
++- **调试日志规范** - 调试日志应包含足够的上下文信息，便于问题定位
++- **语法验证优先** - 在功能开发前确保基础语法正确，避免阻塞性错误
++- **开发命令使用** - 使用 `pnpm start` 启动开发环境，使用 `pnpm lint` 检查代码质量
+ 
+ ## 📋 检查清单
+ 
+@@ -109,10 +171,14 @@ src/
+ - [ ] 功能组件正确放置在 `src/components/` 目录
+ - [ ] 所有导入路径正确
+ - [ ] 没有未使用的变量和函数
+-- [ ] 通过lint检查（`npm run lint`）
++- [ ] 通过lint检查（`pnpm lint`）
++- [ ] 对象字面量语法正确，字段位置准确
++- [ ] 代码格式一致，缩进和空行规范
++- [ ] 调试日志结构完整，信息充分
+ 
+ ### 构建和部署
+-- [ ] 项目能够正常构建（`npm run package`）
++- [ ] 项目能够正常启动（`pnpm start`）
++- [ ] 项目能够正常构建（`pnpm package`）
+ - [ ] 原生模块正确配置为外部依赖
+ - [ ] 动态导入替代静态导入（针对原生模块）
+ - [ ] Vite 配置文件正确设置
+@@ -122,6 +188,8 @@ src/
+ - [ ] 错误处理机制完善
+ - [ ] 用户反馈（Toast/通知）正常工作
+ - [ ] 文件操作（选择/保存）功能正常
++- [ ] 应用配置实时同步正常
++- [ ] 图片压缩质量控制机制有效
+ 
+ ### 文档更新
+ - [ ] `product.md` 记录实际实现状态
+
+--- FILE: product.md ---
+diff --git a/product.md b/product.md
+index 8c50da5..c5172bf 100644
+--- a/product.md
++++ b/product.md
+@@ -258,6 +258,8 @@
+ - **重名文件处理**：集成应用配置，支持自动编号或询问覆盖
+ - **批量处理**：支持多文件同时压缩
+ - **错误容错**：单文件失败不影响其他文件处理
++- **压缩预览功能**：实时生成压缩预览，显示压缩前后对比效果
++- **详细统计信息**：显示文件大小、尺寸、格式变化和压缩率统计
+ 
+ ### 开发过程中的挑战与解决
+ 
+@@ -407,6 +409,38 @@ while (attempts < maxAttempts) {
+ 
+ ## 重要Bug修复记录
+ 
++### 压缩预览功能语法错误修复（2024-12-29）
++- **问题描述**：应用启动时出现语法错误，"Unexpected 'return'"阻止应用正常启动
++- **根本原因**：
++  1. 调试日志对象结构被破坏，`outputFormat` 和 `tempExt` 字段位置错误
++  2. 临时文件路径生成的代码格式不规范，影响代码可读性
++- **修复方案**：
++  1. **语法结构修复**：将 `outputFormat` 和 `tempExt` 字段正确放置在调试日志对象内部
++  2. **代码格式优化**：规范化输出格式确定逻辑，改善代码结构
++  3. **可读性提升**：优化临时文件路径生成的代码格式
++- **技术细节**：
++  ```typescript
++  // 修复前（语法错误）
++  console.log('预览生成信息:', {
++    // ... 其他字段
++    compressedMimeType
++  });
++  outputFormat,  // ❌ 在对象外部
++  tempExt,       // ❌ 在对象外部
++
++  // 修复后（正确结构）
++  console.log('预览生成信息:', {
++    // ... 其他字段
++    compressedMimeType,
++    outputFormat,  // ✅ 在对象内部
++    tempExt        // ✅ 在对象内部
++  });
++  ```
++- **修复结果**：
++  - 应用可以正常启动，语法检查通过
++  - 代码结构清晰，便于维护
++  - 为压缩预览功能的正常工作奠定了基础
++
+ ### 图片压缩质量问题修复（2024-12-29）
+ - **问题描述**：选择高质量等级压缩时，生成的图片文件比原图更大
+ - **根本原因**：
+@@ -577,8 +611,8 @@ while (attempts < maxAttempts) {
+ 
+ ### 图片压缩扩展
+ - [ ] **压缩进度显示**：实时进度条和文件状态更新
+-- [ ] **压缩预览**：压缩前后效果对比
+-- [ ] **压缩结果统计**：显示压缩前后文件大小对比和压缩率
++- [x] **压缩预览**：压缩前后效果对比，支持查看压缩效果和文件大小变化（已修复语法错误，功能就绪）
++- [x] **压缩结果统计**：显示压缩前后文件大小对比和压缩率
+ 
+ ## 📋 技术债务和优化项
+
+--- FILE: src/components/image-compressor.tsx ---
+diff --git a/src/components/image-compressor.tsx b/src/components/image-compressor.tsx
+index e9aa62f..46cba1c 100644
+--- a/src/components/image-compressor.tsx
++++ b/src/components/image-compressor.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState } from 'react';
+-import { Image, FolderOpen, Settings } from 'lucide-react';
++import { Image, FolderOpen, Settings, Eye } from 'lucide-react';
+ import { Modal } from '../ui/modal';
++import { ImagePreview } from '../ui/image-preview';
+ import { formatFileSize } from '../lib/utils';
+ import { toast } from 'sonner';
+ 
+@@ -16,6 +17,27 @@ interface ImageFile {
+   status: 'ready' | 'processing' | 'done' | 'error';
+ }
+ 
++interface PreviewData {
++  originalPath: string;
++  previewPath: string;
++  originalBase64: string;
++  compressedBase64: string;
++  original: {
++    size: number;
++    width: number;
++    height: number;
++    format: string;
++  };
++  compressed: {
++    size: number;
++    width: number;
++    height: number;
++    format: string;
++  };
++  compressionRatio: number;
++  sizeDifference: number;
++}
++
+ 
+ 
+ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+@@ -28,6 +50,12 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   const [namingSuffix, setNamingSuffix] = useState('_compressed');
+   const [saveLocation, setSaveLocation] = useState('');
+   const [isProcessing, setIsProcessing] = useState(false);
++  
++  // 预览相关状态
++  const [showPreview, setShowPreview] = useState(false);
++  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
++  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
++  const [selectedFileForPreview, setSelectedFileForPreview] = useState<ImageFile | null>(null);
+ 
+   // 初始化保存位置 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+@@ -66,6 +94,68 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+     setFiles(prev => prev.filter((_, i) => i !== index));
+   };
+ 
++  // 生成预览
++  const handlePreview = async (file: ImageFile) => {
++    if (isGeneratingPreview) return;
++    
++    setSelectedFileForPreview(file);
++    setIsGeneratingPreview(true);
++    setShowPreview(true);
++    setPreviewData(null);
++
++    try {
++      const settings = {
++        method: compressionMethod,
++        quality: qualityLevel,
++        targetSize,
++        maxDimension,
++        outputFormat
++      };
++
++      const result = await window.electronAPI.generateImagePreview(file.path, settings);
++      
++      if (result.success && result.preview) {
++        setPreviewData(result.preview);
++      } else {
++        toast.error(result.error || '生成预览失败');
++        setShowPreview(false);
++      }
++    } catch (error) {
++      console.error('生成预览失败:', error);
++      toast.error('生成预览失败，请重试');
++      setShowPreview(false);
++    } finally {
++      setIsGeneratingPreview(false);
++    }
++  };
++
++  // 关闭预览
++  const handleClosePreview = async () => {
++    if (previewData?.previewPath) {
++      // 清理预览文件
++      try {
++        await window.electronAPI.cleanupImagePreview(previewData.previewPath);
++      } catch (error) {
++        console.error('清理预览文件失败:', error);
++      }
++    }
++    
++    setShowPreview(false);
++    setPreviewData(null);
++    setSelectedFileForPreview(null);
++  };
++
++  // 确认压缩（从预览界面）
++  const handleConfirmFromPreview = async () => {
++    if (!selectedFileForPreview) return;
++    
++    // 关闭预览
++    await handleClosePreview();
++    
++    // 执行压缩
++    await handleCompress();
++  };
++
+ 
+ 
+   const handleCompress = async () => {
+@@ -125,7 +215,16 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+   );
+ 
+   return (
+-    <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
++    <>
++      <ImagePreview
++        isOpen={showPreview}
++        onClose={handleClosePreview}
++        preview={previewData}
++        onConfirm={handleConfirmFromPreview}
++        isGenerating={isGeneratingPreview}
++      />
++      
++      <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
+       <div className="space-y-6">
+         {/* 文件选择区域 */}
+         <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+@@ -167,12 +266,23 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+                       </p>
+                     </div>
+                   </div>
+-                  <button
+-                    onClick={() => removeFile(index)}
+-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200"
+-                  >
+-                    删除
+-                  </button>
++                  <div className="flex items-center space-x-2">
++                    <button
++                      onClick={() => handlePreview(file)}
++                      disabled={isProcessing || isGeneratingPreview}
++                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
++                      title="预览压缩效果"
++                    >
++                      <Eye className="h-4 w-4" />
++                    </button>
++                    <button
++                      onClick={() => removeFile(index)}
++                      disabled={isProcessing}
++                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
++                    >
++                      删除
++                    </button>
++                  </div>
+                 </li>
+               ))}
+             </ul>
+@@ -322,5 +432,6 @@ export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+         </div>
+       </div>
+     </Modal>
++    </>
+   );
+ } 
+\ No newline at end of file
+
+--- FILE: src/main.ts ---
+diff --git a/src/main.ts b/src/main.ts
+index 5c5979d..4eb3bd2 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -600,6 +600,214 @@ ipcMain.handle('select-save-location', async () => {
+   }
+ });
+ 
++// 生成图片压缩预览
++ipcMain.handle('generate-image-preview', async (event, filePath: string, settings: {
++  method: string;
++  quality?: number;
++  targetSize?: number;
++  maxDimension?: number;
++  outputFormat?: string;
++}) => {
++  try {
++    // 动态导入sharp
++    const sharp = await import('sharp');
++    
++    // 获取原始文件信息
++    const originalStats = await fs.stat(filePath);
++    const originalSize = originalStats.size;
++    
++    // 获取原始图片信息
++    const originalInfo = await sharp.default(filePath).metadata();
++    
++    // 创建临时预览文件
++    const tempDir = path.join(app.getPath('temp'), 'image-preview');
++    await fs.mkdir(tempDir, { recursive: true });
++    
++    const fileName = path.basename(filePath);
++    const fileNameWithoutExt = path.parse(fileName).name;
++    
++    // 确定输出格式
++    let outputFormat = settings.outputFormat || 'original';
++    if (outputFormat === 'original') {
++      const ext = path.extname(filePath).toLowerCase();
++      if (ext === '.jpg' || ext === '.jpeg') {
++        outputFormat = 'jpeg';
++      } else if (ext === '.png') {
++        outputFormat = 'png';
++      } else if (ext === '.webp') {
++        outputFormat = 'webp';
++      } else {
++        outputFormat = 'jpeg';
++      }
++    }
++
++    // 根据输出格式确定临时文件扩展名
++    let tempExt: string;
++    switch (outputFormat) {
++      case 'jpeg':
++      case 'jpg':
++        tempExt = 'jpg';
++        break;
++      case 'png':
++        tempExt = 'png';
++        break;
++      case 'webp':
++        tempExt = 'webp';
++        break;
++      default:
++        tempExt = 'jpg';
++    }
++    
++    const tempPath = path.join(tempDir, `${fileNameWithoutExt}_preview.${tempExt}`);
++    
++    // 创建sharp实例
++    let sharpInstance = sharp.default(filePath);
++    
++    
++    // 根据压缩方法处理图片
++    if (settings.method === 'quality') {
++      const quality = settings.quality || 70;
++      
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        sharpInstance = sharpInstance.jpeg({ quality });
++      } else if (outputFormat === 'png') {
++        const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
++        sharpInstance = sharpInstance.png({ 
++          compressionLevel,
++          progressive: true
++        });
++      } else if (outputFormat === 'webp') {
++        sharpInstance = sharpInstance.webp({ quality });
++      }
++    } else if (settings.method === 'size') {
++      const targetSizeKB = settings.targetSize || 500;
++      const targetSizeBytes = targetSizeKB * 1024;
++      
++      // 简化的质量估算用于预览
++      const compressionRatio = targetSizeBytes / originalSize;
++      let estimatedQuality: number;
++      
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
++        sharpInstance = sharpInstance.jpeg({ quality: estimatedQuality });
++      } else if (outputFormat === 'png') {
++        estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
++        const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - estimatedQuality) / 10)));
++        sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++      } else if (outputFormat === 'webp') {
++        estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
++        sharpInstance = sharpInstance.webp({ quality: estimatedQuality });
++      }
++    } else if (settings.method === 'dimension') {
++      const maxDimension = settings.maxDimension || 1920;
++      sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
++        fit: 'inside',
++        withoutEnlargement: true
++      });
++      
++      // 尺寸压缩时应用适中的质量
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        sharpInstance = sharpInstance.jpeg({ quality: 80 });
++      } else if (outputFormat === 'png') {
++        sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++      } else if (outputFormat === 'webp') {
++        sharpInstance = sharpInstance.webp({ quality: 80 });
++      }
++    }
++    
++    // 生成预览图片
++    await sharpInstance.toFile(tempPath);
++    
++    // 获取压缩后的文件信息
++    const compressedStats = await fs.stat(tempPath);
++    const compressedSize = compressedStats.size;
++    const compressedInfo = await sharp.default(tempPath).metadata();
++    
++    // 计算压缩率
++    const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
++    
++    // 将图片转换为base64
++    const originalBuffer = await fs.readFile(filePath);
++    const compressedBuffer = await fs.readFile(tempPath);
++    
++    // 正确的MIME类型映射
++    const getMimeType = (format: string) => {
++      switch (format.toLowerCase()) {
++        case 'jpeg':
++        case 'jpg':
++          return 'image/jpeg';
++        case 'png':
++          return 'image/png';
++        case 'webp':
++          return 'image/webp';
++        default:
++          return 'image/jpeg';
++      }
++    };
++    
++    const originalMimeType = getMimeType(originalInfo.format || 'jpeg');
++    const compressedMimeType = getMimeType(compressedInfo.format || 'jpeg');
++    
++    const originalBase64 = `data:${originalMimeType};base64,${originalBuffer.toString('base64')}`;
++    const compressedBase64 = `data:${compressedMimeType};base64,${compressedBuffer.toString('base64')}`;
++    
++    console.log('预览生成信息:', {
++      originalPath: filePath,
++      compressedPath: tempPath,
++      originalSize: originalBuffer.length,
++      compressedSize: compressedBuffer.length,
++      originalFormat: originalInfo.format,
++      compressedFormat: compressedInfo.format,
++      originalMimeType,
++      compressedMimeType,
++      outputFormat,
++      tempExt
++    });
++    
++    return {
++      success: true,
++      preview: {
++        originalPath: filePath,
++        previewPath: tempPath,
++        originalBase64,
++        compressedBase64,
++        original: {
++          size: originalSize,
++          width: originalInfo.width || 0,
++          height: originalInfo.height || 0,
++          format: originalInfo.format || 'unknown'
++        },
++        compressed: {
++          size: compressedSize,
++          width: compressedInfo.width || 0,
++          height: compressedInfo.height || 0,
++          format: compressedInfo.format || 'unknown'
++        },
++        compressionRatio: Math.round(compressionRatio * 100) / 100,
++        sizeDifference: originalSize - compressedSize
++      }
++    };
++    
++  } catch (error) {
++    console.error('生成预览失败:', error);
++    return { 
++      success: false, 
++      error: error instanceof Error ? error.message : '生成预览失败' 
++    };
++  }
++});
++
++// 清理预览文件
++ipcMain.handle('cleanup-image-preview', async (event, previewPath: string) => {
++  try {
++    await fs.unlink(previewPath);
++    return { success: true };
++  } catch (error) {
++    console.error('清理预览文件失败:', error);
++    return { success: false };
++  }
++});
++
+ // 压缩图片
+ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+   method: string;
+
+--- FILE: src/preload.ts ---
+diff --git a/src/preload.ts b/src/preload.ts
+index 0868a20..36aaaaa 100644
+--- a/src/preload.ts
++++ b/src/preload.ts
+@@ -54,9 +54,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
+   // 图片压缩相关API
+   selectImages: () => ipcRenderer.invoke('select-images'),
+   selectSaveLocation: () => ipcRenderer.invoke('select-save-location'),
+-  compressImages: (filePaths: string[], settings: Record<string, unknown>) => 
++    compressImages: (filePaths: string[], settings: Record<string, unknown>) =>
+     ipcRenderer.invoke('compress-images', filePaths, settings),
+   
++  generateImagePreview: (filePath: string, settings: Record<string, unknown>) =>
++    ipcRenderer.invoke('generate-image-preview', filePath, settings),
++  
++  cleanupImagePreview: (previewPath: string) =>
++    ipcRenderer.invoke('cleanup-image-preview', previewPath),
++  
+   // 监听压缩进度
+   onCompressionProgress: (callback: (progress: {
+     currentFile: string;
+
+--- FILE: src/types/electron.d.ts ---
+diff --git a/src/types/electron.d.ts b/src/types/electron.d.ts
+index 54ce02f..4b98340 100644
+--- a/src/types/electron.d.ts
++++ b/src/types/electron.d.ts
+@@ -83,6 +83,42 @@ export interface ElectronAPI {
+     error?: string;
+   }>;
+   
++  generateImagePreview: (
++    filePath: string,
++    settings: {
++      method: string;
++      quality?: number;
++      targetSize?: number;
++      maxDimension?: number;
++      outputFormat?: string;
++    }
++  ) => Promise<{
++    success: boolean;
++    preview?: {
++      originalPath: string;
++      previewPath: string;
++      originalBase64: string;
++      compressedBase64: string;
++      original: {
++        size: number;
++        width: number;
++        height: number;
++        format: string;
++      };
++      compressed: {
++        size: number;
++        width: number;
++        height: number;
++        format: string;
++      };
++      compressionRatio: number;
++      sizeDifference: number;
++    };
++    error?: string;
++  }>;
++  
++  cleanupImagePreview: (previewPath: string) => Promise<{ success: boolean }>;
++  
+   onCompressionProgress: (callback: (progress: {
+     currentFile: string;
+     currentIndex: number;
+
+--- FILE: src/ui/image-preview.tsx ---
+diff --git a/src/ui/image-preview.tsx b/src/ui/image-preview.tsx
+new file mode 100644
+index 0000000..3da6225
+--- /dev/null
++++ b/src/ui/image-preview.tsx
+@@ -0,0 +1,206 @@
++import React from 'react';
++import { X, Download, FileImage, Zap } from 'lucide-react';
++import { formatFileSize } from '../lib/utils';
++
++interface ImagePreviewProps {
++  isOpen: boolean;
++  onClose: () => void;
++  preview: {
++    originalPath: string;
++    previewPath: string;
++    originalBase64: string;
++    compressedBase64: string;
++    original: {
++      size: number;
++      width: number;
++      height: number;
++      format: string;
++    };
++    compressed: {
++      size: number;
++      width: number;
++      height: number;
++      format: string;
++    };
++    compressionRatio: number;
++    sizeDifference: number;
++  } | null;
++  onConfirm: () => void;
++  isGenerating: boolean;
++}
++
++export function ImagePreview({ 
++  isOpen, 
++  onClose, 
++  preview, 
++  onConfirm, 
++  isGenerating 
++}: ImagePreviewProps) {
++  if (!isOpen) return null;
++
++  return (
++    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
++      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
++        {/* 头部 */}
++        <div className="flex items-center justify-between p-6 border-b border-gray-200">
++          <div className="flex items-center space-x-3">
++            <div className="p-2 bg-blue-100 rounded-xl">
++              <FileImage className="h-6 w-6 text-blue-600" />
++            </div>
++            <div>
++              <h2 className="text-xl font-semibold text-gray-900">压缩预览</h2>
++              <p className="text-sm text-gray-500">查看压缩前后的效果对比</p>
++            </div>
++          </div>
++          <button
++            onClick={onClose}
++            className="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-200"
++          >
++            <X className="h-6 w-6 text-gray-500" />
++          </button>
++        </div>
++
++        {/* 内容区域 */}
++        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
++          {isGenerating ? (
++            <div className="flex flex-col items-center justify-center py-12">
++              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
++              <p className="text-gray-600">正在生成预览...</p>
++            </div>
++          ) : preview ? (
++            <div className="space-y-6">
++              {/* 统计信息卡片 */}
++              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
++                <div className="bg-gray-50 rounded-xl p-4">
++                  <div className="flex items-center space-x-2 mb-2">
++                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
++                    <span className="text-sm font-medium text-gray-700">压缩前</span>
++                  </div>
++                  <p className="text-2xl font-bold text-gray-900">
++                    {formatFileSize(preview.original.size)}
++                  </p>
++                  <p className="text-sm text-gray-500">
++                    {preview.original.width} × {preview.original.height}
++                  </p>
++                </div>
++                
++                <div className="bg-green-50 rounded-xl p-4">
++                  <div className="flex items-center space-x-2 mb-2">
++                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
++                    <span className="text-sm font-medium text-gray-700">压缩后</span>
++                  </div>
++                  <p className="text-2xl font-bold text-gray-900">
++                    {formatFileSize(preview.compressed.size)}
++                  </p>
++                  <p className="text-sm text-gray-500">
++                    {preview.compressed.width} × {preview.compressed.height}
++                  </p>
++                </div>
++                
++                <div className="bg-blue-50 rounded-xl p-4">
++                  <div className="flex items-center space-x-2 mb-2">
++                    <Zap className="w-4 h-4 text-blue-600" />
++                    <span className="text-sm font-medium text-gray-700">压缩效果</span>
++                  </div>
++                  <p className="text-2xl font-bold text-blue-600">
++                    {preview.compressionRatio > 0 ? '-' : '+'}{Math.abs(preview.compressionRatio)}%
++                  </p>
++                  <p className="text-sm text-gray-500">
++                    {preview.sizeDifference > 0 ? '节省' : '增加'} {formatFileSize(Math.abs(preview.sizeDifference))}
++                  </p>
++                </div>
++              </div>
++
++              {/* 图片对比 */}
++              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
++                {/* 原图 */}
++                <div className="space-y-3">
++                  <div className="flex items-center justify-between">
++                    <h3 className="text-lg font-medium text-gray-900">原图</h3>
++                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
++                      {preview.original.format.toUpperCase()}
++                    </span>
++                  </div>
++                  <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50">
++                    <img
++                      src={preview.originalBase64}
++                      alt="原图"
++                      className="w-full h-auto max-h-80 object-contain"
++                      style={{ imageRendering: 'auto' }}
++                    />
++                  </div>
++                </div>
++
++                {/* 压缩后 */}
++                <div className="space-y-3">
++                  <div className="flex items-center justify-between">
++                    <h3 className="text-lg font-medium text-gray-900">压缩后</h3>
++                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
++                      {preview.compressed.format.toUpperCase()}
++                    </span>
++                  </div>
++                  <div className="border-2 border-green-200 rounded-xl overflow-hidden bg-gray-50">
++                    <img
++                      src={preview.compressedBase64}
++                      alt="压缩后"
++                      className="w-full h-auto max-h-80 object-contain"
++                      style={{ imageRendering: 'auto' }}
++                    />
++                  </div>
++                </div>
++              </div>
++
++              {/* 详细信息 */}
++              <div className="bg-gray-50 rounded-xl p-4">
++                <h4 className="font-medium text-gray-900 mb-3">详细信息</h4>
++                <div className="grid grid-cols-2 gap-4 text-sm">
++                  <div>
++                    <span className="text-gray-600">原始格式:</span>
++                    <span className="ml-2 font-medium">{preview.original.format.toUpperCase()}</span>
++                  </div>
++                  <div>
++                    <span className="text-gray-600">输出格式:</span>
++                    <span className="ml-2 font-medium">{preview.compressed.format.toUpperCase()}</span>
++                  </div>
++                  <div>
++                    <span className="text-gray-600">原始尺寸:</span>
++                    <span className="ml-2 font-medium">{preview.original.width} × {preview.original.height}</span>
++                  </div>
++                  <div>
++                    <span className="text-gray-600">压缩后尺寸:</span>
++                    <span className="ml-2 font-medium">{preview.compressed.width} × {preview.compressed.height}</span>
++                  </div>
++                </div>
++              </div>
++            </div>
++          ) : (
++            <div className="flex flex-col items-center justify-center py-12">
++              <div className="p-4 bg-gray-100 rounded-2xl mb-4">
++                <FileImage className="h-12 w-12 text-gray-400" />
++              </div>
++              <p className="text-gray-600">无法生成预览</p>
++            </div>
++          )}
++        </div>
++
++        {/* 底部操作栏 */}
++        <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
++          <button
++            onClick={onClose}
++            className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200"
++          >
++            取消
++          </button>
++          <button
++            onClick={onConfirm}
++            disabled={!preview || isGenerating}
++            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
++          >
++            <Download className="h-4 w-4" />
++            <span>确认压缩</span>
++          </button>
++        </div>
++      </div>
++    </div>
++  );
++} 
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

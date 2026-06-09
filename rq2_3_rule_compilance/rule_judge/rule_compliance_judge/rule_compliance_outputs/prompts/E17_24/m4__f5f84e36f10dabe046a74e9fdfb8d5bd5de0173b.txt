@@ -1,0 +1,116 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursorrules
+- Change Type: modified
+- Target Rule Content:
+-   - Prefer table-driven tests for multiple cases
++   - Prefer table-driven tests for multiple cases; avoid multiple calls to t.Run in the same function
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Go source code files, specifically test files (e.g., *_test.go).
+- Suggested Logic: Scan test functions (functions starting with 'Test' and accepting '*testing.T') to count the number of calls to the '.Run' method (e.g., 't.Run(...)'). If a single test function contains more than one call to 't.Run' outside of a loop structure, it violates the rule against multiple calls in favor of table-driven tests.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: Now playing alternating moves
+- Changed Files List: 
+game/tictactoe.go	+14	-7	after_lines=43
+game/tictactoe_test.go	+15	-1	after_lines=93
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── Makefile
+├── game
+│   ├── tictactoe.go
+│   └── tictactoe_test.go
+├── go.mod
+├── go.sum
+├── main.go
+└── web
+    └── static
+        ├── index.html
+        └── wasm_exec.js
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: game/tictactoe.go ---
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+index 346017a..cca36f0 100644
+--- a/game/tictactoe.go
++++ b/game/tictactoe.go
+@@ -5,25 +5,32 @@ import (
+ )
+ 
+ type Game struct {
+-	board [9]string
+-	text  string
++	board   [9]string
++	text    string
++	xIsNext bool
+ }
+ 
+ func (g *Game) MakeMove(position int) error {
+-	if position < 0 || position > 8 {
++	if position < 0 || position >= len(g.board) {
+ 		return fmt.Errorf("invalid position")
+ 	}
+-	if g.Board()[position] != "" {
++	if g.board[position] != "" {
+ 		return fmt.Errorf("cell already occupied")
+ 	}
+-	g.board[position] = "X"
++	if g.xIsNext {
++		g.board[position] = "X"
++	} else {
++		g.board[position] = "O"
++	}
++	g.xIsNext = !g.xIsNext // Switch turns
+ 	return nil
+ }
+ 
+ func NewGame() *Game {
+ 	return &Game{
+-		board: [9]string{"", "", "", "", "", "", "", "", ""},
+-		text:  "hello",
++		board:   [9]string{"", "", "", "", "", "", "", "", ""},
++		text:    "hello",
++		xIsNext: true, // X plays first
+ 	}
+ }
+
+--- FILE: game/tictactoe_test.go ---
+diff --git a/game/tictactoe_test.go b/game/tictactoe_test.go
+index 90363b5..dd54a1d 100644
+--- a/game/tictactoe_test.go
++++ b/game/tictactoe_test.go
+@@ -27,11 +27,25 @@ func TestMakeMove(t *testing.T) {
+ 		expectedBoard [9]string
+ 	}{
+ 		{
+-			name:          "valid move",
++			name:          "X plays first",
+ 			position:      4,
+ 			expectedErr:   "",
+ 			expectedBoard: [9]string{"", "", "", "", "X", "", "", "", ""},
+ 		},
++		{
++			name:          "O plays second",
++			position:      0,
++			setupMoves:    []int{4},
++			expectedErr:   "",
++			expectedBoard: [9]string{"O", "", "", "", "X", "", "", "", ""},
++		},
++		{
++			name:          "X plays third",
++			position:      8,
++			setupMoves:    []int{4, 0},
++			expectedErr:   "",
++			expectedBoard: [9]string{"O", "", "", "", "X", "", "", "", "X"},
++		},
+ 		{
+ 			name:          "cell already occupied",
+ 			position:      4,
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

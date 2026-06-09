@@ -1,0 +1,260 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+**Method Parameters**: Event handlers receive `&mut Context<Self>`, not `&mut Window`
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Rust source code files (*.rs)
+- Suggested Logic: Scan function signatures (especially those within implementation blocks or traits likely to be event handlers) to ensure that parameters use the type '&mut Context<Self>' and specifically do not use the type '&mut Window'. This can be done via regex (e.g., searching for 'fn .*\(&mut Window\)') or AST parsing to inspect method arguments.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: support shutting the process down when last window
+is closed.
+- Changed Files List: 
+src/game/state.rs	+18	-18	after_lines=509
+src/main.rs	+31	-15	after_lines=228
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── solitaire-game
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── Cargo.toml
+└── src
+    ├── game
+    │   ├── actions.rs
+    │   ├── deck.rs
+    │   ├── mod.rs
+    │   └── state.rs
+    ├── main.rs
+    └── ui
+        └── mod.rs
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/game/state.rs ---
+diff --git a/src/game/state.rs b/src/game/state.rs
+index 90bf232..dcd354f 100644
+--- a/src/game/state.rs
++++ b/src/game/state.rs
+@@ -90,7 +90,7 @@ impl GameState {
+         game_state.draw_count = draw_count;
+         game_state
+     }
+-    
++
+     /// Get a summary of the current game state for display
+     pub fn summary(&self) -> String {
+         format!(
+@@ -123,7 +123,7 @@ impl GameState {
+             if self.waste.is_empty() {
+                 return Err("Both stock and waste are empty".to_string());
+             }
+-            
++
+             // Move waste back to stock, face-down, in reverse order
+             while let Some(mut card) = self.waste.pop() {
+                 card.face_up = false;
+@@ -157,7 +157,7 @@ impl GameState {
+                 if col >= 7 {
+                     return Err("Invalid tableau column".to_string());
+                 }
+-                
++
+                 let pile = &mut self.tableau[col];
+                 if idx >= pile.len() {
+                     return Err("Invalid card index in tableau".to_string());
+@@ -400,12 +400,12 @@ mod tests {
+     #[test]
+     fn test_deal_from_empty_stock_recycles_waste() {
+         let mut game_state = GameState::new();
+-        
++
+         // Empty the stock by dealing all cards
+         while !game_state.stock.is_empty() {
+             let _ = game_state.deal_from_stock();
+         }
+-        
++
+         let waste_count_before_recycle = game_state.waste.len();
+         assert!(waste_count_before_recycle > 0);
+         assert!(game_state.stock.is_empty());
+@@ -425,7 +425,7 @@ mod tests {
+     #[test]
+     fn test_flip_card_in_tableau() {
+         let mut game_state = GameState::new();
+-        
++
+         // Find a tableau column with face-down cards
+         let mut test_col = None;
+         for (col, pile) in game_state.tableau.iter().enumerate() {
+@@ -447,16 +447,16 @@ mod tests {
+             // Remove the top card to expose a face-down card
+             let top_card = game_state.tableau[col].pop().unwrap();
+             let top_idx = game_state.tableau[col].len() - 1;
+-            
++
+             // The newly exposed card should be face-down
+             assert!(!game_state.tableau[col][top_idx].face_up);
+-            
++
+             // Flip the card
+             let result = game_state.flip_card(Position::Tableau(col, top_idx));
+             assert!(result.is_ok());
+             assert!(game_state.tableau[col][top_idx].face_up);
+             assert_eq!(game_state.move_count, 1);
+-            
++
+             // Put the top card back
+             game_state.tableau[col].push(top_card);
+         }
+@@ -465,19 +465,19 @@ mod tests {
+     #[test]
+     fn test_flip_card_errors() {
+         let mut game_state = GameState::new();
+-        
++
+         // Try to flip card in invalid column
+         let result = game_state.flip_card(Position::Tableau(7, 0));
+         assert!(result.is_err());
+-        
++
+         // Try to flip card with invalid index
+         let result = game_state.flip_card(Position::Tableau(0, 10));
+         assert!(result.is_err());
+-        
++
+         // Try to flip already face-up card (top card in tableau is face-up)
+         let result = game_state.flip_card(Position::Tableau(0, 0));
+         assert!(result.is_err());
+-        
++
+         // Try to flip non-tableau position
+         let result = game_state.flip_card(Position::Stock);
+         assert!(result.is_err());
+@@ -486,22 +486,22 @@ mod tests {
+     #[test]
+     fn test_can_click_position() {
+         let game_state = GameState::new();
+-        
++
+         // Can always click stock
+         assert!(game_state.can_click_position(Position::Stock));
+-        
++
+         // Can click top card in tableau
+         assert!(game_state.can_click_position(Position::Tableau(0, 0))); // Column 0 has 1 card
+         assert!(game_state.can_click_position(Position::Tableau(6, 6))); // Column 6 has 7 cards
+-        
++
+         // Cannot click non-top cards in tableau
+         assert!(!game_state.can_click_position(Position::Tableau(6, 0))); // Not top card
+         assert!(!game_state.can_click_position(Position::Tableau(6, 5))); // Not top card
+-        
++
+         // Cannot click invalid positions
+         assert!(!game_state.can_click_position(Position::Tableau(7, 0))); // Invalid column
+         assert!(!game_state.can_click_position(Position::Tableau(0, 5))); // Invalid index
+-        
++
+         // Cannot click waste or foundation yet
+         assert!(!game_state.can_click_position(Position::Waste(0)));
+         assert!(!game_state.can_click_position(Position::Foundation(0)));
+
+--- FILE: src/main.rs ---
+diff --git a/src/main.rs b/src/main.rs
+index 4062341..01b6145 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1,15 +1,13 @@
+ use gpui::{
+-    AppContext, Application, Context, FontWeight, InteractiveElement, IntoElement, MouseDownEvent,
+-    ParentElement, Render, Styled, Window, WindowOptions, div, px, rgb, white,
++    AppContext, Application, Context, FontWeight, InteractiveElement, IntoElement, KeyBinding,
++    ParentElement, Render, Styled, Window, WindowOptions, actions, div, px, rgb, white,
+ };
+ 
+ mod game;
+ mod ui;
+ 
+ use game::actions::GameAction;
+-use game::deck::Card;
+ use game::state::{GameState, Position};
+-use ui::render_game_board;
+ 
+ struct SolitaireApp {
+     game_state: GameState,
+@@ -124,10 +122,13 @@ impl SolitaireApp {
+                 .justify_center()
+                 .cursor_pointer()
+                 .hover(|style| style.border_color(rgb(0x3B82F6)))
+-                .on_mouse_down(gpui::MouseButton::Left, cx.listener(|app, _event, _window, cx| {
+-                    println!("Stock pile clicked! (empty) - Recycling waste to stock");
+-                    app.handle_action(GameAction::DealFromStock, cx);
+-                }))
++                .on_mouse_down(
++                    gpui::MouseButton::Left,
++                    cx.listener(|app, _event, _window, cx| {
++                        println!("Stock pile clicked! (empty) - Recycling waste to stock");
++                        app.handle_action(GameAction::DealFromStock, cx);
++                    }),
++                )
+                 .child(
+                     div()
+                         .text_color(rgb(0x9CA3AF))
+@@ -147,10 +148,13 @@ impl SolitaireApp {
+                 .shadow_lg()
+                 .cursor_pointer()
+                 .hover(|style| style.shadow_xl().border_color(rgb(0x3B82F6)))
+-                .on_mouse_down(gpui::MouseButton::Left, cx.listener(|app, _event, _window, cx| {
+-                    println!("Stock pile clicked! (with cards) - Dealing cards");
+-                    app.handle_action(GameAction::DealFromStock, cx);
+-                }))
++                .on_mouse_down(
++                    gpui::MouseButton::Left,
++                    cx.listener(|app, _event, _window, cx| {
++                        println!("Stock pile clicked! (with cards) - Dealing cards");
++                        app.handle_action(GameAction::DealFromStock, cx);
++                    }),
++                )
+                 .child(
+                     div()
+                         .size_full()
+@@ -204,9 +208,21 @@ impl Render for SolitaireApp {
+ 
+ fn main() {
+     Application::new().run(|cx| {
+-        cx.open_window(WindowOptions::default(), |_, cx| {
+-            cx.new(|_| SolitaireApp::new())
++        // Configure the application to quit when all windows are closed
++        cx.activate(true);
++
++        cx.on_window_closed(|cx| {
++            if cx.windows().is_empty() {
++                cx.quit();
++            }
+         })
+-        .unwrap();
++        .detach();
++
++        // Open the main window
++        let _window = cx
++            .open_window(WindowOptions::default(), |_, cx| {
++                cx.new(|_| SolitaireApp::new())
++            })
++            .unwrap();
+     });
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

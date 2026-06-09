@@ -1,0 +1,92 @@
+diff --git a/src/utils/orchestration/smart-batcher.ts b/src/utils/orchestration/smart-batcher.ts
+index 17da3a4..965bc83 100644
+--- a/src/utils/orchestration/smart-batcher.ts
++++ b/src/utils/orchestration/smart-batcher.ts
+@@ -1,9 +1,9 @@
+ import { EventEmitter } from 'events';
+-import { AccessibilityTestOptions, AnalysisTask, ServiceResult } from '../../core/types/common.js';
+-import { AnalysisCache } from './analysis-cache.js';
+-import { TaskQueue } from './task-queue.js';
+-import { ErrorHandlerService } from '../services/error-handler-service';
+-import { ConfigurationService } from '../services/configuration-service';
++import { AccessibilityTestOptions, AnalysisTask, ServiceResult } from '@/core/types/common.js';
++import { AnalysisCache } from '@/utils/orchestration/analysis-cache.js';
++import { TaskQueue } from '@/utils/orchestration/task-queue.js';
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++import { ConfigurationService } from '@/utils/services/configuration-service';
+ 
+ interface PageInfo {
+   url: string;
+@@ -200,19 +200,16 @@ export class SmartBatcher extends EventEmitter {
+     let optimalSize = domainSettings.batchSize;
+ 
+     // Adjust based on cache hit ratio for this domain
+-    // TODO: Fix this type error
+-    const cacheStats = (this.analysisCache as any).getCacheStats();
+-    const domainCacheEntry = cacheStats.topDomains.find((d: any) => d.domain === domain);
+-
+-    if (domainCacheEntry) {
+-      const cachePerformance = (this.analysisCache as any).getPerformance();
+-      if (cachePerformance.hitRate > 0.7) {
+-        // High cache hit rate, can increase batch size
+-        optimalSize = Math.min(optimalSize * 1.5, 30);
+-      } else if (cachePerformance.hitRate < 0.3) {
+-        // Low cache hit rate, decrease batch size
+-        optimalSize = Math.max(optimalSize * 0.7, 5);
+-      }
++    // Fixed: Use available AnalysisCache methods
++    const cachePerformance = this.analysisCache.getPerformance();
++
++    // Use cache performance to adjust batch size
++    if (cachePerformance.hitRate > 0.7) {
++      // High cache hit rate, can increase batch size
++      optimalSize = Math.min(optimalSize * 1.5, 30);
++    } else if (cachePerformance.hitRate < 0.3) {
++      // Low cache hit rate, decrease batch size
++      optimalSize = Math.max(optimalSize * 0.7, 5);
+     }
+ 
+     // Adjust based on system resources
+@@ -298,8 +295,8 @@ export class SmartBatcher extends EventEmitter {
+       priority: batch.priority,
+       options: {
+         ...options,
+-        // TODO: Fix this type error
+-        batchUrls: batch.pages.map(p => p.url) as any,
++        // Fixed: Properly type the batch URLs
++        batchUrls: batch.pages.map(p => p.url),
+         domainSettings: this.getDomainSettings(batch.domain),
+       },
+       retryCount: 0,
+@@ -387,23 +384,18 @@ export class SmartBatcher extends EventEmitter {
+   }
+ 
+   public async optimizeBatchSizes(): Promise<void> {
+-    const cacheStats = (this.analysisCache as any).getCacheStats();
++    const cachePerformance = this.analysisCache.getPerformance();
+ 
+     for (const [domain, settings] of this.domainSpecificSettings) {
+       // Analyze performance metrics for this domain
+-      const domainCacheEntry = cacheStats.topDomains.find((d: any) => d.domain === domain);
+-      if (domainCacheEntry) {
+-        const hitRate =
+-          domainCacheEntry.hits / (domainCacheEntry.hits + domainCacheEntry.misses);
+-        if (hitRate > 0.8 && settings.batchSize < 25) {
+-          settings.batchSize = Math.min(settings.batchSize + 2, 25);
+-        } else if (hitRate < 0.2 && settings.batchSize > 5) {
+-          settings.batchSize = Math.max(settings.batchSize - 2, 5);
+-        }
++      // Use cache performance to optimize batch sizes
++      if (cachePerformance.hitRate > 0.7) {
++        // High cache hit rate, can increase batch size
++        settings.batchSize = Math.min(settings.batchSize * 1.2, 30);
++      } else if (cachePerformance.hitRate < 0.3) {
++        // Low cache hit rate, decrease batch size
++        settings.batchSize = Math.max(settings.batchSize * 0.8, 5);
+       }
+-
+-      // Adjust based on overall system health
+-      // No-op as PerformanceMonitor is removed
+     }
+   }
+ }

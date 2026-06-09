@@ -1,0 +1,233 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+## Cross-cutting Architecture
+- Message Bus: Shared contracts in packages/shared, Extension bus in packages/extension, Webview bus in packages/webview
+- HTTP Bridge: packages/extension/src/services/http-bridge.service.ts (POST /events)
+- MCP Provider: packages/extension/src/mcp/mcp.provider.ts
+- Web assets manifest: packages/extension/src/ui-providers/asset-manifest.ts
+- Dev utility: dependency-cruiser POC command (kiro.deps.scan) writes JSON to .constellation/data/.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure, specific source code files, and directory paths.
+- Suggested Logic: 1. Verify the existence of the following directories: 'packages/shared', 'packages/extension', 'packages/webview', and '.constellation/data/'.
+2. Verify the existence of the following specific files: 'packages/extension/src/services/http-bridge.service.ts', 'packages/extension/src/mcp/mcp.provider.ts', and 'packages/extension/src/ui-providers/asset-manifest.ts'.
+3. Use a regex or AST check to confirm that 'packages/extension/src/services/http-bridge.service.ts' contains logic or strings related to 'POST /events'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: feat: update .gitignore to include .constellation directory and enhance DependencyCruiserService to save analysis results in .constellation/data
+- Changed Files List: 
+.gitignore	+11	-0	after_lines=19
+packages/extension/src/services/dependency-cruiser.service.ts	+6	-3	after_lines=235
+packages/extension/src/shared/runtime.ts	+4	-0	after_lines=36
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   └── steering
+│       ├── product.md
+│       ├── server-extension-mcp.md
+│       ├── structure.md
+│       ├── tech.md
+│       └── web-ui-preact.md
+├── .turbo
+│   └── cache
+│       ├── 395e09f7cbff983c-meta.json
+│       ├── 395e09f7cbff983c.tar.zst
+│       ├── 3c0cebe33d07e2b9-meta.json
+│       ├── 3c0cebe33d07e2b9.tar.zst
+│       ├── aa678af485ed0301-meta.json
+│       ├── aa678af485ed0301.tar.zst
+│       ├── de46b90a178129f9-meta.json
+│       └── de46b90a178129f9.tar.zst
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── LICENSE
+├── README.md
+├── dep-cruiser-gpt5.md
+├── dep-cruiser.md
+├── dependency-analysis.json
+├── docs
+│   ├── build-and-bundling.md
+│   ├── bundle-architecture.md
+│   ├── events.md
+│   ├── extension-bus.md
+│   ├── index.md
+│   ├── lifecycle.md
+│   ├── mcp
+│   │   ├── architecture.md
+│   │   ├── overview.md
+│   │   └── tools.md
+│   ├── message-bus.md
+│   ├── messaging.md
+│   ├── recipes.md
+│   └── webview-bus.md
+├── esbuild.mcp.config.js
+├── eslint.config.mjs
+├── package.json
+├── packages
+│   ├── extension
+│   │   ├── LICENSE
+│   │   ├── README.md
+│   │   ├── media
+│   │   │   ├── global.css
+│   │   │   └── kiro.svg
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── extension.ts
+│   │   │   ├── mcp
+│   │   │   │   └── mcp.provider.ts
+│   │   │   ├── services
+│   │   │   │   ├── dependency-cruiser.service.ts
+│   │   │   │   ├── http-bridge.service.ts
+│   │   │   │   ├── message-bus.service.ts
+│   │   │   │   └── webview-bus-register.utils.ts
+│   │   │   ├── shared
+│   │   │   │   └── runtime.ts
+│   │   │   └── ui-providers
+│   │   │       ├── asset-manifest.ts
+│   │   │       ├── health-dashboard
+│   │   │       │   ├── health-dashboard.panel.ts
+│   │   │       │   └── index.ts
+│   │   │       └── sidebar
+│   │   │           ├── index.ts
+│   │   │           └── sidebar.provider.ts
+│   │   ├── test
+│   │   │   └── test
+│   │   │       └── extension.test.ts
+│   │   └── tsconfig.json
+│   ├── mcp-server
+│   │   ├── package.json
+│   │   └── src
+│   │       └── server.ts
+│   ├── shared
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── index.ts
+│   │   │   ├── shared
+│   │   │   │   ├── commands.ts
+│   │   │   │   ├── events.ts
+│   │   │   │   └── utils
+│   │   │   │       └── generate-nonce.utils.ts
+│   │   │   └── types
+│   │   │       └── mcp-shims.d.ts
+│   │   └── tsconfig.json
+│   └── webview
+│       ├── bundle-stats.html
+│       ├── package.json
+│       ├── src
+│       │   ├── components
+│       │   │   └── molecules
+│       │   │       └── Button.tsx
+│       │   ├── main-dashboard.tsx
+│       │   ├── main-sidebar.tsx
+│       │   ├── services
+│       │   │   └── message-bus.service.ts
+│       │   ├── types
+│       │   │   └── cssmodule.d.ts
+│       │   ├── views
+│       │   │   ├── HealthDashboard
+│       │   │   │   ├── HealthDashboard.module.css
+│       │   │   │   └── HealthDashboard.tsx
+│       │   │   └── Sidebar
+│       │   │       ├── Sidebar.module.css
+│       │   │       └── Sidebar.tsx
+│       │   └── vscode.ts
+│       ├── tsconfig.json
+│       └── vite.config.ts
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── scripts
+│   ├── analyze-bundles.sh
+│   └── prepare-vsix.sh
+├── tsconfig.base.json
+├── tsconfig.json
+└── turbo.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index bea549d..2170997 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,14 @@
++# Ignore build metadata and cache (added by Agent Mode)
++
++# TypeScript incremental build info
++*.tsbuildinfo
++**/*.tsbuildinfo
++
++# Turborepo cache & logs
++.turbo/
++**/.turbo/
++**/turbo-build.log
++
+ node_modules/
+ out/
+ *.vsix
+
+--- FILE: packages/extension/src/services/dependency-cruiser.service.ts ---
+diff --git a/packages/extension/src/services/dependency-cruiser.service.ts b/packages/extension/src/services/dependency-cruiser.service.ts
+index 5fa24b1..b9a7791 100644
+--- a/packages/extension/src/services/dependency-cruiser.service.ts
++++ b/packages/extension/src/services/dependency-cruiser.service.ts
+@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
+ import * as path from 'path';
+ import { spawn, type ChildProcess } from 'child_process';
+ import * as fs from 'fs/promises';
++import { CONSTELLATION_DIR, CONSTELLATION_DATA_DIR } from '../shared/runtime';
+ 
+ // Minimal subset of dependency-cruiser JSON we'll read for the POC
+ interface DepCruiserSummaryViolation {
+@@ -115,7 +116,7 @@ export class DependencyCruiserService {
+     }
+ 
+     // Exclude heavy/irrelevant folders by default (regex)
+-    const excludeRe = 'node_modules|(^|/)out/|(^|/)dist/|\\.turbo|\\.git|\\.vite|\\.vscode|\\.tsbuildinfo$|\\.vsix|(^|/)coverage/';
++    const excludeRe = 'node_modules|(^|/)out/|(^|/)dist/|\\.turbo|\\.git|\\.vite|\\.vscode|\\.tsbuildinfo$|\\.vsix|(^|/)coverage/|(^|/)\\.constellation/';
+     args.push('--exclude', excludeRe);
+ 
+     // Include-only when we can narrow scope further
+@@ -155,9 +156,11 @@ export class DependencyCruiserService {
+     this.output.appendLine(`Dependencies: ${totalDeps}`);
+     this.output.appendLine(`Violations: ${summary.violations.length}`);
+ 
+-    // Write JSON next to the analyzed project for easy inspection
+-    const outPath = path.join(target.dir, 'dependency-analysis.json');
++    // Write JSON into .constellation/data for the analyzed project
++    const outDir = path.join(target.dir, CONSTELLATION_DIR, CONSTELLATION_DATA_DIR);
++    const outPath = path.join(outDir, 'dependency-analysis.json');
+     try {
++      await fs.mkdir(outDir, { recursive: true });
+       await fs.writeFile(outPath, JSON.stringify(result, null, 2), 'utf-8');
+       this.output.appendLine('');
+       this.output.appendLine(`Saved JSON → ${outPath}`);
+
+--- FILE: packages/extension/src/shared/runtime.ts ---
+diff --git a/packages/extension/src/shared/runtime.ts b/packages/extension/src/shared/runtime.ts
+index 360b7db..b53107a 100644
+--- a/packages/extension/src/shared/runtime.ts
++++ b/packages/extension/src/shared/runtime.ts
+@@ -21,6 +21,10 @@ export type BusEvent<K extends EventType = EventType> = {
+ 
+ export const OPEN_DASHBOARD_COMMAND = 'kiro-ide-constellation.openDashboard';
+ 
++// Constellation workspace data locations
++export const CONSTELLATION_DIR = '.constellation';
++export const CONSTELLATION_DATA_DIR = 'data';
++
+ export function getNonce(): string {
+   let text = '';
+   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

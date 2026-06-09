@@ -1,0 +1,339 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+- Deepgram
+ - src/app/api/deepgram has transcribe-audio/route.ts which is a simple API that returns the Deepgram API key to be used in the client side to transcribe audio in real-time.
+ - src/lib/contexts has a DeepgramContext.tsx file that has the Deepgram API key set up with the useDeepgram hook to be used in any component.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory structure and source code content within specific files (src/app/api/deepgram/transcribe-audio/route.ts and src/lib/contexts/DeepgramContext.tsx).
+- Suggested Logic: 1. Verify the existence of the file path 'src/app/api/deepgram/transcribe-audio/route.ts'.
+2. Verify the existence of the file path 'src/lib/contexts/DeepgramContext.tsx'.
+3. Perform a static analysis (regex or AST) on 'DeepgramContext.tsx' to ensure it defines or exports a hook named 'useDeepgram'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: reset template
+- Changed Files List: 
+src/app/api/deepgram/route.ts	+0	-40	after_lines=9
+src/components/NotesList.tsx	+0	-37	after_lines=0
+src/components/VoiceRecorder.tsx	+2	-2	after_lines=46
+src/hooks/useRecordVoice.ts	+0	-130	after_lines=0
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .eslintrc.json
+├── .gitignore
+├── .replit
+├── README.md
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── paths
+│   ├── chat.md
+│   ├── image-generation.md
+│   ├── social-media.md
+│   └── voice-notes.md
+├── postcss.config.mjs
+├── public
+│   ├── next.svg
+│   └── vercel.svg
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   ├── anthropic
+│   │   │   │   └── chat
+│   │   │   │       └── route.ts
+│   │   │   ├── deepgram
+│   │   │   │   └── route.ts
+│   │   │   ├── openai
+│   │   │   │   ├── chat
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── transcribe
+│   │   │   │       └── route.ts
+│   │   │   └── replicate
+│   │   │       └── generate-image
+│   │   │           └── route.ts
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── ImageUpload.tsx
+│   │   ├── SignInWithGoogle.tsx
+│   │   └── VoiceRecorder.tsx
+│   └── lib
+│       ├── contexts
+│       │   ├── AuthContext.tsx
+│       │   └── DeepgramContext.tsx
+│       ├── firebase
+│       │   ├── firebase.ts
+│       │   └── firebaseUtils.ts
+│       └── hooks
+│           └── useAuth.ts
+├── tailwind.config.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/app/api/deepgram/route.ts ---
+diff --git a/src/app/api/deepgram/route.ts b/src/app/api/deepgram/route.ts
+index fdf9595..e5f522d 100644
+--- a/src/app/api/deepgram/route.ts
++++ b/src/app/api/deepgram/route.ts
+@@ -1,49 +1,9 @@
+-import { DeepgramError, createClient } from "@deepgram/sdk";
+ import { NextResponse } from "next/server";
+ 
+ export const dynamic = "force-dynamic";
+ 
+ export async function GET() {
+-  // exit early so we don't request 70000000 keys while in devmode
+-  if (process.env.NODE_ENV === "development") {
+     return NextResponse.json({
+       key: process.env.DEEPGRAM_API_KEY ?? "",
+     });
+-  }
+-
+-  const deepgram = createClient(process.env.DEEPGRAM_API_KEY ?? "");
+-
+-  let { result: projectsResult, error: projectsError } = await deepgram.manage.getProjects();
+-
+-  if (projectsError) {
+-    return NextResponse.json(projectsError);
+-  }
+-
+-  const project = projectsResult?.projects[0];
+-
+-  if (!project) {
+-    return NextResponse.json(
+-      new DeepgramError("Cannot find a Deepgram project. Please create a project first.")
+-    );
+-  }
+-
+-  let { result: newKeyResult, error: newKeyError } = await deepgram.manage.createProjectKey(
+-    project.project_id,
+-    {
+-      comment: "Temporary API key",
+-      scopes: ["usage:write"],
+-      tags: ["next.js"],
+-      time_to_live_in_seconds: 60,
+-    }
+-  );
+-
+-  if (newKeyError) {
+-    return NextResponse.json(newKeyError);
+-  }
+-
+-  return NextResponse.json(newKeyResult, {
+-    headers: {
+-      "Cache-Control": "no-store, max-age=0",
+-    },
+-  });
+ }
+
+--- FILE: src/components/NotesList.tsx ---
+diff --git a/src/components/NotesList.tsx b/src/components/NotesList.tsx
+deleted file mode 100644
+index 864d9a2..0000000
+--- a/src/components/NotesList.tsx
++++ /dev/null
+@@ -1,37 +0,0 @@
+-'use client';
+-
+-import { useState, useEffect } from 'react';
+-import { getDocuments } from '../lib/firebaseUtils';
+-
+-interface Note {
+-  id: string;
+-  text: string;
+-  timestamp: string;
+-}
+-
+-export default function NotesList() {
+-  const [notes, setNotes] = useState<Note[]>([]);
+-
+-  useEffect(() => {
+-    const fetchNotes = async () => {
+-      const notesData = await getDocuments('notes');
+-      setNotes(notesData.docs.map(doc => ({ id: doc.id, ...doc.data() } as Note)));
+-    };
+-
+-    fetchNotes();
+-  }, []);
+-
+-  return (
+-    <div className="w-full max-w-md mt-8">
+-      <h2 className="text-2xl font-bold mb-4">Your Notes</h2>
+-      <ul className="space-y-4">
+-        {notes.map((note) => (
+-          <li key={note.id} className="bg-white shadow rounded-lg p-4">
+-            <p className="text-sm text-gray-600">{new Date(note.timestamp).toLocaleString()}</p>
+-            <p className="mt-2">{note.text}</p>
+-          </li>
+-        ))}
+-      </ul>
+-    </div>
+-  );
+-}
+\ No newline at end of file
+
+--- FILE: src/components/VoiceRecorder.tsx ---
+diff --git a/src/components/VoiceRecorder.tsx b/src/components/VoiceRecorder.tsx
+index cc9e262..d03af69 100644
+--- a/src/components/VoiceRecorder.tsx
++++ b/src/components/VoiceRecorder.tsx
+@@ -1,8 +1,8 @@
+ 'use client';
+ 
+ import { useState } from 'react';
+-import { useDeepgram } from '../contexts/DeepgramContext';
+-import { addDocument } from '../lib/firebaseUtils';
++import { useDeepgram } from '../lib/contexts/DeepgramContext';
++import { addDocument } from '../lib/firebase/firebaseUtils';
+ 
+ export default function VoiceRecorder() {
+   const [isRecording, setIsRecording] = useState(false);
+
+--- FILE: src/hooks/useRecordVoice.ts ---
+diff --git a/src/hooks/useRecordVoice.ts b/src/hooks/useRecordVoice.ts
+deleted file mode 100644
+index f14d275..0000000
+--- a/src/hooks/useRecordVoice.ts
++++ /dev/null
+@@ -1,130 +0,0 @@
+-import { useEffect, useState, useRef } from "react";
+-
+-// Function to calculate the peak level from the analyzer data
+-const getPeakLevel = (analyzer: AnalyserNode): number => {
+-  // Create a Uint8Array to store the audio data
+-  const array = new Uint8Array(analyzer.fftSize);
+-
+-  // Get the time domain data from the analyzer and store it in the array
+-  analyzer.getByteTimeDomainData(array);
+-
+-  // Calculate the peak level by finding the maximum absolute deviation from 127
+-  return array.reduce((max, current) => Math.max(max, Math.abs(current - 127)), 0) / 128;
+-};
+-
+-const createMediaStream = (
+-  stream: MediaStream,
+-  isRecording: boolean,
+-  callback: (peak: number) => void
+-): void => {
+-  // Create a new AudioContext
+-  const context = new AudioContext();
+-
+-  // Create a media stream source node from the input stream
+-  const source = context.createMediaStreamSource(stream);
+-
+-  // Create an analyzer node for audio analysis
+-  const analyzer = context.createAnalyser();
+-
+-  // Connect the source node to the analyzer node
+-  source.connect(analyzer);
+-
+-  // Function to continuously analyze audio data and invoke the callback
+-  const tick = (): void => {
+-    // Calculate the peak level using the getPeakLevel function
+-    const peak = getPeakLevel(analyzer);
+-
+-    if (isRecording) {
+-      callback(peak);
+-
+-      // Request the next animation frame for continuous analysis
+-      requestAnimationFrame(tick);
+-    }
+-  };
+-
+-  // Start the continuous analysis loop
+-  tick();
+-};
+-
+-const blobToBase64 = (blob: Blob, callback: (base64data: string | undefined) => void): void => {
+-  const reader = new FileReader();
+-  reader.onload = function () {
+-    const base64data = reader.result as string;
+-    const splitData = base64data.split(",")[1];
+-    callback(splitData);
+-  };
+-  reader.readAsDataURL(blob);
+-};
+-
+-export const useRecordVoice = () => {
+-  const [text, setText] = useState<string>("");
+-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+-  const [recording, setRecording] = useState<boolean>(false);
+-  const isRecording = useRef<boolean>(false);
+-  const chunks = useRef<Blob[]>([]);
+-
+-  const startRecording = () => {
+-    if (mediaRecorder) {
+-      isRecording.current = true;
+-      mediaRecorder.start();
+-      setRecording(true);
+-    }
+-  };
+-
+-  const stopRecording = () => {
+-    if (mediaRecorder) {
+-      isRecording.current = false;
+-      mediaRecorder.stop();
+-      setRecording(false);
+-    }
+-  };
+-
+-  const getText = async (base64data: string | undefined) => {
+-    if (!base64data) return;
+-    try {
+-      const response = await fetch("/api/speechToText", {
+-        method: "POST",
+-        headers: {
+-          "Content-Type": "application/json",
+-        },
+-        body: JSON.stringify({
+-          audio: base64data,
+-        }),
+-      }).then((res) => res.json());
+-      const { text } = response;
+-      setText(text);
+-    } catch (error) {
+-      console.error(error);
+-    }
+-  };
+-
+-  const initialMediaRecorder = (stream: MediaStream) => {
+-    const mediaRecorder = new MediaRecorder(stream);
+-
+-    mediaRecorder.onstart = () => {
+-      createMediaStream(stream, isRecording.current, (peak: number) => {
+-        // Handle peak level if needed
+-      });
+-      chunks.current = [];
+-    };
+-
+-    mediaRecorder.ondataavailable = (ev: BlobEvent) => {
+-      chunks.current.push(ev.data);
+-    };
+-
+-    mediaRecorder.onstop = () => {
+-      const audioBlob = new Blob(chunks.current, { type: "audio/wav" });
+-      blobToBase64(audioBlob, getText);
+-    };
+-
+-    setMediaRecorder(mediaRecorder);
+-  };
+-
+-  useEffect(() => {
+-    if (typeof window !== "undefined") {
+-      navigator.mediaDevices.getUserMedia({ audio: true }).then(initialMediaRecorder);
+-    }
+-  }, []);
+-
+-  return { recording, startRecording, stopRecording, text };
+-};
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

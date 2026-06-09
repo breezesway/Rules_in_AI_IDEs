@@ -1,0 +1,110 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .cursor/rules/architecture.mdc
+- Change Type: added
+- Target Rule Content:
+使用 ts-jest 5.x 提供 TypeScript 支持
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: package.json, jest.config.js, or jest.config.ts
+- Suggested Logic: 1. Parse 'package.json' to verify 'ts-jest' is listed in 'devDependencies' or 'dependencies' with a version range compatible with 5.x (e.g., '^5.0.0'). 
+2. Check Jest configuration files (jest.config.js/ts or the 'jest' key in package.json) to ensure 'ts-jest' is configured as a transformer or preset for TypeScript files.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: rules: enhanced architecture document with detailed C4 component diagrams for Promptyoo-0
+
+- Added C4 component diagrams for both request and response flows, outlining the interactions between frontend and backend components, including user interactions, API requests, and data handling processes.
+- Changed Files List: 
+.cursor/rules/architecture.mdc	+68	-0	after_lines=194
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── architecture.mdc
+├── .gitignore
+└── book
+    └── cobbled-user-interface.png
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/architecture.mdc ---
+diff --git a/.cursor/rules/architecture.mdc b/.cursor/rules/architecture.mdc
+index 32e4350..807f755 100644
+--- a/.cursor/rules/architecture.mdc
++++ b/.cursor/rules/architecture.mdc
+@@ -124,3 +124,71 @@ alwaysApply: true
+   - 国际化、历史记录、主题切换等。
+ 
+ ---
++
++C4Component
++title Promptyoo-0 请求流程图 - Components 层
++
++Person(user, "终端用户", "通过浏览器访问应用")
++
++Container_Boundary(frontend, "前端 Web 应用") {
++    Component(homePage, "HomePage", "React", "包含6问表单的主页")
++    Component(questionForm, "QuestionForm", "React", "6个问题的输入表单")
++    Component(promptContext, "PromptContext", "React Context", "管理表单状态")
++    Component(promptService, "promptService", "TypeScript", "封装API请求")
++}
++
++Container_Boundary(backend, "后端服务") {
++    Component(routes, "API路由层", "Express Router", "定义API端点")
++    Component(controllers, "控制器层", "TypeScript", "处理请求、校验参数")
++    Component(services, "服务层", "TypeScript", "封装业务逻辑")
++    Component(utils, "工具函数层", "TypeScript", "参数校验、格式化等")
++}
++
++System_Ext(deepseekAPI, "DeepSeek API", "外部AI服务")
++
++Rel(user, homePage, "访问", "HTTP")
++Rel(homePage, questionForm, "包含", "")
++Rel(questionForm, promptContext, "更新状态", "")
++Rel(promptContext, promptService, "提交表单数据", "")
++Rel(promptService, routes, "发送API请求", "HTTP POST")
++Rel(routes, controllers, "路由到", "")
++Rel(controllers, utils, "验证参数", "")
++Rel(controllers, services, "调用", "")
++Rel(services, deepseekAPI, "请求生成优化提示词", "HTTP")
++
++---
++
++C4Component
++title Promptyoo-0 响应流程图 - Components 层
++
++Person(user, "终端用户", "通过浏览器访问应用")
++
++Container_Boundary(frontend, "前端 Web 应用") {
++    Component(homePage, "HomePage", "React", "将根据状态重定向")
++    Component(resultPage, "ResultPage", "React", "展示优化结果")
++    Component(promptResult, "PromptResult", "React", "显示优化提示词组件")
++    Component(promptContext, "PromptContext", "React Context", "存储响应数据")
++    Component(promptService, "promptService", "TypeScript", "处理API响应")
++}
++
++Container_Boundary(backend, "后端服务") {
++    Component(services, "服务层", "TypeScript", "处理AI响应数据")
++    Component(controllers, "控制器层", "TypeScript", "格式化响应数据")
++    Component(routes, "API路由层", "Express Router", "返回HTTP响应")
++    Component(utils, "工具函数层", "TypeScript", "错误处理、日志记录")
++}
++
++System_Ext(deepseekAPI, "DeepSeek API", "外部AI服务")
++
++Rel(deepseekAPI, services, "返回优化提示词", "HTTP Response")
++Rel(services, controllers, "处理后的AI响应", "")
++Rel(controllers, utils, "记录响应", "")
++Rel(controllers, routes, "格式化后的响应数据", "")
++Rel(routes, promptService, "返回API响应", "HTTP JSON")
++Rel(promptService, promptContext, "更新状态", "")
++Rel(promptContext, homePage, "触发路由更新", "")
++Rel(homePage, resultPage, "重定向至", "React Router")
++Rel(resultPage, promptResult, "渲染", "")
++Rel(promptResult, user, "展示优化后的提示词", "UI")
++
++---
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

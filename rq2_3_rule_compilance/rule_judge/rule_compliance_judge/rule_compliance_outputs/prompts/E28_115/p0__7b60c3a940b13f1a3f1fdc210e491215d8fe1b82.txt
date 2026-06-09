@@ -1,0 +1,397 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: Update steering docs
+- Changed Files List: 
+.kiro/steering/dependency-scanning.md	+10	-2	after_lines=71
+.kiro/steering/graph-visualization.md	+90	-0	after_lines=90
+.kiro/steering/messaging.md	+12	-2	after_lines=114
+.kiro/steering/product.md	+18	-8	after_lines=46
+.kiro/steering/tech.md	+11	-0	after_lines=113
+
+- Project Directory Tree (Snapshot after commit):
+├── .constellation
+│   └── data
+│       └── codebase-dependencies.json
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── 02-cytoscape-graph-visualization
+│   │       ├── cytoscape-graph-initial-prd.md
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── graph-visualization.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   └── Button.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/dependency-scanning.md ---
+diff --git a/.kiro/steering/dependency-scanning.md b/.kiro/steering/dependency-scanning.md
+index 6e2db53..83a43e8 100644
+--- a/.kiro/steering/dependency-scanning.md
++++ b/.kiro/steering/dependency-scanning.md
+@@ -6,8 +6,9 @@ Kiro Constellation includes built-in dependency-cruiser integration that automat
+ ## Automatic Scanning
+ - **Trigger**: Runs automatically on extension activation (background, non-blocking)
+ - **Target**: First workspace folder
+-- **Timeout**: 60 seconds maximum
++- **Timeout**: 30 seconds maximum (optimized for performance)
+ - **Output**: `./.constellation/data/codebase-dependencies.json`
++- **Progress Reporting**: Real-time status updates with countdown timer
+ 
+ ## Configuration Detection
+ The scanner intelligently detects and uses existing project configurations:
+@@ -50,11 +51,18 @@ Results are written as JSON to `./.constellation/data/codebase-dependencies.json
+ - Orphaned modules identification
+ - Dependency metrics and statistics
+ 
++## Performance Optimizations
++- **Large File Detection**: Automatically detects files >5MB and provides appropriate warnings
++- **Progress Indicators**: Real-time scanning progress with remaining time countdown
++- **Timeout Handling**: 30-second timeout with graceful error handling and retry suggestions
++- **Memory Management**: Efficient processing of large dependency graphs
++
+ ## Troubleshooting
+-- **Large repos**: May hit 60s timeout - consider narrower subfolder or custom excludes
++- **Large repos**: May hit 30s timeout - consider narrower subfolder or custom excludes
+ - **Config errors**: Check debug console for "Dependency scan stderr:" messages
+ - **Missing results**: Ensure workspace has analyzable code files
+ - **Permission issues**: Verify write access to `./.constellation/data/` directory
++- **No workspace**: Clear error messaging when no workspace folder is open
+ 
+ ## Integration Points
+ - **Service**: `src/services/dependency-cruiser.service.ts`
+
+--- FILE: .kiro/steering/graph-visualization.md ---
+diff --git a/.kiro/steering/graph-visualization.md b/.kiro/steering/graph-visualization.md
+new file mode 100644
+index 0000000..50f0bf4
+--- /dev/null
++++ b/.kiro/steering/graph-visualization.md
+@@ -0,0 +1,90 @@
++# Graph Visualization
++
++## Overview
++Kiro Constellation provides interactive dependency graph visualization using Cytoscape.js. The graph view transforms dependency-cruiser output into an interactive visual representation of your codebase structure.
++
++## Core Features
++- **Interactive Navigation**: Click to select nodes, double-click to open files
++- **Real-time Updates**: Live progress indicators during scanning and rendering
++- **Performance Optimization**: Adaptive rendering for graphs of all sizes
++- **Error Resilience**: Graceful handling of edge cases and failures
++
++## Performance Optimizations
++
++### Large Graph Handling
++- **Threshold Detection**: Automatically detects large graphs (200+ nodes, 500+ nodes)
++- **Adaptive Layouts**: 
++  - Standard COSE layout for small/medium graphs (<500 nodes)
++  - Simplified grid layout for very large graphs (500+ nodes)
++- **Visual Optimizations**:
++  - Smaller nodes and fonts for large graphs
++  - Thinner, more transparent edges
++  - Reduced layout iterations to improve performance
++
++### Memory Management
++- **Proper Cleanup**: Comprehensive Cytoscape instance cleanup on component unmount
++- **Event Listener Management**: Removes all listeners before destroying instances
++- **Error Handling**: Try-catch blocks around all graph operations
++
++### Loading States
++- **Progressive Loading**: Separate states for scanning, rendering, and data processing
++- **Smart Delays**: setTimeout delays for large graphs to prevent UI blocking
++- **Progress Indicators**: Real-time feedback during long operations
++
++## Timeout Handling
++- **Scan Timeout**: 30-second limit for dependency scanning operations
++- **Progress Reporting**: Countdown timer showing remaining scan time
++- **Graceful Failures**: Clear error messages with retry options
++
++## Edge Case Handling
++- **Missing Workspace**: Clear messaging when no workspace folder is open
++- **Large Files**: Automatic detection and warnings for files >5MB
++- **Parse Errors**: Robust error handling for malformed dependency data
++- **Network Issues**: Timeout handling with user-friendly error messages
++
++## Data Flow
++1. **Scan Trigger**: User action or automatic scan on extension activation
++2. **Progress Updates**: Real-time status messages via webview messaging
++3. **Data Transformation**: dependency-cruiser output → graph format
++4. **Rendering**: Cytoscape.js visualization with performance optimizations
++5. **Interaction**: User can navigate and interact with the graph
++
++## Message Types
++- `graph/load`: Request dependency graph data
++- `graph/data`: Response with transformed graph data
++- `graph/status`: Progress updates during operations
++- `graph/error`: Error responses with user-friendly messages
++- `graph/scan`: Trigger new dependency scan
++- `graph/open-file`: Open file from graph node interaction
++
++## File Structure
++- **Data Service**: `src/services/graph-data.service.ts`
++  - Dependency data transformation
++  - File size checking and performance optimization flags
++  - Error message constants and handling
++- **UI Component**: `webview-ui/src/views/GraphView.tsx`
++  - Cytoscape.js integration
++  - Performance-aware rendering
++  - User interaction handling
++- **Messaging**: `src/services/messenger.service.ts`
++  - Graph-specific message handling
++  - Workspace validation
++  - Error propagation
++
++## Performance Metrics
++- **Small Graphs** (<200 nodes): Full-featured COSE layout with animations
++- **Medium Graphs** (200-500 nodes): Optimized COSE layout with reduced iterations
++- **Large Graphs** (500+ nodes): Grid layout with visual simplifications
++- **Timeout Limits**: 30-second scan timeout with progress reporting
++
++## Error Messages
++- Standardized error constants for consistent user experience
++- Context-aware messages based on failure type
++- Actionable suggestions for resolution (retry, manual scan, etc.)
++
++## Development Guidelines
++- Always clean up Cytoscape instances to prevent memory leaks
++- Use performance flags to adapt rendering for different graph sizes
++- Provide progress feedback for operations longer than 1 second
++- Handle all edge cases gracefully with user-friendly error messages
++- Test with both small and large codebases to ensure performance
+\ No newline at end of file
+
+--- FILE: .kiro/steering/messaging.md ---
+diff --git a/.kiro/steering/messaging.md b/.kiro/steering/messaging.md
+index 9e4c696..a541677 100644
+--- a/.kiro/steering/messaging.md
++++ b/.kiro/steering/messaging.md
+@@ -18,12 +18,13 @@ Kiro Constellation implements a multi-layer messaging system that enables commun
+ - `open-graph-view`: Opens/reveals the Graph visualization tab
+ - `ping`: Simple connectivity test
+ 
+-#### Planned Message Types (Graph Integration)
++#### Graph Integration Message Types (Implemented)
+ - `graph/load`: Request dependency graph data
+ - `graph/data`: Response with graph nodes/edges/metadata
+ - `graph/open-file`: Open specific file in editor from graph node
+ - `graph/scan`: Trigger dependency rescan
+ - `graph/error`: Error response for graph operations
++- `graph/status`: Progress updates during scanning and processing
+ 
+ ### 2. MCP Server → Extension (HTTP Bridge)
+ - **Protocol**: HTTP REST API over loopback (127.0.0.1)
+@@ -95,10 +96,19 @@ await fetch(`http://127.0.0.1:${port}/open-graph`, {
+ - **Extensibility**: Easy to add new message types and endpoints
+ - **Debugging**: Centralized message handling for easier troubleshooting
+ 
++## Graph Visualization Integration
++- **Data Service**: `src/services/graph-data.service.ts` handles dependency data transformation
++- **UI Component**: `webview-ui/src/views/GraphView.tsx` renders interactive Cytoscape graphs
++- **Performance Handling**: Automatic optimizations for large graphs (500+ nodes)
++- **Error Resilience**: Comprehensive error handling with user-friendly messages
++- **Progress Feedback**: Real-time status updates during scanning and rendering
++
+ ## Related Files
+ - **Documentation**: `docs/events.md` (detailed message specifications)
+ - **UI messaging**: `webview-ui/src/services/messenger.ts`
+ - **Extension messaging**: `src/services/messenger.service.ts`
+ - **HTTP bridge**: `src/services/http-bridge.service.ts`
+ - **MCP integration**: `src/mcp.server.ts`
+-- **Webview providers**: `src/side-panel-view-provider.ts`
+\ No newline at end of file
++- **Webview providers**: `src/side-panel-view-provider.ts`
++- **Graph data**: `src/services/graph-data.service.ts`
++- **Graph UI**: `webview-ui/src/views/GraphView.tsx`
+\ No newline at end of file
+
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index a5d463d..462a3d8 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -1,12 +1,13 @@
+ # Product Overview
+ 
+-Kiro Constellation is a VS Code extension that provides a bare-bones MCP (Model Context Protocol) server for Kiro AI assistant integration, complete with a webview-based side panel UI.
++Kiro Constellation is a VS Code extension that provides a comprehensive MCP (Model Context Protocol) server for Kiro AI assistant integration, featuring interactive dependency graph visualization and a modern webview-based side panel UI.
+ 
+ ## Core Purpose
+ - Demonstrates MCP server implementation with basic ping/echo tools
+ - Auto-configures Kiro's MCP settings for seamless integration
+ - Serves as a template/starting point for custom MCP server development
+-- Provides a modern Preact-based webview UI as an extension example
++- Provides interactive dependency graph visualization for codebase analysis
++- Showcases modern Preact-based webview UI with performance optimizations
+ 
+ ## Key Features
+ - **MCP Server Integration**: Automatic server registration in Kiro configuration
+@@ -14,15 +15,21 @@ Kiro Constellation is a VS Code extension that provides a bare-bones MCP (Model
+ - **Self-Testing**: Built-in server health checks and validation
+ - **Dual Configuration**: User-level and workspace-level MCP config support
+ - **Development Workflow**: Dev/prod server ID namespacing for isolation
+-- **Webview Side Panel**: Modern Preact UI with Vite build system
+-- **Dependency Analysis**: Background dependency-cruiser integration for codebase scanning
+-- **Extension Commands**: Self-test, config management, and dependency scanning commands
++- **Interactive Graph Visualization**: Cytoscape.js-powered dependency graphs with performance optimizations
++- **Smart Performance Handling**: Adaptive rendering for graphs of all sizes (200+ to 500+ nodes)
++- **Real-time Progress Feedback**: Live status updates during scanning and rendering operations
++- **Webview Side Panel**: Modern Preact UI with Vite build system and hot reload
++- **Dependency Analysis**: Background dependency-cruiser integration with 30-second timeout optimization
++- **Extension Commands**: Self-test, config management, dependency scanning, and graph visualization
+ 
+ ## Architecture Components
+ - **VS Code Extension**: Main extension host integration (`src/extension.ts`)
+ - **MCP Server**: Standalone server with ping/echo tools (`src/mcp.server.ts`)
+-- **Webview UI**: Preact-based side panel with dashboard components
+-- **Dependency Scanner**: Background dependency-cruiser integration service
++- **Graph Visualization**: Interactive Cytoscape.js-based dependency graph rendering
++- **Data Processing**: Intelligent dependency data transformation with performance optimizations
++- **Webview UI**: Preact-based side panel with dashboard and graph view components
++- **Dependency Scanner**: Background dependency-cruiser integration with timeout handling
++- **Messaging System**: Bidirectional communication between extension and webview
+ - **Build System**: TypeScript + Vite for extension and UI compilation
+ - **Configuration**: Automatic Kiro MCP config management
+ 
+@@ -32,5 +39,8 @@ Developers who want to:
+ - Create custom tools for Kiro AI assistant
+ - Build VS Code extensions with webview UIs
+ - Understand Kiro integration workflows
+-- Analyze codebase dependencies and structure
++- Visualize and analyze codebase dependencies interactively
++- Explore large codebases with performance-optimized graph visualization
++- Implement real-time progress feedback in VS Code extensions
++- Handle edge cases and performance optimization in webview applications
+ - Extend Kiro's capabilities with local services
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 7e36269..fa21e74 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -9,6 +9,7 @@
+ - **Preact**: Lightweight React alternative for webview UI
+ - **Vite**: Fast build tool for webview bundling
+ - **dependency-cruiser**: Codebase dependency analysis and visualization
++- **Cytoscape.js**: Interactive graph visualization library for dependency graphs
+ 
+ ## Build System
+ - **TypeScript Compiler**: Direct `tsc` compilation for extension code
+@@ -56,6 +57,15 @@ npm run clean:mcp:ws # Clean workspace MCP config
+   - Excludes: `node_modules|dist|out|build|coverage|.git|.vscode|.constellation`
+   - Output: `./.constellation/data/codebase-dependencies.json`
+   - Manual trigger: Command palette → "Constellation: Scan Dependencies"
++  - **Timeout**: 30 seconds with progress reporting
++  - **Performance**: Optimized for large codebases with smart file size detection
++
++### Graph Visualization
++- **Interactive Graphs**: Cytoscape.js-powered dependency visualization
++- **Performance Optimizations**: Adaptive layouts and rendering for large graphs (500+ nodes)
++- **User Interactions**: Click to select, double-click to open files
++- **Real-time Updates**: Live progress indicators during scanning and rendering
++- **Error Handling**: Graceful fallbacks with user-friendly error messages
+ 
+ ### Development Workflow
+ - **F5 Launch**: Extension Development Host with dual watch tasks
+@@ -92,6 +102,7 @@ npm run clean:mcp:ws # Clean workspace MCP config
+ - `zod`: ^3.23.8 (Schema validation)
+ - `preact`: ^10.24.3 (UI framework)
+ - `dependency-cruiser`: ^16.8.0 (Codebase dependency analysis)
++- `cytoscape`: ^3.30.4 (Interactive graph visualization)
+ 
+ ### Development Dependencies
+ - `typescript`: ^5.9.2 (Language and compiler)
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

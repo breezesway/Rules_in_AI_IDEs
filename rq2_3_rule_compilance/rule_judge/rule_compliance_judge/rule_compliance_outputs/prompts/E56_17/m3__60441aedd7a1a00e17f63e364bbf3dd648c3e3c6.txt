@@ -1,0 +1,463 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- utils/batch_processor.py: Batch processing utilities, progress tracking, and error aggregation
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and source code file (specifically utils/batch_processor.py).
+- Suggested Logic: Verify that the file 'utils/batch_processor.py' exists in the repository. Optionally, use basic AST parsing or regex to check if the file contains classes or functions related to batch processing, progress tracking, or error aggregation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: quota handling
+- Changed Files List: 
+.kiro/steering/product.md	+8	-3	after_lines=62
+.kiro/steering/tech.md	+7	-1	after_lines=95
+QUOTA_HANDLING_IMPROVEMENTS.md	+0	-180	after_lines=0
+README.md	+97	-1	after_lines=1028
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           ├── chat_logger.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_chat_logging.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/product.md ---
+diff --git a/.kiro/steering/product.md b/.kiro/steering/product.md
+index 0ed1e4e..99a6119 100644
+--- a/.kiro/steering/product.md
++++ b/.kiro/steering/product.md
+@@ -44,9 +44,11 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - **Progress Tracking**: Show progress indicators for batch operations (e.g., "Processing 3/10...")
+ - **Error Resilience**: Continue processing remaining URLs even if some fail
+ - **Batch Reporting**: Provide summary of successful/failed operations at completion
+-- **Rate Limiting**: Implement appropriate delays between API calls to respect quotas
++- **Intelligent Quota Management**: Parse `retryDelay` from API responses and wait appropriately
++- **Smart Retry Logic**: Wait for API-specified delay + 15 second buffer before retrying
++- **Progress Feedback**: Show clear messages during quota waits (e.g., "Waiting 33 seconds before retry...")
++- **Test Mode Optimization**: Cap retry delays to 5 seconds during testing to prevent hangs
+ - **Reduced Verbosity**: Use concise output in batch mode to avoid overwhelming logs
+-- **Parallel Processing**: Consider concurrent processing for improved performance (with rate limits)
+ - **Resume Capability**: Support resuming interrupted batch operations
+ 
+ ### User Experience Principles
+@@ -54,4 +56,7 @@ YouTube-to-Notion Integration processes YouTube videos and creates AI-generated
+ - **Validation First**: Validate inputs (URLs, API keys) before processing
+ - **Helpful Errors**: Include specific troubleshooting steps in error messages
+ - **Mode Clarity**: Make operation mode clear to users in CLI help and output
+-- **Batch Efficiency**: Minimize redundant operations (database lookups, client initialization) in batch mode
+\ No newline at end of file
++- **Batch Efficiency**: Minimize redundant operations (database lookups, client initialization) in batch mode
++- **Quota Transparency**: Show clear messages when waiting for API quota limits (e.g., "Waiting 33 seconds...")
++- **Resilient Processing**: Continue batch operations even when individual URLs hit quota limits
++- **Test-Friendly**: Automatically detect test environments and cap delays to prevent hangs
+\ No newline at end of file
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 368bfc5..b5d3d2d 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -36,6 +36,9 @@ inclusion: always
+ - Use specific exception types with retry logic
+ - Provide user-friendly error messages with troubleshooting context
+ - Implement graceful fallbacks (YouTube API → web scraping)
++- **Intelligent Quota Management**: Parse `retryDelay` from API responses and wait appropriately
++- **Test Mode Detection**: Cap retry delays to 5 seconds during testing to prevent hangs
++- **Batch Resilience**: Continue processing other URLs even when some hit quota limits
+ 
+ ### Configuration Management
+ - Use `.env` files with `python-dotenv` for environment variables
+@@ -69,7 +72,10 @@ from notion_client import Client
+ - Validate API responses before processing
+ - Implement rate limiting for batch operations to respect API quotas
+ - Use connection pooling and session reuse for batch processing efficiency
+-- Handle quota exceeded errors gracefully with exponential backoff
++- **Enhanced Quota Handling**: Parse `retryDelay` from API error responses (e.g., "18s")
++- **Smart Retry Logic**: Wait for API-specified delay + 15 second buffer before retrying
++- **Batch Processing Resilience**: Continue processing remaining URLs when individual ones hit quota limits
++- **Test Environment Optimization**: Cap retry delays to 5 seconds maximum during testing
+ 
+ ## Development Commands
+
+--- FILE: QUOTA_HANDLING_IMPROVEMENTS.md ---
+diff --git a/QUOTA_HANDLING_IMPROVEMENTS.md b/QUOTA_HANDLING_IMPROVEMENTS.md
+deleted file mode 100644
+index 9db2799..0000000
+--- a/QUOTA_HANDLING_IMPROVEMENTS.md
++++ /dev/null
+@@ -1,180 +0,0 @@
+-# Quota Handling Improvements
+-
+-## Overview
+-
+-I've implemented comprehensive improvements to handle Gemini API quota errors with proper retry delays, addressing the issue where the system would fail immediately instead of waiting for the API-specified retry delay.
+-
+-## Key Improvements
+-
+-### 1. Enhanced QuotaExceededError Exception
+-
+-**File**: `src/youtube_notion/processors/exceptions.py`
+-
+-- Added `retry_delay_seconds` parameter to store the delay from API response
+-- Added `raw_error` parameter to store the complete error for debugging
+-- Enhanced string representation to show retry delay information
+-
+-```python
+-# Before: Basic quota error
+-QuotaExceededError("API quota exceeded")
+-
+-# After: Enhanced with retry delay
+-QuotaExceededError(
+-    message="API quota exceeded", 
+-    retry_delay_seconds=18,  # From API response
+-    raw_error="Full API error response"
+-)
+-```
+-
+-### 2. Retry Delay Parsing
+-
+-**File**: `src/youtube_notion/processors/youtube_processor.py`
+-
+-Added `_parse_retry_delay_from_error()` method that extracts retry delay from Gemini API error responses:
+-
+-- Handles multiple formats: `'retryDelay': '18s'`, `"retryDelay": "18s"`, `retryDelay: 18s`
+-- Parses JSON structures within error messages
+-- Returns `None` if no retry delay is found (falls back to default retry logic)
+-
+-**Example API Error Response**:
+-```json
+-{
+-  "error": {
+-    "details": [
+-      {
+-        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+-        "retryDelay": "18s"
+-      }
+-    ]
+-  }
+-}
+-```
+-
+-### 3. Intelligent Retry Logic
+-
+-**File**: `src/youtube_notion/processors/youtube_processor.py`
+-
+-Modified `_api_call_with_retry()` to:
+-
+-- **Parse retry delays** from quota error responses
+-- **Wait for API-specified delay + 15 second buffer** before retrying
+-- **Continue processing** instead of failing immediately
+-- **Cap retry delays in test mode** to prevent long test hangs (5 seconds max)
+-- **Provide clear progress feedback** during waits
+-
+-```python
+-# Production: Wait for full delay
+-"API quota exceeded. Waiting 33 seconds before retry (attempt 1/3)..."
+-
+-# Test mode: Capped delay
+-"API quota exceeded. Test mode: waiting 5s (capped from 33s) before retry (attempt 1/3)..."
+-```
+-
+-### 4. Test Mode Detection
+-
+-Automatically detects test environments and caps retry delays:
+-
+-- Checks for `PYTEST_CURRENT_TEST`, `TESTING`, or `_PYTEST_RAISE` environment variables
+-- Caps retry delays to 5 seconds maximum during testing
+-- Prevents test suite hangs while maintaining production behavior
+-
+-### 5. Enhanced Error Messages
+-
+-Improved error messages with actionable information:
+-
+-```python
+-# Before
+-"Gemini API quota exceeded"
+-
+-# After  
+-"Gemini API quota exceeded: [detailed error] | API: Gemini API | Quota Type: quota | Retry After: 18s"
+-```
+-
+-### 6. Batch Processing Resilience
+-
+-The improvements work seamlessly with existing batch processing:
+-
+-- **Individual URL failures** don't stop the entire batch
+-- **Quota delays** are handled gracefully with progress feedback
+-- **Batch summary** shows successful vs failed URLs
+-- **Automatic retry** for quota errors with proper delays
+-
+-## Usage Examples
+-
+-### Single URL Processing
+-```bash
+-# Will automatically retry with proper delays if quota exceeded
+-python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"
+-```
+-
+-### Batch Processing
+-```bash
+-# Will continue processing other URLs even if some hit quota limits
+-python youtube_notion_cli.py --urls "url1,url2,url3"
+-python youtube_notion_cli.py --file urls.txt
+-```
+-
+-### Expected Output During Quota Handling
+-```
+-Processing YouTube video: https://youtu.be/abc123
+-API quota exceeded. Waiting 33 seconds before retry (attempt 1/3)...
+-✓ Successfully processed video: Example Video Title
+-✓ Added to Notion: Example Video Title
+-```
+-
+-## Technical Details
+-
+-### Retry Delay Calculation
+-```python
+-# API returns: retryDelay: "18s"
+-# System waits: 18 + 15 = 33 seconds
+-# Reasoning: 15-second buffer ensures we don't retry too early
+-```
+-
+-### Test Mode Behavior
+-```python
+-# Production: Wait full delay (18 + 15 = 33 seconds)
+-# Test mode: Cap to 5 seconds maximum
+-# Prevents test suite from hanging for minutes
+-```
+-
+-### Error Flow
+-1. **API Call** → Quota exceeded with `retryDelay: "18s"`
+-2. **Parse Delay** → Extract 18 seconds from error response
+-3. **Calculate Wait** → 18 + 15 = 33 seconds total
+-4. **Wait & Retry** → Sleep for 33 seconds, then retry
+-5. **Continue** → Process next URL or complete successfully
+-
+-## Backward Compatibility
+-
+-- All existing functionality remains unchanged
+-- New retry behavior only activates when API provides retry delay
+-- Falls back to original exponential backoff if no retry delay specified
+-- Existing error handling and batch processing work as before
+-
+-## Testing
+-
+-The improvements include comprehensive test coverage:
+-
+-- ✅ Retry delay parsing from various error formats
+-- ✅ Test mode detection and delay capping
+-- ✅ Enhanced error message generation
+-- ✅ Integration with existing retry logic
+-- ✅ Batch processing resilience
+-
+-## Benefits
+-
+-1. **Improved Success Rate**: Respects API retry delays instead of failing immediately
+-2. **Better User Experience**: Clear progress feedback during waits
+-3. **Batch Processing Resilience**: Continues processing other URLs during quota delays
+-4. **Test Suite Stability**: Prevents long hangs during testing
+-5. **Production Ready**: Handles real-world quota scenarios gracefully
+-
+-## Files Modified
+-
+-- `src/youtube_notion/processors/exceptions.py` - Enhanced QuotaExceededError
+-- `src/youtube_notion/processors/youtube_processor.py` - Retry logic and delay parsing
+-- `tests/test_cli.py` - Fixed CLI test assertions
+-- `tests/test_youtube_end_to_end.py` - Updated hanging tests to handle quota errors
+-
+-The system now handles quota limits intelligently, making it much more robust for production use while maintaining fast test execution.
+\ No newline at end of file
+
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index a42e089..2ada2a5 100644
+--- a/README.md
++++ b/README.md
+@@ -13,6 +13,8 @@ A Python application that automatically processes YouTube videos and adds AI-gen
+ - 🖼️ **Cover Images**: Automatically adds video thumbnails as page covers
+ - 🔄 **Dual Mode Operation**: Supports both example data mode and live YouTube processing
+ - 🛡️ **Robust Error Handling**: Comprehensive error handling with retry logic and graceful fallbacks
++- ⚡ **Intelligent Quota Management**: Automatically handles API quota limits with smart retry delays
++- 🔄 **Batch Processing**: Process multiple URLs with resilient error handling
+ - 🧪 **Comprehensive Testing**: 50+ unit tests ensuring reliable functionality
+ - 📁 **Professional Structure**: Organized, maintainable codebase following Python best practices
+ 
+@@ -260,7 +262,14 @@ The Google Gemini API generates intelligent summaries of YouTube videos with tim
+ **Pricing & Limits:**
+ - **Free Tier**: 15 requests per minute, 1,500 requests per day
+ - **Cost**: $0.00 for most personal use cases
+-- **Rate Limits**: Automatically handled with retry logic
++- **Rate Limits**: Automatically handled with intelligent retry logic
++
++**Quota Handling:**
++- **Smart Retry**: Automatically parses `retryDelay` from API responses (e.g., "18s")
++- **Intelligent Waiting**: Waits for API-specified delay + 15 second buffer before retrying
++- **Batch Resilience**: Continues processing other URLs even when some hit quota limits
++- **Progress Feedback**: Shows exactly how long the system is waiting and why
++- **Test Mode**: Caps retry delays to 5 seconds during testing to prevent hangs
+ 
+ ### YouTube Data API Key (Optional but Recommended)
+ 
+@@ -529,6 +538,93 @@ EOF
+ python youtube_notion_cli.py --file research_videos.txt
+ ```
+ 
++## Intelligent Quota Management
++
++The system includes sophisticated quota handling that makes it highly resilient to API rate limits and quota exceeded errors.
++
++### How It Works
++
++When the Gemini API returns a quota exceeded error, it often includes a `retryDelay` field specifying exactly when you can retry:
++
++```json
++{
++  "error": {
++    "details": [
++      {
++        "@type": "type.googleapis.com/google.rpc.RetryInfo",
++        "retryDelay": "18s"
++      }
++    ]
++  }
++}
++```
++
++The system automatically:
++1. **Parses the retry delay** from the API response (e.g., "18s")
++2. **Waits for the specified time + 15 second buffer** (e.g., 33 seconds total)
++3. **Retries the request** instead of failing immediately
++4. **Continues batch processing** for other URLs
++
++### Real-World Example
++
++```bash
++# Before: Immediate failure
++❌ Error: API quota exceeded - Gemini API quota exceeded: 429 RESOURCE_EXHAUSTED
++
++# After: Intelligent retry
++⏳ API quota exceeded. Waiting 33 seconds before retry (attempt 1/3)...
++✅ Successfully processed video: Your Video Title
++✅ Added to Notion: Your Video Title
++```
++
++### Batch Processing Resilience
++
++When processing multiple URLs, quota limits don't stop the entire batch:
++
++```bash
++python youtube_notion_cli.py --file large_batch.txt
++
++# Output:
++[1/10] Processing: https://youtu.be/video1
++✅ Added to Notion: Video 1 Title
++
++[2/10] Processing: https://youtu.be/video2
++⏳ API quota exceeded. Waiting 33 seconds before retry (attempt 1/3)...
++✅ Added to Notion: Video 2 Title
++
++[3/10] Processing: https://youtu.be/video3
++✅ Added to Notion: Video 3 Title
++# ... continues processing all URLs
++```
++
++### Test Mode Behavior
++
++During testing, retry delays are automatically capped to prevent long test hangs:
++
++```bash
++# Production: Wait full delay
++"API quota exceeded. Waiting 33 seconds before retry (attempt 1/3)..."
++
++# Test mode: Capped delay  
++"API quota exceeded. Test mode: waiting 5s (capped from 33s) before retry (attempt 1/3)..."
++```
++
++### Configuration
++
++The quota handling works automatically with these defaults:
++- **Buffer time**: 15 seconds added to API-specified delay
++- **Max retries**: 3 attempts per URL
++- **Test mode cap**: 5 seconds maximum delay during testing
++- **Fallback**: Uses exponential backoff if no retry delay specified
++
++### Benefits
++
++- **Higher success rate**: Respects API guidance instead of failing immediately
++- **Batch resilience**: Continues processing other URLs during quota delays
++- **Clear feedback**: Shows exactly what's happening and how long to wait
++- **Test-friendly**: Prevents test suite hangs while maintaining production behavior
++- **Production-ready**: Handles real-world quota scenarios gracefully
++
+ ## Usage Patterns & Examples
+ 
+ ### Common Workflows
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

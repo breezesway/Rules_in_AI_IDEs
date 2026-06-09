@@ -1,0 +1,1051 @@
+diff --git a/src/web/server.ts b/src/web/server.ts
+index 82fe2ab..6d3adf7 100644
+--- a/src/web/server.ts
++++ b/src/web/server.ts
+@@ -1,10 +1,16 @@
++import dotenv from 'dotenv';
++import path from 'path';
++
++// Load environment variables from .env.local
++dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+ import express from 'express';
+ import cors from 'cors';
+ import bodyParser from 'body-parser';
+-import path from 'path';
+-import { WorkflowOrchestrator } from '../utils/orchestration/workflow-orchestrator';
+-import { ErrorHandlerService } from '../utils/services/error-handler-service';
+-import { ConfigurationService } from '../utils/services/configuration-service';
++import { WorkflowOrchestrator } from '@/utils/orchestration/workflow-orchestrator';
++import { ErrorHandlerService } from '@/utils/services/error-handler-service';
++import { ConfigurationService } from '@/utils/services/configuration-service';
++import { DatabaseService } from '@/utils/services/database-service';
++import { SiteWideAccessibilityReport } from '@/core/types/common';
+ import { createServer } from 'http';
+ import { Server as SocketIOServer } from 'socket.io';
+ 
+@@ -15,6 +21,7 @@ export class WebServer {
+     private orchestrator: WorkflowOrchestrator;
+     private errorHandler: ErrorHandlerService;
+     private config: ConfigurationService;
++    private databaseService: DatabaseService;
+     private activeScans: Map<string, any> = new Map();
+ 
+     constructor(private port: number = 3000) {
+@@ -29,6 +36,7 @@ export class WebServer {
+         this.orchestrator = new WorkflowOrchestrator();
+         this.errorHandler = ErrorHandlerService.getInstance();
+         this.config = ConfigurationService.getInstance();
++        this.databaseService = DatabaseService.getInstance();
+         this.setupMiddleware();
+         this.setupRoutes(); // Setup API routes first
+         this.setupStaticFiles(); // Setup static files after API routes
+@@ -71,10 +79,33 @@ export class WebServer {
+     }
+ 
+     private setupStaticFiles(): void {
+-        // Serve static files from the public directory
++        // Import page components
++        const { renderLandingPage } = require('../components/LandingPage');
++        const { renderSinglePageScanPage } = require('../components/SinglePageScanPage');
++        const { renderFullSiteScanPage } = require('../components/FullSiteScanPage');
++        const { renderReportsPage } = require('../components/ReportsPage');
++
++        // Handle specific page routes BEFORE static files
++        this.app.get('/', (req, res) => {
++            res.send(renderLandingPage());
++        });
++
++        this.app.get('/single-page', (req, res) => {
++            res.send(renderSinglePageScanPage());
++        });
++
++        this.app.get('/full-site', (req, res) => {
++            res.send(renderFullSiteScanPage());
++        });
++
++        this.app.get('/reports', (req, res) => {
++            res.send(renderReportsPage());
++        });
++
++        // Serve static files from the public directory (CSS, JS, images)
+         this.app.use(express.static(path.join(__dirname, '../public')));
+ 
+-        // Serve the main HTML file for all non-API routes (SPA)
++        // Serve the main HTML file for all other non-API routes (SPA)
+         this.app.get('*', (req, res) => {
+             // Skip API routes - let them be handled by the API route handlers
+             if (req.path.startsWith('/api/')) {
+@@ -100,7 +131,7 @@ export class WebServer {
+         // Full site scan endpoint
+         this.app.post('/api/scan/full-site', async (req, res) => {
+             try {
+-                const { url, options = {} } = req.body;
++                const { url, wcagLevel = 'WCAG2AA', options = {} } = req.body;
+ 
+                 if (!url) {
+                     return res.status(400).json({
+@@ -119,6 +150,15 @@ export class WebServer {
+                     });
+                 }
+ 
++                // Validate WCAG level
++                const validWcagLevels = ['WCAG2A', 'WCAG2AA', 'WCAG2AAA', 'WCAG22A', 'WCAG22AA', 'WCAG22AAA'];
++                if (!validWcagLevels.includes(wcagLevel)) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Invalid WCAG level. Must be one of: WCAG2A, WCAG2AA, WCAG2AAA, WCAG22A, WCAG22AA, WCAG22AAA'
++                    });
++                }
++
+                 // Generate scan ID for tracking
+                 const scanId = this.generateScanId();
+ 
+@@ -130,12 +170,14 @@ export class WebServer {
+                     enablePerformanceMonitoring: false,
+                     retryFailedPages: true,
+                     generateReports: true,
++                    wcagLevel,
+                     ...options
+                 };
+ 
+                 // Store scan info
+                 this.activeScans.set(scanId, {
+                     url,
++                    wcagLevel,
+                     startTime: new Date(),
+                     status: 'starting',
+                     type: 'full-site'
+@@ -146,12 +188,12 @@ export class WebServer {
+                     success: true,
+                     data: {
+                         scanId,
+-                        message: 'Full site scan started. Use the scan ID to track progress via WebSocket.'
++                        message: `Full site scan started with ${wcagLevel} compliance. Use the scan ID to track progress via WebSocket.`
+                     }
+                 });
+ 
+                 // Start the scan in background with progress tracking
+-                this.runFullSiteScanWithProgress(scanId, url, scanOptions);
++                this.runFullSiteScanWithProgress(scanId, url, { wcagLevel });
+ 
+                 return;
+ 
+@@ -164,7 +206,7 @@ export class WebServer {
+         // Single page scan endpoint
+         this.app.post('/api/scan/single-page', async (req, res) => {
+             try {
+-                const { url } = req.body;
++                const { url, wcagLevel = 'WCAG2AA' } = req.body;
+ 
+                 if (!url) {
+                     return res.status(400).json({
+@@ -183,12 +225,22 @@ export class WebServer {
+                     });
+                 }
+ 
++                // Validate WCAG level
++                const validWcagLevels = ['WCAG2A', 'WCAG2AA', 'WCAG2AAA', 'WCAG22A', 'WCAG22AA', 'WCAG22AAA'];
++                if (!validWcagLevels.includes(wcagLevel)) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Invalid WCAG level. Must be one of: WCAG2A, WCAG2AA, WCAG2AAA, WCAG22A, WCAG22AA, WCAG22AAA'
++                    });
++                }
++
+                 // Generate scan ID for tracking
+                 const scanId = this.generateScanId();
+ 
+                 // Store scan info
+                 this.activeScans.set(scanId, {
+                     url,
++                    wcagLevel,
+                     startTime: new Date(),
+                     status: 'starting',
+                     type: 'single-page'
+@@ -199,7 +251,7 @@ export class WebServer {
+                     success: true,
+                     data: {
+                         scanId,
+-                        message: 'Single page scan started. Use the scan ID to track progress via WebSocket.'
++                        message: `Single page scan started with ${wcagLevel} compliance. Use the scan ID to track progress via WebSocket.`
+                     }
+                 });
+ 
+@@ -214,91 +266,492 @@ export class WebServer {
+             }
+         });
+ 
+-        // Regenerate reports endpoint
+-        this.app.post('/api/reports/regenerate', async (req, res) => {
++
++
++        // Search reports endpoint
++        this.app.post('/api/reports/search', async (req, res) => {
+             try {
++                const { siteUrl, dateFrom, dateTo } = req.body;
++
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
++                        });
++                    }
++                }
++
++                // Build search options
++                const searchOptions: any = {
++                    limit: 50,
++                    orderBy: 'createdAt',
++                    orderDirection: 'desc'
++                };
++
++                // Add URL filter if provided
++                if (siteUrl && siteUrl.trim()) {
++                    searchOptions.siteUrl = siteUrl.trim();
++                }
++
++                // Add date filters if provided
++                if (dateFrom) {
++                    searchOptions.dateFrom = new Date(dateFrom);
++                }
++                if (dateTo) {
++                    searchOptions.dateTo = new Date(dateTo);
++                }
++
++                // Get reports from database with filters
++                const dbResult = await this.databaseService.getReportsWithMetadata(searchOptions);
++
++                if (!dbResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to search reports in database: ${dbResult.message}`
++                    });
++                }
++
++                const dbReports = dbResult.data || [];
++
++                if (dbReports.length === 0) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'No reports found matching your search criteria.'
++                    });
++                }
++
++                // Convert database reports to the expected format
++                const reports = dbReports.map(report => {
++                    if (!report) return null;
++                    return {
++                        id: report._id.toString(),
++                        filename: `accessibility-report-${report._id.toString()}.json`,
++                        path: `db://${report._id.toString()}`,
++                        data: report.reportData,
++                        lastModified: report.createdAt,
++                        source: 'database',
++                        reportType: report.reportType,
++                        siteUrl: report.siteUrl
++                    };
++                }).filter(Boolean);
++
++                return res.json({
++                    success: true,
++                    data: {
++                        reports,
++                        count: reports.length,
++                        source: 'database',
++                        searchCriteria: {
++                            siteUrl: siteUrl || null,
++                            dateFrom: dateFrom || null,
++                            dateTo: dateTo || null
++                        }
++                    }
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to search reports');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Generate reports endpoint - list available reports (kept for backward compatibility)
++        this.app.post('/api/reports/generate', async (req, res) => {
++            try {
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
++                        });
++                    }
++                }
++
++                // Get reports from database
++                const dbResult = await this.databaseService.getReports({
++                    limit: 50,
++                    orderBy: 'createdAt',
++                    orderDirection: 'desc'
++                });
++
++                if (!dbResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to retrieve reports from database: ${dbResult.message}`
++                    });
++                }
++
++                const dbReports = dbResult.data || [];
++
++                if (dbReports.length === 0) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'No reports found in database. Please run a scan first.'
++                    });
++                }
++
++                // Convert database reports to the expected format
++                const reports = dbReports.map(report => {
++                    if (!report) return null;
++                    return {
++                        id: report._id.toString(),
++                        filename: `accessibility-report-${report._id.toString()}.json`,
++                        path: `db://${report._id.toString()}`,
++                        data: report.reportData,
++                        lastModified: report.createdAt,
++                        source: 'database',
++                        reportType: report.reportType,
++                        siteUrl: report.siteUrl
++                    };
++                }).filter(Boolean);
++
++                return res.json({
++                    success: true,
++                    data: {
++                        reports,
++                        count: reports.length,
++                        source: 'database'
++                    }
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve reports for generation');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Download PDF reports endpoint
++        this.app.get('/api/reports/download/:filename', (req, res) => {
++            try {
++                const { filename } = req.params;
++
++                if (!filename) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Filename is required'
++                    });
++                }
++
+                 const reportsDir = path.join(process.cwd(), 'accessibility-reports');
+-                const historyDir = path.join(process.cwd(), 'accessibility-reports', 'history');
+-                const fs = require('fs');
++                const filePath = path.join(reportsDir, filename);
+ 
+-                if (!fs.existsSync(reportsDir)) {
++                // Check if file exists
++                if (!require('fs').existsSync(filePath)) {
+                     return res.status(404).json({
+                         success: false,
+-                        error: 'No reports directory found'
++                        error: 'PDF file not found'
+                     });
+                 }
+ 
+-                // Look for JSON files in both reports directory and history directory
+-                const allReportFiles: Array<{ filename: string; path: string; mtime: Date }> = [];
++                // Set headers for file download
++                res.setHeader('Content-Type', 'application/pdf');
++                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+ 
+-                // Check main reports directory
+-                if (fs.existsSync(reportsDir)) {
+-                    const reportFiles = fs.readdirSync(reportsDir).filter((file: string) =>
+-                        file.endsWith('.json') && file.includes('accessibility-report')
+-                    );
++                // Stream the file
++                const fileStream = require('fs').createReadStream(filePath);
++                fileStream.pipe(res);
++
++                // Delete the file after download
++                fileStream.on('end', () => {
++                    try {
++                        require('fs').unlinkSync(filePath);
++                        this.errorHandler.logInfo(`PDF file deleted after download: ${filename}`);
++                    } catch (error) {
++                        this.errorHandler.logWarning(`Failed to delete PDF file after download: ${filename}`, { error });
++                    }
++                });
++
++                return; // Explicit return for TypeScript
+ 
+-                    reportFiles.forEach((file: string) => {
+-                        const filePath = path.join(reportsDir, file);
+-                        const stats = fs.statSync(filePath);
+-                        allReportFiles.push({
+-                            filename: file,
+-                            path: filePath,
+-                            mtime: stats.mtime
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'PDF download failed');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Generate PDF reports endpoint
++        this.app.post('/api/reports/generate-pdf', async (req, res) => {
++            try {
++                const { reportId, audience, generateAll } = req.body;
++
++                if (!reportId) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Report ID is required'
++                    });
++                }
++
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
+                         });
++                    }
++                }
++
++                // Get report from database
++                const dbResult = await this.databaseService.getReportById(reportId);
++
++                if (!dbResult.success) {
++                    return res.status(404).json({
++                        success: false,
++                        error: `Report not found: ${dbResult.message}`
++                    });
++                }
++
++                const report = dbResult.data;
++
++                if (!report) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'Report data not found'
+                     });
+                 }
+ 
+-                // Check history directory
+-                if (fs.existsSync(historyDir)) {
+-                    const historyFiles = fs.readdirSync(historyDir).filter((file: string) =>
+-                        file.endsWith('.json') && file.includes('accessibility-report')
++                // Initialize browser manager for PDF generation
++                await this.orchestrator.browserManager.initialize();
++
++                // Check if the report data is a SiteWideAccessibilityReport
++                if (report.reportType === 'site-wide') {
++                    // Generate PDF reports with scan metadata from database
++                    const pdfResults = await this.orchestrator.generatePdfReportsFromStoredData(
++                        report.reportData as SiteWideAccessibilityReport,
++                        {
++                            reportId,
++                            audience,
++                            generateAll,
++                            ...(report.metadata && { scanMetadata: report.metadata })
++                        }
+                     );
+ 
+-                    historyFiles.forEach((file: string) => {
+-                        const filePath = path.join(historyDir, file);
+-                        const stats = fs.statSync(filePath);
+-                        allReportFiles.push({
+-                            filename: file,
+-                            path: filePath,
+-                            mtime: stats.mtime
++                    if (!pdfResults.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to generate PDF reports: ${pdfResults.message}`
+                         });
++                    }
++
++                    return res.json({
++                        success: true,
++                        data: {
++                            reportId,
++                            pdfFiles: pdfResults.data || [],
++                            count: pdfResults.data?.length || 0
++                        }
++                    });
++                } else {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Only site-wide reports can be used to generate PDF reports'
++                    });
++                }
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'PDF generation failed');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Download PDF endpoint
++        this.app.get('/api/reports/download/:filename', async (req, res) => {
++            try {
++                const { filename } = req.params;
++
++                if (!filename) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Filename is required'
+                     });
+                 }
+ 
+-                if (allReportFiles.length === 0) {
++                const filePath = path.join(process.cwd(), 'accessibility-reports', filename);
++
++                if (!require('fs').existsSync(filePath)) {
+                     return res.status(404).json({
+                         success: false,
+-                        error: 'No accessibility reports found in reports or history directories'
++                        error: 'PDF file not found'
+                     });
+                 }
+ 
+-                // Sort by modification time to get the most recent first
+-                allReportFiles.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
++                res.download(filePath, filename, (err) => {
++                    if (err) {
++                        this.errorHandler.handleError(err, 'PDF download failed');
++                    } else {
++                        // Delete the file after successful download
++                        require('fs').unlinkSync(filePath);
++                        this.errorHandler.logInfo(`PDF file deleted after download: ${filename}`);
++                    }
++                });
++                return;
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'PDF download failed');
++                return res.status(500).json(errorResult);
++            }
++        });
+ 
+-                const reports = [];
+-                for (const reportFile of allReportFiles) {
+-                    try {
+-                        const reportData = JSON.parse(fs.readFileSync(reportFile.path, 'utf8'));
+-                        reports.push({
+-                            filename: reportFile.filename,
+-                            path: reportFile.path,
+-                            data: reportData,
+-                            lastModified: reportFile.mtime.toISOString()
++        // Get report by ID endpoint
++        this.app.get('/api/reports/:reportId', async (req, res) => {
++            try {
++                const { reportId } = req.params;
++
++                if (!reportId) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Report ID is required'
++                    });
++                }
++
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
++                        });
++                    }
++                }
++
++                // Get report from database
++                const dbResult = await this.databaseService.getReportById(reportId);
++
++                if (!dbResult.success) {
++                    return res.status(404).json({
++                        success: false,
++                        error: `Report not found: ${dbResult.message}`
++                    });
++                }
++
++                const report = dbResult.data;
++
++                if (!report) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'Report data not found'
++                    });
++                }
++
++                return res.json({
++                    success: true,
++                    data: {
++                        id: report._id.toString(),
++                        filename: `accessibility-report-${report._id.toString()}.json`,
++                        path: `db://${report._id.toString()}`,
++                        data: report.reportData,
++                        lastModified: report.createdAt,
++                        source: 'database',
++                        reportType: report.reportType,
++                        siteUrl: report.siteUrl,
++                        metadata: report.metadata
++                    }
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve report');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Get report statistics endpoint
++        this.app.get('/api/reports/stats', async (req, res) => {
++            try {
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
+                         });
+-                    } catch (error) {
+-                        this.errorHandler.handleError(error, `Failed to read ${reportFile.filename}`);
+                     }
+                 }
+ 
++                // Get report statistics from database
++                const statsResult = await this.databaseService.getReportStatistics();
++
++                if (!statsResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to retrieve report statistics: ${statsResult.message}`
++                    });
++                }
++
++                return res.json({
++                    success: true,
++                    data: statsResult.data
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve report statistics');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Regenerate reports endpoint
++        this.app.post('/api/reports/regenerate', async (req, res) => {
++            try {
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        return res.status(500).json({
++                            success: false,
++                            error: `Failed to initialize database service: ${initResult.message}`
++                        });
++                    }
++                }
++
++                // Try to get reports from database first
++                const dbResult = await this.databaseService.getReports({
++                    limit: 50,
++                    orderBy: 'createdAt',
++                    orderDirection: 'desc'
++                });
++
++                if (!dbResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to retrieve reports from database: ${dbResult.message}`
++                    });
++                }
++
++                const dbReports = dbResult.data || [];
++
++                if (dbReports.length === 0) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'No reports found in database. Please run a scan first.'
++                    });
++                }
++
++                // Convert database reports to the expected format
++                const reports = dbReports.map(report => {
++                    if (!report) return null;
++                    return {
++                        id: report._id.toString(),
++                        filename: `accessibility-report-${report._id.toString()}.json`,
++                        path: `db://${report._id.toString()}`,
++                        data: report.reportData,
++                        lastModified: report.createdAt,
++                        source: 'database',
++                        reportType: report.reportType,
++                        siteUrl: report.siteUrl
++                    };
++                }).filter(Boolean);
++
+                 return res.json({
+                     success: true,
+                     data: {
+                         reports,
+-                        count: reports.length
++                        count: reports.length,
++                        source: 'database'
+                     }
+                 });
+             } catch (error) {
+-                const errorResult = this.errorHandler.handleError(error, 'Report regeneration failed');
++                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve reports for regeneration');
+                 return res.status(500).json(errorResult);
+             }
+         });
+@@ -336,6 +789,52 @@ export class WebServer {
+                 }
+             });
+         });
++
++        // Cancel scan endpoint
++        this.app.post('/api/scan/cancel', async (req, res) => {
++            try {
++                const { scanId } = req.body;
++
++                if (!scanId) {
++                    return res.status(400).json({
++                        success: false,
++                        error: 'Scan ID is required'
++                    });
++                }
++
++                const scan = this.activeScans.get(scanId);
++                if (!scan) {
++                    return res.status(404).json({
++                        success: false,
++                        error: 'Scan not found'
++                    });
++                }
++
++                // Update scan status to cancelled
++                this.activeScans.set(scanId, {
++                    ...scan,
++                    status: 'cancelled',
++                    cancelledAt: new Date()
++                });
++
++                // Emit cancellation event
++                this.io.to(scanId).emit('scan-cancelled', {
++                    scanId,
++                    message: 'Scan cancelled by user'
++                });
++
++                return res.json({
++                    success: true,
++                    data: {
++                        message: 'Scan cancelled successfully'
++                    }
++                });
++
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Cancel scan failed');
++                return res.status(500).json(errorResult);
++            }
++        });
+     }
+ 
+     private async runFullSiteScanWithProgress(scanId: string, url: string, options: any): Promise<void> {
+@@ -346,10 +845,9 @@ export class WebServer {
+                 status: 'running'
+             });
+ 
+-            // Phase 0: Cleanup old reports (0-5%)
+-            this.emitProgressUpdate(scanId, 'cleanup', 0, 'Cleaning up old reports...');
+-            await this.orchestrator['cleanupReportsDirectory']();
+-            this.emitProgressUpdate(scanId, 'cleanup', 5, 'Cleanup completed');
++            // Phase 0: Initialization (0-5%)
++            this.emitProgressUpdate(scanId, 'init', 0, 'Initializing scan...');
++            this.emitProgressUpdate(scanId, 'init', 5, 'Initialization completed');
+ 
+             // Phase 1: Browser Initialization (5-15%)
+             this.emitProgressUpdate(scanId, 'browser-init', 5, 'Initializing browser...');
+@@ -373,10 +871,88 @@ export class WebServer {
+             });
+             this.emitProgressUpdate(scanId, 'analysis', 80, `Accessibility analysis completed. Analyzed ${analysisResults.length} pages.`);
+ 
+-            // Phase 4: Report Generation (80-100%)
+-            this.emitProgressUpdate(scanId, 'reporting', 85, 'Generating reports...');
+-            const reportPaths = await this.orchestrator.generateReports(analysisResults, url);
+-            this.emitProgressUpdate(scanId, 'reporting', 100, 'Reports generated successfully');
++            // Phase 4: Store Results (80-100%)
++            this.emitProgressUpdate(scanId, 'storing', 85, 'Storing results in database...');
++
++            // Store results in database using the workflow orchestrator's database storage logic
++            const scanStartTime = Date.now();
++            const scanIdForMetadata = scanStartTime.toString();
++
++            // Calculate performance metrics for database storage
++            const totalScanTime = Date.now() - scanStartTime;
++            const pagesWithViolations = analysisResults.filter(result => result.summary.totalViolations > 0).length;
++            const successRate = analysisResults.length > 0 ? (analysisResults.length / crawlResults.length) * 100 : 0;
++            const averageTimePerPage = analysisResults.length > 0 ? totalScanTime / analysisResults.length : 0;
++
++            // Extract tools used from analysis results
++            const toolsUsed = new Set<string>();
++            analysisResults.forEach(result => {
++                result.violations?.forEach(violation => {
++                    violation.tools?.forEach(tool => toolsUsed.add(tool));
++                });
++            });
++
++            // Prepare scan metadata for database storage
++            const scanMetadata = {
++                scanConfiguration: {
++                    maxPages: options.maxPages,
++                    maxDepth: options.maxDepth,
++                    maxConcurrency: options.maxConcurrency,
++                    retryFailedPages: options.retryFailedPages,
++                    generateReports: false, // PDF generation is now separate
++                    wcagLevel: options.wcagLevel || 'WCAG2AA'
++                },
++                performanceMetrics: {
++                    totalScanTime,
++                    averageTimePerPage,
++                    successRate,
++                    pagesAnalyzed: analysisResults.length,
++                    pagesWithViolations
++                },
++                toolsUsed: Array.from(toolsUsed),
++                scanId: scanIdForMetadata,
++                scanType: 'full-site' as const,
++                userAgent: await this.orchestrator.browserManager.getUserAgent(),
++                crawlDepth: options.maxDepth,
++                excludedPatterns: options.excludePatterns?.map((pattern: RegExp) => pattern.toString()) || []
++            };
++
++            // Store results in database
++            const siteWideReport = this.orchestrator.convertAnalysisResultsToSiteWideReport(
++                analysisResults,
++                url,
++                options.wcagLevel || 'WCAG2AA'
++            );
++
++            try {
++                // Initialize database service if not already initialized
++                if (!this.databaseService.isInitialized()) {
++                    const initResult = await this.databaseService.initialize();
++                    if (!initResult.success) {
++                        this.errorHandler.logWarning('Failed to initialize database service for report storage', {
++                            error: initResult.message
++                        });
++                    }
++                }
++
++                if (this.databaseService.isInitialized()) {
++                    const storeResult = await this.databaseService.storeSiteWideReport(siteWideReport, scanMetadata);
++                    if (storeResult.success) {
++                        this.errorHandler.logSuccess('Scan results stored in database successfully', {
++                            reportId: storeResult.data,
++                            scanId: scanIdForMetadata
++                        });
++                    } else {
++                        this.errorHandler.logWarning('Failed to store scan results in database', {
++                            error: storeResult.message
++                        });
++                    }
++                }
++            } catch (error) {
++                this.errorHandler.logWarning('Error storing scan results in database', { error });
++            }
++
++            this.emitProgressUpdate(scanId, 'storing', 100, 'Results stored successfully');
+ 
+             // Update scan status to completed
+             this.activeScans.set(scanId, {
+@@ -385,7 +961,7 @@ export class WebServer {
+                 results: {
+                     crawlResults,
+                     analysisResults,
+-                    reportPaths
++                    reportPaths: [] // No PDF generation - reports stored in database
+                 },
+                 completedAt: new Date()
+             });
+@@ -397,7 +973,8 @@ export class WebServer {
+                 data: {
+                     crawlResults,
+                     analysisResults,
+-                    reportPaths
++                    reportPaths: [], // No PDF generation - reports stored in database
++                    wcagLevel: options.wcagLevel || 'WCAG2AA' // Include WCAG level in results
+                 }
+             });
+ 
+@@ -428,10 +1005,9 @@ export class WebServer {
+                 status: 'running'
+             });
+ 
+-            // Phase 0: Cleanup old reports (0-5%)
+-            this.emitProgressUpdate(scanId, 'cleanup', 0, 'Cleaning up old reports...');
+-            await this.orchestrator['cleanupReportsDirectory']();
+-            this.emitProgressUpdate(scanId, 'cleanup', 5, 'Cleanup completed');
++            // Phase 0: Initialization (0-5%)
++            this.emitProgressUpdate(scanId, 'init', 0, 'Initializing scan...');
++            this.emitProgressUpdate(scanId, 'init', 5, 'Initialization completed');
+ 
+             // Phase 1: Browser Initialization (5-15%)
+             this.emitProgressUpdate(scanId, 'browser-init', 5, 'Initializing browser...');
+@@ -440,13 +1016,29 @@ export class WebServer {
+ 
+             // Phase 2: Single Page Analysis (15-80%)
+             this.emitProgressUpdate(scanId, 'analysis', 15, 'Starting single page analysis...');
+-            const analysisResults = await this.orchestrator.testSinglePage(url);
+-            this.emitProgressUpdate(scanId, 'analysis', 80, 'Single page analysis completed');
+ 
+-            // Phase 3: Report Generation (80-100%)
+-            this.emitProgressUpdate(scanId, 'reporting', 85, 'Generating reports...');
+-            const reportPaths = await this.orchestrator.generateReports(analysisResults, url);
+-            this.emitProgressUpdate(scanId, 'reporting', 100, 'Reports generated successfully');
++            // Prepare scan metadata
++            const scanMetadata = {
++                scanConfiguration: {
++                    maxPages: 1,
++                    maxDepth: 0,
++                    maxConcurrency: 1,
++                    retryFailedPages: false,
++                    generateReports: false, // PDF generation is now separate
++                    wcagLevel: this.activeScans.get(scanId)?.wcagLevel || 'WCAG2AA'
++                },
++                scanId,
++                scanType: 'single-page' as const
++            };
++
++            const { analysisResults, reportPaths } = await this.orchestrator.testSinglePageWithReports(
++                url,
++                this.activeScans.get(scanId)?.wcagLevel || 'WCAG2AA',
++                scanMetadata
++            );
++
++            this.emitProgressUpdate(scanId, 'analysis', 80, 'Single page analysis completed');
++            this.emitProgressUpdate(scanId, 'storing', 100, 'Results stored successfully');
+ 
+             // Update scan status to completed
+             this.activeScans.set(scanId, {
+@@ -455,8 +1047,7 @@ export class WebServer {
+                 results: {
+                     analysisResults,
+                     reportPaths
+-                },
+-                completedAt: new Date()
++                }
+             });
+ 
+             // Emit completion event
+@@ -465,12 +1056,87 @@ export class WebServer {
+                 success: true,
+                 data: {
+                     analysisResults,
+-                    reportPaths
++                    reportPaths,
++                    wcagLevel: this.activeScans.get(scanId)?.wcagLevel || 'WCAG2AA' // Include WCAG level in results
+                 }
+             });
+ 
+         } catch (error) {
++            // Update scan status to failed
++            this.activeScans.set(scanId, {
++                ...this.activeScans.get(scanId),
++                status: 'failed',
++                error: error instanceof Error ? error.message : 'Unknown error'
++            });
++
++            // Emit error event
++            this.io.to(scanId).emit('scan-failed', {
++                scanId,
++                error: error instanceof Error ? error.message : 'Unknown error'
++            });
++
+             this.errorHandler.handleError(error, 'Single page scan failed');
++        }
++    }
++
++    // Mock scan completion for testing purposes
++    private async runMockScanWithProgress(scanId: string, url: string, isFullSite: boolean = false, wcagLevel?: string): Promise<void> {
++        try {
++            // Update scan status
++            this.activeScans.set(scanId, {
++                ...this.activeScans.get(scanId),
++                status: 'running'
++            });
++
++            // Simulate scan progress for testing
++            const stages = isFullSite ?
++                ['cleanup', 'browser-init', 'crawling', 'analysis', 'reporting'] :
++                ['cleanup', 'browser-init', 'analysis', 'reporting'];
++
++            for (let i = 0; i < stages.length; i++) {
++                const stage = stages[i];
++                if (stage) {
++                    const progress = (i / (stages.length - 1)) * 100;
++
++                    this.emitProgressUpdate(scanId, stage, progress, `${stage}...`);
++
++                    // Wait a bit between stages for realistic progress
++                    await new Promise(resolve => setTimeout(resolve, 1000));
++                }
++            }
++
++            // Mock results
++            const mockResults = {
++                url: url,
++                wcagLevel: wcagLevel || 'WCAG2AA',
++                violations: [],
++                warnings: [],
++                passes: [],
++                summary: {
++                    totalViolations: 0,
++                    totalWarnings: 0,
++                    totalPasses: 10,
++                    complianceScore: 100
++                }
++            };
++
++            // Update scan status to completed
++            this.activeScans.set(scanId, {
++                ...this.activeScans.get(scanId),
++                status: 'completed',
++                results: mockResults,
++                completedAt: new Date()
++            });
++
++            // Emit completion event
++            this.io.to(scanId).emit('scan-completed', {
++                scanId,
++                success: true,
++                data: mockResults
++            });
++
++        } catch (error) {
++            this.errorHandler.handleError(error, 'Mock scan failed');
+ 
+             // Update scan status to failed
+             this.activeScans.set(scanId, {
+@@ -491,7 +1157,7 @@ export class WebServer {
+     public start(): void {
+         this.server.listen(this.port, () => {
+             this.errorHandler.logInfo(`Web server started on port ${this.port}`);
+-            console.log(`🌐 Web interface available at: http://localhost:${this.port}`);
++            this.errorHandler.logInfo(`🌐 Web interface available at: http://localhost:${this.port}`);
+         });
+     }
+ }

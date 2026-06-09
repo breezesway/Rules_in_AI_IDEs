@@ -1,0 +1,512 @@
+diff --git a/README.md b/README.md
+index 8bd79d9..75298e0 100644
+--- a/README.md
++++ b/README.md
+@@ -6,7 +6,7 @@
+     <img src="https://img.shields.io/badge/WCAG-2.1%20AAA-1e214d?style=for-the-badge&logo=w3c&logoColor=white" alt="WCAG 2.1 AAA" />
+     <img src="https://img.shields.io/badge/Accessibility-Testing-db0064?style=for-the-badge&logo=universal-access&logoColor=white" alt="Accessibility Testing" />
+     <img src="https://img.shields.io/badge/Automated-Reports-fcc700?style=for-the-badge&logo=documents&logoColor=white" alt="Automated Reports" />
+-    <img src="https://img.shields.io/badge/E2E%20Tests-23%20Passing-28a745?style=for-the-badge&logo=test&logoColor=white" alt="23 E2E Tests Passing" />
++    <img src="https://img.shields.io/badge/E2E%20Tests-40%2B%20Tests-28a745?style=for-the-badge&logo=test&logoColor=white" alt="40+ Tests" />
+   </p>
+ </div>
+ 
+@@ -34,9 +34,43 @@ modern, modular architecture.
+ - **Node.js**: Version 18.0.0 or higher
+ - **npm**: Version 8.0.0 or higher
+ - **Git**: For version control
++- **Docker and Docker Compose** (for local MongoDB development)
+ 
+ ### Installation & Setup
+ 
++#### Quick Start with Local MongoDB
++
++```bash
++# Clone the repository
++git clone https://github.com/nimbleapproach/Accessability-Scanning-Tool.git
++cd Accessability-Scanning-Tool
++
++# Install dependencies
++npm install
++
++# Generate secure secrets for local development
++npm run secrets:generate
++
++# Validate environment configuration (optional but recommended)
++npm run validate:env
++
++# Start everything together (recommended)
++npm run dev:full
++```
++
++This will:
++- Generate secure secrets for MongoDB
++- Create a `.env.local` file with all necessary environment variables
++- Validate environment configuration for correctness
++- Start the complete MongoDB stack (MongoDB, Mongo Express)
++- Wait for all services to be ready
++- Auto-populate environment configuration
++- Build the application
++- Start the development server
++- Open the web interface at [http://localhost:3000](http://localhost:3000)
++
++#### Manual Setup
++
+ 1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/nimbleapproach/Accessability-Scanning-Tool.git
+@@ -65,11 +99,79 @@ modern, modular architecture.
+ For development with hot reloading:
+ 
+ ```bash
+-npm run dev
++# Start everything together (recommended)
++npm run dev:full
++
++# Alternative commands:
++npm run dev:start     # Same as dev:full
++npm run dev:mongodb-only  # Start database only
++npm run dev:app-only       # Start app only (requires DB to be running)
++
++# Legacy commands (still work):
++npm run dev:setup:mongodb  # Old setup command
++npm run dev:setup:no-mongodb  # Without MongoDB
++npm run dev                 # Standard development mode
+ ```
+ 
+ This starts both TypeScript compilation in watch mode and the web server with nodemon.
+ 
++### Local MongoDB Development
++
++For local development with a full MongoDB instance:
++
++```bash
++# Start local MongoDB instance
++npm run mongodb:start
++
++# Check MongoDB status
++npm run mongodb:status
++
++# View MongoDB logs
++npm run mongodb:logs
++
++# Stop MongoDB
++npm run mongodb:stop
++
++# Reset MongoDB (delete all data)
++npm run mongodb:reset
++```
++
++**Local MongoDB Services:**
++- **MongoDB Database**: `localhost:27017` (admin/password123)
++- **Mongo Express (Web UI)**: `http://localhost:8081` (admin/password123)
++
++### Environment Validation
++
++The project includes automatic environment file validation to ensure your local development setup is correct:
++
++```bash
++# Validate environment configuration
++npm run validate:env
++
++# Show validation help
++npm run validate:env:help
++```
++
++**What the validation checks:**
++- ✅ Required environment variables are present
++- ✅ No placeholder values (e.g., `your_mongodb_url_here`)
++- ✅ Proper variable formatting and syntax
++- ✅ Consistency between related variables (e.g., database URLs)
++- ✅ Valid port configurations
++- ✅ No duplicate variables
++
++**Automatic validation:**
++- Environment validation runs automatically before starting MongoDB or the development server
++- If validation fails, the startup process will stop and show detailed error messages
++- The validation provides specific suggestions for fixing any issues found
++
++**Example validation output:**
++```bash
++✅ Environment file validation passed!
++ℹ️ Found 18 variables
++✅ No fixes needed - environment file is valid!
++```
++
+ ## 🧪 Testing
+ 
+ ### Running Tests
+@@ -95,11 +197,21 @@ npm run test-storybook
+ 
+ ### Test Coverage
+ 
+-- **Unit Tests**: 214 tests for individual functions and methods
+-- **Integration Tests**: 47 tests for service interactions
++- **Unit Tests**: 210 tests for individual functions and methods
++- **Integration Tests**: 70 tests for service interactions
+ - **Component Tests**: 9 Storybook component tests
+-- **E2E Tests**: 47 tests (23 accessibility + 24 interface)
+-- **Total**: 301+ tests with 100% success rate
++- **E2E Tests**: 40+ tests for accessibility and interface testing (enhanced with local development server)
++- **Total**: 315+ tests with 100% success rate
++
++### E2E Testing Infrastructure
++
++The E2E tests use the full local development environment for accurate testing:
++
++- **Local Server Integration**: Tests automatically start the development server (including MongoDB) if not running
++- **Page Object Model**: Dedicated page objects for different scan pages (`FullSiteScanPage`, `SinglePageScanPage`)
++- **Test Structure**: Tests navigate to correct pages (`/full-site`, `/single-page`) instead of expecting all forms on main page
++- **Server Health Checks**: Robust health checking ensures server is fully ready before running tests
++- **Automatic Cleanup**: Tests properly clean up resources and handle server startup/shutdown
+ 
+ ## 🔄 CI/CD Pipeline
+ 
+@@ -109,7 +221,7 @@ The project uses comprehensive GitHub Actions workflows for automated testing, d
+ 
+ #### **CI Pipeline** (`ci.yml`)
+ - **Triggers**: Pull requests, pushes to main/develop
+-- **Runs**: All 301+ tests automatically
++- **Runs**: All 315 tests automatically
+ - **Includes**:
+   - Unit & Integration Tests
+   - E2E Tests with Playwright
+@@ -150,7 +262,7 @@ The project uses comprehensive GitHub Actions workflows for automated testing, d
+ 
+ All workflows include comprehensive quality checks:
+ 
+-- ✅ **Test Coverage**: 301+ tests must pass
++- ✅ **Test Coverage**: 315 tests must pass
+ - ✅ **Accessibility**: WCAG 2.1 AAA compliance verified
+ - ✅ **Security**: Vulnerability scanning and audit
+ - ✅ **Cross-browser**: Tests run on Chrome, Firefox, Safari
+@@ -180,12 +292,36 @@ All workflows include comprehensive quality checks:
+ Before running the accessibility testing application, ensure you have the
+ following installed:
+ 
+-- **Node.js 16+**: Download from [nodejs.org](https://nodejs.org/)
++- **Node.js 18+**: Download from [nodejs.org](https://nodejs.org/)
+ - **npm**: Comes with Node.js (or use yarn/pnpm)
+ - **Git**: For cloning the repository
++- **Docker and Docker Compose**: For local MongoDB development
+ 
+ ### Setup Steps
+ 
++#### Quick Start with Local MongoDB
++
++```bash
++# Clone the repository
++git clone https://github.com/nimbleapproach/Accessability-Scanning-Tool.git
++cd Accessability-Scanning-Tool
++
++# Install dependencies
++npm install
++
++# Start development with local MongoDB
++npm run dev:setup:mongodb
++```
++
++This will automatically:
++- Install all dependencies
++- Start a local MongoDB instance
++- Build the application
++- Start the development server
++- Open the web interface at [http://localhost:3000](http://localhost:3000)
++
++#### Manual Setup
++
+ 1. **Clone the repository:**
+ 
+    ```bash
+@@ -203,20 +339,37 @@ following installed:
+    - Playwright browsers (Chrome/Chromium)
+    - TypeScript compilation tools
+    - Accessibility testing libraries (axe-core, pa11y)
++   - MongoDB client library
++
++3. **Build the application:**
++
++   ```bash
++   npm run build
++   ```
+ 
+-3. **Verify installation:**
++4. **Start the web interface:**
+ 
+    ```bash
+-   # Test web interface
+    npm start
+    # Then open http://localhost:3000
+    ```
+ 
+-   The web interface should load successfully.
++### Environment Configuration
++
++#### Local Development
++Copy the example environment file:
++```bash
++cp env.local.example .env.local
++```
++
++The local MongoDB instance will use default configuration.
+ 
+-4. **Optional: Install Playwright browsers separately (if needed):**
++#### Production Setup
++1. Set up a MongoDB instance (Atlas, self-hosted, or cloud provider)
++2. Set environment variables:
+    ```bash
+-   npx playwright install chromium
++   MONGODB_URL=mongodb://your-mongodb-host:27017
++   MONGODB_DB_NAME=accessibility_testing
+    ```
+ 
+ ### First Run
+@@ -224,6 +377,13 @@ following installed:
+ After installation, you can immediately start testing:
+ 
+ ```bash
++# With local MongoDB
++npm run dev:setup:mongodb
++
++# Without MongoDB (file-based storage)
++npm run dev:setup:no-mongodb
++
++# Standard start
+ npm start
+ # Open http://localhost:3000 in your browser
+ ```
+@@ -235,6 +395,36 @@ The web interface will guide you through:
+ - Running comprehensive accessibility analysis
+ - Generating detailed reports
+ 
++### Local MongoDB Management
++
++```bash
++# Start local MongoDB
++npm run mongodb:start
++
++# Check status
++npm run mongodb:status
++
++# View logs
++npm run mongodb:logs
++
++# Stop services
++npm run mongodb:stop
++
++# Reset database (delete all data)
++npm run mongodb:reset
++
++# Manually populate environment file
++npm run mongodb:env
++```
++
++**Local Services Available:**
++- **Web Interface**: [http://localhost:3000](http://localhost:3000)
++- **Mongo Express**: [http://localhost:8081](http://localhost:8081) - Database management UI
++- **MongoDB**: localhost:27017 - Direct database access
++
++**Environment Configuration:**
++The `.env.local` file is automatically created and populated with local MongoDB credentials. The system uses `dotenv` to load environment variables and will create the environment file automatically if it doesn't exist. The `env.local.example` file serves as a template but is not required.
++
+ ### Troubleshooting Setup
+ 
+ **Common Issues:**
+@@ -315,34 +505,99 @@ saving time while maintaining comprehensive coverage.
+ 
+ ## 📈 Reports Generated
+ 
+-After each audit, you'll find reports in `accessibility-reports/`:
++After each audit, reports are generated and stored in multiple formats:
+ 
+-- **📄 JSON Report**: Detailed technical data with raw violation data and
+-  comprehensive accessibility information
+-- **📄 PDF Report**: Professional, brand-compliant report with executive
+-  summary and detailed findings
+-- **📊 Site-wide Aggregate Report**: Combines results from all tested pages
+-  into a single comprehensive overview
++### 🗄️ Database Storage (Primary)
++- **📄 JSON Report**: Stored in MongoDB database with metadata and searchable content
++- **📊 Report Statistics**: Comprehensive analytics and reporting data
++- **🔍 Advanced Queries**: Filter, paginate, and search through historical reports
++- **📈 Trend Analysis**: Track accessibility improvements over time
++
++### 📁 File Storage (Fallback)
++- **📄 JSON Report**: Detailed technical data with raw violation data and comprehensive accessibility information
++- **📄 Enhanced PDF Report**: Professional, brand-compliant report with database metadata, performance metrics, technical details, and scan timeline
++- **📊 Site-wide Aggregate Report**: Combines results from all tested pages into a single comprehensive overview
+ - **🗂️ Page-specific Reports**: Individual JSON files for each tested page
+ - **📸 Screenshots**: Visual evidence of accessibility violations (optional)
+ - **📄 Page List Cache**: Cached list of all discovered pages for faster re-runs
+ 
+ ### 📁 Historical Data Management
+ 
+-The system intelligently manages historical audit data:
++The system intelligently manages historical audit data with dual storage:
++
++#### 🗄️ Database Management (Primary)
++- **📊 Persistent Storage**: All JSON reports stored permanently in MongoDB database
++- **🔍 Advanced Search**: Query reports by site URL, report type, date range, and metadata
++- **📈 Analytics**: Comprehensive statistics and trend analysis across all reports
++- **🔄 Report Retrieval**: Access any historical report via API with full metadata
++- **📊 Performance Metrics**: Track accessibility improvements over time
+ 
++#### 📁 File Management (Fallback)
+ - **🔄 Automatic Cleanup**: Before each new audit, JSON files are moved to history and all existing PDF reports are deleted
+ - **📂 History Folder**: JSON files are automatically moved to `accessibility-reports/history/` for future reference
+ - **🧹 Clean Slate**: All existing PDF reports are deleted to provide a clean slate for new scan
+-- **🔄 Report Regeneration**: Historical JSON data can be used to regenerate PDF reports without re-running accessibility scans
++- **🔄 Enhanced Report Regeneration**: Historical JSON data can be used to regenerate enhanced PDF reports with database metadata without re-running accessibility scans
+ - **📊 Data Preservation**: All audit data is preserved for trend analysis and historical comparison
+ - **📄 Fresh Reports**: New PDF reports are generated after each scan completes
+ 
+ ## ⚙️ Configuration
+ 
+-### Configuration
++### Environment Variables
++
++Create a `.env.local` file in the root directory with your configuration:
++
++```bash
++# MongoDB Configuration (for production)
++MONGODB_URL=mongodb://admin:password123@localhost:27017
++MONGODB_DB_NAME=accessibility_testing
++
++# Local Development (auto-configured)
++NODE_ENV=development
++PORT=3000
++```
++
++### 🗄️ MongoDB Database Configuration
++
++#### Local Development
++The project includes a complete local MongoDB setup using Docker Compose:
++
++1. **Automatic Setup**: Run `npm run dev:setup:mongodb` to start everything
++2. **Manual Setup**: Use the individual MongoDB commands:
++   - `npm run mongodb:start` - Start local MongoDB
++   - `npm run mongodb:status` - Check service status
++   - `npm run mongodb:stop` - Stop services
++
++#### Production Setup
++1. **Set up MongoDB Instance**:
++   - Use MongoDB Atlas (cloud) or self-hosted MongoDB
++   - Create a database named `accessibility_testing`
++   - Note your connection string
++
++2. **Set Environment Variables**:
++   ```bash
++   export MONGODB_URL="mongodb://admin:password123@localhost:27017"
++   export MONGODB_DB_NAME="accessibility_testing"
++   ```
++
++3. **Database Schema**:
++   The MongoDB setup automatically creates:
++   - `accessibility_reports` collection for storing reports
++   - Indexes for performance optimization
++   - Automatic timestamp management
++
++4. **Database Features**:
++   - **Automatic Storage**: JSON reports are automatically stored in the database
++   - **Fallback Support**: File-based storage is maintained as a fallback
++   - **Report Retrieval**: Access reports via API endpoints with filtering and pagination
++   - **Statistics**: Get comprehensive report statistics and analytics
++   - **Flexible Schema**: MongoDB's document-based structure allows for flexible report storage
++
++5. **API Endpoints**:
++   - `GET /api/reports/:reportId` - Retrieve specific report by ID
++   - `GET /api/reports/stats` - Get report statistics
++   - `POST /api/reports/regenerate` - List all reports (database first, then files)
+ 
+-The accessibility testing system uses intelligent defaults optimised for comprehensive coverage. Configuration is handled through the web interface and internal service settings.
++**Note**: If MongoDB is not configured, the system will automatically fall back to file-based storage.
+ 
+ ### Universal Timeout Strategy
+ 
+@@ -409,8 +664,8 @@ The system follows **SOLID principles** with a clean, maintainable architecture:
+ 
+ **📄 PDF Generation**:
+ 
+-- **`PdfTemplateGenerator`**: HTML template generation for reports
+-- **`PdfOrchestrator`**: PDF creation and file management
++- **`PdfTemplateGenerator`**: Enhanced HTML template generation with database metadata
++- **`PdfOrchestrator`**: Enhanced PDF creation with comprehensive scan information
+ 
+ **🎯 Orchestration**:
+ 
+@@ -441,7 +696,7 @@ The system provides a modern web interface with real-time progress tracking and
+ - **⚡ Real-time Updates**: Live progress tracking via WebSocket
+ - **🎯 Comprehensive Coverage**: Multi-tool accessibility analysis
+ - **🔧 Modern Interface**: Responsive web design with UK brand compliance
+-- **📄 Professional Reports**: Audience-specific PDF and JSON outputs
++- **📄 Professional Reports**: Enhanced audience-specific PDF reports with database metadata and comprehensive JSON outputs
+ - **💾 Historical Data**: Intelligent file management with data preservation
+ - **🏗️ Maintainable Code**: Clean service-based architecture
+ 
+@@ -450,7 +705,7 @@ The system provides a modern web interface with real-time progress tracking and
+ 1. **Clean Start**: Automatic cleanup of previous reports (JSON moved to history, PDFs deleted)
+ 2. **Site Crawling**: Discovers pages with intelligent redirect handling
+ 3. **Accessibility Analysis**: Multi-tool testing with axe-core and Pa11y
+-4. **Report Generation**: Creates audience-specific PDF reports and detailed JSON data
++4. **Report Generation**: Creates enhanced audience-specific PDF reports with database metadata and detailed JSON data
+ 5. **Historical Preservation**: JSON data preserved for future report regeneration
+ 6. **Clean Exit**: Automatic process cleanup and termination
+ 
+@@ -460,7 +715,7 @@ The project includes comprehensive code quality tools, testing framework, and do
+ 
+ ### 🧪 Testing Framework
+ 
+-The application includes a **comprehensive testing suite** with **367+ tests** across all testing layers:
++The application includes a **comprehensive testing suite** with **315 tests** across all testing layers:
+ 
+ ```bash
+ # Run all tests
+@@ -479,9 +734,9 @@ npm run test:services      # Service tests only
+ npm run test:e2e           # End-to-end tests only
+ ```
+ 
+-**🎯 Complete Test Coverage (367+ Tests):**
++**🎯 Complete Test Coverage (315 Tests):**
+ 
+-#### **Unit Tests (304 tests)**
++#### **Unit Tests (210 tests)**
+ - **Core Services**: ErrorHandlerService, ConfigurationService, SecurityValidationService, FileOperationsService
+ - **Test Runners**: AxeTestRunner, Pa11yTestRunner with comprehensive analysis testing
+ - **Analyzers**: PageAnalyzer with full page analysis coverage
+@@ -490,20 +745,20 @@ npm run test:e2e           # End-to-end tests only
+ - **Edge Cases**: Error conditions, invalid inputs, and boundary testing
+ - **Performance**: Memory leak detection and concurrent access testing
+ 
+-#### **Integration Tests (50+ tests)**
++#### **Integration Tests (70 tests)**
+ - **Service Integration**: Cross-service communication and workflow testing
+ - **API Testing**: Complete REST API endpoint testing with error handling
+ - **WebSocket Testing**: Real-time communication and progress tracking
+ - **Error Propagation**: Comprehensive error handling across services
+ - **Configuration Integration**: Service configuration and validation
+ 
+-#### **Component Tests (13 tests)**
++#### **Component Tests (9 tests)**
+ - **Storybook Validation**: Component rendering and accessibility testing
+ - **UI Components**: Header, ScanOptions, ProgressSection components
+ - **Accessibility Compliance**: WCAG 2.1 AA validation for all components
+ - **Responsive Design**: Multi-viewport component testing
+ 
+-#### **End-to-End Tests (63 tests)**
++#### **End-to-End Tests (26 tests)**
+ - **Accessibility Scanning Workflows**: Complete user journey testing
+ - **Interface Accessibility Compliance**: WCAG 2.1 AA interface validation
+ - **Performance and Load Testing**: Page load and scan execution benchmarks
+@@ -802,9 +1057,9 @@ makes fixing accessibility violations straightforward:
+ [![Deploy](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/deploy.yml/badge.svg)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/deploy.yml)
+ [![Accessibility](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/accessibility.yml/badge.svg)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/accessibility.yml)
+ [![Dependencies](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/dependencies.yml/badge.svg)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/dependencies.yml)
+-[![Tests](https://img.shields.io/badge/tests-301%2B%20passing-brightgreen)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/ci.yml)
++[![Tests](https://img.shields.io/badge/tests-315%20passing-brightgreen)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/ci.yml)
+ [![WCAG](https://img.shields.io/badge/WCAG-2.1%20AAA%20Compliant-brightgreen)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/accessibility.yml)
+-[![E2E Tests](https://img.shields.io/badge/E2E%20Tests-47%20passing-brightgreen)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/ci.yml)
++[![E2E Tests](https://img.shields.io/badge/E2E%20Tests-26%20passing-brightgreen)](https://github.com/nimbleapproach/Accessability-Scanning-Tool/actions/workflows/ci.yml)
+ [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
+ [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+ [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.4-blue.svg)](https://www.typescriptlang.org/)
+\ No newline at end of file

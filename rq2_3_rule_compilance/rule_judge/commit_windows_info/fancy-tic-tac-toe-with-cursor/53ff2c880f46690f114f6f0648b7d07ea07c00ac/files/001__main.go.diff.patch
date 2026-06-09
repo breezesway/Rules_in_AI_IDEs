@@ -1,0 +1,35 @@
+diff --git a/main.go b/main.go
+index ff1ea0b..6e781e3 100644
+--- a/main.go
++++ b/main.go
+@@ -8,17 +8,23 @@ import (
+ )
+ 
+ func main() {
+-	c := make(chan any, 0)
++	c := make(chan struct{}, 0)
+ 
+-	game := game.NewGame()
++	g := game.NewGame()
+ 
+ 	// Register our game in JavaScript
+-	js.Global().Set("tictactoeGame", js.ValueOf(map[string]interface{}{
+-		"newGame": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+-			return game.Board()
+-		}),
++	js.Global().Set("game", js.ValueOf(map[string]interface{}{
+ 		"text": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+-			return game.Text()
++			return g.Text()
++		}),
++		"board": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
++			board := g.Board()
++			// Convert Go array to JavaScript array
++			jsBoard := make([]interface{}, len(board))
++			for i, cell := range board {
++				jsBoard[i] = cell
++			}
++			return jsBoard
+ 		}),
+ 	}))
+ 

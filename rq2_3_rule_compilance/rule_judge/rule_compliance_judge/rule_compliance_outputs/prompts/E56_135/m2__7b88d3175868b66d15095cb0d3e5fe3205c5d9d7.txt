@@ -1,0 +1,688 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- Python 3.12+ with notion-client, google-genai>=0.1.0, python-dotenv, pytest
++ Python 3.12+ with notion-client, google-genai>=0.1.0, python-dotenv, pytest, hypothesis
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files such as pyproject.toml, requirements.txt, Pipfile, setup.py, or environment definition files like .python-version.
+- Suggested Logic: Verify that 'hypothesis' is added to the project dependencies. Additionally, check that the Python version constraint is set to 3.12+ and that other specified packages (notion-client, google-genai>=0.1.0, python-dotenv, pytest) are present in the dependency manifest.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: feat: Implement sequential video splitting for long videos
+
+This commit introduces the following changes:
+
+-   Updates the logic in `GeminiSummaryWriter` to process long videos sequentially. Instead of generating summaries for all chunks and then combining them, the new approach processes chunks one by one, feeding the summary of the previous chunks into the prompt for the next one.
+-   Updates the unit tests for `GeminiSummaryWriter` to test the new sequential logic.
+- Changed Files List: 
+src/youtube_notion/config/constants.py	+4	-1	after_lines=18
+src/youtube_notion/extractors/video_metadata_extractor.py	+13	-4	after_lines=577
+src/youtube_notion/utils/video_utils.py	+82	-0	after_lines=82
+src/youtube_notion/writers/gemini_summary_writer.py	+87	-21	after_lines=669
+tests/unit/test_gemini_summary_writer.py	+69	-1	after_lines=701
+tests/unit/test_metadata_extraction.py	+6	-2	after_lines=501
+tests/unit/test_video_metadata_extractor.py	+7	-2	after_lines=491
+tests/unit/test_video_utils.py	+48	-0	after_lines=48
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   ├── markdown_converter.py
+│       │   └── video_utils.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_property_based_markdown_converter.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       ├── test_video_processor.py
+│       └── test_video_utils.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/youtube_notion/config/constants.py ---
+diff --git a/src/youtube_notion/config/constants.py b/src/youtube_notion/config/constants.py
+index 59f3cc5..6717889 100644
+--- a/src/youtube_notion/config/constants.py
++++ b/src/youtube_notion/config/constants.py
+@@ -12,4 +12,7 @@ Don't miss any details but keep the article as short and direct as possible.
+ Put timestamp(s) to fragments of the video next to each fact you got from the video.
+ Format the output in markdown with proper headers, bullet points, and formatting.
+ Use timestamps in the format [MM:SS] or [MM:SS-MM:SS] for time ranges.
+-"""
+\ No newline at end of file
++"""
++
++# Maximum video duration in seconds that can be processed in a single chunk
++MAX_VIDEO_DURATION_SECONDS = 2700  # 45 minutes
+\ No newline at end of file
+
+--- FILE: src/youtube_notion/extractors/video_metadata_extractor.py ---
+diff --git a/src/youtube_notion/extractors/video_metadata_extractor.py b/src/youtube_notion/extractors/video_metadata_extractor.py
+index 0a19e6a..d26ff39 100644
+--- a/src/youtube_notion/extractors/video_metadata_extractor.py
++++ b/src/youtube_notion/extractors/video_metadata_extractor.py
+@@ -21,6 +21,7 @@ from ..utils.exceptions import (
+     MetadataExtractionError,
+     ConfigurationError
+ )
++from ..utils.video_utils import parse_iso8601_duration
+ 
+ 
+ class VideoMetadataExtractor:
+@@ -346,7 +347,7 @@ class VideoMetadataExtractor:
+             
+             # Request video details
+             request = youtube.videos().list(
+-                part='snippet',
++                part='snippet,contentDetails',
+                 id=video_id
+             )
+             
+@@ -361,14 +362,21 @@ class VideoMetadataExtractor:
+                 )
+             
+             # Extract video information
+-            video_info = response['items'][0]['snippet']
++            video_item = response['items'][0]
++            video_info = video_item['snippet']
++            content_details = video_item.get('contentDetails', {})
++
++            # Extract and parse duration
++            duration_iso = content_details.get('duration')
++            duration_seconds = parse_iso8601_duration(duration_iso) if duration_iso else 0
+             
+             return {
+                 'title': video_info.get('title', 'Unknown Title'),
+                 'channel': video_info.get('channelTitle', 'Unknown Channel'),
+                 'description': video_info.get('description', ''),
+                 'published_at': video_info.get('publishedAt', ''),
+-                'thumbnail_url': self._construct_thumbnail_url(video_id)
++                'thumbnail_url': self._construct_thumbnail_url(video_id),
++                'duration': duration_seconds
+             }
+             
+         except VideoUnavailableError:
+@@ -505,7 +513,8 @@ class VideoMetadataExtractor:
+                 'channel': channel,
+                 'description': '',  # Not easily extractable via scraping
+                 'published_at': '',  # Not easily extractable via scraping
+-                'thumbnail_url': self._construct_thumbnail_url(video_id)
++                'thumbnail_url': self._construct_thumbnail_url(video_id),
++                'duration': 0
+             }
+             
+         except VideoUnavailableError:
+
+--- FILE: src/youtube_notion/utils/video_utils.py ---
+diff --git a/src/youtube_notion/utils/video_utils.py b/src/youtube_notion/utils/video_utils.py
+new file mode 100644
+index 0000000..17d6510
+--- /dev/null
++++ b/src/youtube_notion/utils/video_utils.py
+@@ -0,0 +1,82 @@
++import re
++from typing import List, Tuple
++from datetime import timedelta
++
++def parse_iso8601_duration(duration: str) -> int:
++    """
++    Parse an ISO 8601 duration string (e.g., PT1H2M3S) into seconds.
++    Args:
++        duration: ISO 8601 duration string.
++    Returns:
++        The duration in seconds.
++    """
++    if not duration or duration.startswith("-"):
++        return 0
++
++    match = re.match(
++        r"P(?:(?P<years>\d+)Y)?(?:(?P<months>\d+)M)?(?:(?P<weeks>\d+)W)?(?:(?P<days>\d+)D)?"
++        r"T?(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?",
++        duration,
++    )
++    if not match:
++        return 0
++
++    parts = match.groupdict()
++    time_params = {}
++    for name, param in parts.items():
++        if param:
++            time_params[name] = int(param)
++
++    total_seconds = timedelta(
++        days=(time_params.get("years", 0) * 365)
++        + (time_params.get("months", 0) * 30)
++        + (time_params.get("weeks", 0) * 7)
++        + time_params.get("days", 0),
++        hours=time_params.get("hours", 0),
++        minutes=time_params.get("minutes", 0),
++        seconds=time_params.get("seconds", 0),
++    ).total_seconds()
++
++    return int(total_seconds)
++
++
++def calculate_video_splits(
++    duration_seconds: int,
++    max_chunk_duration: int = 2700,  # 45 minutes
++    min_chunk_duration: int = 1200,  # 20 minutes
++    overlap_duration: int = 300,  # 5 minutes
++) -> List[Tuple[int, int]]:
++    """
++    Calculate video splits for a long video.
++
++    Args:
++        duration_seconds: The total duration of the video in seconds.
++        max_chunk_duration: The maximum duration of a single chunk in seconds.
++        min_chunk_duration: The minimum duration of a single chunk in seconds.
++        overlap_duration: The duration of the overlap between chunks in seconds.
++
++    Returns:
++        A list of tuples, where each tuple contains the start and end time
++        of a video chunk in seconds.
++    """
++    if duration_seconds <= max_chunk_duration:
++        return [(0, duration_seconds)]
++
++    splits = []
++    start_time = 0
++    while True:
++        end_time = start_time + max_chunk_duration
++        if end_time >= duration_seconds:
++            splits.append((start_time, duration_seconds))
++            break
++
++        next_start_time = end_time - overlap_duration
++        remaining_duration = duration_seconds - next_start_time
++        if remaining_duration < min_chunk_duration:
++            splits.append((start_time, duration_seconds))
++            break
++
++        splits.append((start_time, end_time))
++        start_time = next_start_time
++
++    return splits
+
+--- FILE: src/youtube_notion/writers/gemini_summary_writer.py ---
+diff --git a/src/youtube_notion/writers/gemini_summary_writer.py b/src/youtube_notion/writers/gemini_summary_writer.py
+index cb48690..bfa7f0a 100644
+--- a/src/youtube_notion/writers/gemini_summary_writer.py
++++ b/src/youtube_notion/writers/gemini_summary_writer.py
+@@ -22,7 +22,8 @@ from ..utils.exceptions import (
+     APIError,
+     QuotaExceededError
+ )
+-from ..config.constants import DEFAULT_SUMMARY_PROMPT
++from ..config.constants import DEFAULT_SUMMARY_PROMPT, MAX_VIDEO_DURATION_SECONDS
++from ..utils.video_utils import calculate_video_splits
+ 
+ 
+ class GeminiSummaryWriter(SummaryWriter):
+@@ -81,8 +82,8 @@ class GeminiSummaryWriter(SummaryWriter):
+         # Initialize chat logger
+         self.chat_logger = chat_logger or ChatLogger()
+     
+-    def generate_summary(self, video_url: str, video_metadata: Dict[str, Any], 
+-                        custom_prompt: Optional[str] = None) -> str:
++    def generate_summary(self, video_url: str, video_metadata: Dict[str, Any],
++                         custom_prompt: Optional[str] = None) -> str:
+         """
+         Generate a markdown summary for the video using Gemini AI.
+         
+@@ -100,16 +101,19 @@ class GeminiSummaryWriter(SummaryWriter):
+         """
+         if not video_url:
+             raise SummaryGenerationError("Video URL is required")
+-        
++
+         if not video_metadata:
+             raise SummaryGenerationError("Video metadata is required")
+-        
++
+         prompt = custom_prompt or self.default_prompt
+-        
++        duration_seconds = video_metadata.get('duration', 0)
++
+         try:
+-            # Generate summary with retry logic
+-            response = self._api_call_with_retry(self._call_gemini_api, video_url, prompt)
+-            
++            if duration_seconds > MAX_VIDEO_DURATION_SECONDS:
++                response = self._generate_summary_for_long_video(video_url, video_metadata, prompt)
++            else:
++                response = self._api_call_with_retry(self._call_gemini_api, video_url, prompt)
++
+             # Log the chat conversation
+             try:
+                 video_id = video_metadata.get('video_id', 'unknown')
+@@ -123,9 +127,9 @@ class GeminiSummaryWriter(SummaryWriter):
+             except Exception as e:
+                 # Don't fail the main process if logging fails
+                 print(f"Warning: Failed to log chat conversation: {e}")
+-            
++
+             return response
+-            
++
+         except (APIError, QuotaExceededError):
+             # Re-raise known API errors as SummaryGenerationError
+             raise
+@@ -135,6 +139,39 @@ class GeminiSummaryWriter(SummaryWriter):
+                 f"Unexpected error during summary generation: {str(e)}",
+                 details=f"Video URL: {video_url}, Error type: {type(e).__name__}"
+             )
++
++    def _generate_summary_for_long_video(self, video_url: str, video_metadata: Dict[str, Any], prompt: str) -> str:
++        """
++        Generate a summary for a long video by splitting it into chunks and processing them sequentially.
++        """
++        duration_seconds = video_metadata.get('duration', 0)
++        splits = calculate_video_splits(duration_seconds)
++
++        full_summary = ""
++        for i, (start, end) in enumerate(splits):
++            print(f"Processing video chunk {i+1}/{len(splits)}: {start}s - {end}s")
++
++            if i == 0:
++                chunk_prompt = f"This is the first part of a video. {prompt}"
++            else:
++                chunk_prompt = (
++                    f"This is part {i+1} of {len(splits)} of a video, starting from timestamp {start}s.\n"
++                    f"The summary from the previous part is:\n<summary>{full_summary}</summary>\n"
++                    f"Your task is to write a summary for the second part with timestamps according to the instructions.\n"
++                    f"<instruction>{prompt}</instruction>\n"
++                    f"<important>Return only the continuation of the summary, don't duplicate content from parts already in the previous summary.</important>"
++                )
++
++            summary_part = self._api_call_with_retry(
++                self._call_gemini_api,
++                video_url,
++                chunk_prompt,
++                start_offset=f"{start}s",
++                end_offset=f"{end}s"
++            )
++            full_summary += "\n" + summary_part if full_summary else summary_part
++
++        return full_summary
+     
+     def validate_configuration(self) -> bool:
+         """
+@@ -181,13 +218,16 @@ class GeminiSummaryWriter(SummaryWriter):
+                 f"Configuration validation failed: {str(e)}"
+             )
+     
+-    def _call_gemini_api(self, video_url: str, prompt: str) -> str:
++    def _call_gemini_api(self, video_url: str, prompt: str,
++                         start_offset: Optional[str] = None, end_offset: Optional[str] = None) -> str:
+         """
+         Make the actual Gemini API call with streaming response handling.
+         
+         Args:
+             video_url: YouTube URL for Gemini to process
+             prompt: Prompt for summary generation
++            start_offset: Start offset for video chunk
++            end_offset: End offset for video chunk
+             
+         Returns:
+             str: AI-generated markdown summary with timestamps
+@@ -200,19 +240,24 @@ class GeminiSummaryWriter(SummaryWriter):
+             # Initialize Gemini client
+             client = genai.Client(api_key=self.api_key)
+             
++            # Prepare video part
++            video_part = types.Part(
++                file_data=types.FileData(
++                    file_uri=video_url,
++                    mime_type="video/*"
++                )
++            )
++            if start_offset and end_offset:
++                video_part.video_metadata = types.VideoMetadata(
++                    start_offset=start_offset,
++                    end_offset=end_offset
++                )
++
+             # Prepare content for the API call
+             contents = [
+                 types.Content(
+                     role="user",
+-                    parts=[
+-                        types.Part(
+-                            file_data=types.FileData(
+-                                file_uri=video_url,
+-                                mime_type="video/*"
+-                            )
+-                        ),
+-                        types.Part.from_text(text=prompt)
+-                    ]
++                    parts=[video_part, types.Part.from_text(text=prompt)]
+                 )
+             ]
+             
+@@ -312,6 +357,27 @@ class GeminiSummaryWriter(SummaryWriter):
+                 api_name="Gemini API",
+                 details=f"Video URL: {video_url}, Error type: {error_type}, Model: {self.model}"
+             )
++
++    def _call_gemini_api_for_text(self, prompt: str) -> str:
++        """
++        Make a Gemini API call for text-only input.
++        """
++        try:
++            client = genai.Client(api_key=self.api_key)
++            contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
++            generate_content_config = types.GenerateContentConfig(
++                temperature=self.temperature,
++                max_output_tokens=self.max_output_tokens,
++                response_mime_type="text/plain"
++            )
++            response = client.models.generate_content(
++                model=self.model,
++                contents=contents,
++                config=generate_content_config
++            )
++            return response.text.strip() if response.text else ""
++        except Exception as e:
++            raise APIError(f"Gemini API text call failed: {str(e)}", api_name="Gemini API")
+     
+     def _api_call_with_retry(self, api_func, *args, **kwargs):
+         """
+
+--- FILE: tests/unit/test_gemini_summary_writer.py ---
+diff --git a/tests/unit/test_gemini_summary_writer.py b/tests/unit/test_gemini_summary_writer.py
+index a26ae72..06a7846 100644
+--- a/tests/unit/test_gemini_summary_writer.py
++++ b/tests/unit/test_gemini_summary_writer.py
+@@ -630,4 +630,72 @@ class TestIntegration:
+         with patch('src.youtube_notion.writers.gemini_summary_writer.genai.Client', side_effect=Exception("Client error")):
+             writer = GeminiSummaryWriter(api_key="invalid_key")
+             with pytest.raises(ConfigurationError):
+-                writer.validate_configuration()
+\ No newline at end of file
++                writer.validate_configuration()
++
++
++class TestGeminiSummaryWriterVideoSplitting:
++    """Test video splitting logic in GeminiSummaryWriter."""
++
++    @pytest.fixture
++    def mock_writer(self):
++        """Create a GeminiSummaryWriter with mocked dependencies."""
++        with patch('src.youtube_notion.writers.gemini_summary_writer.genai.Client'):
++            writer = GeminiSummaryWriter(api_key="test_api_key")
++            writer.chat_logger = Mock(spec=ChatLogger)
++            return writer
++
++    @pytest.fixture
++    def long_video_metadata(self):
++        """Sample video metadata for a long video."""
++        return {
++            'video_id': 'long_video_id',
++            'title': 'Long Test Video Title',
++            'channel': 'Test Channel',
++            'duration': 5000  # Longer than MAX_VIDEO_DURATION_SECONDS
++        }
++
++    @patch('src.youtube_notion.writers.gemini_summary_writer.calculate_video_splits')
++    def test_long_video_is_split(self, mock_calculate_splits, mock_writer, long_video_metadata):
++        """Test that a long video is split and processed in chunks."""
++        mock_calculate_splits.return_value = [(0, 2700), (2400, 5000)]
++
++        with patch.object(mock_writer, '_api_call_with_retry') as mock_retry:
++            # Mock return values for each call
++            mock_retry.side_effect = [
++                "Summary for part 1.",
++                "Summary for part 2.",
++            ]
++
++            result = mock_writer.generate_summary(
++                video_url="https://youtube.com/watch?v=long_id",
++                video_metadata=long_video_metadata
++            )
++
++            assert result == "Summary for part 1.\nSummary for part 2."
++            mock_calculate_splits.assert_called_once_with(5000)
++            assert mock_retry.call_count == 2
++
++            # Check calls for each split
++            call1_args, call1_kwargs = mock_retry.call_args_list[0]
++            assert call1_kwargs['start_offset'] == "0s"
++            assert call1_kwargs['end_offset'] == "2700s"
++            assert "This is the first part of a video." in call1_args[2]
++
++            call2_args, call2_kwargs = mock_retry.call_args_list[1]
++            assert call2_kwargs['start_offset'] == "2400s"
++            assert call2_kwargs['end_offset'] == "5000s"
++            assert "This is part 2 of 2 of a video" in call2_args[2]
++            assert "<summary>Summary for part 1.</summary>" in call2_args[2]
++
++    def test_short_video_is_not_split(self, mock_writer, sample_video_metadata):
++        """Test that a short video is not split."""
++        with patch.object(mock_writer, '_api_call_with_retry') as mock_retry:
++            mock_retry.return_value = "Short video summary"
++
++            result = mock_writer.generate_summary(
++                video_url="https://youtube.com/watch?v=short_id",
++                video_metadata=sample_video_metadata # duration is 0 by default
++            )
++
++            assert result == "Short video summary"
++            mock_retry.assert_called_once()
+\ No newline at end of file
+
+--- FILE: tests/unit/test_metadata_extraction.py ---
+diff --git a/tests/unit/test_metadata_extraction.py b/tests/unit/test_metadata_extraction.py
+index 6c18198..8b97850 100644
+--- a/tests/unit/test_metadata_extraction.py
++++ b/tests/unit/test_metadata_extraction.py
+@@ -64,6 +64,9 @@ class TestYouTubeDataAPI:
+                     'channelTitle': 'RickAstleyVEVO',
+                     'description': 'The official video for "Never Gonna Give You Up"',
+                     'publishedAt': '2009-10-25T06:57:33Z'
++                },
++                'contentDetails': {
++                    'duration': 'PT3M32S'
+                 }
+             }]
+         }
+@@ -74,7 +77,7 @@ class TestYouTubeDataAPI:
+         # Verify API was called correctly
+         mock_build.assert_called_once_with('youtube', 'v3', developerKey='test_youtube_key')
+         mock_videos.list.assert_called_once_with(
+-            part='snippet',
++            part='snippet,contentDetails',
+             id=self.test_video_id
+         )
+         
+@@ -84,7 +87,8 @@ class TestYouTubeDataAPI:
+             'channel': 'RickAstleyVEVO',
+             'description': 'The official video for "Never Gonna Give You Up"',
+             'published_at': '2009-10-25T06:57:33Z',
+-            'thumbnail_url': f'https://img.youtube.com/vi/{self.test_video_id}/maxresdefault.jpg'
++            'thumbnail_url': f'https://img.youtube.com/vi/{self.test_video_id}/maxresdefault.jpg',
++            'duration': 212
+         }
+         assert result == expected
+
+--- FILE: tests/unit/test_video_metadata_extractor.py ---
+diff --git a/tests/unit/test_video_metadata_extractor.py b/tests/unit/test_video_metadata_extractor.py
+index fe0a4e0..9591467 100644
+--- a/tests/unit/test_video_metadata_extractor.py
++++ b/tests/unit/test_video_metadata_extractor.py
+@@ -176,6 +176,9 @@ class TestVideoMetadataExtractor:
+                     'channelTitle': 'Test Channel',
+                     'description': 'Test description',
+                     'publishedAt': '2023-01-01T00:00:00Z'
++                },
++                'contentDetails': {
++                    'duration': 'PT1H2M3S'
+                 }
+             }]
+         }
+@@ -190,7 +193,8 @@ class TestVideoMetadataExtractor:
+             'description': 'Test description',
+             'published_at': '2023-01-01T00:00:00Z',
+             'thumbnail_url': 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+-            'video_id': 'dQw4w9WgXcQ'
++            'video_id': 'dQw4w9WgXcQ',
++            'duration': 3723
+         }
+         
+         assert result == expected
+@@ -293,7 +297,8 @@ class TestVideoMetadataExtractor:
+             'description': '',
+             'published_at': '',
+             'thumbnail_url': 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+-            'video_id': 'dQw4w9WgXcQ'
++            'video_id': 'dQw4w9WgXcQ',
++            'duration': 0
+         }
+         
+         assert result == expected
+
+--- FILE: tests/unit/test_video_utils.py ---
+diff --git a/tests/unit/test_video_utils.py b/tests/unit/test_video_utils.py
+new file mode 100644
+index 0000000..21986c9
+--- /dev/null
++++ b/tests/unit/test_video_utils.py
+@@ -0,0 +1,48 @@
++import pytest
++from src.youtube_notion.utils.video_utils import parse_iso8601_duration, calculate_video_splits
++
++@pytest.mark.parametrize(
++    "duration_str, expected_seconds",
++    [
++        ("PT1H2M3S", 3723),
++        ("PT1M", 60),
++        ("PT1S", 1),
++        ("P1DT12H", 129600),
++        ("PT0S", 0),
++        ("", 0),
++        (None, 0),
++        ("P1Y", 31536000),
++        ("P1M", 2592000),
++        ("P1W", 604800),
++        ("P1D", 86400),
++    ],
++)
++def test_parse_iso8601_duration(duration_str, expected_seconds):
++    assert parse_iso8601_duration(duration_str) == expected_seconds
++
++@pytest.mark.parametrize(
++    "duration_seconds, max_chunk_duration, min_chunk_duration, overlap_duration, expected_splits",
++    [
++        # Video shorter than max_chunk_duration
++        (2000, 2700, 1200, 300, [(0, 2000)]),
++        # Video equal to max_chunk_duration
++        (2700, 2700, 1200, 300, [(0, 2700)]),
++        # Video slightly longer than max_chunk_duration, but the remainder is less than min_chunk_duration
++        (3000, 2700, 1200, 300, [(0, 3000)]),
++        # Video that needs to be split into two parts
++        (4000, 2700, 1200, 300, [(0, 2700), (2400, 4000)]),
++        # Video that needs to be split into three parts
++        (7000, 2700, 1200, 300, [(0, 2700), (2400, 5100), (4800, 7000)]),
++        # Edge case: last chunk is exactly min_chunk_duration
++        (3900, 2700, 1200, 300, [(0, 2700), (2400, 3900)]),
++        # Edge case: last chunk is shorter than min_chunk_duration, should be merged
++        (3899, 2700, 1200, 300, [(0, 2700), (2400, 3899)]),
++    ],
++)
++def test_calculate_video_splits(
++    duration_seconds, max_chunk_duration, min_chunk_duration, overlap_duration, expected_splits
++):
++    splits = calculate_video_splits(
++        duration_seconds, max_chunk_duration, min_chunk_duration, overlap_duration
++    )
++    assert splits == expected_splits
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

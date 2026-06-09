@@ -1,0 +1,967 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+Directory tree and responsibility table updated to include utils/video_utils.py.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and project documentation files (e.g., README.md, PROJECT_STRUCTURE.md, or docs/ directory).
+- Suggested Logic: 1. Verify the existence of the file 'utils/video_utils.py' in the repository.
+2. Perform a text search/regex check in documentation files (like README.md) to confirm that 'utils/video_utils.py' is listed in the directory tree or responsibility table section.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: design
+- Changed Files List: 
+.kiro/specs/web-ui-mode/design.md	+528	-0	after_lines=528
+.kiro/specs/web-ui-mode/requirements.md	+143	-0	after_lines=143
+.kiro/specs/web-ui-mode/tasks.md	+144	-0	after_lines=144
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── architecture-restructure
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── web-ui-mode
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_integration_tests.py
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── constants.py
+│       │   ├── example_data.py
+│       │   ├── factory.py
+│       │   └── settings.py
+│       ├── extractors
+│       │   ├── __init__.py
+│       │   └── video_metadata_extractor.py
+│       ├── interfaces
+│       │   ├── __init__.py
+│       │   ├── storage.py
+│       │   └── summary_writer.py
+│       ├── main.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   └── video_processor.py
+│       ├── storage
+│       │   ├── __init__.py
+│       │   └── notion_storage.py
+│       ├── utils
+│       │   ├── __init__.py
+│       │   ├── chat_logger.py
+│       │   ├── exceptions.py
+│       │   ├── markdown_converter.py
+│       │   └── video_utils.py
+│       └── writers
+│           ├── __init__.py
+│           └── gemini_summary_writer.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── fixtures
+│   │   ├── __init__.py
+│   │   └── mock_implementations.py
+│   ├── integration
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── conftest.py
+│   │   ├── test_end_to_end_integration.py
+│   │   ├── test_gemini_integration.py
+│   │   └── test_setup_validation.py
+│   └── unit
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── test_chat_logging.py
+│       ├── test_cli.py
+│       ├── test_component_integration.py
+│       ├── test_comprehensive_error_handling.py
+│       ├── test_configuration.py
+│       ├── test_end_to_end_timestamps.py
+│       ├── test_exceptions.py
+│       ├── test_gemini_summary_writer.py
+│       ├── test_interfaces.py
+│       ├── test_markdown_converter.py
+│       ├── test_metadata_extraction.py
+│       ├── test_mock_implementations.py
+│       ├── test_notion_storage.py
+│       ├── test_performance.py
+│       ├── test_property_based_markdown_converter.py
+│       ├── test_timestamp_enrichment.py
+│       ├── test_url_validation.py
+│       ├── test_validation_edge_cases.py
+│       ├── test_video_metadata_extractor.py
+│       ├── test_video_processor.py
+│       └── test_video_utils.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/web-ui-mode/design.md ---
+diff --git a/.kiro/specs/web-ui-mode/design.md b/.kiro/specs/web-ui-mode/design.md
+new file mode 100644
+index 0000000..580a85f
+--- /dev/null
++++ b/.kiro/specs/web-ui-mode/design.md
+@@ -0,0 +1,528 @@
++# Design Document
++
++## Overview
++
++The web UI mode feature adds a browser-based interface to the YouTube-to-Notion integration application. The design follows a client-server architecture where the existing CLI application is extended with a web server backend that serves a single-page application (SPA) frontend. The system maintains the existing component-based architecture while adding new web-specific components for queue management, real-time communication, and UI serving.
++
++The design prioritizes code reuse by implementing a shared queue system that both CLI batch processing and web UI modes can utilize. This ensures consistency between processing modes while avoiding code duplication.
++
++## Architecture
++
++### High-Level Architecture
++
++```mermaid
++graph TB
++    CLI[CLI Entry Point] --> QM[Queue Manager]
++    WebUI[Web UI Entry Point] --> WS[Web Server]
++    WS --> QM
++    WS --> SSE[Server-Sent Events]
++    WS --> Static[Static File Server]
++    
++    QM --> VP[Video Processor]
++    VP --> CF[Component Factory]
++    CF --> ME[Metadata Extractor]
++    CF --> SW[Summary Writer]
++    CF --> NS[Notion Storage]
++    
++    Browser[Web Browser] --> Static
++    Browser --> SSE
++    Browser --> WS
++    
++    subgraph "Existing Components"
++        VP
++        CF
++        ME
++        SW
++        NS
++    end
++    
++    subgraph "New Components"
++        QM
++        WS
++        SSE
++        Static
++    end
++```
++
++### Component Interaction Flow
++
++```mermaid
++sequenceDiagram
++    participant Browser
++    participant WebServer
++    participant QueueManager
++    participant VideoProcessor
++    participant ComponentFactory
++    
++    Browser->>WebServer: Add URL to queue
++    WebServer->>QueueManager: enqueue(url)
++    QueueManager->>WebServer: Queue updated event
++    WebServer->>Browser: SSE: Queue status update
++    
++    QueueManager->>VideoProcessor: process_video(url)
++    VideoProcessor->>ComponentFactory: create_all_components()
++    VideoProcessor->>QueueManager: Status: In Progress
++    QueueManager->>WebServer: Status change event
++    WebServer->>Browser: SSE: Status update
++    
++    VideoProcessor->>QueueManager: Status: Complete
++    QueueManager->>WebServer: Status change event
++    WebServer->>Browser: SSE: Final status update
++```
++
++## Components and Interfaces
++
++### New Components
++
++#### 1. QueueManager (`processors/queue_manager.py`)
++
++**Purpose**: Centralized queue management for both CLI and web UI modes
++
++**Interface**:
++```python
++class QueueManager:
++    def enqueue(self, url: str, custom_prompt: Optional[str] = None) -> str
++    def get_queue_status(self) -> Dict[str, List[QueueItem]]
++    def get_item_status(self, item_id: str) -> QueueItem
++    def start_processing(self) -> None
++    def stop_processing(self) -> None
++    def add_status_listener(self, callback: Callable) -> None
++    def remove_status_listener(self, callback: Callable) -> None
++```
++
++**Key Features**:
++- Thread-safe queue operations using `threading.Lock`
++- Observable pattern for status change notifications
++- Automatic processing loop in background thread
++- Support for custom prompts per URL
++- Unique item IDs for tracking
++- Graceful shutdown handling
++
++#### 2. WebServer (`web/server.py`)
++
++**Purpose**: HTTP server for serving UI and handling API requests
++
++**Interface**:
++```python
++from fastapi import FastAPI, HTTPException
++from pydantic import BaseModel
++
++class WebServer:
++    def __init__(self, queue_manager: QueueManager, port: int = 8080)
++    def start(self) -> None
++    def stop(self) -> None
++
++# FastAPI endpoints with automatic validation
++@app.post("/api/queue", response_model=AddUrlResponse)
++async def add_url_endpoint(request: AddUrlRequest) -> AddUrlResponse
++
++@app.get("/api/status", response_model=QueueStatusResponse)
++async def get_status_endpoint() -> QueueStatusResponse
++
++@app.get("/api/chat-log/{item_id}")
++async def get_chat_log_endpoint(item_id: str) -> dict
++
++@app.get("/events")
++async def sse_endpoint() -> StreamingResponse
++```
++
++**Technology**: FastAPI web framework (modern, high-performance, async)
++**Key Features**:
++- RESTful API endpoints with automatic OpenAPI documentation
++- Server-Sent Events (SSE) for real-time updates with async support
++- Static file serving for frontend assets
++- Built-in CORS middleware
++- Automatic request/response validation with Pydantic
++- Type hints and dependency injection
++
++#### 3. QueueItem (`web/models.py`)
++
++**Purpose**: Data model for queue items with status tracking
++
++**Interface**:
++```python
++@dataclass
++class QueueItem:
++    id: str
++    url: str
++    custom_prompt: Optional[str]
++    status: QueueStatus
++    title: Optional[str]
++    thumbnail_url: Optional[str]
++    channel: Optional[str]
++    created_at: datetime
++    started_at: Optional[datetime]
++    completed_at: Optional[datetime]
++    error_message: Optional[str]
++    chat_log_path: Optional[str]
++    chunk_logs: List[str]
++    current_phase: Optional[str]
++    current_chunk: Optional[int]
++    total_chunks: Optional[int]
++```
++
++#### 4. Frontend SPA (`web/static/`)
++
++**Purpose**: Single-page application for the web interface
++
++**Technology**: Vanilla JavaScript with modern ES6+ features
++**Key Files**:
++- `index.html` - Main HTML structure
++- `app.js` - Main application logic
++- `styles.css` - YouTube-inspired styling
++- `components/` - Reusable UI components
++
++### Modified Components
++
++#### 1. CLI Entry Point (`youtube_notion_cli.py`)
++
++**Changes**:
++- Add `--ui` flag to argument parser
++- Initialize QueueManager for batch processing
++- Delegate to WebServer when UI mode is requested
++
++#### 2. Main Application (`src/youtube_notion/main.py`)
++
++**Changes**:
++- Add `main_ui()` function for web UI mode
++- Integrate QueueManager for batch processing
++- Maintain backward compatibility
++
++## Data Models
++
++### Queue Status Enumeration
++
++```python
++class QueueStatus(Enum):
++    TODO = "todo"
++    IN_PROGRESS = "in_progress"
++    COMPLETED = "completed"
++    FAILED = "failed"
++```
++
++### Processing Phase Enumeration
++
++```python
++class ProcessingPhase(Enum):
++    METADATA_EXTRACTION = "Extracting metadata"
++    SUMMARY_GENERATION = "Generating summary"
++    CHUNK_PROCESSING = "Processing chunk"
++    NOTION_UPLOAD = "Uploading to Notion"
++```
++
++### API Request/Response Models (Pydantic)
++
++```python
++from pydantic import BaseModel, HttpUrl
++from typing import List, Optional
++
++class AddUrlRequest(BaseModel):
++    url: HttpUrl
++    custom_prompt: Optional[str] = None
++
++class AddUrlResponse(BaseModel):
++    success: bool
++    item_id: Optional[str] = None
++    error: Optional[str] = None
++
++class QueueStatusResponse(BaseModel):
++    todo: List[QueueItem]
++    in_progress: List[QueueItem]
++    completed: List[QueueItem]
++    failed: List[QueueItem]
++
++class QueueItem(BaseModel):
++    id: str
++    url: str
++    custom_prompt: Optional[str]
++    status: QueueStatus
++    title: Optional[str]
++    thumbnail_url: Optional[str]
++    channel: Optional[str]
++    created_at: datetime
++    started_at: Optional[datetime]
++    completed_at: Optional[datetime]
++    error_message: Optional[str]
++    chat_log_path: Optional[str]
++    chunk_logs: List[str]
++    current_phase: Optional[str]
++    current_chunk: Optional[int]
++    total_chunks: Optional[int]
++```
++
++## Error Handling
++
++### Error Categories
++
++1. **Validation Errors**: Invalid URLs, missing parameters
++2. **Processing Errors**: Video processing failures, API errors
++3. **Server Errors**: Web server issues, connection problems
++4. **Queue Errors**: Queue operation failures, concurrency issues
++
++### Error Handling Strategy
++
++```python
++# Web API error responses
++@dataclass
++class ErrorResponse:
++    error: str
++    details: Optional[str]
++    error_code: str
++    timestamp: datetime
++
++# Error codes
++class ErrorCodes:
++    INVALID_URL = "INVALID_URL"
++    PROCESSING_FAILED = "PROCESSING_FAILED"
++    QUEUE_FULL = "QUEUE_FULL"
++    SERVER_ERROR = "SERVER_ERROR"
++```
++
++### Error Recovery
++
++- **Queue Processing**: Continue processing remaining items on individual failures
++- **Web Server**: Graceful error responses with appropriate HTTP status codes
++- **Real-time Updates**: Reconnection logic for SSE connections
++- **Frontend**: User-friendly error messages with retry options
++
++## Testing Strategy
++
++### Unit Testing Approach
++
++#### QueueManager Testing
++```python
++class TestQueueManager:
++    def test_enqueue_valid_url(self, mock_video_processor)
++    def test_queue_status_updates(self, mock_video_processor)
++    def test_concurrent_operations(self, mock_video_processor)
++    def test_status_listeners(self, mock_video_processor)
++    def test_graceful_shutdown(self, mock_video_processor)
++```
++
++#### WebServer Testing (FastAPI)
++```python
++from fastapi.testclient import TestClient
++import pytest
++
++class TestWebServer:
++    @pytest.fixture
++    def client(self, mock_queue_manager):
++        app = create_app(mock_queue_manager)
++        return TestClient(app)
++    
++    def test_add_url_endpoint(self, client, mock_queue_manager)
++    def test_get_status_endpoint(self, client, mock_queue_manager)
++    async def test_sse_endpoint(self, client, mock_queue_manager)
++    def test_static_file_serving(self, client)
++    def test_automatic_validation(self, client)
++    def test_openapi_docs(self, client)
++```
++
++#### Frontend Testing
++- **Unit Tests**: JavaScript functions using Jest or similar
++- **Integration Tests**: Selenium WebDriver for UI interactions
++- **Mock Server**: Test frontend against mock API responses
++
++### Mock Implementations
++
++```python
++# tests/fixtures/mock_implementations.py
++class MockQueueManager:
++    def __init__(self):
++        self.items = {}
++        self.listeners = []
++    
++    def enqueue(self, url: str, custom_prompt: Optional[str] = None) -> str:
++        # Mock implementation
++        pass
++
++class MockWebServer:
++    def __init__(self, queue_manager):
++        self.queue_manager = queue_manager
++        self.running = False
++    
++    def start(self):
++        self.running = True
++```
++
++### Test Data
++
++```python
++# tests/fixtures/web_test_data.py
++SAMPLE_QUEUE_ITEMS = [
++    QueueItem(
++        id="test-1",
++        url="https://youtu.be/test123",
++        status=QueueStatus.TODO,
++        created_at=datetime.now()
++    ),
++    # Additional test items...
++]
++
++SAMPLE_SSE_EVENTS = [
++    {"type": "queue_update", "data": {...}},
++    {"type": "status_change", "data": {...}},
++    # Additional events...
++]
++```
++
++## Implementation Details
++
++### Web Server Configuration
++
++```python
++# web/config.py
++from pydantic import BaseModel
++
++class WebServerConfig(BaseModel):
++    host: str = "127.0.0.1"
++    port: int = 8080
++    debug: bool = False
++    static_folder: str = "web/static"
++    max_queue_size: int = 100
++    sse_heartbeat_interval: int = 30
++    reload: bool = False  # For uvicorn auto-reload in development
++    
++    class Config:
++        env_prefix = "WEB_"  # Allow WEB_HOST, WEB_PORT, etc.
++```
++
++### Real-time Communication
++
++**Server-Sent Events Implementation**:
++```python
++from fastapi import FastAPI
++from fastapi.responses import StreamingResponse
++import asyncio
++
++@app.get("/events")
++async def sse_endpoint():
++    async def event_stream():
++        while True:
++            # Wait for queue events asynchronously
++            event = await queue_manager.get_next_event_async()
++            yield f"data: {json.dumps(event)}\n\n"
++            await asyncio.sleep(0.1)  # Prevent busy waiting
++    
++    return StreamingResponse(
++        event_stream(),
++        media_type='text/event-stream',
++        headers={
++            'Cache-Control': 'no-cache',
++            'Connection': 'keep-alive'
++        }
++    )
++```
++
++### Frontend Architecture
++
++**Component Structure**:
++```javascript
++// app.js
++class YouTubeNotionApp {
++    constructor() {
++        this.queueColumns = new QueueColumns();
++        this.urlInput = new UrlInput();
++        this.chatLogModal = new ChatLogModal();
++        this.sseConnection = new SSEConnection();
++    }
++}
++
++class QueueColumns {
++    render(queueData) {
++        // Render three columns with items
++    }
++    
++    moveItem(itemId, fromStatus, toStatus) {
++        // Animate item movement between columns
++    }
++}
++```
++
++### YouTube-like Styling
++
++**CSS Design System**:
++```css
++:root {
++    --yt-red: #ff0000;
++    --yt-dark-bg: #0f0f0f;
++    --yt-light-bg: #ffffff;
++    --yt-text: #030303;
++    --yt-secondary-text: #606060;
++    --yt-border: #e5e5e5;
++}
++
++.queue-column {
++    background: var(--yt-light-bg);
++    border: 1px solid var(--yt-border);
++    border-radius: 8px;
++    /* YouTube-inspired styling */
++}
++```
++
++### Dependency Integration
++
++**New Dependencies**:
++```txt
++# requirements.txt additions
++fastapi>=0.104.0
++uvicorn>=0.24.0
++pydantic>=2.0.0
++```
++
++**Development Dependencies**:
++```txt
++# requirements-dev.txt additions
++selenium>=4.0.0
++httpx>=0.25.0  # For testing FastAPI
++pytest-asyncio>=0.21.0
++```
++
++## Security Considerations
++
++### Input Validation
++- URL format validation using regex patterns
++- XSS prevention through proper HTML escaping
++- CSRF protection for state-changing operations
++
++### Network Security
++- CORS configuration for development vs production
++- Rate limiting for API endpoints
++- Input sanitization for all user inputs
++
++### Data Privacy
++- No sensitive data in client-side JavaScript
++- Secure handling of API keys (server-side only)
++- Chat log access control
++
++## Performance Considerations
++
++### Queue Management
++- Efficient data structures for queue operations
++- Background processing to avoid blocking UI
++- Memory management for large queues
++
++### Real-time Updates
++- SSE connection pooling and management
++- Efficient event serialization
++- Client-side debouncing for rapid updates
++
++### Frontend Optimization
++- Lazy loading for chat logs
++- Virtual scrolling for large queues
++- Efficient DOM updates using modern JavaScript
++
++## Deployment Considerations
++
++### Development Mode
++- Hot reloading for frontend assets
++- Debug logging enabled
++- CORS allowing all origins
++
++### Production Mode
++- Minified and bundled frontend assets
++- Production logging configuration
++- Restricted CORS origins
++- Process management (systemd, Docker, etc.)
++
++This design ensures a robust, testable, and maintainable web UI that integrates seamlessly with the existing YouTube-to-Notion processing pipeline while following established architectural patterns and testing standards.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/web-ui-mode/requirements.md ---
+diff --git a/.kiro/specs/web-ui-mode/requirements.md b/.kiro/specs/web-ui-mode/requirements.md
+new file mode 100644
+index 0000000..b02a07c
+--- /dev/null
++++ b/.kiro/specs/web-ui-mode/requirements.md
+@@ -0,0 +1,143 @@
++# Requirements Document
++
++## Introduction
++
++This feature adds a web-based user interface mode to the YouTube-to-Notion integration application. The UI provides a visual queue management system with three columns (To Do, In Progress, Done) for tracking video processing status in real-time. Users can add YouTube URLs to a processing queue and monitor progress through an intuitive web interface that resembles YouTube's visual design.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a user, I want to start the application in UI mode using a `--ui` flag, so that I can access a web-based interface for managing video processing.
++
++#### Acceptance Criteria
++
++1. WHEN the user runs the command with `--ui` flag THEN the system SHALL start a web server backend
++2. WHEN the web server starts THEN the system SHALL automatically open a web browser to the UI interface
++3. WHEN the UI mode is active THEN the system SHALL serve a webpage with YouTube-like visual styling
++4. IF the user provides `--ui` flag THEN the system SHALL NOT process videos from command line arguments
++
++### Requirement 2
++
++**User Story:** As a user, I want to see a three-column layout (To Do, In Progress, Done), so that I can visually track the status of all video processing tasks.
++
++#### Acceptance Criteria
++
++1. WHEN the UI loads THEN the system SHALL display three distinct columns labeled "To Do", "In Progress", and "Done"
++2. WHEN a URL is added to queue THEN the system SHALL display it in the "To Do" column
++3. WHEN processing begins THEN the system SHALL move the URL from "To Do" to "In Progress" column
++4. WHEN processing completes THEN the system SHALL move the URL from "In Progress" to "Done" column
++5. WHEN displaying URLs THEN the system SHALL show video thumbnails extracted from the YouTube URL
++
++### Requirement 3
++
++**User Story:** As a user, I want to add YouTube URLs to the processing queue through the web interface, so that I can queue multiple videos for processing without using command line.
++
++#### Acceptance Criteria
++
++1. WHEN the user clicks the "+" button next to "To Do" column THEN the system SHALL display an input popup
++2. WHEN the user enters a YouTube URL in the input THEN the system SHALL validate the URL format
++3. WHEN a valid URL is submitted THEN the system SHALL add it to the "To Do" queue
++4. WHEN an invalid URL is submitted THEN the system SHALL display an error message
++5. WHEN the URL is added THEN the system SHALL close the input popup and refresh the "To Do" column
++
++### Requirement 4
++
++**User Story:** As a user, I want to see real-time status updates for videos being processed, so that I can monitor progress without refreshing the page.
++
++#### Acceptance Criteria
++
++1. WHEN a video is being processed THEN the system SHALL display the current processing phase (metadata extraction, AI summary generation, Notion upload)
++2. WHEN processing a chunked video THEN the system SHALL display which chunk is currently being processed (e.g., "Processing chunk 2/4")
++3. WHEN status changes occur THEN the system SHALL update the UI automatically without page refresh
++4. WHEN multiple videos are in queue THEN the system SHALL process them sequentially and update status for each
++5. WHEN processing fails THEN the system SHALL display error status and move the URL to appropriate column
++
++### Requirement 5
++
++**User Story:** As a user, I want to view chat logs for completed videos, so that I can review the AI conversation and processing details.
++
++#### Acceptance Criteria
++
++1. WHEN a video is in the "Done" column THEN the system SHALL display an eye button next to the URL
++2. WHEN the user clicks the eye button THEN the system SHALL open a popup displaying the chat log
++3. WHEN a video was processed in chunks THEN the system SHALL display additional numbered eye buttons for each chunk
++4. WHEN the user clicks a chunk eye button THEN the system SHALL display the specific chunk's chat log
++5. WHEN displaying chat logs THEN the system SHALL format them in a readable manner with proper styling
++
++### Requirement 6
++
++**User Story:** As a user, I want the backend to continue processing videos from the queue while serving the web interface, so that I can have a seamless experience.
++
++#### Acceptance Criteria
++
++1. WHEN the web server starts THEN the system SHALL initialize a video processing queue
++2. WHEN URLs are added to queue THEN the system SHALL process them using existing VideoProcessor logic
++3. WHEN processing videos THEN the system SHALL maintain all existing functionality (AI summaries, Notion integration, chat logging)
++4. WHEN processing completes THEN the system SHALL update the web interface with results
++5. WHEN the server shuts down THEN the system SHALL gracefully complete any in-progress video processing
++
++### Requirement 7
++
++**User Story:** As a user, I want the web interface to have YouTube-like visual appeal, so that the interface feels familiar and professional.
++
++#### Acceptance Criteria
++
++1. WHEN the UI loads THEN the system SHALL use a color scheme and typography similar to YouTube
++2. WHEN displaying video thumbnails THEN the system SHALL extract and show actual YouTube video thumbnails
++3. WHEN showing video information THEN the system SHALL display title, duration, and channel information when available
++4. WHEN styling the interface THEN the system SHALL use modern web design principles with responsive layout
++5. WHEN displaying status information THEN the system SHALL use clear visual indicators (progress bars, status badges, icons)
++
++### Requirement 8
++
++**User Story:** As a user, I want real-time updates without page refreshes, so that I can monitor progress continuously without manual intervention.
++
++#### Acceptance Criteria
++
++1. WHEN status changes occur THEN the system SHALL push updates to the web interface using WebSocket or Server-Sent Events
++2. WHEN new URLs are added THEN the system SHALL immediately reflect them in the UI
++3. WHEN processing status changes THEN the system SHALL update the relevant column and status information
++4. WHEN videos move between columns THEN the system SHALL animate the transitions smoothly
++5. WHEN connection is lost THEN the system SHALL attempt to reconnect and sync the current state
++
++### Requirement 9
++
++**User Story:** As a developer, I want the web UI components to be well-tested and properly separated, so that the code maintains high quality and follows existing project standards.
++
++#### Acceptance Criteria
++
++1. WHEN implementing web UI components THEN the system SHALL separate functionality into well-sized, single-responsibility components
++2. WHEN creating components THEN the system SHALL implement abstract interfaces for testability
++3. WHEN writing unit tests THEN the system SHALL follow existing project standards (fast execution, no external API calls, mock implementations)
++4. WHEN testing web components THEN the system SHALL use dependency injection and mock implementations from test fixtures
++5. WHEN testing real-time features THEN the system SHALL mock WebSocket/SSE connections and simulate events
++6. WHEN running tests THEN the system SHALL complete all web UI tests within the existing fast test suite timeframe
++7. WHEN implementing the web server THEN the system SHALL use the existing ComponentFactory pattern for dependency injection
++
++### Requirement 10
++
++**User Story:** As a developer, I want to avoid code duplication between CLI and UI modes, so that both modes share the same core processing logic and maintain consistency.
++
++#### Acceptance Criteria
++
++1. WHEN implementing UI mode THEN the system SHALL use a shared queue system for both CLI batch processing and web UI processing
++2. WHEN processing videos in UI mode THEN the system SHALL reuse existing VideoProcessor, ComponentFactory, and all processing components
++3. WHEN implementing queue functionality THEN the system SHALL create a reusable queue component that works for both CLI and UI modes
++4. WHEN running CLI batch mode THEN the system SHALL use the same queue system internally as the UI mode
++5. WHEN testing queue functionality THEN the system SHALL write comprehensive unit tests for queue operations (add, remove, status updates, error handling)
++6. WHEN queue state changes THEN the system SHALL provide observable events that both CLI and UI can consume
++7. WHEN implementing queue persistence THEN the system SHALL ensure queue state can be maintained across application restarts if needed
++
++### Requirement 11
++
++**User Story:** As a product owner, I want the README documentation to be updated after implementation, so that users understand how to use the new UI mode feature.
++
++#### Acceptance Criteria
++
++1. WHEN the UI mode is implemented THEN the system SHALL update the README with `--ui` flag documentation
++2. WHEN documenting UI mode THEN the system SHALL include screenshots or descriptions of the three-column interface
++3. WHEN updating README THEN the system SHALL add setup instructions for any new dependencies (web server, frontend assets)
++4. WHEN documenting features THEN the system SHALL explain how to add URLs, monitor progress, and view chat logs
++5. WHEN updating CLI documentation THEN the system SHALL maintain existing command examples while adding UI mode examples
++6. WHEN documenting architecture THEN the system SHALL update any architecture diagrams to include web UI components
+\ No newline at end of file
+
+--- FILE: .kiro/specs/web-ui-mode/tasks.md ---
+diff --git a/.kiro/specs/web-ui-mode/tasks.md b/.kiro/specs/web-ui-mode/tasks.md
+new file mode 100644
+index 0000000..69467f3
+--- /dev/null
++++ b/.kiro/specs/web-ui-mode/tasks.md
+@@ -0,0 +1,144 @@
++# Implementation Plan
++
++- [ ] 1. Set up core data models and enumerations
++  - Create queue status and processing phase enumerations
++  - Implement QueueItem data model with all required fields
++  - Create Pydantic models for API requests and responses
++  - Write unit tests for data model validation and serialization
++  - _Requirements: 2.1, 2.2, 4.1, 4.2, 5.3, 9.3_
++
++- [ ] 2. Implement QueueManager component with thread-safe operations
++  - Create QueueManager class with thread-safe queue operations using threading.Lock
++  - Implement enqueue, dequeue, and status tracking methods
++  - Add observable pattern with status change listeners for real-time updates
++  - Create background processing thread that processes queue items sequentially
++  - Implement graceful shutdown handling for clean application termination
++  - Write comprehensive unit tests for queue operations, concurrency, and error handling
++  - _Requirements: 6.1, 6.2, 10.1, 10.3, 10.4, 10.5, 9.3_
++
++- [ ] 3. Create FastAPI web server with basic endpoints
++  - Set up FastAPI application with CORS middleware and static file serving
++  - Implement POST /api/queue endpoint for adding URLs with Pydantic validation
++  - Create GET /api/status endpoint returning current queue status
++  - Add GET /api/chat-log/{item_id} endpoint for retrieving chat logs
++  - Configure web server with Pydantic-based configuration management
++  - Write unit tests for all API endpoints using FastAPI TestClient
++  - _Requirements: 1.1, 3.1, 3.3, 5.1, 5.2, 9.1, 9.3_
++
++- [ ] 4. Implement Server-Sent Events for real-time updates
++  - Create async SSE endpoint that streams queue status changes to clients
++  - Implement event serialization and proper SSE formatting
++  - Add connection management and heartbeat functionality
++  - Handle client disconnections and reconnections gracefully
++  - Write unit tests for SSE functionality using async test patterns
++  - _Requirements: 4.3, 8.1, 8.2, 8.5, 9.5_
++
++- [ ] 5. Integrate QueueManager with existing VideoProcessor
++  - Modify QueueManager to use existing VideoProcessor and ComponentFactory
++  - Implement status update callbacks during video processing phases
++  - Add support for chunked video processing status updates
++  - Handle processing errors and update queue item status accordingly
++  - Ensure all existing functionality (AI summaries, Notion integration, chat logging) is preserved
++  - Write unit tests for VideoProcessor integration using mock implementations
++  - _Requirements: 6.2, 6.3, 4.1, 4.2, 10.2, 9.4_
++
++- [ ] 6. Create basic HTML structure and CSS styling
++  - Design HTML structure with three-column layout (To Do, In Progress, Done)
++  - Implement YouTube-inspired CSS design system with CSS custom properties
++  - Create responsive layout that works on different screen sizes
++  - Add visual indicators for status, progress bars, and loading states
++  - Style queue items with thumbnail placeholders and metadata display
++  - _Requirements: 2.1, 7.1, 7.4, 7.5_
++
++- [ ] 7. Implement frontend JavaScript application structure
++  - Create main application class with component-based architecture
++  - Implement QueueColumns component for rendering three-column layout
++  - Add UrlInput component for the add URL popup functionality
++  - Create ChatLogModal component for displaying processing logs
++  - Set up event handling and DOM manipulation utilities
++  - _Requirements: 2.1, 3.1, 5.1, 9.1_
++
++- [ ] 8. Add URL input functionality with validation
++  - Implement "+" button next to To Do column that opens input popup
++  - Create URL validation on frontend using regex patterns
++  - Add form submission handling with error display
++  - Implement popup close functionality and form reset
++  - Connect frontend to POST /api/queue endpoint
++  - Write JavaScript unit tests for URL validation and form handling
++  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
++
++- [ ] 9. Implement real-time UI updates with Server-Sent Events
++  - Create SSEConnection class for managing EventSource connections
++  - Implement automatic UI updates when queue status changes
++  - Add smooth animations for items moving between columns
++  - Handle connection errors and implement reconnection logic
++  - Update queue columns in real-time without page refresh
++  - _Requirements: 4.3, 8.1, 8.2, 8.3, 8.4, 8.5_
++
++- [ ] 10. Add video metadata display and thumbnail extraction
++  - Implement thumbnail URL extraction from YouTube URLs
++  - Display video title, channel, and duration when available
++  - Show processing status and current phase for in-progress items
++  - Add chunk processing indicators for long videos
++  - Update metadata display in real-time as processing progresses
++  - _Requirements: 2.5, 7.2, 7.3, 4.1, 4.2_
++
++- [ ] 11. Implement chat log viewing functionality
++  - Add eye button to completed queue items
++  - Create modal popup for displaying chat logs with proper formatting
++  - Implement support for chunked video logs with numbered eye buttons
++  - Add chat log retrieval from backend API
++  - Style chat logs for readability with syntax highlighting
++  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
++
++- [ ] 12. Modify CLI entry point to support UI mode
++  - Add --ui flag to argument parser with mutually exclusive group
++  - Implement UI mode initialization that starts web server
++  - Add automatic browser opening when UI mode starts
++  - Ensure --ui flag prevents processing of command line URL arguments
++  - Maintain backward compatibility with existing CLI functionality
++  - Write unit tests for CLI argument parsing and mode selection
++  - _Requirements: 1.1, 1.2, 1.4, 9.3_
++
++- [ ] 13. Integrate QueueManager with CLI batch processing
++  - Modify existing batch processing to use QueueManager internally
++  - Ensure CLI batch mode and UI mode share the same queue system
++  - Update batch processing output to work with queue status updates
++  - Maintain existing CLI batch processing behavior and output format
++  - Write unit tests for CLI batch processing integration
++  - _Requirements: 10.1, 10.4, 10.6_
++
++- [ ] 14. Add comprehensive error handling and user feedback
++  - Implement error display in UI for failed processing attempts
++  - Add user-friendly error messages with troubleshooting context
++  - Handle network errors and API failures gracefully
++  - Show appropriate error states in queue columns
++  - Add retry functionality for failed items
++  - Write unit tests for error handling scenarios
++  - _Requirements: 4.5, 8.5, 9.3_
++
++- [ ] 15. Create comprehensive test suite for web components
++  - Write unit tests for all new components following existing project standards
++  - Create mock implementations for QueueManager and WebServer
++  - Add integration tests for complete web UI workflow
++  - Implement frontend JavaScript tests using appropriate testing framework
++  - Ensure all tests run within existing fast test suite timeframe
++  - Add test fixtures and sample data for web UI testing
++  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
++
++- [ ] 16. Update dependencies and configuration
++  - Add FastAPI, uvicorn, and pydantic to requirements.txt
++  - Update development dependencies with testing libraries
++  - Create web server configuration with environment variable support
++  - Add web-specific settings to application configuration
++  - Update setup.py with new dependencies and entry points
++  - _Requirements: 1.1, 9.7_
++
++- [ ] 17. Update documentation and README
++  - Add --ui flag documentation to README with usage examples
++  - Include screenshots or descriptions of the three-column interface
++  - Document setup instructions for new web dependencies
++  - Explain URL addition, progress monitoring, and chat log viewing
++  - Update architecture documentation to include web UI components
++  - Maintain existing CLI documentation while adding UI mode examples
++  - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

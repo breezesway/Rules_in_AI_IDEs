@@ -1,0 +1,838 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - **Dependency Injection** pattern with Injectable + GetIt
++ - **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dart source code files (specifically those identified as Services and ViewModels via naming conventions or directory structure), and annotations from the 'injectable' package.
+- Suggested Logic: 1. Identify 'Service' files (e.g., files in 'services/' or named '*_service.dart') and verify they contain @injectable, @singleton, or @lazySingleton annotations.
+2. Identify 'ViewModel' files (e.g., files in 'view_models/' or named '*_view_model.dart') and verify they do NOT contain 'injectable' package annotations.
+3. Verify that ViewModels are instantiated using class constructors (e.g., 'HomeViewModel()') and not via GetIt resolution (e.g., 'getIt<HomeViewModel>()').
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: refactor: refine GitHub Client Authentication specification focus
+
+- Remove UI and feature requirements (moved to separate specs)
+- Remove clean architecture requirements (moved to steering docs)
+- Focus requirements on core authentication: OAuth device flow, token persistence, logout, error handling
+- Update design to emphasize authentication module interface over app architecture
+- Refine implementation tasks to authentication-only scope
+- Move hybrid dependency injection patterns to steering documentation
+- Update tech.md and structure.md with detailed architectural patterns
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+- Changed Files List: 
+.kiro/specs/github-client-authentication/design.md	+57	-85	after_lines=280
+.kiro/specs/github-client-authentication/requirements.md	+1	-46	after_lines=56
+.kiro/specs/github-client-authentication/tasks.md	+38	-130	after_lines=86
+.kiro/steering/structure.md	+17	-7	after_lines=130
+.kiro/steering/tech.md	+5	-3	after_lines=119
+
+- Project Directory Tree (Snapshot after commit):
+├── .claude
+│   └── settings.local.json
+├── .dartignore
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   └── flutter-code-quality.kiro.hook
+│   ├── specs
+│   │   ├── github-client-authentication
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── github-graphql-ferry
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── modular-navigation-architecture
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── kiro-lessons.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .metadata
+├── CLAUDE.md
+├── README.md
+├── analysis_options.yaml
+├── build.yaml
+├── devtools_options.yaml
+├── ios
+│   ├── .gitignore
+│   ├── Flutter
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Podfile
+│   ├── Podfile.lock
+│   ├── Runner
+│   │   ├── AppDelegate.swift
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage.png
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── Runner.xcodeproj
+│   │   ├── project.pbxproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── contents.xcworkspacedata
+│   │   │   └── xcshareddata
+│   │   │       ├── IDEWorkspaceChecks.plist
+│   │   │       └── WorkspaceSettings.xcsettings
+│   │   └── xcshareddata
+│   │       └── xcschemes
+│   │           └── Runner.xcscheme
+│   ├── Runner.xcworkspace
+│   │   ├── contents.xcworkspacedata
+│   │   └── xcshareddata
+│   │       ├── IDEWorkspaceChecks.plist
+│   │       └── WorkspaceSettings.xcsettings
+│   └── RunnerTests
+│       └── RunnerTests.swift
+├── lib
+│   ├── __generated__
+│   │   ├── github_schema.ast.gql.dart
+│   │   ├── github_schema.schema.gql.dart
+│   │   ├── github_schema.schema.gql.g.dart
+│   │   ├── serializers.gql.dart
+│   │   └── serializers.gql.g.dart
+│   ├── github_schema.graphql
+│   ├── main.dart
+│   └── src
+│       ├── env
+│       │   ├── env.dart
+│       │   └── env.g.dart
+│       ├── init.config.dart
+│       ├── init.dart
+│       ├── routing
+│       │   ├── app_route.dart
+│       │   ├── route_collection_service.dart
+│       │   ├── route_provider.dart
+│       │   ├── routes.dart
+│       │   └── routing.dart
+│       ├── screens
+│       │   ├── app
+│       │   │   ├── auth_viewmodel.dart
+│       │   │   └── gh3_app.dart
+│       │   ├── base_viewmodel.dart
+│       │   ├── home_screen
+│       │   │   ├── __generated__
+│       │   │   │   ├── home_viewmodel.ast.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.dart
+│       │   │   │   ├── home_viewmodel.data.gql.g.dart
+│       │   │   │   ├── home_viewmodel.req.gql.dart
+│       │   │   │   ├── home_viewmodel.req.gql.g.dart
+│       │   │   │   ├── home_viewmodel.var.gql.dart
+│       │   │   │   └── home_viewmodel.var.gql.g.dart
+│       │   │   ├── home_route.dart
+│       │   │   ├── home_route_provider.dart
+│       │   │   ├── home_screen.dart
+│       │   │   ├── home_viewmodel.dart
+│       │   │   ├── home_viewmodel.graphql
+│       │   │   └── home_viewmodel_factory.dart
+│       │   ├── loading_screen
+│       │   │   ├── loading_route.dart
+│       │   │   ├── loading_route_provider.dart
+│       │   │   └── loading_screen.dart
+│       │   ├── login_screen
+│       │   │   ├── login_route.dart
+│       │   │   ├── login_route_provider.dart
+│       │   │   ├── login_screen.dart
+│       │   │   ├── login_viewmodel.dart
+│       │   │   └── login_viewmodel_factory.dart
+│       │   └── user_details
+│       │       ├── user_details_route.dart
+│       │       ├── user_details_route_provider.dart
+│       │       ├── user_details_screen.dart
+│       │       ├── user_details_viewmodel.dart
+│       │       └── user_details_viewmodel_factory.dart
+│       ├── services
+│       │   ├── auth_service.dart
+│       │   ├── ferry_client_service.dart
+│       │   ├── ferry_module.dart
+│       │   ├── github_auth_client.dart
+│       │   ├── scope_service.dart
+│       │   ├── timer_service.dart
+│       │   └── token_storage.dart
+│       └── widgets
+│           ├── repository_card
+│           │   ├── __generated__
+│           │   │   ├── repository_card.ast.gql.dart
+│           │   │   ├── repository_card.data.gql.dart
+│           │   │   ├── repository_card.data.gql.g.dart
+│           │   │   ├── repository_card.req.gql.dart
+│           │   │   ├── repository_card.req.gql.g.dart
+│           │   │   ├── repository_card.var.gql.dart
+│           │   │   └── repository_card.var.gql.g.dart
+│           │   └── repository_card.graphql
+│           ├── user_card
+│           │   ├── __generated__
+│           │   │   ├── user_card.ast.gql.dart
+│           │   │   ├── user_card.data.gql.dart
+│           │   │   ├── user_card.data.gql.g.dart
+│           │   │   ├── user_card.req.gql.dart
+│           │   │   ├── user_card.req.gql.g.dart
+│           │   │   ├── user_card.var.gql.dart
+│           │   │   └── user_card.var.gql.g.dart
+│           │   ├── user_card.dart
+│           │   └── user_card.graphql
+│           └── user_profile
+│               ├── __generated__
+│               │   ├── user_profile.ast.gql.dart
+│               │   ├── user_profile.data.gql.dart
+│               │   ├── user_profile.data.gql.g.dart
+│               │   ├── user_profile.req.gql.dart
+│               │   ├── user_profile.req.gql.g.dart
+│               │   ├── user_profile.var.gql.dart
+│               │   └── user_profile.var.gql.g.dart
+│               └── user_profile.graphql
+├── pubspec.lock
+├── pubspec.yaml
+└── test
+    ├── app_start_test.dart
+    ├── app_start_test.mocks.dart
+    ├── integration
+    │   ├── di_factory_integration_test.dart
+    │   ├── di_factory_integration_test.mocks.dart
+    │   ├── modular_architecture_test.dart
+    │   └── modular_architecture_test.mocks.dart
+    ├── routing
+    │   ├── app_route_test.dart
+    │   ├── route_collection_service_test.dart
+    │   └── route_collection_service_test.mocks.dart
+    ├── screens
+    │   ├── app
+    │   │   ├── auth_viewmodel_test.dart
+    │   │   └── auth_viewmodel_test.mocks.dart
+    │   ├── base_viewmodel_test.dart
+    │   ├── home_screen
+    │   │   ├── home_route_provider_test.dart
+    │   │   ├── home_route_provider_test.mocks.dart
+    │   │   ├── home_route_test.dart
+    │   │   ├── home_screen_test.dart
+    │   │   ├── home_screen_test.mocks.dart
+    │   │   ├── home_viewmodel_factory_test.dart
+    │   │   ├── home_viewmodel_factory_test.mocks.dart
+    │   │   ├── home_viewmodel_test.dart
+    │   │   └── home_viewmodel_test.mocks.dart
+    │   ├── loading_screen
+    │   │   ├── loading_route_provider_test.dart
+    │   │   ├── loading_route_provider_test.mocks.dart
+    │   │   ├── loading_route_test.dart
+    │   │   ├── loading_screen_test.dart
+    │   │   └── loading_screen_test.mocks.dart
+    │   ├── login_screen
+    │   │   ├── login_route_provider_test.dart
+    │   │   ├── login_route_provider_test.mocks.dart
+    │   │   ├── login_route_test.dart
+    │   │   ├── login_screen_test.dart
+    │   │   ├── login_screen_test.mocks.dart
+    │   │   ├── login_viewmodel_factory_test.dart
+    │   │   ├── login_viewmodel_factory_test.mocks.dart
+    │   │   ├── login_viewmodel_test.dart
+    │   │   └── login_viewmodel_test.mocks.dart
+    │   └── user_details
+    │       ├── user_details_route_provider_test.dart
+    │       ├── user_details_route_provider_test.mocks.dart
+    │       ├── user_details_route_test.dart
+    │       ├── user_details_screen_test.dart
+    │       ├── user_details_screen_test.mocks.dart
+    │       ├── user_details_viewmodel_factory_test.dart
+    │       └── user_details_viewmodel_test.dart
+    ├── services
+    │   ├── auth_service_test.dart
+    │   ├── auth_service_test.mocks.dart
+    │   ├── ferry_client_service_test.dart
+    │   ├── ferry_client_service_test.mocks.dart
+    │   ├── github_auth_client_test.dart
+    │   ├── github_auth_client_test.mocks.dart
+    │   ├── scope_service_test.dart
+    │   ├── scope_service_test.mocks.dart
+    │   ├── timer_service_test.dart
+    │   └── token_storage_test.dart
+    └── widgets
+        └── user_card
+            └── user_card_test.dart
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/github-client-authentication/design.md ---
+diff --git a/.kiro/specs/github-client-authentication/design.md b/.kiro/specs/github-client-authentication/design.md
+index 28fde74..31b59a0 100644
+--- a/.kiro/specs/github-client-authentication/design.md
++++ b/.kiro/specs/github-client-authentication/design.md
+@@ -2,9 +2,9 @@
+ 
+ ## Overview
+ 
+-The GitHub Client Authentication system is built using Flutter with a clean architecture approach that separates concerns between services, ViewModels, and UI components. The system implements GitHub's OAuth device flow for secure authentication without requiring users to enter credentials directly on mobile devices.
++The GitHub Client Authentication system implements GitHub's OAuth device flow for secure authentication without requiring users to enter credentials directly on mobile devices. The design focuses on the core authentication services, token management, and error handling required for secure GitHub API access.
+ 
+-The architecture follows a hybrid dependency injection pattern where services are managed by get_it/injectable, while ViewModels are manually instantiated with explicit dependencies to improve testability and maintainability.
++The system provides a clean separation between authentication concerns and application logic, allowing other modules to consume authentication services through well-defined interfaces.
+ 
+ ## Architecture
+ 
+@@ -12,43 +12,34 @@ The architecture follows a hybrid dependency injection pattern where services ar
+ 
+ ```mermaid
+ graph TB
+-    UI[UI Layer - Screens] --> VM[ViewModel Layer]
+-    VM --> SVC[Service Layer]
+-    SVC --> EXT[External APIs]
++    CONSUMER[Consumer Modules] --> AUTH[AuthService]
++    AUTH --> CLIENT[GithubAuthClient]
++    AUTH --> TOKEN[TokenStorage]
++    AUTH --> SCOPE[ScopeService]
+     
+-    subgraph "UI Layer"
+-        LOGIN[LoginScreen]
+-        HOME[HomeScreen]
+-        LOADING[LoadingScreen]
+-        USER[UserDetailsScreen]
+-        REPO[RepositoryDetailsScreen]
+-    end
+-    
+-    subgraph "ViewModel Layer"
+-        AUTHVM[AuthViewModel]
+-        LOGINVM[LoginViewModel]
+-    end
++    CLIENT --> GITHUB[GitHub OAuth API]
++    TOKEN --> STORAGE[Local Storage]
++    SCOPE --> GITHUB
+     
+-    subgraph "Service Layer"
+-        AUTH[AuthService]
+-        CLIENT[GithubAuthClient]
+-        TOKEN[TokenStorage]
+-        SCOPE[ScopeService]
++    subgraph "Authentication Module"
++        AUTH
++        CLIENT
++        TOKEN
++        SCOPE
+     end
+     
+-    subgraph "External APIs"
+-        GITHUB[GitHub OAuth API]
+-        STORAGE[Local Storage]
++    subgraph "External Dependencies"
++        GITHUB
++        STORAGE
+     end
+ ```
+ 
+-### Dependency Flow
++### Module Interface
+ 
+-The application uses explicit dependency injection where:
+-- Services are registered with get_it and injectable
+-- ViewModels receive services through constructor injection
+-- Screens receive ViewModels through constructor parameters
+-- GoRouter handles ViewModel instantiation with explicit dependencies
++The authentication module exposes a single primary interface:
++- **AuthService**: Main authentication orchestrator consumed by other modules
++- **Service Registration**: Authentication services registered with dependency injection for consumption
++- **Token Access**: Provides authenticated HTTP client and token validation for API calls
+ 
+ ### Authentication Flow
+ 
+@@ -172,41 +163,26 @@ sequenceDiagram
+   - `userCode`: Code for user to enter on GitHub
+   - `errorMessage`: Authentication error feedback
+ 
+-### UI Layer
+-
+-#### Screen Architecture
+-All screens follow a consistent pattern:
+-- Receive ViewModels through constructor injection
+-- Use StatefulWidget for ViewModel listener management
+-- Implement proper listener cleanup in dispose()
+-- Handle navigation through GoRouter context
+-
+-#### LoginScreen
+-- **Purpose**: GitHub device flow authentication UI
+-- **Features**:
+-  - Sign in button with loading states
+-  - User code display with copy functionality
+-  - Browser launch for GitHub authorization
+-  - Error message display
+-- **Integration**: Uses flutter_custom_tabs for in-app browser
+-
+-#### HomeScreen
+-- **Purpose**: Main application dashboard
+-- **Features**:
+-  - Welcome message for authenticated users
+-  - List of sample GitHub users
+-  - User avatar placeholders with color coding
+-  - Navigation to user detail screens
+-  - Logout functionality
+-
+-#### LoadingScreen
+-- **Purpose**: App initialization feedback
+-- **Usage**: Displayed during token validation on app start
+-
+-#### UserDetailsScreen & RepositoryDetailsScreen
+-- **Purpose**: Placeholder screens for future GitHub data display
+-- **Current State**: Show static content with proper navigation
+-- **Future Enhancement**: Will integrate with GitHub API for real data
++### Public API
++
++#### AuthService Interface
++The primary interface for consuming modules:
++```dart
++class AuthService {
++  Future<void> init();
++  Future<void> login();
++  Future<void> loginWithDeviceCode(String deviceCode);
++  Future<void> logout();
++  bool get isAuthenticated;
++  String? get accessToken;
++}
++```
++
++#### Authentication Events
++The service provides state change notifications:
++- **Authentication Status**: Observable changes to login state
++- **Token Updates**: Notifications when tokens are refreshed or invalidated
++- **Error Events**: Authentication failures and recovery states
+ 
+ ## Data Models
+ 
+@@ -219,9 +195,10 @@ class GithubDeviceCodeResult {
+ ```
+ 
+ ### Authentication State
+-- Managed through AuthViewModel properties
++- Managed internally by AuthService
+ - Persisted via TokenStorage interface
+-- Validated against required scopes
++- Validated against required scopes (`repo`, `read:user`)
++- Exposed to consumers through observable properties
+ 
+ ### Exception Hierarchy
+ ```
+@@ -246,32 +223,27 @@ GithubAuthException (base)
+ - Token validation failures result in automatic logout
+ - Browser launch failures are logged but don't crash the app
+ 
+-### State Management Errors
+-- ViewModel listener management prevents memory leaks
+-- Proper disposal of resources in screen lifecycle
+-- Error boundaries through try-catch in async operations
++### Service Errors
++- Graceful degradation for network failures
++- Automatic token cleanup on validation failures
++- Proper resource disposal in service lifecycle
+ 
+ ## Testing Strategy
+ 
+ ### Unit Testing
+ - **Services**: Mock HTTP client and storage dependencies
+-- **ViewModels**: Create with mock service dependencies
+ - **Authentication Flow**: Test all exception scenarios
++- **Token Management**: Verify storage, retrieval, and validation
+ 
+ ### Integration Testing
+ - **Device Flow**: End-to-end authentication testing
+-- **Token Persistence**: Verify storage and retrieval
+-- **Navigation**: Test routing with authentication states
+-
+-### Widget Testing
+-- **Screens**: Test with mock ViewModels
+-- **User Interactions**: Verify button states and navigation
+-- **Error States**: Test error message display
+-
+-### Architecture Testing
+-- **Dependency Injection**: Verify service registration
+-- **Explicit Dependencies**: Ensure no hidden GetIt calls in UI
+-- **Clean Architecture**: Validate layer separation
++- **Token Persistence**: Verify storage and retrieval across app restarts
++- **Service Integration**: Test service interactions and error propagation
++
++### Module Testing
++- **Public API**: Test all exposed service methods
++- **Error Scenarios**: Verify proper exception handling and recovery
++- **State Consistency**: Ensure authentication state remains consistent
+ 
+ ## Security Considerations
+
+--- FILE: .kiro/specs/github-client-authentication/requirements.md ---
+diff --git a/.kiro/specs/github-client-authentication/requirements.md b/.kiro/specs/github-client-authentication/requirements.md
+index 8ac430b..f10a20d 100644
+--- a/.kiro/specs/github-client-authentication/requirements.md
++++ b/.kiro/specs/github-client-authentication/requirements.md
+@@ -45,52 +45,7 @@ This document captures the requirements for the GitHub Client Authentication sys
+ 
+ ### Requirement 4
+ 
+-**User Story:** As a user, I want to see a list of GitHub users I'm following, so that I can easily navigate to their profiles and repositories.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the user is authenticated and on the home screen THEN the system SHALL display a welcome message
+-2. WHEN the home screen loads THEN the system SHALL show a list of sample GitHub users with their information
+-3. WHEN displaying user information THEN the system SHALL show username, display name, repository count, and follower count
+-4. WHEN a user taps on a user in the list THEN the system SHALL navigate to that user's detail screen
+-5. WHEN displaying users THEN the system SHALL show colored avatar placeholders with the first letter of the username
+-
+-### Requirement 5
+-
+-**User Story:** As a user, I want to view detailed information about GitHub users, so that I can learn more about developers I follow.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the user navigates to a user detail screen THEN the system SHALL display the username in the URL path
+-2. WHEN on a user detail screen THEN the system SHALL show placeholder content for user information
+-3. WHEN the user wants to go back THEN the system SHALL provide navigation to return to the previous screen
+-
+-### Requirement 6
+-
+-**User Story:** As a user, I want to view detailed information about GitHub repositories, so that I can explore code and project details.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN the user navigates to a repository detail screen THEN the system SHALL display the owner/repo name in the URL path
+-2. WHEN on a repository detail screen THEN the system SHALL show repository information including URL, stars, forks, and issues
+-3. WHEN displaying repository details THEN the system SHALL provide a placeholder for README content
+-4. WHEN the user wants to go back THEN the system SHALL provide navigation to return to the previous screen
+-
+-### Requirement 7
+-
+-**User Story:** As a developer, I want the application to follow clean architecture principles, so that the code is maintainable and testable.
+-
+-#### Acceptance Criteria
+-
+-1. WHEN implementing services THEN the system SHALL register them with dependency injection using get_it and injectable
+-2. WHEN implementing ViewModels THEN the system SHALL create them manually with explicit dependencies
+-3. WHEN implementing screens THEN the system SHALL receive ViewModels through constructor parameters
+-4. WHEN routing between screens THEN the system SHALL use GoRouter with explicit dependency injection in route builders
+-5. WHEN testing components THEN the system SHALL allow easy mocking of dependencies without complex DI setup
+-
+-### Requirement 8
+-
+-**User Story:** As a developer, I want proper error handling for authentication flows, so that users receive appropriate feedback when issues occur.
++**User Story:** As a user, I want proper error handling for authentication flows, so that I receive appropriate feedback when issues occur.
+ 
+ #### Acceptance Criteria
+
+--- FILE: .kiro/specs/github-client-authentication/tasks.md ---
+diff --git a/.kiro/specs/github-client-authentication/tasks.md b/.kiro/specs/github-client-authentication/tasks.md
+index 125caf9..3eb5dcc 100644
+--- a/.kiro/specs/github-client-authentication/tasks.md
++++ b/.kiro/specs/github-client-authentication/tasks.md
+@@ -1,15 +1,15 @@
+ # Implementation Plan
+ 
+ ## Current Status
+-This implementation plan documents potential improvements and enhancements for the existing GitHub Client Authentication system. The core authentication functionality is already implemented and working.
++This implementation plan focuses on the core GitHub Client Authentication module. The basic authentication functionality is implemented and working, with enhancement opportunities in security, error handling, and module completeness.
+ 
+-## Enhancement Tasks
++## Authentication Module Tasks
+ 
+ - [x] 1. Implement missing service interfaces and improve error handling
+   - Create concrete implementations for ITokenStorage and IScopeService interfaces
+   - Add comprehensive error handling for network failures and edge cases
+   - Implement retry logic for transient failures
+-  - _Requirements: 2.4, 2.5, 8.1, 8.2, 8.3, 8.4, 8.5_
++  - _Requirements: 2.4, 2.5, 4.1, 4.2, 4.3, 4.4, 4.5_
+ 
+ - [x] 1.1 Create ITokenStorage interface and implementation
+   - Define ITokenStorage interface with saveToken, getToken, and deleteToken methods
+@@ -21,158 +21,66 @@ This implementation plan documents potential improvements and enhancements for t
+   - Define IScopeService interface with getScopesFromAccessToken method
+   - Implement ScopeService class that calls GitHub API to validate token scopes
+   - Add unit tests for scope validation including invalid token scenarios
+-  - _Requirements: 2.5, 8.4_
++  - _Requirements: 2.5, 4.4_
+ 
+ - [x] 1.3 Enhance error handling in GithubAuthClient
+   - Add timeout handling for HTTP requests
+   - Implement exponential backoff for rate limiting scenarios
+   - Add comprehensive error logging without exposing sensitive data
+   - Create unit tests for all error scenarios
+-  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
++  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+ 
+-- [x] 2. Implement real GitHub API integration for user and repository data
+-  - Create GitHub API service for fetching user and repository information
+-  - Replace placeholder data in HomeScreen with real GitHub API calls
+-  - Implement UserDetailsScreen with actual user data from GitHub API
+-  - Implement RepositoryDetailsScreen with real repository data and README content
+-  - _Requirements: 4.1, 4.2, 4.3, 4.4, 5.1, 5.2, 6.1, 6.2, 6.3_
+-
+-- [x] 2.1 Create GitHub API service for user data
+-  - Implement GitHubApiService with methods for fetching user information
+-  - Add authentication header injection using stored access token
+-  - Create data models for GitHub user and repository responses
+-  - Write unit tests with mocked HTTP responses
+-  - _Requirements: 4.2, 4.3, 5.2_
+-
+-- [x] 2.2 Implement following users functionality
+-  - Add API call to fetch users that the authenticated user follows
+-  - Replace sample data in HomeScreen with real following data
+-  - Implement error handling for API failures
+-  - Add loading states and refresh functionality
+-  - _Requirements: 4.1, 4.2, 4.4_
+-
+-- [x] 2.3 Build UserDetailsScreen with real data
+-  - Fetch user profile information from GitHub API
+-  - Display user avatar, bio, location, and other profile details
+-  - Show user's repositories with sorting and filtering options
+-  - Implement navigation to repository details from user profile
+-  - _Requirements: 5.1, 5.2, 5.3_
+-
+-- [x] 2.4 Build RepositoryDetailsScreen with comprehensive data
+-  - Fetch repository information including stars, forks, issues, and language
+-  - Implement README content fetching and markdown rendering
+-  - Add repository statistics and contributor information
+-  - Implement file browser functionality for repository contents
+-  - _Requirements: 6.1, 6.2, 6.3, 6.4_
+-
+-- [ ] 3. Enhance authentication security and token management
++- [ ] 2. Enhance authentication security and token management
+   - Implement automatic token refresh before expiration
+-  - Add biometric authentication for app access
++  - Add enhanced authentication methods and security features
+   - Implement secure token storage using platform keychain
+   - Add session timeout and automatic logout functionality
+   - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4_
+ 
+-- [ ] 3.1 Implement secure token storage
++- [ ] 2.1 Implement secure token storage
+   - Replace SharedPreferences with flutter_secure_storage for token storage
+   - Add encryption for sensitive data at rest
+   - Implement token expiration checking and automatic cleanup
+   - Write integration tests for secure storage functionality
+   - _Requirements: 2.1, 2.2, 2.4_
+ 
+-- [ ] 3.2 Add biometric authentication
+-  - Integrate local_auth package for biometric authentication
+-  - Implement app lock screen with biometric or PIN authentication
+-  - Add settings for enabling/disabling biometric authentication
+-  - Handle biometric authentication failures gracefully
++- [ ] 2.2 Add enhanced authentication features
++  - Integrate local_auth package for biometric authentication (optional)
++  - Implement additional authentication methods as needed
++  - Add authentication method preferences and configuration
++  - Handle authentication method failures gracefully
+   - _Requirements: 3.1, 3.4_
+ 
+-- [ ] 3.3 Implement session management
++- [ ] 2.3 Implement session management
+   - Add automatic logout after period of inactivity
+   - Implement token refresh logic before expiration
+   - Add session validation on app resume from background
+   - Create user settings for session timeout configuration
+   - _Requirements: 2.3, 3.2, 3.3_
+ 
+-- [ ] 4. Improve user experience and accessibility
+-  - Add dark mode support with theme switching
+-  - Implement accessibility features for screen readers
+-  - Add pull-to-refresh functionality on list screens
+-  - Implement offline mode with cached data
+-  - _Requirements: 4.4, 4.5, 5.3, 6.4_
+-
+-- [ ] 4.1 Implement theme management
+-  - Create ThemeService for managing light/dark themes
+-  - Add theme toggle in settings screen
+-  - Implement system theme detection and automatic switching
+-  - Update all screens to support both light and dark themes
+-  - _Requirements: 4.5_
+-
+-- [ ] 4.2 Add accessibility features
+-  - Implement semantic labels for all interactive elements
+-  - Add screen reader support for dynamic content
+-  - Ensure proper focus management for keyboard navigation
+-  - Test with accessibility tools and make necessary adjustments
+-  - _Requirements: 4.4, 5.3, 6.4_
+-
+-- [ ] 4.3 Implement offline functionality
+-  - Add local database for caching GitHub data
+-  - Implement offline mode detection and user feedback
+-  - Create sync mechanism for when connectivity is restored
+-  - Add offline indicators and cached data timestamps
+-  - _Requirements: 4.2, 5.2, 6.2_
++- [ ] 3. Expand authentication module test coverage
++  - Achieve 90%+ code coverage for authentication services
++  - Add integration tests for authentication flows
++  - Add comprehensive error scenario testing
++  - Add performance tests for authentication operations
+ 
+-- [ ] 5. Expand test coverage and improve code quality
+-  - Achieve 90%+ code coverage with comprehensive unit tests
+-  - Add integration tests for complete user flows
+-  - Implement widget tests for all screens and components
+-  - Add performance tests for API calls and data processing
+-  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+-
+-- [ ] 5.1 Expand unit test coverage
+-  - Write comprehensive tests for all service classes
+-  - Add tests for all ViewModel state transitions and error scenarios
++- [ ] 3.1 Expand authentication service unit tests
++  - Write comprehensive tests for AuthService, GithubAuthClient, TokenStorage, ScopeService
++  - Add tests for all error scenarios and edge cases
+   - Create mock implementations for all external dependencies
+-  - Implement test utilities for common testing patterns
+-  - _Requirements: 7.5_
+-
+-- [ ] 5.2 Add integration tests
+-  - Create end-to-end tests for authentication flow
+-  - Test complete user journeys from login to data viewing
+-  - Add tests for offline/online state transitions
+-  - Implement automated testing for different device configurations
+-  - _Requirements: 7.1, 7.2, 7.3_
+-
+-- [ ] 5.3 Implement widget tests
+-  - Create widget tests for all screen components
+-  - Test user interactions and navigation flows
+-  - Add tests for error states and loading indicators
+-  - Implement golden tests for UI consistency
+-  - _Requirements: 7.4_
+-
+-- [ ] 6. Add advanced features and optimizations
+-  - Implement search functionality for users and repositories
+-  - Add favorites/bookmarks for repositories and users
+-  - Implement push notifications for repository updates
+-  - Add analytics and crash reporting
+-  - _Requirements: 4.3, 5.1, 6.1_
+-
+-- [ ] 6.1 Implement search functionality
+-  - Create search service for GitHub users and repositories
+-  - Add search screens with filtering and sorting options
+-  - Implement search history and suggestions
+-  - Add debounced search input to reduce API calls
+-  - _Requirements: 4.3, 5.1_
+-
+-- [ ] 6.2 Add favorites and bookmarks
+-  - Create local storage for user favorites
+-  - Implement favorites management screens
+-  - Add quick access to favorited repositories and users
+-  - Implement sync of favorites across devices
+-  - _Requirements: 6.1_
+-
+-- [ ] 6.3 Implement push notifications
+-  - Set up Firebase Cloud Messaging for push notifications
+-  - Create notification service for repository updates
+-  - Add notification preferences and management
+-  - Implement deep linking from notifications to relevant screens
+-  - _Requirements: 6.1_
+\ No newline at end of file
++  - Test token validation, refresh, and cleanup scenarios
++  - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 4.5_
++
++- [ ] 3.2 Add authentication integration tests
++  - Create end-to-end tests for OAuth device flow
++  - Test token persistence across app restarts
++  - Test authentication state changes and notifications
++  - Test error recovery and retry mechanisms
++  - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4_
++
++- [ ] 3.3 Add authentication performance tests
++  - Test authentication startup time and token validation performance
++  - Test network timeout and retry performance
++  - Test memory usage during authentication flows
++  - Test concurrent authentication request handling
++  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+\ No newline at end of file
+
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index fa281f3..6782a1e 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -95,15 +95,25 @@ Mirrors the `lib/` structure:
+ - **Business Logic Separation**: Complex logic moved from screen widgets into ViewModels
+ - **Dependency Injection**: Use `@injectable` annotations, avoid direct `getIt` calls
+ 
+-### Dependency Flow
+-1. **Services** - Registered with `@injectable` in DI container
+-2. **ViewModels** - Injected with service dependencies, contain business logic
+-3. **Screens** - Focus on UI, delegate complex logic to ViewModels
+-4. **Widgets** - Receive data through parameters, minimal business logic
++### Hybrid Dependency Injection Pattern
++1. **Services** - Registered with `@injectable`/`@lazySingleton` in DI container
++2. **ViewModel Factories** - Registered with `@injectable`, create ViewModels with explicit dependencies
++3. **ViewModels** - Manually instantiated by factories, extend `DisposableViewModel` for lifecycle management
++4. **RouteProviders** - Registered with `@injectable`, create routes with ViewModel factory integration
++5. **Screens** - Receive ViewModels through constructor parameters, focus on UI
++6. **Widgets** - Receive data through parameters, minimal business logic
++
++### ViewModel Lifecycle Management
++- **Manual Creation**: ViewModels created by factories, not DI container
++- **Explicit Dependencies**: All dependencies injected through constructors
++- **Resource Disposal**: ViewModels extend `DisposableViewModel` with `onDispose()` hook
++- **State Management**: ViewModels extend `ChangeNotifier` for UI reactivity
+ 
+ ### File Naming Conventions
+-- `*_service.dart` - Business logic services
+-- `*_viewmodel.dart` - UI state management
++- `*_service.dart` - Business logic services (registered with DI)
++- `*_viewmodel.dart` - UI state management (manually instantiated)
++- `*_viewmodel_factory.dart` - ViewModel factory classes (registered with DI)
++- `*_route_provider.dart` - Route provider classes (registered with DI)
+ - `*_screen.dart` - Full screen widgets
+ - `*_route.dart` - Typed route classes for navigation
+ - `*_test.dart` - Test files
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 5edd21f..af7b7da 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -5,10 +5,12 @@
+ - **Dart** - Primary programming language
+ 
+ ## Architecture & Patterns
+-- **Dependency Injection** pattern with Injectable + GetIt
++- **Hybrid Dependency Injection** - Services use Injectable + GetIt, ViewModels manually instantiated
+ - **Screen-based modular architecture** - each screen is a self-contained module
+-- **ViewModel pattern** - business logic separated from UI widgets
+-- **GoRouter** for declarative routing and navigation
++- **ViewModel Factory pattern** - Factories registered with DI create ViewModels with explicit dependencies
++- **RouteProvider pattern** - Each screen module provides its own route configuration
++- **GoRouter** for declarative routing with ViewModel factory integration
++- **Explicit dependency management** - All dependencies injected through constructors, no hidden GetIt calls
+ - **Avoid strict layer separation** - focus on modularity and testability
+ 
+ ## Key Dependencies
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

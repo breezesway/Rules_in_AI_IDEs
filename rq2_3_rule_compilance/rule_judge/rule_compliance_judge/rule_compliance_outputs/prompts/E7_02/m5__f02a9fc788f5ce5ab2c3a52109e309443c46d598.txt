@@ -1,0 +1,611 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=5)
+- Commit Message: feat: redesign CanvasToolbar and Sidebar with icon buttons and improved UI
+
+    * Add @radix-ui/react-slot dependency for enhanced UI component composition.
+    * Refactor CanvasToolbar to use new Button component with Lucide icons for shapes.
+    * Redesign Sidebar:
+        * Use icon buttons for removing and clearing layers.
+        * Add application title.
+        * Display layer indices and apply truncation for long IDs.
+        * Improve spacing, padding, and scrolling.
+    * Update styles for a more compact and modern look.
+- Changed Files List: 
+bun.lock	+5	-0	after_lines=883
+conversations/10-sidebar-scrollbar-overflow.md	+52	-0	after_lines=52
+conversations/11-redesign-layer-items.md	+47	-0	after_lines=47
+conversations/12-add-shadcn-button-with-icons.md	+59	-0	after_lines=59
+conversations/13-add-product-name-reduce-padding.md	+31	-0	after_lines=31
+package.json	+1	-0	after_lines=37
+src/components/CanvasToolbar.tsx	+27	-10	after_lines=51
+src/components/Sidebar.tsx	+42	-31	after_lines=139
+src/components/ui/button.tsx	+59	-0	after_lines=59
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 10-sidebar-scrollbar-overflow.md
+│   ├── 11-redesign-layer-items.md
+│   ├── 12-add-shadcn-button-with-icons.md
+│   ├── 13-add-product-name-reduce-padding.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 3-adjust-layers-rendering.md
+│   ├── 4-implement-drag-drop-layers.md
+│   ├── 5-implement-text-shape.md
+│   ├── 6-remove-add-layer-button-fix-remove-functionality.md
+│   ├── 7-implement-layer-hover-highlighting.md
+│   ├── 8-optimize-shape-rendering.md
+│   └── 9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ui
+│   │       └── button.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: bun.lock ---
+diff --git a/bun.lock b/bun.lock
+index e4bbedc..ed086e6 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -7,6 +7,7 @@
+         "@dnd-kit/core": "^6.3.1",
+         "@dnd-kit/sortable": "^10.0.0",
+         "@dnd-kit/utilities": "^3.2.2",
++        "@radix-ui/react-slot": "^1.2.3",
+         "class-variance-authority": "^0.7.1",
+         "clsx": "^2.1.1",
+         "lucide-react": "^0.525.0",
+@@ -159,6 +160,10 @@
+ 
+     "@nolyfill/is-core-module": ["@nolyfill/is-core-module@1.0.39", "", {}, "sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA=="],
+ 
++    "@radix-ui/react-compose-refs": ["@radix-ui/react-compose-refs@1.1.2", "", { "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-z4eqJvfiNnFMHIIvXP3CY57y2WJs5g2v3X0zm9mEJkrkNv4rDxu+sg9Jh8EkXyeqBkB7SOcboo9dMVqhyrACIg=="],
++
++    "@radix-ui/react-slot": ["@radix-ui/react-slot@1.2.3", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A=="],
++
+     "@rtsao/scc": ["@rtsao/scc@1.1.0", "", {}, "sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g=="],
+ 
+     "@rushstack/eslint-patch": ["@rushstack/eslint-patch@1.12.0", "", {}, "sha512-5EwMtOqvJMMa3HbmxLlF74e+3/HhwBTMcvt3nqVJgGCozO6hzIPOBlwm8mGVNR9SN2IJpxSnlxczyDjcn7qIyw=="],
+
+--- FILE: conversations/10-sidebar-scrollbar-overflow.md ---
+diff --git a/conversations/10-sidebar-scrollbar-overflow.md b/conversations/10-sidebar-scrollbar-overflow.md
+new file mode 100644
+index 0000000..819a511
+--- /dev/null
++++ b/conversations/10-sidebar-scrollbar-overflow.md
+@@ -0,0 +1,52 @@
++# Conversation 10: Sidebar Scrollbar Overflow
++
++**Date:** [Current Date]
++
++## Summary
++Modified the sidebar to properly handle overflow when there are too many layers by implementing scrollbar functionality.
++
++## Participants
++- **Chuang:** User
++- **Cursor:** Assistant
++
++## Conversation Flow
++
++### Chuang:
++The sidebar container should hug all layers and show a scrollbar when there are too many.
++
++### Cursor:
++I'll help you modify the sidebar to hug all layers and show a scrollbar when there are too many. Let me examine the current sidebar structure and make the necessary changes.
++
++[Modified `src/components/Sidebar.tsx`]
++
++Perfect! I've modified the sidebar to properly handle overflow when there are too many layers. Here's what I changed:
++
++1. **Wrapped the DndContext in a flex container**: Added a `div` with `flex-1 min-h-0` classes around the DndContext. This makes the layers section take up the remaining space after the header elements.
++
++2. **Added overflow handling to the layers list**: The `ul` element now has `overflow-y-auto max-h-full` classes, which will:
++   - Show a vertical scrollbar when the content exceeds the available height
++   - Ensure the list doesn't exceed the height of its container
++
++The key changes:
++- `flex-1` makes the layers section expand to fill available space
++- `min-h-0` allows the flex item to shrink below its content size
++- `overflow-y-auto` shows a scrollbar only when needed
++- `max-h-full` ensures the list doesn't exceed its container height
++
++Now the sidebar will hug all layers and automatically show a scrollbar when there are too many layers to fit in the available space, while maintaining the drag-and-drop functionality.
++
++### Chuang:
++Save the chat
++
++## Code Changes Made
++
++### Modified: `src/components/Sidebar.tsx`
++- Wrapped DndContext in a flex container with `flex-1 min-h-0` classes
++- Added `overflow-y-auto max-h-full` classes to the layers `ul` element
++- This enables proper overflow handling and scrollbar functionality when there are too many layers
++
++## Technical Details
++- Used CSS Flexbox to create a proper layout structure
++- Implemented overflow handling with `overflow-y-auto` for vertical scrolling
++- Maintained drag-and-drop functionality while adding scrollbar support
++- Used `max-h-full` to ensure the list respects container boundaries 
+\ No newline at end of file
+
+--- FILE: conversations/11-redesign-layer-items.md ---
+diff --git a/conversations/11-redesign-layer-items.md b/conversations/11-redesign-layer-items.md
+new file mode 100644
+index 0000000..7604b79
+--- /dev/null
++++ b/conversations/11-redesign-layer-items.md
+@@ -0,0 +1,47 @@
++# Conversation 11: Redesign Layer Items
++
++**Date:** Current session
++
++## Participants
++- **Chuang:** User
++- **Cursor:** Assistant
++
++## Summary
++Redesigned the layer items in the sidebar to improve visual hierarchy and compactness by adding indexes, truncating long IDs, and reducing padding.
++
++## Requirements
++- Add indexes for each layer starting from 1
++- Truncate the layer ID into one line
++- Reduce paddings a little bit
++
++## Code Changes Made
++
++### Modified: `src/components/Sidebar.tsx`
++
++**Changes to SortableLayerItemProps interface:**
++- Added `index: number` parameter
++
++**Changes to SortableLayerItem component:**
++- Added `index` parameter to function signature
++- Reduced padding from `p-3` to `p-2`
++- Added index display with styling: `text-gray-400 text-sm font-mono mr-2 flex-shrink-0`
++- Added `min-w-0` to main content div for proper text truncation
++- Added `truncate` class to layer ID span for one-line truncation
++- Added `flex-shrink-0` to remove button to prevent shrinking
++
++**Changes to layer mapping:**
++- Updated map function to include index: `layers.map((layer, index) => ...)`
++- Pass `index + 1` to SortableLayerItem component
++
++## Technical Details
++- Used CSS `truncate` class for text overflow with ellipsis
++- Implemented proper flexbox layout with `min-w-0` for truncation to work
++- Added visual hierarchy with gray, monospace font for indexes
++- Maintained drag-and-drop functionality while improving layout
++
++## Result
++Layer items now display with:
++1. Numbered indexes (1, 2, 3, etc.) in gray monospace font
++2. Truncated layer IDs that fit on one line
++3. More compact padding for better space utilization
++4. Improved visual hierarchy and readability 
+\ No newline at end of file
+
+--- FILE: conversations/12-add-shadcn-button-with-icons.md ---
+diff --git a/conversations/12-add-shadcn-button-with-icons.md b/conversations/12-add-shadcn-button-with-icons.md
+new file mode 100644
+index 0000000..20eda60
+--- /dev/null
++++ b/conversations/12-add-shadcn-button-with-icons.md
+@@ -0,0 +1,59 @@
++# Conversation 12: Add shadcn Button with Icons
++
++**Date**: December 2024
++
++## Participants
++- **Chuang**: User
++- **Cursor**: AI Assistant
++
++## Summary
++Added shadcn button component and lucide-react icons to improve the UI consistency and user experience in both Sidebar and CanvasToolbar components.
++
++## Key Changes Made
++
++### 1. Added shadcn Button Component
++- Installed button component using `bunx --bun shadcn@latest add button`
++- Created `src/components/ui/button.tsx` with modern button variants
++
++### 2. Added Icon Library
++- Installed `lucide-react` package for modern, customizable icons
++- Added shape-specific icons for better visual identification
++
++### 3. Updated Sidebar.tsx
++- Replaced HTML buttons with shadcn Button components
++- Added `Layers` icon to "Clear All Layers" button
++- Converted "Remove" buttons to icon buttons using `Trash2` icon
++- Used `variant="destructive"` for destructive actions
++
++### 4. Updated CanvasToolbar.tsx
++- Replaced HTML buttons with shadcn Button components
++- Added shape-specific icons (Square, Circle, Triangle, Type, Minus)
++- Reduced toolbar height from `h-16` to `h-12`
++- Reduced padding and gaps for more compact design
++- Added `size="sm"` for smaller buttons
++
++## Icon Mapping
++- Rectangle → Square icon
++- Circle → Circle icon
++- Triangle → Triangle icon
++- Text → Type icon
++- Line → Minus icon
++
++## Benefits
++- Consistent styling across the application
++- Better accessibility and focus states
++- Modern design with visual icons
++- More compact toolbar layout
++- Improved user experience with intuitive icons
++
++## Files Modified
++- `src/components/Sidebar.tsx`
++- `src/components/CanvasToolbar.tsx`
++- `src/components/ui/button.tsx` (new)
++- `package.json` (dependencies added)
++
++## Technical Details
++- Used shadcn's button variants (default, secondary, destructive)
++- Implemented icon buttons with `size="icon"`
++- Added proper spacing and sizing for icons
++- Maintained existing functionality while improving UI 
+\ No newline at end of file
+
+--- FILE: conversations/13-add-product-name-reduce-padding.md ---
+diff --git a/conversations/13-add-product-name-reduce-padding.md b/conversations/13-add-product-name-reduce-padding.md
+new file mode 100644
+index 0000000..a4351ce
+--- /dev/null
++++ b/conversations/13-add-product-name-reduce-padding.md
+@@ -0,0 +1,31 @@
++# Conversation 13: Add Product Name and Reduce Sidebar Padding
++
++**Date:** [Current Date]
++
++## Participants
++- **Chuang:** User
++- **Cursor:** Assistant
++
++## Summary
++Added "Ascii Canvas" product name to the sidebar and reduced padding for better layout.
++
++## Changes Made
++
++### Sidebar.tsx
++- Added product name "Ascii Canvas" as an h1 heading at the top of the sidebar
++- Initially centered the title, then changed to left alignment per user request
++- Reduced sidebar padding from `p-4` to `p-3` for a more compact layout
++
++## Code Changes
++```tsx
++// Added product name at top of sidebar
++<h1 className="text-2xl font-bold mb-4">Ascii Canvas</h1>
++
++// Reduced padding from p-4 to p-3
++<div className="flex h-full w-64 flex-col bg-gray-800 p-3 text-white shrink-0">
++```
++
++## Notes
++- Product name provides clear brand identity for the application
++- Reduced padding makes better use of sidebar space while maintaining readability
++- All existing functionality (drag-and-drop, layer management) remains intact 
+\ No newline at end of file
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 5bfc7af..c196216 100644
+--- a/package.json
++++ b/package.json
+@@ -12,6 +12,7 @@
+     "@dnd-kit/core": "^6.3.1",
+     "@dnd-kit/sortable": "^10.0.0",
+     "@dnd-kit/utilities": "^3.2.2",
++    "@radix-ui/react-slot": "^1.2.3",
+     "class-variance-authority": "^0.7.1",
+     "clsx": "^2.1.1",
+     "lucide-react": "^0.525.0",
+
+--- FILE: src/components/CanvasToolbar.tsx ---
+diff --git a/src/components/CanvasToolbar.tsx b/src/components/CanvasToolbar.tsx
+index 3667d4e..a63dbc9 100644
+--- a/src/components/CanvasToolbar.tsx
++++ b/src/components/CanvasToolbar.tsx
+@@ -1,6 +1,8 @@
+ "use client";
+ 
+ import { useShapeStore } from "@/store";
++import { Button } from "@/components/ui/button";
++import { Square, Circle, Triangle, Type, Minus } from "lucide-react";
+ 
+ export default function CanvasToolbar() {
+   const shapes = useShapeStore((state) => state.shapes);
+@@ -8,25 +10,40 @@ export default function CanvasToolbar() {
+   const unselectShape = useShapeStore((state) => state.unselectShape);
+   const selectedShape = useShapeStore((state) => state.selectedShape);
+ 
++  const getShapeIcon = (shapeType: string) => {
++    switch (shapeType.toLowerCase()) {
++      case 'rectangle':
++        return <Square className="h-4 w-4" />;
++      case 'circle':
++        return <Circle className="h-4 w-4" />;
++      case 'triangle':
++        return <Triangle className="h-4 w-4" />;
++      case 'text':
++        return <Type className="h-4 w-4" />;
++      case 'line':
++        return <Minus className="h-4 w-4" />;
++      default:
++        return null;
++    }
++  };
++
+   return (
+-    <div className="flex h-16 w-full items-center justify-between bg-gray-200 p-4">
+-      <div className="flex space-x-4">
++    <div className="flex h-12 w-full items-center justify-between bg-gray-200 px-3 py-2">
++      <div className="flex space-x-2">
+         {shapes.map((shape) => (
+-          <button
++          <Button
+             key={shape.id}
+-            className={`px-4 py-2 rounded ${
+-              selectedShape?.id === shape.id
+-                ? "bg-blue-500 text-white"
+-                : "bg-gray-300 hover:bg-gray-400"
+-            }`}
++            variant={selectedShape?.id === shape.id ? "default" : "secondary"}
++            size="sm"
+             onClick={() =>
+               selectedShape?.id === shape.id
+                 ? unselectShape()
+                 : selectShape(shape)
+             }
+           >
+-            {shape.type}
+-          </button>
++            {getShapeIcon(shape.type)}
++            <span className="ml-1">{shape.type}</span>
++          </Button>
+         ))}
+       </div>
+     </div>
+
+--- FILE: src/components/Sidebar.tsx ---
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+index 4ed7cf1..97a8507 100644
+--- a/src/components/Sidebar.tsx
++++ b/src/components/Sidebar.tsx
+@@ -1,6 +1,8 @@
+ "use client";
+ 
+ import { useLayersStore } from "@/store";
++import { Button } from "@/components/ui/button";
++import { Trash2, Layers } from "lucide-react";
+ import {
+   DndContext,
+   closestCenter,
+@@ -23,9 +25,10 @@ import { CSS } from "@dnd-kit/utilities";
+ interface SortableLayerItemProps {
+   layer: { id: string; canvas: string[][] };
+   onRemove: (id: string) => void;
++  index: number;
+ }
+ 
+-function SortableLayerItem({ layer, onRemove }: SortableLayerItemProps) {
++function SortableLayerItem({ layer, onRemove, index }: SortableLayerItemProps) {
+   const {
+     attributes,
+     listeners,
+@@ -47,23 +50,25 @@ function SortableLayerItem({ layer, onRemove }: SortableLayerItemProps) {
+     <li
+       ref={setNodeRef}
+       style={style}
+-      className="flex items-center justify-between bg-gray-700 p-3 rounded hover:bg-gray-600 transition-colors"
++      className="flex items-center justify-between bg-gray-700 p-2 rounded hover:bg-gray-600 transition-colors"
+       onMouseEnter={() => setHoveredLayer(layer.id)}
+       onMouseLeave={() => setHoveredLayer(null)}
+     >
+       <div 
+-        className="flex items-center flex-1 cursor-move"
++        className="flex items-center flex-1 cursor-move min-w-0"
+         {...attributes}
+         {...listeners}
+       >
+-        <span className="text-white">{layer.id}</span>
++        <span className="text-gray-400 text-sm font-mono mr-2 flex-shrink-0">{index}</span>
++        <span className="text-white truncate">{layer.id}</span>
+       </div>
+-      <button
+-        className="text-red-500 hover:text-red-700 ml-2"
++      <Button
++        variant="destructive"
++        size="icon"
+         onClick={() => onRemove(layer.id)}
+       >
+-        Remove
+-      </button>
++        <Trash2 className="h-4 w-4" />
++      </Button>
+     </li>
+   );
+ }
+@@ -93,36 +98,42 @@ export default function Sidebar() {
+   }
+ 
+   return (
+-    <div className="flex h-full w-64 flex-col bg-gray-800 p-4 text-white shrink-0">
+-      <button
+-        className="mb-4 rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
++    <div className="flex h-full w-64 flex-col bg-gray-800 p-3 text-white shrink-0">
++      <h1 className="text-2xl font-bold mb-4">Ascii Canvas</h1>
++      <Button
++        variant="destructive"
++        className="mb-4"
+         onClick={clearAllLayers}
+         disabled={layers.length === 0}
+       >
++        <Layers className="h-4 w-4 mr-2" />
+         Clear All Layers
+-      </button>
++      </Button>
+       <h2 className="mb-4 text-xl font-bold">Layers</h2>
+       
+-      <DndContext
+-        sensors={sensors}
+-        collisionDetection={closestCenter}
+-        onDragEnd={handleDragEnd}
+-      >
+-        <SortableContext
+-          items={layers.map(layer => layer.id)}
+-          strategy={verticalListSortingStrategy}
++      <div className="flex-1 min-h-0">
++        <DndContext
++          sensors={sensors}
++          collisionDetection={closestCenter}
++          onDragEnd={handleDragEnd}
+         >
+-          <ul className="space-y-2">
+-            {layers.map((layer) => (
+-              <SortableLayerItem
+-                key={layer.id}
+-                layer={layer}
+-                onRemove={removeLayer}
+-              />
+-            ))}
+-          </ul>
+-        </SortableContext>
+-      </DndContext>
++          <SortableContext
++            items={layers.map(layer => layer.id)}
++            strategy={verticalListSortingStrategy}
++          >
++            <ul className="space-y-2 overflow-y-auto max-h-full">
++              {layers.map((layer, index) => (
++                <SortableLayerItem
++                  key={layer.id}
++                  layer={layer}
++                  onRemove={removeLayer}
++                  index={index + 1}
++                />
++              ))}
++            </ul>
++          </SortableContext>
++        </DndContext>
++      </div>
+     </div>
+   );
+ }
+
+--- FILE: src/components/ui/button.tsx ---
+diff --git a/src/components/ui/button.tsx b/src/components/ui/button.tsx
+new file mode 100644
+index 0000000..a2df8dc
+--- /dev/null
++++ b/src/components/ui/button.tsx
+@@ -0,0 +1,59 @@
++import * as React from "react"
++import { Slot } from "@radix-ui/react-slot"
++import { cva, type VariantProps } from "class-variance-authority"
++
++import { cn } from "@/lib/utils"
++
++const buttonVariants = cva(
++  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
++  {
++    variants: {
++      variant: {
++        default:
++          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
++        destructive:
++          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
++        outline:
++          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
++        secondary:
++          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
++        ghost:
++          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
++        link: "text-primary underline-offset-4 hover:underline",
++      },
++      size: {
++        default: "h-9 px-4 py-2 has-[>svg]:px-3",
++        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
++        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
++        icon: "size-9",
++      },
++    },
++    defaultVariants: {
++      variant: "default",
++      size: "default",
++    },
++  }
++)
++
++function Button({
++  className,
++  variant,
++  size,
++  asChild = false,
++  ...props
++}: React.ComponentProps<"button"> &
++  VariantProps<typeof buttonVariants> & {
++    asChild?: boolean
++  }) {
++  const Comp = asChild ? Slot : "button"
++
++  return (
++    <Comp
++      data-slot="button"
++      className={cn(buttonVariants({ variant, size, className }))}
++      {...props}
++    />
++  )
++}
++
++export { Button, buttonVariants }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

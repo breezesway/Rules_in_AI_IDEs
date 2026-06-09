@@ -1,0 +1,85 @@
+diff --git a/eslint.config.js b/eslint.config.js
+index 7a89119..46a9b98 100644
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -83,6 +83,7 @@ module.exports = [
+       // Accessibility testing specific
+       'no-empty-function': 'off',
+       'no-magic-numbers': 'off',
++      'no-empty': 'warn', // Empty blocks can indicate incomplete accessibility handling
+ 
+       // Playwright specific rules
+       'playwright/expect-expect': 'error',
+@@ -107,6 +108,16 @@ module.exports = [
+ 
+       // Prettier integration
+       'prettier/prettier': 'error',
++
++      // TypeScript preference rule
++      'no-restricted-syntax': [
++        'error',
++        {
++          selector: 'Program[sourceType="script"]',
++          message:
++            'Use TypeScript (.ts) files instead of JavaScript (.js) files for new code. Convert existing JavaScript files to TypeScript when making significant changes.',
++        },
++      ],
+     },
+   },
+ 
+@@ -134,6 +145,55 @@ module.exports = [
+     },
+     rules: {
+       '@typescript-eslint/no-var-requires': 'off',
++      // Disable TypeScript preference rule for config files
++      'no-restricted-syntax': 'off',
++    },
++  },
++
++  // Special rules for scripts directory (pure JavaScript files)
++  {
++    files: ['scripts/**/*.js'],
++    languageOptions: {
++      parserOptions: {
++        ecmaVersion: 2020,
++        sourceType: 'module',
++      },
++      globals: {
++        console: 'readonly',
++        process: 'readonly',
++        Buffer: 'readonly',
++        __dirname: 'readonly',
++        __filename: 'readonly',
++        module: 'readonly',
++        require: 'readonly',
++        exports: 'readonly',
++        global: 'readonly',
++      },
++    },
++    plugins: {
++      prettier: prettierPlugin,
++    },
++    rules: {
++      '@typescript-eslint/no-unused-vars': 'off',
++      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
++      '@typescript-eslint/no-explicit-any': 'off',
++      'prettier/prettier': 'error',
++      'no-restricted-syntax': 'off', // Allow JS files in scripts directory
++    },
++  },
++
++  // TypeScript preference rule for JavaScript files
++  {
++    files: ['**/*.js'],
++    rules: {
++      'no-restricted-syntax': [
++        'warn',
++        {
++          selector: 'Program',
++          message:
++            'Consider converting this JavaScript file to TypeScript (.ts) for better type safety and maintainability.',
++        },
++      ],
+     },
+   },
+ 

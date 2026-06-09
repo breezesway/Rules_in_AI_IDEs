@@ -1,0 +1,376 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech_stack.md
+- Change Type: modified
+- Target Rule Content:
+- Immutable Ledger: Amazon QLDB
++ Immutable Ledger: Amazon Aurora PostgreSQL
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency management files (e.g., package.json, requirements.txt, pom.xml), configuration files (e.g., .env, application.yaml), and Infrastructure-as-Code (IaC) files (e.g., Terraform .tf files, CloudFormation templates).
+- Suggested Logic: 1. Check dependency manifests for the removal of QLDB-specific SDKs (e.g., @aws-sdk/client-qldb, amazon-qldb-driver-nodejs) and the addition of PostgreSQL drivers (e.g., 'pg', 'psycopg2', 'jdbc:postgresql'). 2. Scan configuration and IaC files to ensure that database connection strings or resource definitions point to Amazon Aurora/RDS (PostgreSQL) instead of AWS::QLDB::Ledger resources.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: feat(infra): Add GraceLogicStack with ProvenanceLogger Lambda function
+- Changed Files List: 
+infrastructure/bin/grace-app.ts	+18	-2	after_lines=39
+infrastructure/lambda/provenance_logger/index.py	+102	-0	after_lines=102
+infrastructure/lambda/provenance_logger/requirements.txt	+1	-0	after_lines=1
+infrastructure/lib/grace-logic-stack.ts	+38	-45	after_lines=67
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── README.md
+│   ├── specs
+│   │   └── core-audit-workflow
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── project_conventions.md
+│       └── tech_stack.md
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── GRACE_ARCHITECTURE.md
+│   ├── GRACE_DEPLOYMENT_GUIDE.md
+│   ├── GRACE_GLOBAL_STRATEGY.md
+│   ├── GRACE_MODEL_SPEC.md
+│   └── dataset_manifest.md
+├── infrastructure
+│   ├── README.md
+│   ├── additional-permissions.json
+│   ├── bin
+│   │   ├── grace-app.ts
+│   │   └── s3-app.ts
+│   ├── bootstrap-instructions.md
+│   ├── cdk-bootstrap-permissions.json
+│   ├── cdk.context.json
+│   ├── cdk.json
+│   ├── configure-s3.sh
+│   ├── create-s3-bucket.sh
+│   ├── deploy.sh
+│   ├── lambda
+│   │   ├── db-init
+│   │   │   ├── cfnresponse.py
+│   │   │   ├── index.py
+│   │   │   └── requirements.txt
+│   │   ├── dependencies
+│   │   │   ├── README.md
+│   │   │   └── build_layer.sh
+│   │   ├── index.js
+│   │   └── provenance_logger
+│   │       ├── index.py
+│   │       └── requirements.txt
+│   ├── lib
+│   │   ├── grace-api-stack.ts
+│   │   ├── grace-foundation-stack.ts
+│   │   ├── grace-foundation-stack.ts.original
+│   │   ├── grace-logic-stack.ts
+│   │   ├── s3-stack.ts
+│   │   └── simple-s3-stack.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── s3-config.json
+│   ├── sql
+│   │   └── init-audit-schema.sql
+│   ├── tsconfig.json
+│   └── update-s3-policy.sh
+└── scripts
+    └── verify_dataset.sh
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: infrastructure/bin/grace-app.ts ---
+diff --git a/infrastructure/bin/grace-app.ts b/infrastructure/bin/grace-app.ts
+index 2bb6584..1665efe 100644
+--- a/infrastructure/bin/grace-app.ts
++++ b/infrastructure/bin/grace-app.ts
+@@ -2,6 +2,7 @@
+ import 'source-map-support/register';
+ import * as cdk from 'aws-cdk-lib';
+ import { GraceFoundationStack } from '../lib/grace-foundation-stack';
++import { GraceLogicStack } from '../lib/grace-logic-stack';
+ 
+ const app = new cdk.App();
+ 
+@@ -11,13 +12,28 @@ const env = {
+   region: 'eu-west-2' // London region as specified in the architecture
+ };
+ 
++// Determine if this is a production deployment
++const isProduction = process.env.ENVIRONMENT === 'production';
++
+ // Create the foundation stack with core resources
+ const foundationStack = new GraceFoundationStack(app, 'GraceFoundationStack', {
+   env,
+-  description: 'Core infrastructure for the GRACE project including PostgreSQL database, S3 bucket, and EventBridge bus'
++  description: 'Core infrastructure for the GRACE project including PostgreSQL database, S3 bucket, and EventBridge bus',
++  isProduction
+ });
+ 
++// Create the logic stack with Lambda functions
++const logicStack = new GraceLogicStack(app, 'GraceLogicStack', {
++  env,
++  description: 'Business logic layer for the GRACE project including Lambda functions',
++  foundationStack,
++  isProduction
++});
++
++// Add dependency to ensure the foundation stack is deployed first
++logicStack.addDependency(foundationStack);
++
+ // Add tags to all resources
+ cdk.Tags.of(app).add('Project', 'GRACE');
+-cdk.Tags.of(app).add('Environment', 'Development');
++cdk.Tags.of(app).add('Environment', isProduction ? 'Production' : 'Development');
+ cdk.Tags.of(app).add('ManagedBy', 'CDK');
+\ No newline at end of file
+
+--- FILE: infrastructure/lambda/provenance_logger/index.py ---
+diff --git a/infrastructure/lambda/provenance_logger/index.py b/infrastructure/lambda/provenance_logger/index.py
+new file mode 100644
+index 0000000..073acca
+--- /dev/null
++++ b/infrastructure/lambda/provenance_logger/index.py
+@@ -0,0 +1,102 @@
++import json
++import os
++import boto3
++import psycopg2
++import hashlib
++import base64
++import datetime
++
++# Initialize AWS clients
++secretsmanager = boto3.client('secretsmanager')
++
++def get_db_connection():
++    """Establish a connection to the PostgreSQL database using credentials from Secrets Manager"""
++    secret_arn = os.environ['DATABASE_SECRET_ARN']
++    
++    # Get the secret
++    secret_response = secretsmanager.get_secret_value(SecretId=secret_arn)
++    secret = json.loads(secret_response['SecretString'])
++    
++    # Extract credentials
++    username = secret['username']
++    password = secret['password']
++    host = os.environ['DATABASE_ENDPOINT']
++    
++    # Connect to the database
++    conn = psycopg2.connect(
++        host=host,
++        user=username,
++        password=password,
++        database='postgres'  # Default database name
++    )
++    
++    return conn
++
++def calculate_hash(data, previous_hash=None):
++    """Calculate a hash of the data, incorporating the previous hash if available"""
++    # Create a JSON string of the data
++    data_str = json.dumps(data, sort_keys=True)
++    
++    # If there's a previous hash, include it in the calculation
++    if previous_hash:
++        data_str = previous_hash + data_str
++    
++    # Calculate SHA-256 hash
++    hash_obj = hashlib.sha256(data_str.encode())
++    return base64.b64encode(hash_obj.digest()).decode()
++
++def log_provenance(conn, event_data):
++    """Log provenance data to the database with cryptographic chaining"""
++    cursor = conn.cursor()
++    
++    # Get the last hash from the database (if any)
++    cursor.execute("SELECT hash FROM audit_records ORDER BY timestamp DESC LIMIT 1")
++    result = cursor.fetchone()
++    previous_hash = result[0] if result else None
++    
++    # Calculate the new hash
++    current_hash = calculate_hash(event_data, previous_hash)
++    
++    # Insert the record
++    timestamp = datetime.datetime.now().isoformat()
++    cursor.execute(
++        "INSERT INTO audit_records (timestamp, event_data, hash, previous_hash) VALUES (%s, %s, %s, %s)",
++        (timestamp, json.dumps(event_data), current_hash, previous_hash)
++    )
++    
++    conn.commit()
++    cursor.close()
++    
++    return {
++        'timestamp': timestamp,
++        'hash': current_hash
++    }
++
++def handler(event, context):
++    """Lambda handler function"""
++    try:
++        # Connect to the database
++        conn = get_db_connection()
++        
++        # Process the event
++        result = log_provenance(conn, event)
++        
++        # Close the connection
++        conn.close()
++        
++        return {
++            'statusCode': 200,
++            'body': json.dumps({
++                'message': 'Provenance logged successfully',
++                'result': result
++            })
++        }
++    except Exception as e:
++        print(f"Error: {str(e)}")
++        return {
++            'statusCode': 500,
++            'body': json.dumps({
++                'message': 'Error logging provenance',
++                'error': str(e)
++            })
++        }
+\ No newline at end of file
+
+--- FILE: infrastructure/lambda/provenance_logger/requirements.txt ---
+diff --git a/infrastructure/lambda/provenance_logger/requirements.txt b/infrastructure/lambda/provenance_logger/requirements.txt
+new file mode 100644
+index 0000000..0530c94
+--- /dev/null
++++ b/infrastructure/lambda/provenance_logger/requirements.txt
+@@ -0,0 +1 @@
++psycopg2-binary==2.9.9
+\ No newline at end of file
+
+--- FILE: infrastructure/lib/grace-logic-stack.ts ---
+diff --git a/infrastructure/lib/grace-logic-stack.ts b/infrastructure/lib/grace-logic-stack.ts
+index 2243f12..9aae50d 100644
+--- a/infrastructure/lib/grace-logic-stack.ts
++++ b/infrastructure/lib/grace-logic-stack.ts
+@@ -1,74 +1,67 @@
+ import * as cdk from 'aws-cdk-lib';
++import { Construct } from 'constructs';
+ import * as lambda from 'aws-cdk-lib/aws-lambda';
+-import * as iam from 'aws-cdk-lib/aws-iam';
+ import * as ec2 from 'aws-cdk-lib/aws-ec2';
+-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+-import { Construct } from 'constructs';
++import * as iam from 'aws-cdk-lib/aws-iam';
++import * as path from 'path';
+ import { GraceFoundationStack } from './grace-foundation-stack';
+ 
++export interface GraceLogicStackProps extends cdk.StackProps {
++  foundationStack: GraceFoundationStack;
++  isProduction?: boolean;
++}
++
+ export class GraceLogicStack extends cdk.Stack {
+   public readonly provenanceLogger: lambda.Function;
+ 
+-  constructor(scope: Construct, id: string, foundationStack: GraceFoundationStack, props?: cdk.StackProps) {
++  constructor(scope: Construct, id: string, props: GraceLogicStackProps) {
+     super(scope, id, props);
+ 
+-    // Create a secret for database credentials
+-    const dbSecret = new secretsmanager.Secret(this, 'GraceDbCredentials', {
+-      secretName: 'grace/db/credentials',
+-      description: 'Credentials for Aurora PostgreSQL database',
+-      generateSecretString: {
+-        secretStringTemplate: JSON.stringify({
+-          username: 'admin',
+-          dbname: 'grace_audit',
+-          host: foundationStack.auditDatabase.clusterEndpoint.hostname,
+-          port: foundationStack.auditDatabase.clusterEndpoint.port,
+-        }),
+-        generateStringKey: 'password',
+-        excludeCharacters: '/@"',
+-      },
+-    });
++    // Determine if this is a production deployment
++    const isProduction = props?.isProduction ?? false;
++    const envSuffix = isProduction ? 'prod' : 'dev';
++
++    // Reference resources from the foundation stack
++    const { vpc, database, databaseSecret } = props.foundationStack;
+ 
+-    // Create security group for Lambda to access RDS
+-    const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'ProvenanceLoggerSG', {
+-      vpc: foundationStack.vpc,
+-      description: 'Security group for ProvenanceLogger Lambda function',
+-      allowAllOutbound: true,
++    // Create a security group for the Lambda function
++    const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'ProvenanceLoggerSecurityGroup', {
++      vpc,
++      description: 'Security group for the ProvenanceLogger Lambda function',
++      allowAllOutbound: true
+     });
+ 
+-    // Allow Lambda to connect to RDS
+-    foundationStack.auditDatabase.connections.allowFrom(
+-      lambdaSecurityGroup,
+-      ec2.Port.tcp(foundationStack.auditDatabase.clusterEndpoint.port),
+-      'Allow Lambda to connect to RDS'
+-    );
++    // Allow the Lambda function to connect to the database
++    database.connections.allowFrom(lambdaSecurityGroup, ec2.Port.tcp(5432), 'Allow Lambda to connect to PostgreSQL');
+ 
+-    // Create the Lambda function
++    // Create the ProvenanceLogger Lambda function
+     this.provenanceLogger = new lambda.Function(this, 'ProvenanceLogger', {
+-      functionName: 'ProvenanceLogger',
+-      runtime: lambda.Runtime.PYTHON_3_10,
+-      handler: 'index.lambda_handler',
+-      code: lambda.Code.fromAsset('lambda/provenance_logger'),
+-      timeout: cdk.Duration.seconds(30),
+-      memorySize: 256,
+-      vpc: foundationStack.vpc,
++      runtime: lambda.Runtime.PYTHON_3_12,
++      handler: 'index.handler',
++      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/provenance_logger')),
++      vpc,
+       vpcSubnets: {
+-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
++        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
+       },
+       securityGroups: [lambdaSecurityGroup],
+       environment: {
+-        DB_SECRET_ARN: dbSecret.secretArn,
+-        DB_ENDPOINT: foundationStack.auditDatabase.clusterEndpoint.hostname,
++        DATABASE_SECRET_ARN: databaseSecret.secretArn,
++        DATABASE_ENDPOINT: database.clusterEndpoint.hostname,
++        ENVIRONMENT: isProduction ? 'production' : 'development'
+       },
++      timeout: cdk.Duration.seconds(30),
++      memorySize: 256,
++      description: 'Lambda function for logging provenance data with cryptographic chaining',
++      functionName: `grace-provenance-logger-${envSuffix}`
+     });
+ 
+-    // Grant Lambda permission to read the secret
+-    dbSecret.grantRead(this.provenanceLogger);
++    // Grant the Lambda function permission to read the database secret
++    databaseSecret.grantRead(this.provenanceLogger);
+ 
+     // Output the Lambda function ARN
+     new cdk.CfnOutput(this, 'ProvenanceLoggerArn', {
+       value: this.provenanceLogger.functionArn,
+-      description: 'ARN of the ProvenanceLogger Lambda function',
+-      exportName: 'ProvenanceLoggerArn',
++      description: 'The ARN of the ProvenanceLogger Lambda function'
+     });
+   }
+ }
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

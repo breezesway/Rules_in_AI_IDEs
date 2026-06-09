@@ -1,0 +1,352 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=1)
+- Commit Message: feat: implement editable text shapes on canvas
+
+    * Add text shape type to shape store and shape selector
+    * Enable text shape editing with keyboard input on the canvas
+    * Implement cursor positioning, text input, and backspace/enter handling
+    * Draw text cursor in canvas rendering logic
+    * Reset cursor and text layer state on tool switch
+- Changed Files List: 
+conversations/5-implement-text-shape.md	+58	-0	after_lines=58
+src/components/Canvas.tsx	+129	-5	after_lines=496
+src/store/index.ts	+2	-1	after_lines=64
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 3-adjust-layers-rendering.md
+│   ├── 4-implement-drag-drop-layers.md
+│   └── 5-implement-text-shape.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: conversations/5-implement-text-shape.md ---
+diff --git a/conversations/5-implement-text-shape.md b/conversations/5-implement-text-shape.md
+new file mode 100644
+index 0000000..74ad77e
+--- /dev/null
++++ b/conversations/5-implement-text-shape.md
+@@ -0,0 +1,58 @@
++# Conversation 5: Implement Text Shape
++
++**Date**: December 2024  
++**Participants**: Chuang, Cursor
++
++## Summary
++Implemented a new Text shape tool for the ASCII Canvas project that allows users to type directly on the canvas with real-time editing capabilities.
++
++## Key Changes Made
++
++### 1. Store Updates (`src/store/index.ts`)
++- Added "text" to the Shape type union: `"rectangle" | "circle" | "line" | "text"`
++- Added text shape to default shapes: `{ id: "shape-4", type: "text" }`
++
++### 2. Canvas Functionality (`src/components/Canvas.tsx`)
++- **Text Mode Detection**: Canvas detects when text tool is selected
++- **Click to Position**: Click anywhere on canvas to set text cursor position
++- **Keyboard Input**: Full keyboard support for typing, backspace, and enter
++- **Text Layer Management**: Creates dedicated text layer that persists until switching tools
++- **Visual Cursor**: Blue cursor indicator shows current text position
++- **Overwrite Behavior**: Always overwrites content in current cell when typing
++
++### 3. Technical Implementation Details
++- Added `textLayerId` state to track current text layer
++- Added `cursorPos` state to track cursor position
++- Implemented `handleTextInput()` for character processing
++- Added keyboard event listeners for text mode
++- Updated mouse handlers to support text positioning
++- Added visual cursor rendering in canvas draw loop
++
++## Key Features
++- **Real-time Typing**: Type directly on the canvas
++- **Overwrite Any Content**: Text can overwrite characters from other shapes
++- **Persistent Text Layer**: All text edits stay on one layer until switching tools
++- **Smart Positioning**: Automatically moves to next position after typing
++- **Visual Feedback**: Blue cursor shows typing position
++
++## Behavior
++1. Select Text tool from toolbar
++2. Click anywhere on canvas to position cursor
++3. Type normally - characters appear and overwrite existing content
++4. Cursor automatically moves to next position
++5. Continue typing until switching to another tool
++6. All text stays on single layer until tool change
++
++## Code Changes
++- Modified `src/store/index.ts` to add text shape type
++- Updated `src/components/Canvas.tsx` with comprehensive text input handling
++- Added keyboard event management for text mode
++- Implemented cursor positioning and visual feedback
++
++## Resolution of Uncertainties
++- **Text vs Other Shapes**: Decided to allow text to overwrite any existing content
++- **Text Layer Management**: Single persistent text layer until tool switch
++- **Line Breaking**: Simplified to always overwrite current cell, move to next position
++- **Text Persistence**: Text remains editable until switching tools
++
++The implementation provides a smooth, intuitive text editing experience that integrates well with the existing ASCII Canvas functionality. 
+\ No newline at end of file
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+index 4e3d6e6..4025698 100644
+--- a/src/components/Canvas.tsx
++++ b/src/components/Canvas.tsx
+@@ -40,6 +40,7 @@ const SHAPE_CHARS = {
+ export default function Canvas() {
+   const layers = useLayersStore((state) => state.layers);
+   const addLayer = useLayersStore((state) => state.addLayer);
++  const updateLayer = useLayersStore((state) => state.updateLayer);
+   const canvasRef = useRef<HTMLCanvasElement>(null);
+   const selectedShape = useShapeStore((state) => state.selectedShape);
+ 
+@@ -47,6 +48,8 @@ export default function Canvas() {
+   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
+     null
+   );
++  const [textLayerId, setTextLayerId] = useState<string | null>(null);
++  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+ 
+   // Get canvas coordinates from mouse position
+   const getCanvasCoords = (clientX: number, clientY: number) => {
+@@ -71,6 +74,109 @@ export default function Canvas() {
+     return { x: clampedX, y: clampedY };
+   };
+ 
++  // Find next available position for text with collision detection
++  const findNextTextPositionWithCollision = (currentX: number, currentY: number): { x: number; y: number } => {
++    let x = currentX;
++    let y = currentY;
++
++    // Always allow the current position (for overwriting)
++    // Only check for collisions when moving to the next position
++    if (x >= CANVAS_COLS) {
++      x = 0;
++      y++;
++    }
++
++    // If we're at the end of canvas, wrap to beginning
++    if (y >= CANVAS_ROWS) {
++      y = 0;
++    }
++
++    return { x, y };
++  };
++
++  // Handle text input
++  const handleTextInput = (char: string) => {
++    if (!selectedShape || selectedShape.type !== "text" || !cursorPos) return;
++
++    // Ensure we have a text layer
++    let textLayer = layers.find(layer => layer.id === textLayerId);
++    if (!textLayer) {
++      textLayer = {
++        id: `text-layer-${Date.now()}`,
++        canvas: Array.from({ length: CANVAS_ROWS }, () =>
++          Array.from({ length: CANVAS_COLS }, () => " ")
++        ),
++      };
++      addLayer(textLayer);
++      setTextLayerId(textLayer.id);
++    }
++
++    // Create a copy of the text layer canvas
++    const newCanvas = textLayer.canvas.map(row => [...row]);
++
++    // Handle special characters
++    if (char === "Backspace") {
++      // Move cursor back and clear the cell
++      let newX = cursorPos.x - 1;
++      let newY = cursorPos.y;
++      
++      if (newX < 0) {
++        newX = CANVAS_COLS - 1;
++        newY = Math.max(0, newY - 1);
++      }
++      
++      if (newY >= 0 && newX >= 0) {
++        newCanvas[newY][newX] = " ";
++        setCursorPos({ x: newX, y: newY });
++      }
++    } else if (char === "Enter") {
++      // Move to next line
++      const nextPos = findNextTextPositionWithCollision(0, cursorPos.y + 1);
++      setCursorPos(nextPos);
++    } else if (char.length === 1) {
++      // Regular character
++      newCanvas[cursorPos.y][cursorPos.x] = char;
++      
++      // Move cursor to next position with collision detection
++      const nextPos = findNextTextPositionWithCollision(cursorPos.x + 1, cursorPos.y);
++      setCursorPos(nextPos);
++    }
++
++    // Update the text layer
++    updateLayer(textLayer.id, newCanvas);
++  };
++
++  // Handle keyboard events
++  const handleKeyDown = (e: KeyboardEvent) => {
++    if (!selectedShape || selectedShape.type !== "text") return;
++
++    e.preventDefault();
++
++    if (e.key === "Backspace") {
++      handleTextInput("Backspace");
++    } else if (e.key === "Enter") {
++      handleTextInput("Enter");
++    } else if (e.key.length === 1) {
++      handleTextInput(e.key);
++    }
++  };
++
++  // Set up keyboard event listeners
++  useEffect(() => {
++    if (selectedShape?.type === "text") {
++      document.addEventListener("keydown", handleKeyDown);
++      return () => document.removeEventListener("keydown", handleKeyDown);
++    }
++  }, [selectedShape, cursorPos, textLayerId, layers]);
++
++  // Reset text layer when switching away from text tool
++  useEffect(() => {
++    if (selectedShape?.type !== "text") {
++      setTextLayerId(null);
++      setCursorPos(null);
++    }
++  }, [selectedShape]);
++
+   // Generate ASCII characters for rectangle
+   const generateRectangle = (
+     startX: number,
+@@ -212,20 +318,27 @@ export default function Canvas() {
+ 
+   // Handle mouse down
+   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    if (!selectedShape) return;
+-
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+ 
+     console.log(`Mouse down at canvas position: (${coords.x}, ${coords.y})`);
+ 
++    // Handle text mode
++    if (selectedShape?.type === "text") {
++      setCursorPos(coords);
++      return;
++    }
++
++    // Handle drawing shapes
++    if (!selectedShape) return;
++
+     setIsDrawing(true);
+     setStartPos(coords);
+   };
+ 
+   // Handle mouse move
+   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    if (!isDrawing || !startPos || !selectedShape) return;
++    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
+ 
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+@@ -295,7 +408,7 @@ export default function Canvas() {
+ 
+   // Handle mouse up
+   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+-    if (!isDrawing || !startPos || !selectedShape) return;
++    if (!isDrawing || !startPos || !selectedShape || selectedShape.type === "text") return;
+ 
+     const coords = getCanvasCoords(e.clientX, e.clientY);
+     if (!coords) return;
+@@ -356,7 +469,18 @@ export default function Canvas() {
+         }
+       });
+     });
+-  }, [layers]);
++
++    // Draw text cursor if in text mode
++    if (selectedShape?.type === "text" && cursorPos) {
++      ctx.fillStyle = "#0000ff";
++      ctx.fillRect(
++        cursorPos.x * CELL_WIDTH,
++        cursorPos.y * CELL_HEIGHT,
++        2,
++        CELL_HEIGHT
++      );
++    }
++  }, [layers, selectedShape, cursorPos]);
+ 
+   return (
+     <canvas
+
+--- FILE: src/store/index.ts ---
+diff --git a/src/store/index.ts b/src/store/index.ts
+index a2f4414..fa34de9 100644
+--- a/src/store/index.ts
++++ b/src/store/index.ts
+@@ -39,7 +39,7 @@ export const useLayersStore = create<LayersStore>((set) => ({
+ 
+ interface Shape {
+   id: string;
+-  type: "rectangle" | "circle" | "line";
++  type: "rectangle" | "circle" | "line" | "text";
+ }
+ 
+ interface ShapeStore {
+@@ -53,6 +53,7 @@ const defaultShapes: Shape[] = [
+   { id: "shape-1", type: "rectangle" },
+   { id: "shape-2", type: "circle" },
+   { id: "shape-3", type: "line" },
++  { id: "shape-4", type: "text" },
+ ];
+ 
+ export const useShapeStore = create<ShapeStore>((set) => ({
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

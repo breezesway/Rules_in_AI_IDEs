@@ -1,0 +1,74 @@
+import { Response } from 'express';
+import { ApiResponse, ApiError } from '../models/api-response';
+import { AppError } from './errors';
+
+/**
+ * Send successful response
+ */
+export function sendSuccess<T>(
+  res: Response,
+  data: T,
+  message?: string,
+  statusCode: number = 200
+): void {
+  const response: ApiResponse<T> = {
+    success: true,
+    data,
+    ...(message && { message }),
+  };
+
+  res.status(statusCode).json(response);
+}
+
+/**
+ * Send error response
+ */
+export function sendError(
+  res: Response,
+  error: Error | AppError,
+  statusCode?: number
+): void {
+  let code = 'INTERNAL_ERROR';
+  let status = statusCode || 500;
+  let details;
+
+  if (error instanceof AppError) {
+    code = error.code;
+    status = error.statusCode;
+    details = (error as any).details;
+  }
+
+  const response: ApiError = {
+    success: false,
+    error: {
+      message: error.message,
+      code,
+      ...(details && { details }),
+    },
+  };
+
+  // Log error for debugging
+  if (status >= 500) {
+    console.error('Server Error:', {
+      message: error.message,
+      stack: error.stack,
+      code,
+    });
+  }
+
+  res.status(status).json(response);
+}
+
+/**
+ * Send created response
+ */
+export function sendCreated<T>(res: Response, data: T, message?: string): void {
+  sendSuccess(res, data, message, 201);
+}
+
+/**
+ * Send no content response
+ */
+export function sendNoContent(res: Response): void {
+  res.status(204).send();
+}

@@ -1,0 +1,65 @@
+diff --git a/lib/src/init.config.dart b/lib/src/init.config.dart
+index 8ca552c..429f2e8 100644
+--- a/lib/src/init.config.dart
++++ b/lib/src/init.config.dart
+@@ -64,18 +64,12 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.lazySingleton<_i792.IScopeService>(
+       () => _i792.ScopeService(gh<_i519.Client>()),
+     );
+-    gh.factory<_i564.FerryClientService>(
+-      () => _i564.FerryClientService(gh<_i895.ITokenStorage>()),
+-    );
+     gh.factory<_i1035.GithubAuthClient>(
+       () => _i1035.GithubAuthClient(
+         gh<_i519.Client>(),
+         gh<String>(instanceName: 'GithubClientID'),
+       ),
+     );
+-    gh.lazySingletonAsync<_i25.Client>(
+-      () => ferryModule.ferryClient(gh<_i564.FerryClientService>()),
+-    );
+     gh.lazySingleton<_i336.AuthService>(
+       () => _i336.AuthService(
+         gh<_i1035.GithubAuthClient>(),
+@@ -84,20 +78,21 @@ extension GetItInjectableX on _i174.GetIt {
+         gh<_i1066.TimerService>(),
+       ),
+     );
+-    gh.factoryAsync<_i627.UserDetailsViewModelFactory>(
+-      () async =>
+-          _i627.UserDetailsViewModelFactory(await getAsync<_i25.Client>()),
+-    );
+     gh.factory<_i850.AuthViewModel>(
+       () => _i850.AuthViewModel(gh<_i336.AuthService>()),
+     );
+     gh.factory<_i1013.HomeViewModelFactory>(
+       () => _i1013.HomeViewModelFactory(gh<_i336.AuthService>()),
+     );
+-    gh.factoryAsync<_i57.UserDetailsRouteProvider>(
+-      () async => _i57.UserDetailsRouteProvider(
+-        await getAsync<_i627.UserDetailsViewModelFactory>(),
+-      ),
++    gh.factory<_i564.FerryClientService>(
++      () => _i564.FerryClientService(gh<_i336.AuthService>()),
++    );
++    gh.lazySingletonAsync<_i25.Client>(
++      () => ferryModule.ferryClient(gh<_i564.FerryClientService>()),
++    );
++    gh.factoryAsync<_i627.UserDetailsViewModelFactory>(
++      () async =>
++          _i627.UserDetailsViewModelFactory(await getAsync<_i25.Client>()),
+     );
+     gh.factory<_i76.LoginViewModelFactory>(
+       () => _i76.LoginViewModelFactory(
+@@ -118,6 +113,11 @@ extension GetItInjectableX on _i174.GetIt {
+     gh.factory<_i468.LoginRouteProvider>(
+       () => _i468.LoginRouteProvider(gh<_i76.LoginViewModelFactory>()),
+     );
++    gh.factoryAsync<_i57.UserDetailsRouteProvider>(
++      () async => _i57.UserDetailsRouteProvider(
++        await getAsync<_i627.UserDetailsViewModelFactory>(),
++      ),
++    );
+     return this;
+   }
+ }

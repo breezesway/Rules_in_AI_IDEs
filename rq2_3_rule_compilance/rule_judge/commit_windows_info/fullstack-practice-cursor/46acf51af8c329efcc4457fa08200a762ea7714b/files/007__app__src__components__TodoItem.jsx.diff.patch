@@ -1,0 +1,181 @@
+diff --git a/app/src/components/TodoItem.jsx b/app/src/components/TodoItem.jsx
+index 1095f92..46cdee1 100644
+--- a/app/src/components/TodoItem.jsx
++++ b/app/src/components/TodoItem.jsx
+@@ -1,11 +1,13 @@
+ import React, { useState } from 'react';
+ import './TodoItem.css';
+ 
+-const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
++const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveDeadline, loading }) => {
+     const [isEditing, setIsEditing] = useState(false);
+     const [editData, setEditData] = useState({
+         title: todo.title,
+-        description: todo.description || ''
++        description: todo.description || '',
++        completed: todo.completed,
++        deadline: todo.deadline ? todo.deadline.slice(0, 16) : ''
+     });
+     const [editErrors, setEditErrors] = useState({});
+ 
+@@ -21,6 +23,15 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+         if (editData.description && editData.description.length > 500) {
+             newErrors.description = 'Description must not exceed 500 characters';
+         }
++
++        // Validate deadline if set
++        if (editData.deadline) {
++            const selectedDate = new Date(editData.deadline);
++            const now = new Date();
++            if (selectedDate <= now) {
++                newErrors.deadline = 'Deadline must be in the future';
++            }
++        }
+         
+         setEditErrors(newErrors);
+         return Object.keys(newErrors).length === 0;
+@@ -34,7 +45,12 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+         }
+ 
+         try {
+-            await onUpdate(todo.id, editData);
++            const submitData = {
++                ...editData,
++                deadline: editData.deadline ? new Date(editData.deadline).toISOString() : null
++            };
++            
++            await onUpdate(todo.id, submitData);
+             setIsEditing(false);
+             setEditErrors({});
+         } catch (error) {
+@@ -43,10 +59,10 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+     };
+ 
+     const handleEditChange = (e) => {
+-        const { name, value } = e.target;
++        const { name, value, type, checked } = e.target;
+         setEditData(prev => ({
+             ...prev,
+-            [name]: value
++            [name]: type === 'checkbox' ? checked : value
+         }));
+         
+         if (editErrors[name]) {
+@@ -79,6 +95,36 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+         });
+     };
+ 
++    const formatDeadline = (deadlineString) => {
++        const deadline = new Date(deadlineString);
++        const now = new Date();
++        const diffTime = deadline - now;
++        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
++        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
++        
++        if (diffDays > 1) {
++            return `${diffDays} days left`;
++        } else if (diffHours > 1) {
++            return `${diffHours} hours left`;
++        } else {
++            return 'Less than 1 hour left';
++        }
++    };
++
++    const getDeadlineStatusClass = () => {
++        if (!todo.hasDeadline) return 'no-deadline';
++        if (todo.isOverdue) return 'overdue';
++        if (todo.isDueSoon) return 'due-soon';
++        return 'on-time';
++    };
++
++    const getDeadlineStatusText = () => {
++        if (!todo.hasDeadline) return 'No Deadline';
++        if (todo.isOverdue) return 'Overdue';
++        if (todo.isDueSoon) return 'Due Soon';
++        return 'On Time';
++    };
++
+     if (isEditing) {
+         return (
+             <div className="todo-item editing">
+@@ -108,6 +154,34 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+                             />
+                             {editErrors.description && <span className="error-message">{editErrors.description}</span>}
+                         </div>
++
++                        <div className="form-group checkbox-group">
++                            <label className="checkbox-label">
++                                <input
++                                    type="checkbox"
++                                    name="completed"
++                                    checked={editData.completed}
++                                    onChange={handleEditChange}
++                                    disabled={loading}
++                                />
++                                <span className="checkmark"></span>
++                                Mark as completed
++                            </label>
++                        </div>
++
++                        <div className="form-group">
++                            <label htmlFor="edit-deadline">Deadline</label>
++                            <input
++                                type="datetime-local"
++                                id="edit-deadline"
++                                name="deadline"
++                                value={editData.deadline}
++                                onChange={handleEditChange}
++                                className={editErrors.deadline ? 'error' : ''}
++                                disabled={loading}
++                            />
++                            {editErrors.deadline && <span className="error-message">{editErrors.deadline}</span>}
++                        </div>
+                     </div>
+                     
+                     <div className="edit-actions">
+@@ -123,7 +197,12 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+                             className="cancel-btn"
+                             onClick={() => {
+                                 setIsEditing(false);
+-                                setEditData({ title: todo.title, description: todo.description || '' });
++                                setEditData({ 
++                                    title: todo.title, 
++                                    description: todo.description || '',
++                                    completed: todo.completed,
++                                    deadline: todo.deadline ? todo.deadline.slice(0, 16) : ''
++                                });
+                                 setEditErrors({});
+                             }}
+                             disabled={loading}
+@@ -137,7 +216,7 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+     }
+ 
+     return (
+-        <div className={`todo-item ${todo.completed ? 'completed' : ''}`}>
++        <div className={`todo-item ${todo.completed ? 'completed' : ''} ${getDeadlineStatusClass()}`}>
+             <div className="todo-content">
+                 <div className="todo-header">
+                     <h3 className="todo-title">{todo.title}</h3>
+@@ -173,6 +252,22 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, loading }) => {
+                     <p className="todo-description">{todo.description}</p>
+                 )}
+                 
++                {todo.hasDeadline && (
++                    <div className="deadline-info">
++                        <div className={`deadline-status ${getDeadlineStatusClass()}`}>
++                            <span className="deadline-icon">
++                                {todo.isOverdue ? '⚠️' : todo.isDueSoon ? '⏰' : '📅'}
++                            </span>
++                            <span className="deadline-text">
++                                {getDeadlineStatusText()}: {formatDeadline(todo.deadline)}
++                            </span>
++                        </div>
++                        <div className="deadline-date">
++                            Due: {formatDate(todo.deadline)}
++                        </div>
++                    </div>
++                )}
++                
+                 <div className="todo-meta">
+                     <span className="todo-date">
+                         Created: {formatDate(todo.createdAt)}

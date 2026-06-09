@@ -1,0 +1,51 @@
+diff --git a/src/app/(auth)/login/page.tsx b/src/app/(auth)/login/page.tsx
+index bfe7da2..0b415b2 100644
+--- a/src/app/(auth)/login/page.tsx
++++ b/src/app/(auth)/login/page.tsx
+@@ -7,10 +7,17 @@ import { auth } from '@/lib/firebase';
+ import { useToast } from '@/components/ui/use-toast';
+ import { Button } from '@/components/ui/button';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
++import { useAuth } from '@/lib/auth-context';
++import { Input } from '@/components/ui/input';
++import { Label } from '@/components/ui/label';
++import { toast } from '@/components/ui/use-toast';
+ 
+ export default function LoginPage() {
+-  const [loading, setLoading] = useState(false);
+   const router = useRouter();
++  const { signInWithGoogle, signInAnonymously, user } = useAuth();
++  const [email, setEmail] = useState('');
++  const [password, setPassword] = useState('');
++  const [loading, setLoading] = useState(false);
+   const { toast } = useToast();
+ 
+   const handleAnonymousLogin = async () => {
+@@ -18,7 +25,7 @@ export default function LoginPage() {
+     try {
+       await signInAnonymously(auth);
+       router.push('/dashboard');
+-    } catch (error) {
++    } catch (_error) {
+       toast({
+         title: 'Fout bij inloggen',
+         description: 'Er is een fout opgetreden bij het inloggen.',
+@@ -36,15 +43,11 @@ export default function LoginPage() {
+           <CardTitle>Start Scan</CardTitle>
+         </CardHeader>
+         <CardContent>
+-          <Button 
+-            onClick={handleAnonymousLogin} 
+-            disabled={loading} 
+-            className="w-full"
+-          >
++          <Button onClick={handleAnonymousLogin} disabled={loading} className="w-full">
+             {loading ? 'Bezig met inloggen...' : 'Start Scan'}
+           </Button>
+         </CardContent>
+       </Card>
+     </div>
+   );
+-} 
+\ No newline at end of file
++}

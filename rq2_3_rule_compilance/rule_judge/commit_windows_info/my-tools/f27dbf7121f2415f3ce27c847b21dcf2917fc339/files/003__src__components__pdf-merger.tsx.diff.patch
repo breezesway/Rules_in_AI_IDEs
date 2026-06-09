@@ -1,0 +1,36 @@
+diff --git a/src/components/pdf-merger.tsx b/src/components/pdf-merger.tsx
+index 2112407..3a744f5 100644
+--- a/src/components/pdf-merger.tsx
++++ b/src/components/pdf-merger.tsx
+@@ -28,18 +28,19 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+ 
+-  // 初始化默认保存路径
++  // 初始化默认保存路径 - 每次打开时都重新获取最新配置
+   React.useEffect(() => {
+-    if (isOpen && !outputPath) {
++    if (isOpen) {
+       window.electronAPI?.getAppConfig().then(config => {
+         if (config.defaultSaveLocation) {
+           setOutputPath(config.defaultSaveLocation);
++          return config.defaultSaveLocation;
+         } else {
+           // 如果没有设置默认保存位置，使用下载目录
+           return window.electronAPI?.getDownloadsPath();
+         }
+       }).then(path => {
+-        if (path && !outputPath) {
++        if (path) {
+           setOutputPath(path);
+         }
+       }).catch(err => {
+@@ -47,7 +48,7 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+         setOutputPath('');
+       });
+     }
+-  }, [isOpen, outputPath]);
++  }, [isOpen]); // 移除 outputPath 依赖，确保每次打开都重新获取
+ 
+   const validateFile = (fileInfo: { name: string; size: number }): { valid: boolean; error?: string } => {
+     if (!fileInfo.name.toLowerCase().endsWith('.pdf')) {

@@ -1,0 +1,368 @@
+diff --git a/src/web/server.ts b/src/web/server.ts
+index 6d3adf7..a41783d 100644
+--- a/src/web/server.ts
++++ b/src/web/server.ts
+@@ -10,6 +10,7 @@ import { WorkflowOrchestrator } from '@/utils/orchestration/workflow-orchestrato
+ import { ErrorHandlerService } from '@/utils/services/error-handler-service';
+ import { ConfigurationService } from '@/utils/services/configuration-service';
+ import { DatabaseService } from '@/utils/services/database-service';
++import { DatabaseCleanupService } from '@/utils/services/database-cleanup-service';
+ import { SiteWideAccessibilityReport } from '@/core/types/common';
+ import { createServer } from 'http';
+ import { Server as SocketIOServer } from 'socket.io';
+@@ -22,6 +23,7 @@ export class WebServer {
+     private errorHandler: ErrorHandlerService;
+     private config: ConfigurationService;
+     private databaseService: DatabaseService;
++    private databaseCleanupService: DatabaseCleanupService;
+     private activeScans: Map<string, any> = new Map();
+ 
+     constructor(private port: number = 3000) {
+@@ -37,6 +39,7 @@ export class WebServer {
+         this.errorHandler = ErrorHandlerService.getInstance();
+         this.config = ConfigurationService.getInstance();
+         this.databaseService = DatabaseService.getInstance();
++        this.databaseCleanupService = DatabaseCleanupService.getInstance();
+         this.setupMiddleware();
+         this.setupRoutes(); // Setup API routes first
+         this.setupStaticFiles(); // Setup static files after API routes
+@@ -44,7 +47,12 @@ export class WebServer {
+     }
+ 
+     private setupMiddleware(): void {
+-        this.app.use(cors());
++        this.app.use(cors({
++            origin: "*",
++            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
++            allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
++            credentials: true
++        }));
+         this.app.use(bodyParser.json());
+     }
+ 
+@@ -84,6 +92,7 @@ export class WebServer {
+         const { renderSinglePageScanPage } = require('../components/SinglePageScanPage');
+         const { renderFullSiteScanPage } = require('../components/FullSiteScanPage');
+         const { renderReportsPage } = require('../components/ReportsPage');
++        const { renderReportDetailsPage } = require('../components/ReportDetailsPage');
+ 
+         // Handle specific page routes BEFORE static files
+         this.app.get('/', (req, res) => {
+@@ -102,6 +111,12 @@ export class WebServer {
+             res.send(renderReportsPage());
+         });
+ 
++        // Report details page route
++        this.app.get('/reports/:reportId', (req, res) => {
++            const { reportId } = req.params;
++            res.send(renderReportDetailsPage({ reportId }));
++        });
++
+         // Serve static files from the public directory (CSS, JS, images)
+         this.app.use(express.static(path.join(__dirname, '../public')));
+ 
+@@ -268,94 +283,7 @@ export class WebServer {
+ 
+ 
+ 
+-        // Search reports endpoint
+-        this.app.post('/api/reports/search', async (req, res) => {
+-            try {
+-                const { siteUrl, dateFrom, dateTo } = req.body;
+ 
+-                // Initialize database service if not already initialized
+-                if (!this.databaseService.isInitialized()) {
+-                    const initResult = await this.databaseService.initialize();
+-                    if (!initResult.success) {
+-                        return res.status(500).json({
+-                            success: false,
+-                            error: `Failed to initialize database service: ${initResult.message}`
+-                        });
+-                    }
+-                }
+-
+-                // Build search options
+-                const searchOptions: any = {
+-                    limit: 50,
+-                    orderBy: 'createdAt',
+-                    orderDirection: 'desc'
+-                };
+-
+-                // Add URL filter if provided
+-                if (siteUrl && siteUrl.trim()) {
+-                    searchOptions.siteUrl = siteUrl.trim();
+-                }
+-
+-                // Add date filters if provided
+-                if (dateFrom) {
+-                    searchOptions.dateFrom = new Date(dateFrom);
+-                }
+-                if (dateTo) {
+-                    searchOptions.dateTo = new Date(dateTo);
+-                }
+-
+-                // Get reports from database with filters
+-                const dbResult = await this.databaseService.getReportsWithMetadata(searchOptions);
+-
+-                if (!dbResult.success) {
+-                    return res.status(500).json({
+-                        success: false,
+-                        error: `Failed to search reports in database: ${dbResult.message}`
+-                    });
+-                }
+-
+-                const dbReports = dbResult.data || [];
+-
+-                if (dbReports.length === 0) {
+-                    return res.status(404).json({
+-                        success: false,
+-                        error: 'No reports found matching your search criteria.'
+-                    });
+-                }
+-
+-                // Convert database reports to the expected format
+-                const reports = dbReports.map(report => {
+-                    if (!report) return null;
+-                    return {
+-                        id: report._id.toString(),
+-                        filename: `accessibility-report-${report._id.toString()}.json`,
+-                        path: `db://${report._id.toString()}`,
+-                        data: report.reportData,
+-                        lastModified: report.createdAt,
+-                        source: 'database',
+-                        reportType: report.reportType,
+-                        siteUrl: report.siteUrl
+-                    };
+-                }).filter(Boolean);
+-
+-                return res.json({
+-                    success: true,
+-                    data: {
+-                        reports,
+-                        count: reports.length,
+-                        source: 'database',
+-                        searchCriteria: {
+-                            siteUrl: siteUrl || null,
+-                            dateFrom: dateFrom || null,
+-                            dateTo: dateTo || null
+-                        }
+-                    }
+-                });
+-            } catch (error) {
+-                const errorResult = this.errorHandler.handleError(error, 'Failed to search reports');
+-                return res.status(500).json(errorResult);
+-            }
+-        });
+ 
+         // Generate reports endpoint - list available reports (kept for backward compatibility)
+         this.app.post('/api/reports/generate', async (req, res) => {
+@@ -690,9 +618,23 @@ export class WebServer {
+             }
+         });
+ 
+-        // Regenerate reports endpoint
+-        this.app.post('/api/reports/regenerate', async (req, res) => {
++
++
++        // Enhanced search reports endpoint with advanced filters
++        this.app.post('/api/reports/search', async (req, res) => {
+             try {
++                const {
++                    siteUrl,
++                    dateFrom,
++                    dateTo,
++                    reportType,
++                    wcagLevel,
++                    minViolations,
++                    maxViolations,
++                    minCompliance,
++                    scanType
++                } = req.body;
++
+                 // Initialize database service if not already initialized
+                 if (!this.databaseService.isInitialized()) {
+                     const initResult = await this.databaseService.initialize();
+@@ -704,17 +646,71 @@ export class WebServer {
+                     }
+                 }
+ 
+-                // Try to get reports from database first
+-                const dbResult = await this.databaseService.getReports({
+-                    limit: 50,
++                // Build search options
++                const searchOptions: any = {
++                    limit: 100,
+                     orderBy: 'createdAt',
+                     orderDirection: 'desc'
+-                });
++                };
++
++                // Add filters if provided
++                if (siteUrl && siteUrl.trim()) {
++                    searchOptions.siteUrl = siteUrl.trim();
++                }
++
++                if (dateFrom) {
++                    try {
++                        searchOptions.dateFrom = new Date(dateFrom);
++                    } catch (error) {
++                        return res.status(400).json({
++                            success: false,
++                            error: 'Invalid dateFrom format. Use ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)'
++                        });
++                    }
++                }
++
++                if (dateTo) {
++                    try {
++                        searchOptions.dateTo = new Date(dateTo);
++                    } catch (error) {
++                        return res.status(400).json({
++                            success: false,
++                            error: 'Invalid dateTo format. Use ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)'
++                        });
++                    }
++                }
++
++                if (reportType) {
++                    searchOptions.reportType = reportType;
++                }
++
++                if (wcagLevel) {
++                    searchOptions.wcagLevel = wcagLevel;
++                }
++
++                if (scanType) {
++                    searchOptions.scanType = scanType;
++                }
++
++                if (minViolations !== undefined) {
++                    searchOptions.minViolations = parseInt(minViolations);
++                }
++
++                if (maxViolations !== undefined) {
++                    searchOptions.maxViolations = parseInt(maxViolations);
++                }
++
++                if (minCompliance !== undefined) {
++                    searchOptions.minCompliance = parseFloat(minCompliance);
++                }
++
++                // Get reports from database with filters
++                const dbResult = await this.databaseService.getReportsWithMetadata(searchOptions);
+ 
+                 if (!dbResult.success) {
+                     return res.status(500).json({
+                         success: false,
+-                        error: `Failed to retrieve reports from database: ${dbResult.message}`
++                        error: `Failed to search reports in database: ${dbResult.message}`
+                     });
+                 }
+ 
+@@ -723,7 +719,7 @@ export class WebServer {
+                 if (dbReports.length === 0) {
+                     return res.status(404).json({
+                         success: false,
+-                        error: 'No reports found in database. Please run a scan first.'
++                        error: 'No reports found matching your search criteria.'
+                     });
+                 }
+ 
+@@ -738,7 +734,8 @@ export class WebServer {
+                         lastModified: report.createdAt,
+                         source: 'database',
+                         reportType: report.reportType,
+-                        siteUrl: report.siteUrl
++                        siteUrl: report.siteUrl,
++                        metadata: report.metadata
+                     };
+                 }).filter(Boolean);
+ 
+@@ -747,11 +744,85 @@ export class WebServer {
+                     data: {
+                         reports,
+                         count: reports.length,
+-                        source: 'database'
++                        source: 'database',
++                        searchCriteria: {
++                            siteUrl: siteUrl || null,
++                            dateFrom: dateFrom || null,
++                            dateTo: dateTo || null,
++                            reportType: reportType || null,
++                            wcagLevel: wcagLevel || null,
++                            minViolations: minViolations || null,
++                            maxViolations: maxViolations || null,
++                            minCompliance: minCompliance || null,
++                            scanType: scanType || null
++                        }
+                     }
+                 });
+             } catch (error) {
+-                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve reports for regeneration');
++                const errorResult = this.errorHandler.handleError(error, 'Failed to search reports');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++
++
++        // Database statistics endpoint
++        this.app.get('/api/database/statistics', async (req, res) => {
++            try {
++                const statsResult = await this.databaseCleanupService.getDatabaseStatistics();
++
++                if (!statsResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to retrieve database statistics: ${statsResult.message}`
++                    });
++                }
++
++                return res.json({
++                    success: true,
++                    data: statsResult.data
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to retrieve database statistics');
++                return res.status(500).json(errorResult);
++            }
++        });
++
++        // Database cleanup endpoint
++        this.app.post('/api/database/cleanup', async (req, res) => {
++            try {
++                const {
++                    testData = true,
++                    orphanedReports = true,
++                    expiredReports = false,
++                    expirationDays = 30,
++                    dryRun = false
++                } = req.body;
++
++                const cleanupOptions = {
++                    testData,
++                    orphanedReports,
++                    expiredReports,
++                    expirationDays,
++                    dryRun
++                };
++
++                const cleanupResult = await this.databaseCleanupService.performCleanup(cleanupOptions);
++
++                if (!cleanupResult.success) {
++                    return res.status(500).json({
++                        success: false,
++                        error: `Failed to perform database cleanup: ${cleanupResult.message}`
++                    });
++                }
++
++                return res.json({
++                    success: true,
++                    message: cleanupResult.message,
++                    data: cleanupResult.data
++                });
++            } catch (error) {
++                const errorResult = this.errorHandler.handleError(error, 'Failed to perform database cleanup');
+                 return res.status(500).json(errorResult);
+             }
+         });

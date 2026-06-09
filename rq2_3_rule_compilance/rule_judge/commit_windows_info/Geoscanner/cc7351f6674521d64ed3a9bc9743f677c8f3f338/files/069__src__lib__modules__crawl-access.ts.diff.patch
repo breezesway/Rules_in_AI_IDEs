@@ -1,0 +1,131 @@
+diff --git a/src/lib/modules/crawl-access.ts b/src/lib/modules/crawl-access.ts
+index 83c28e9..44880fc 100644
+--- a/src/lib/modules/crawl-access.ts
++++ b/src/lib/modules/crawl-access.ts
+@@ -46,24 +46,24 @@ export function analyzeCrawlAccess(
+       robotsTxt: {
+         exists: false,
+         allowsBots: false,
+-        hasCrawlDelay: false
++        hasCrawlDelay: false,
+       },
+       sitemap: {
+         exists: false,
+         isValid: false,
+-        urlCount: 0
++        urlCount: 0,
+       },
+       metaRobots: {
+         exists: false,
+         allowsIndexing: true,
+-        allowsFollowing: true
++        allowsFollowing: true,
+       },
+       httpStatus: {
+         isOk: false,
+-        code: httpStatus
+-      }
++        code: httpStatus,
++      },
+     },
+-    fixes: []
++    fixes: [],
+   };
+ 
+   // Check robots.txt
+@@ -72,8 +72,8 @@ export function analyzeCrawlAccess(
+     result.score += 20;
+ 
+     // Check if bots are allowed
+-    const hasDisallowAll = robotsRules.rules.some(rule => 
+-      rule.type === 'disallow' && rule.path === '/'
++    const hasDisallowAll = robotsRules.rules.some(
++      rule => rule.type === 'disallow' && rule.path === '/'
+     );
+     result.details.robotsTxt.allowsBots = !hasDisallowAll;
+     if (result.details.robotsTxt.allowsBots) {
+@@ -81,8 +81,9 @@ export function analyzeCrawlAccess(
+     } else {
+       result.fixes.push({
+         impact: 'high',
+-        description: 'Robots.txt blokkeert alle bots. Dit voorkomt dat zoekmachines de site kunnen indexeren.',
+-        fix: 'Verwijder of pas de "Disallow: /" regel aan in robots.txt om bots toe te staan.'
++        description:
++          'Robots.txt blokkeert alle bots. Dit voorkomt dat zoekmachines de site kunnen indexeren.',
++        fix: 'Verwijder of pas de "Disallow: /" regel aan in robots.txt om bots toe te staan.',
+       });
+     }
+ 
+@@ -93,15 +94,16 @@ export function analyzeCrawlAccess(
+     } else {
+       result.fixes.push({
+         impact: 'low',
+-        description: 'Geen crawl-delay ingesteld in robots.txt. Dit kan leiden tot overmatige serverbelasting.',
+-        fix: 'Voeg een Crawl-delay directive toe aan robots.txt, bijvoorbeeld: "Crawl-delay: 10"'
++        description:
++          'Geen crawl-delay ingesteld in robots.txt. Dit kan leiden tot overmatige serverbelasting.',
++        fix: 'Voeg een Crawl-delay directive toe aan robots.txt, bijvoorbeeld: "Crawl-delay: 10"',
+       });
+     }
+   } else {
+     result.fixes.push({
+       impact: 'medium',
+       description: 'Geen robots.txt bestand gevonden. Dit kan leiden tot ongewenste indexering.',
+-      fix: 'Maak een robots.txt bestand aan in de root van je website.'
++      fix: 'Maak een robots.txt bestand aan in de root van je website.',
+     });
+   }
+ 
+@@ -119,14 +121,15 @@ export function analyzeCrawlAccess(
+       result.fixes.push({
+         impact: 'medium',
+         description: 'Sitemap.xml bevat geen geldige URLs.',
+-        fix: 'Voeg geldige URLs toe aan je sitemap.xml bestand.'
++        fix: 'Voeg geldige URLs toe aan je sitemap.xml bestand.',
+       });
+     }
+   } else {
+     result.fixes.push({
+       impact: 'medium',
+-      description: 'Geen sitemap.xml bestand gevonden. Dit maakt het moeilijker voor zoekmachines om je site te indexeren.',
+-      fix: 'Maak een sitemap.xml bestand aan in de root van je website.'
++      description:
++        'Geen sitemap.xml bestand gevonden. Dit maakt het moeilijker voor zoekmachines om je site te indexeren.',
++      fix: 'Maak een sitemap.xml bestand aan in de root van je website.',
+     });
+   }
+ 
+@@ -144,7 +147,7 @@ export function analyzeCrawlAccess(
+       result.fixes.push({
+         impact: 'high',
+         description: 'Meta robots tag blokkeert indexering van de pagina.',
+-        fix: 'Verwijder of pas de meta robots tag aan om indexering toe te staan.'
++        fix: 'Verwijder of pas de meta robots tag aan om indexering toe te staan.',
+       });
+     }
+ 
+@@ -154,7 +157,7 @@ export function analyzeCrawlAccess(
+       result.fixes.push({
+         impact: 'medium',
+         description: 'Meta robots tag blokkeert het volgen van links op de pagina.',
+-        fix: 'Verwijder of pas de meta robots tag aan om het volgen van links toe te staan.'
++        fix: 'Verwijder of pas de meta robots tag aan om het volgen van links toe te staan.',
+       });
+     }
+   }
+@@ -167,7 +170,7 @@ export function analyzeCrawlAccess(
+     result.fixes.push({
+       impact: 'high',
+       description: `HTTP status code ${httpStatus} geeft aan dat er een probleem is met de pagina.`,
+-      fix: 'Controleer de server configuratie en zorg ervoor dat de pagina correct wordt geserveerd.'
++      fix: 'Controleer de server configuratie en zorg ervoor dat de pagina correct wordt geserveerd.',
+     });
+   }
+ 
+@@ -181,4 +184,4 @@ export function analyzeCrawlAccess(
+   }
+ 
+   return result;
+-} 
+\ No newline at end of file
++}

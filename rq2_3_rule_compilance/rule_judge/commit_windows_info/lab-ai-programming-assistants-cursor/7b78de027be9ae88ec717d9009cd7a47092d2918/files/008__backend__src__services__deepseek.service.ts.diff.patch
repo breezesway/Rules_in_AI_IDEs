@@ -1,0 +1,76 @@
+diff --git a/backend/src/services/deepseek.service.ts b/backend/src/services/deepseek.service.ts
+index a5423ad..7776ede 100644
+--- a/backend/src/services/deepseek.service.ts
++++ b/backend/src/services/deepseek.service.ts
+@@ -2,6 +2,7 @@ import OpenAI from "openai";
+ import { OptimizePromptRequest } from "../types/api";
+ import dotenv from "dotenv";
+ import { Response } from "express";
++import { singleton, injectable } from "tsyringe";
+ 
+ dotenv.config();
+ 
+@@ -13,13 +14,26 @@ if (!DEEPSEEK_API_KEY) {
+   process.exit(1);
+ }
+ 
+-// Initialize OpenAI client with DeepSeek configuration
+-const openai = new OpenAI({
++// Define the interface for the DeepSeekService
++export interface IDeepSeekService {
++  optimizePrompt(data: OptimizePromptRequest): Promise<string>;
++  optimizePromptStream(data: OptimizePromptRequest, res: Response): Promise<void>;
++}
++
++// Initialize default OpenAI client with DeepSeek configuration
++const defaultOpenAIClient = new OpenAI({
+   baseURL: DEEPSEEK_API_BASE_URL,
+   apiKey: DEEPSEEK_API_KEY,
+ });
+ 
+-export class DeepSeekService {
++@injectable()
++export class DeepSeekService implements IDeepSeekService {
++  private openaiClient: OpenAI;
++
++  constructor(openaiClient: OpenAI = defaultOpenAIClient) {
++    this.openaiClient = openaiClient;
++  }
++
+   /**
+    * Optimize a prompt using DeepSeek API (non-streaming)
+    */
+@@ -27,7 +41,7 @@ export class DeepSeekService {
+     try {
+       const systemMessage = data.systemPrompt || "You are a helpful assistant.";
+       
+-      const completion = await openai.chat.completions.create({
++      const completion = await this.openaiClient.chat.completions.create({
+         messages: [
+           { role: "system", content: systemMessage },
+           { role: "user", content: data.prompt }
+@@ -55,7 +69,7 @@ export class DeepSeekService {
+       res.setHeader('Connection', 'keep-alive');
+       
+       // Create streaming request to DeepSeek API
+-      const stream = await openai.chat.completions.create({
++      const stream = await this.openaiClient.chat.completions.create({
+         messages: [
+           { role: "system", content: systemMessage },
+           { role: "user", content: data.prompt }
+@@ -97,4 +111,12 @@ export class DeepSeekService {
+   }
+ }
+ 
+-export default new DeepSeekService(); 
+\ No newline at end of file
++// Export a singleton instance with the default configuration
++@singleton()
++export class DeepSeekServiceSingleton extends DeepSeekService {
++  constructor() {
++    super(defaultOpenAIClient);
++  }
++}
++
++export default new DeepSeekService(defaultOpenAIClient); 
+\ No newline at end of file

@@ -1,0 +1,535 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Design Principles & Patterns
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Support dual entry points: youtube_notion_cli.py (dev) and console script (installed)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system directory, source code file (youtube_notion_cli.py), and packaging configuration files (e.g., pyproject.toml, setup.py, or setup.cfg).
+- Suggested Logic: 1. Verify the existence of the file 'youtube_notion_cli.py' in the repository root or relevant source directory.
+2. Scan packaging configuration files (like pyproject.toml's [project.scripts] section or setup.py's entry_points) to ensure a console script is defined for the package.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: fixing tests
+- Changed Files List: 
+fix_tests.py	+80	-0	after_lines=80
+tests/test_gemini_integration.py	+7	-13	after_lines=414
+tests/test_integration.py	+1	-0	after_lines=46
+tests/test_main_youtube_integration.py	+26	-30	after_lines=402
+tests/test_metadata_extraction.py	+7	-16	after_lines=330
+tests/test_retry_error_handling.py	+6	-9	after_lines=606
+tests/test_url_validation.py	+5	-5	after_lines=341
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: fix_tests.py ---
+diff --git a/fix_tests.py b/fix_tests.py
+new file mode 100644
+index 0000000..ef55b67
+--- /dev/null
++++ b/fix_tests.py
+@@ -0,0 +1,80 @@
++#!/usr/bin/env python3
++"""
++Script to fix YouTubeProcessor constructor calls in test files.
++Updates from old individual parameter style to new from_api_keys class method.
++"""
++
++import os
++import re
++import glob
++
++def fix_youtube_processor_calls(content):
++    """Fix YouTubeProcessor constructor calls in the given content."""
++    
++    # Pattern 1: Simple constructor with just gemini_api_key
++    pattern1 = r'YouTubeProcessor\(gemini_api_key="([^"]+)"\)'
++    replacement1 = r'YouTubeProcessor.from_api_keys(gemini_api_key="\1")'
++    content = re.sub(pattern1, replacement1, content)
++    
++    # Pattern 2: Constructor with gemini_api_key and youtube_api_key
++    pattern2 = r'YouTubeProcessor\(\s*gemini_api_key="([^"]+)",\s*youtube_api_key="([^"]+)"\s*\)'
++    replacement2 = r'YouTubeProcessor.from_api_keys(gemini_api_key="\1", youtube_api_key="\2")'
++    content = re.sub(pattern2, replacement2, content)
++    
++    # Pattern 3: Constructor with additional parameters (max_retries, etc.)
++    pattern3 = r'YouTubeProcessor\(\s*gemini_api_key="([^"]+)",\s*max_retries=(\d+)\s*\)'
++    replacement3 = r'YouTubeProcessor.from_api_keys(gemini_api_key="\1", max_retries=\2)'
++    content = re.sub(pattern3, replacement3, content)
++    
++    # Pattern 4: Multi-line constructor calls - simple case
++    pattern4 = r'YouTubeProcessor\(\s*\n\s*gemini_api_key="([^"]+)"\s*\n\s*\)'
++    replacement4 = r'YouTubeProcessor.from_api_keys(\n            gemini_api_key="\1"\n        )'
++    content = re.sub(pattern4, replacement4, content, flags=re.MULTILINE | re.DOTALL)
++    
++    # Pattern 5: Multi-line constructor calls - with youtube_api_key
++    pattern5 = r'YouTubeProcessor\(\s*\n\s*gemini_api_key="([^"]+)",\s*\n\s*youtube_api_key="([^"]+)"\s*\n\s*\)'
++    replacement5 = r'YouTubeProcessor.from_api_keys(\n            gemini_api_key="\1",\n            youtube_api_key="\2"\n        )'
++    content = re.sub(pattern5, replacement5, content, flags=re.MULTILINE | re.DOTALL)
++    
++    # Pattern 6: Multi-line constructor calls - complex with multiple params
++    pattern6 = r'YouTubeProcessor\(\s*\n\s*gemini_api_key="([^"]+)",\s*\n\s*youtube_api_key="([^"]+)",\s*\n\s*default_prompt="([^"]*)",\s*\n\s*max_retries=(\d+),\s*\n\s*timeout_seconds=(\d+)\s*\n\s*\)'
++    replacement6 = r'YouTubeProcessor.from_api_keys(\n            gemini_api_key="\1",\n            youtube_api_key="\2",\n            default_prompt="\3",\n            max_retries=\4,\n            timeout_seconds=\5\n        )'
++    content = re.sub(pattern6, replacement6, content, flags=re.MULTILINE | re.DOTALL)
++    
++    # Pattern 7: Constructor with None values
++    pattern7 = r'YouTubeProcessor\(gemini_api_key=None\)'
++    replacement7 = r'YouTubeProcessor.from_api_keys(gemini_api_key=None)'
++    content = re.sub(pattern7, replacement7, content)
++    
++    # Pattern 8: Constructor with empty string
++    pattern8 = r'YouTubeProcessor\(gemini_api_key=""\)'
++    replacement8 = r'YouTubeProcessor.from_api_keys(gemini_api_key="")'
++    content = re.sub(pattern8, replacement8, content)
++    
++    return content
++
++def main():
++    """Main function to fix all test files."""
++    test_files = glob.glob("tests/test_*.py")
++    
++    for file_path in test_files:
++        print(f"Processing {file_path}...")
++        
++        # Read the file
++        with open(file_path, 'r', encoding='utf-8') as f:
++            content = f.read()
++        
++        # Fix the constructor calls
++        original_content = content
++        content = fix_youtube_processor_calls(content)
++        
++        # Write back if changed
++        if content != original_content:
++            with open(file_path, 'w', encoding='utf-8') as f:
++                f.write(content)
++            print(f"  ✓ Updated {file_path}")
++        else:
++            print(f"  - No changes needed for {file_path}")
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+
+--- FILE: tests/test_gemini_integration.py ---
+diff --git a/tests/test_gemini_integration.py b/tests/test_gemini_integration.py
+index 57dbae4..62eebdc 100644
+--- a/tests/test_gemini_integration.py
++++ b/tests/test_gemini_integration.py
+@@ -22,10 +22,7 @@ class TestGeminiIntegration:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            youtube_api_key="test_youtube_key"
+-        )
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", youtube_api_key="test_youtube_key")
+         self.test_video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+         self.test_prompt = "Summarize this video with timestamps."
+     
+@@ -254,10 +251,7 @@ class TestRetryLogic:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            max_retries=3
+-        )
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", max_retries=3)
+     
+     @patch('youtube_notion.processors.youtube_processor.time.sleep')
+     def test_api_call_with_retry_success_after_failure(self, mock_sleep):
+@@ -355,7 +349,7 @@ class TestProcessorConfiguration:
+     
+     def test_processor_initialization_with_defaults(self):
+         """Test processor initialization with default configuration."""
+-        processor = YouTubeProcessor(gemini_api_key="test_key")
++        processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+         
+         assert processor.gemini_api_key == "test_key"
+         assert processor.youtube_api_key is None
+@@ -367,7 +361,7 @@ class TestProcessorConfiguration:
+         """Test processor initialization with custom configuration."""
+         custom_prompt = "Custom prompt for testing"
+         
+-        processor = YouTubeProcessor(
++        processor = YouTubeProcessor.from_api_keys(
+             gemini_api_key="test_key",
+             youtube_api_key="youtube_key",
+             default_prompt=custom_prompt,
+@@ -384,12 +378,12 @@ class TestProcessorConfiguration:
+     def test_processor_initialization_missing_gemini_key(self):
+         """Test that missing Gemini API key raises ValueError."""
+         with pytest.raises(ValueError) as exc_info:
+-            YouTubeProcessor(gemini_api_key="")
++            YouTubeProcessor.from_api_keys(gemini_api_key="")
+         
+         assert "Gemini API key is required" in str(exc_info.value)
+         
+         with pytest.raises(ValueError) as exc_info:
+-            YouTubeProcessor(gemini_api_key=None)
++            YouTubeProcessor.from_api_keys(gemini_api_key=None)
+         
+         assert "Gemini API key is required" in str(exc_info.value)
+ 
+@@ -400,7 +394,7 @@ class TestGenerateContentConfig:
+     @patch('youtube_notion.processors.youtube_processor.genai.Client')
+     def test_generate_content_config_parameters(self, mock_client_class):
+         """Test that correct configuration is passed to Gemini API."""
+-        processor = YouTubeProcessor(gemini_api_key="test_key")
++        processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+         
+         mock_client = Mock()
+         mock_client_class.return_value = mock_client
+
+--- FILE: tests/test_integration.py ---
+diff --git a/tests/test_integration.py b/tests/test_integration.py
+index e945328..7014449 100644
+--- a/tests/test_integration.py
++++ b/tests/test_integration.py
+@@ -29,6 +29,7 @@ def test_example_data_conversion():
+     assert first_block["type"] == "heading_3", f"First block should be heading_3, got {first_block['type']}"
+     
+     print("✅ Integration test passed!")
++    return blocks
+ 
+ 
+ if __name__ == "__main__":
+
+--- FILE: tests/test_main_youtube_integration.py ---
+diff --git a/tests/test_main_youtube_integration.py b/tests/test_main_youtube_integration.py
+index c39befb..ff352da 100644
+--- a/tests/test_main_youtube_integration.py
++++ b/tests/test_main_youtube_integration.py
+@@ -15,7 +15,7 @@ sys.path.insert(0, 'src')
+ 
+ from youtube_notion.main import (
+     main, 
+-    validate_environment_variables, 
++    load_application_config, 
+     initialize_notion_client,
+     find_notion_database,
+     process_youtube_video,
+@@ -27,50 +27,46 @@ class TestEnvironmentValidation:
+     """Test environment variable validation functionality."""
+     
+     @patch.dict(os.environ, {'NOTION_TOKEN': 'test_token'}, clear=True)
+-    def test_validate_environment_variables_example_mode(self):
+-        """Test environment validation for example data mode."""
+-        env_vars = validate_environment_variables(youtube_mode=False)
+-        assert env_vars == {'NOTION_TOKEN': 'test_token'}
++    def test_load_application_config_example_mode(self):
++        """Test configuration loading for example data mode."""
++        config = load_application_config(youtube_mode=False)
++        assert config is not None
++        assert config.notion.notion_token == 'test_token'
+     
+     @patch.dict(os.environ, {
+         'NOTION_TOKEN': 'test_token',
+         'GEMINI_API_KEY': 'test_gemini_key',
+         'YOUTUBE_API_KEY': 'test_youtube_key'
+     }, clear=True)
+-    def test_validate_environment_variables_youtube_mode_complete(self):
+-        """Test environment validation for YouTube mode with all keys."""
+-        env_vars = validate_environment_variables(youtube_mode=True)
+-        expected = {
+-            'NOTION_TOKEN': 'test_token',
+-            'GEMINI_API_KEY': 'test_gemini_key',
+-            'YOUTUBE_API_KEY': 'test_youtube_key'
+-        }
+-        assert env_vars == expected
++    def test_load_application_config_youtube_mode_complete(self):
++        """Test configuration loading for YouTube mode with all keys."""
++        config = load_application_config(youtube_mode=True)
++        assert config is not None
++        assert config.notion.notion_token == 'test_token'
++        assert config.youtube_processor is not None
+     
+     @patch.dict(os.environ, {
+         'NOTION_TOKEN': 'test_token',
+         'GEMINI_API_KEY': 'test_gemini_key'
+     }, clear=True)
+-    def test_validate_environment_variables_youtube_mode_minimal(self):
+-        """Test environment validation for YouTube mode with minimal keys."""
+-        env_vars = validate_environment_variables(youtube_mode=True)
+-        expected = {
+-            'NOTION_TOKEN': 'test_token',
+-            'GEMINI_API_KEY': 'test_gemini_key'
+-        }
+-        assert env_vars == expected
++    def test_load_application_config_youtube_mode_minimal(self):
++        """Test configuration loading for YouTube mode with minimal keys."""
++        config = load_application_config(youtube_mode=True)
++        assert config is not None
++        assert config.notion.notion_token == 'test_token'
++        assert config.youtube_processor is not None
+     
+     @patch.dict(os.environ, {}, clear=True)
+-    def test_validate_environment_variables_missing_notion_token(self):
+-        """Test environment validation with missing NOTION_TOKEN."""
+-        with pytest.raises(SystemExit):
+-            validate_environment_variables(youtube_mode=False)
++    def test_load_application_config_missing_notion_token(self):
++        """Test configuration loading with missing NOTION_TOKEN."""
++        config = load_application_config(youtube_mode=False)
++        assert config is None
+     
+     @patch.dict(os.environ, {'NOTION_TOKEN': 'test_token'}, clear=True)
+-    def test_validate_environment_variables_missing_gemini_key(self):
+-        """Test environment validation with missing GEMINI_API_KEY in YouTube mode."""
+-        with pytest.raises(SystemExit):
+-            validate_environment_variables(youtube_mode=True)
++    def test_load_application_config_missing_gemini_key(self):
++        """Test configuration loading with missing GEMINI_API_KEY in YouTube mode."""
++        config = load_application_config(youtube_mode=True)
++        assert config is None
+ 
+ 
+ class TestNotionClientInitialization:
+
+--- FILE: tests/test_metadata_extraction.py ---
+diff --git a/tests/test_metadata_extraction.py b/tests/test_metadata_extraction.py
+index 3ad2cf4..6cac2ec 100644
+--- a/tests/test_metadata_extraction.py
++++ b/tests/test_metadata_extraction.py
+@@ -24,11 +24,8 @@ class TestMetadataExtraction:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor_with_api = YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            youtube_api_key="test_youtube_key"
+-        )
+-        self.processor_without_api = YouTubeProcessor(
++        self.processor_with_api = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", youtube_api_key="test_youtube_key")
++        self.processor_without_api = YouTubeProcessor.from_api_keys(
+             gemini_api_key="test_gemini_key"
+         )
+         self.test_video_id = "dQw4w9WgXcQ"
+@@ -46,10 +43,7 @@ class TestYouTubeDataAPI:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            youtube_api_key="test_youtube_key"
+-        )
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", youtube_api_key="test_youtube_key")
+         self.test_video_id = "dQw4w9WgXcQ"
+     
+     @patch('youtube_notion.processors.youtube_processor.build')
+@@ -192,7 +186,7 @@ class TestWebScraping:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_gemini_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
+         self.test_video_id = "dQw4w9WgXcQ"
+     
+     @patch('youtube_notion.processors.youtube_processor.requests.get')
+@@ -278,7 +272,7 @@ class TestThumbnailConstruction:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_gemini_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
+     
+     def test_construct_thumbnail_url(self):
+         """Test thumbnail URL construction."""
+@@ -309,11 +303,8 @@ class TestMetadataExtractionIntegration:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor_with_api = YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            youtube_api_key="test_youtube_key"
+-        )
+-        self.processor_without_api = YouTubeProcessor(
++        self.processor_with_api = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", youtube_api_key="test_youtube_key")
++        self.processor_without_api = YouTubeProcessor.from_api_keys(
+             gemini_api_key="test_gemini_key"
+         )
+         self.test_video_id = "dQw4w9WgXcQ"
+
+--- FILE: tests/test_retry_error_handling.py ---
+diff --git a/tests/test_retry_error_handling.py b/tests/test_retry_error_handling.py
+index 8f6ae7e..28ab6e7 100644
+--- a/tests/test_retry_error_handling.py
++++ b/tests/test_retry_error_handling.py
+@@ -28,7 +28,7 @@ class TestRetryLogicEnhancements:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance for testing."""
+-        return YouTubeProcessor(
++        return YouTubeProcessor.from_api_keys(
+             gemini_api_key="test_gemini_key",
+             youtube_api_key="test_youtube_key",
+             max_retries=3,
+@@ -173,10 +173,7 @@ class TestYouTubeAPIErrorHandling:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance for testing."""
+-        return YouTubeProcessor(
+-            gemini_api_key="test_gemini_key",
+-            youtube_api_key="test_youtube_key"
+-        )
++        return YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", youtube_api_key="test_youtube_key")
+     
+     def test_youtube_api_quota_exceeded_error(self, processor):
+         """Test handling of YouTube API quota exceeded errors."""
+@@ -282,7 +279,7 @@ class TestWebScrapingErrorHandling:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance without YouTube API key."""
+-        return YouTubeProcessor(gemini_api_key="test_gemini_key")
++        return YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
+     
+     @patch('src.youtube_notion.processors.youtube_processor.requests.get')
+     def test_web_scraping_timeout_error(self, mock_get, processor):
+@@ -351,7 +348,7 @@ class TestGeminiAPIErrorHandling:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance for testing."""
+-        return YouTubeProcessor(gemini_api_key="test_gemini_key")
++        return YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
+     
+     def test_gemini_quota_exceeded_error(self, processor):
+         """Test handling of Gemini API quota exceeded errors."""
+@@ -463,7 +460,7 @@ class TestErrorMessageEnhancements:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance for testing."""
+-        return YouTubeProcessor(gemini_api_key="test_gemini_key")
++        return YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
+     
+     def test_error_suggestions_for_api_key_errors(self, processor):
+         """Test that API key errors get helpful suggestions."""
+@@ -535,7 +532,7 @@ class TestErrorHandlingEdgeCases:
+     @pytest.fixture
+     def processor(self):
+         """Create a YouTubeProcessor instance for testing."""
+-        return YouTubeProcessor(gemini_api_key="test_gemini_key", max_retries=3)
++        return YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key", max_retries=3)
+     
+     @patch('src.youtube_notion.processors.youtube_processor.time.sleep')
+     def test_mixed_error_types_during_retry(self, mock_sleep, processor):
+
+--- FILE: tests/test_url_validation.py ---
+diff --git a/tests/test_url_validation.py b/tests/test_url_validation.py
+index 5af6ef0..ebe3247 100644
+--- a/tests/test_url_validation.py
++++ b/tests/test_url_validation.py
+@@ -15,7 +15,7 @@ class TestURLValidation:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+     
+     def test_validate_youtube_url_valid_urls(self):
+         """Test validation of valid YouTube URLs."""
+@@ -59,7 +59,7 @@ class TestVideoIDExtraction:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+         self.test_video_id = "dQw4w9WgXcQ"
+     
+     def test_extract_video_id_standard_urls(self):
+@@ -153,7 +153,7 @@ class TestVideoIDExtractionErrors:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+     
+     def test_extract_video_id_invalid_input_types(self):
+         """Test extraction with invalid input types."""
+@@ -221,7 +221,7 @@ class TestVideoIDValidation:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+     
+     def test_is_valid_video_id_valid_ids(self):
+         """Test validation of valid video IDs."""
+@@ -282,7 +282,7 @@ class TestIntegrationScenarios:
+     
+     def setup_method(self):
+         """Set up test fixtures."""
+-        self.processor = YouTubeProcessor(gemini_api_key="test_key")
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
+     
+     def test_real_youtube_urls(self):
+         """Test with real YouTube URLs and their expected video IDs."""
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

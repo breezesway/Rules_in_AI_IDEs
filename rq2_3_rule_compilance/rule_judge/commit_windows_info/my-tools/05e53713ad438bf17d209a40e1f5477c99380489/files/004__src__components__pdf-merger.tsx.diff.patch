@@ -1,0 +1,77 @@
+diff --git a/src/components/pdf-merger.tsx b/src/components/pdf-merger.tsx
+index 933462f..2112407 100644
+--- a/src/components/pdf-merger.tsx
++++ b/src/components/pdf-merger.tsx
+@@ -31,10 +31,19 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+   // 初始化默认保存路径
+   React.useEffect(() => {
+     if (isOpen && !outputPath) {
+-      window.electronAPI?.getDownloadsPath().then(path => {
+-        setOutputPath(path);
++      window.electronAPI?.getAppConfig().then(config => {
++        if (config.defaultSaveLocation) {
++          setOutputPath(config.defaultSaveLocation);
++        } else {
++          // 如果没有设置默认保存位置，使用下载目录
++          return window.electronAPI?.getDownloadsPath();
++        }
++      }).then(path => {
++        if (path && !outputPath) {
++          setOutputPath(path);
++        }
+       }).catch(err => {
+-        console.error('获取下载目录失败:', err);
++        console.error('获取保存目录失败:', err);
+         setOutputPath('');
+       });
+     }
+@@ -153,18 +162,7 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+     setCurrentFile('');
+   };
+ 
+-  const selectSavePath = async () => {
+-    try {
+-      const result = await window.electronAPI?.selectSavePath();
+-      if (result) {
+-        setOutputPath(result.directory);
+-        setOutputFileName(result.fileName);
+-      }
+-    } catch (err) {
+-      console.error('选择保存路径失败:', err);
+-      setError('选择保存路径失败');
+-    }
+-  };
++
+ 
+   const handleMerge = async () => {
+     const validFiles = files.filter(f => f.status === 'ready');
+@@ -425,20 +423,15 @@ export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+           </div>
+           <div>
+             <label className="block text-sm font-medium mb-2 text-gray-900">保存位置</label>
+-            <div className="flex space-x-3">
+-              <input
+-                type="text"
+-                value={outputPath || '选择保存位置...'}
+-                readOnly
+-                className="flex-1 border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-600"
+-              />
+-              <button 
+-                onClick={selectSavePath}
+-                className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200 whitespace-nowrap"
+-                disabled={isProcessing}
+-              >
+-                浏览
+-              </button>
++            <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
++              {outputPath ? (
++                <p className="text-sm text-gray-700">将保存到: {outputPath}</p>
++              ) : (
++                <p className="text-sm text-gray-700">将使用应用设置中配置的默认保存位置</p>
++              )}
++              <p className="text-xs text-gray-500 mt-1">
++                可在应用设置中修改默认保存位置
++              </p>
+             </div>
+           </div>
+         </div>

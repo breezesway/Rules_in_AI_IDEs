@@ -1,0 +1,117 @@
+diff --git a/mcp_flutter_automation/lib/src/screenshot_server.dart b/mcp_flutter_automation/lib/src/screenshot_server.dart
+index f4ece4c..d013c07 100644
+--- a/mcp_flutter_automation/lib/src/screenshot_server.dart
++++ b/mcp_flutter_automation/lib/src/screenshot_server.dart
+@@ -7,12 +7,12 @@ class ScreenshotServer {
+   HttpServer? _server;
+   String? _latestScreenshot;
+   DateTime? _screenshotTimestamp;
+-  
++
+   Future<void> start({int port = 3000}) async {
+     try {
+       _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+       _logger.info('Screenshot server started on http://127.0.0.1:$port');
+-      
++
+       _server!.listen((HttpRequest request) async {
+         await _handleRequest(request);
+       });
+@@ -21,20 +21,22 @@ class ScreenshotServer {
+       rethrow;
+     }
+   }
+-  
++
+   Future<void> _handleRequest(HttpRequest request) async {
+     try {
+       // Add CORS headers
+       request.response.headers.add('Access-Control-Allow-Origin', '*');
+-      request.response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+-      request.response.headers.add('Access-Control-Allow-Headers', 'Content-Type');
+-      
++      request.response.headers
++          .add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
++      request.response.headers
++          .add('Access-Control-Allow-Headers', 'Content-Type');
++
+       if (request.method == 'OPTIONS') {
+         request.response.statusCode = 200;
+         await request.response.close();
+         return;
+       }
+-      
++
+       if (request.uri.path == '/screenshot' && request.method == 'POST') {
+         await _handleScreenshotUpload(request);
+       } else if (request.uri.path == '/screenshot' && request.method == 'GET') {
+@@ -53,17 +55,18 @@ class ScreenshotServer {
+       await request.response.close();
+     }
+   }
+-  
++
+   Future<void> _handleScreenshotUpload(HttpRequest request) async {
+     try {
+       final body = await utf8.decoder.bind(request).join();
+       final data = json.decode(body);
+-      
++
+       _latestScreenshot = data['image'] as String?;
+       _screenshotTimestamp = DateTime.parse(data['timestamp'] as String);
+-      
+-      _logger.info('Screenshot received: ${_latestScreenshot?.length ?? 0} bytes at $_screenshotTimestamp');
+-      
++
++      _logger.info(
++          'Screenshot received: ${_latestScreenshot?.length ?? 0} bytes at $_screenshotTimestamp');
++
+       request.response.statusCode = 200;
+       request.response.headers.contentType = ContentType.json;
+       request.response.write(json.encode({
+@@ -79,7 +82,7 @@ class ScreenshotServer {
+       await request.response.close();
+     }
+   }
+-  
++
+   Future<void> _handleScreenshotDownload(HttpRequest request) async {
+     try {
+       if (_latestScreenshot == null) {
+@@ -91,7 +94,7 @@ class ScreenshotServer {
+         await request.response.close();
+         return;
+       }
+-      
++
+       request.response.statusCode = 200;
+       request.response.headers.contentType = ContentType.json;
+       request.response.write(json.encode({
+@@ -108,7 +111,7 @@ class ScreenshotServer {
+       await request.response.close();
+     }
+   }
+-  
++
+   Future<void> _handleHealthCheck(HttpRequest request) async {
+     request.response.statusCode = 200;
+     request.response.headers.contentType = ContentType.json;
+@@ -119,14 +122,14 @@ class ScreenshotServer {
+     }));
+     await request.response.close();
+   }
+-  
++
+   String? getLatestScreenshot() => _latestScreenshot;
+   DateTime? getScreenshotTimestamp() => _screenshotTimestamp;
+-  
++
+   Future<void> stop() async {
+     if (_server != null) {
+       await _server!.close();
+       _logger.info('Screenshot server stopped');
+     }
+   }
+-}
+\ No newline at end of file
++}

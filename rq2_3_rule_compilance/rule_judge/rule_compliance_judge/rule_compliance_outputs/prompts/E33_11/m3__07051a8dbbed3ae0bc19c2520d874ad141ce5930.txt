@@ -1,0 +1,131 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: internal/domain/.cursor/rules/entity.mdc
+- Change Type: added
+- Target Rule Content:
+All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing data structures with field tags or decorators (e.g., Go structs, Rust structs with serde, or TypeScript classes with decorators).
+- Suggested Logic: 1. Scan source code for struct/class field definitions.
+2. Locate 'json' tags/annotations and use a regular expression to verify that the tag value follows snake_case (e.g., `^[a-z0-9_]+$`).
+3. Check for the presence of a 'secret' tag/annotation on fields.
+4. If a 'secret' tag is present, verify that the 'json' tag is set to omit the field (e.g., `json:"-"` in Go).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: docs: refactor user datatypes rule to be conceptual and domain-focused
+
+- Remove detailed Go code examples for Email, Password, and Ciphertext types
+- Focus on type purpose, constraints, and relationships for clarity
+- Add guidance to reference generator/template rules for technical implementation
+- Improve maintainability and accessibility for both technical and non-technical stakeholders
+- Changed Files List: 
+internal/domain/user/.cursor/rules/datatypes.mdc	+23	-0	after_lines=23
+internal/domain/user/datatypes.go	+25	-0	after_lines=25
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── global.mdc
+├── README.md
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+├── go.sum
+└── internal
+    └── domain
+        ├── .cursor
+        │   └── rules
+        │       ├── entity.mdc
+        │       └── generic-types.mdc
+        ├── tenant
+        │   ├── .cursor
+        │   │   └── rules
+        │   │       └── tenant.mdc
+        │   └── tenant.go
+        └── user
+            ├── .cursor
+            │   └── rules
+            │       └── datatypes.mdc
+            └── datatypes.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: internal/domain/user/.cursor/rules/datatypes.mdc ---
+diff --git a/internal/domain/user/.cursor/rules/datatypes.mdc b/internal/domain/user/.cursor/rules/datatypes.mdc
+new file mode 100644
+index 0000000..6cb6296
+--- /dev/null
++++ b/internal/domain/user/.cursor/rules/datatypes.mdc
+@@ -0,0 +1,23 @@
++# Data Types
++
++This rule describes the required data types in the user domain and their behavior. All types are defined as custom types for stronger type safety and extensibility.
++
++## Email
++Definition: Used as one of the user identifiers. No need to do validation here; validation will be handled elsewhere.
++- Type: string (custom type recommended, e.g., `type Email string`)
++
++## Password
++Definition: User password. Should be at least 8 characters long, contain 1 UPPERCASE letter, 1 lowercase letter, 1 number, and 1 special character. Validation logic is handled elsewhere.
++- Type: string (custom type recommended, e.g., `type Password string`)
++
++## Ciphertext
++Definition: Hashed version of password. Constructed from Password using a secure hash algorithm (e.g., bcrypt with at least 10 rounds). Must provide a method to check if a Password matches the hash.
++- Type: string (custom type recommended, e.g., `type Ciphertext string`)
++- Construction: From Password, using a secure hash algorithm
++- Validation: Must provide a method to check if a Password matches the hash
++
++---
++
++This rule is extensible for future user-related types (e.g., password reset tokens, email verification, etc.).
++
++Note: For technical implementation details or code templates, see generator/template rules such as generic-types.mdc.
+\ No newline at end of file
+
+--- FILE: internal/domain/user/datatypes.go ---
+diff --git a/internal/domain/user/datatypes.go b/internal/domain/user/datatypes.go
+new file mode 100644
+index 0000000..9b899d1
+--- /dev/null
++++ b/internal/domain/user/datatypes.go
+@@ -0,0 +1,25 @@
++package user
++
++import (
++    "golang.org/x/crypto/bcrypt"
++)
++
++// Email represents a user's email address.
++type Email string
++
++// Password represents a user's password.
++type Password string
++
++// Ciphertext represents a hashed password.
++type Ciphertext string
++
++// NewCiphertext hashes the password using bcrypt (at least 10 rounds).
++func NewCiphertext(p Password) (Ciphertext, error) {
++    hash, err := bcrypt.GenerateFromPassword([]byte(p), 10)
++    return Ciphertext(hash), err
++}
++
++// Matches checks if the provided password matches the ciphertext hash.
++func (c Ciphertext) Matches(p Password) bool {
++    return bcrypt.CompareHashAndPassword([]byte(c), []byte(p)) == nil
++} 
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

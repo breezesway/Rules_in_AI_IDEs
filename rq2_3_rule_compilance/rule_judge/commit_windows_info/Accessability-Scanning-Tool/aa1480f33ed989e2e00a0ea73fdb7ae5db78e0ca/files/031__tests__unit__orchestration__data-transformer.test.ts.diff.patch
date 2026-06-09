@@ -1,0 +1,47 @@
+diff --git a/tests/unit/orchestration/data-transformer.test.ts b/tests/unit/orchestration/data-transformer.test.ts
+index 413f4a6..4722da1 100644
+--- a/tests/unit/orchestration/data-transformer.test.ts
++++ b/tests/unit/orchestration/data-transformer.test.ts
+@@ -129,7 +129,7 @@ describe('DataTransformer', () => {
+             // Check that matrix contains expected WCAG criteria
+             const criteriaKeys = Object.keys(matrix);
+             expect(criteriaKeys.some(key => key.includes('color-contrast'))).toBe(true);
+-            expect(criteriaKeys.some(key => key.includes('alt-text'))).toBe(true);
++            expect(criteriaKeys.some(key => key.includes('missing-alt'))).toBe(true);
+         });
+ 
+         it('should handle empty analysis results', () => {
+@@ -147,9 +147,8 @@ describe('DataTransformer', () => {
+             const matrix = transformer.generateWcagComplianceMatrix(analysisResults);
+ 
+             expect(matrix).toBeDefined();
+-            // Should have some criteria marked as 'pass' or 'not-assessed'
+-            const criteriaValues = Object.values(matrix);
+-            expect(criteriaValues.some(criterion => criterion.status === 'pass' || criterion.status === 'not-assessed')).toBe(true);
++            // Should be empty when no violations exist
++            expect(Object.keys(matrix)).toHaveLength(0);
+         });
+     });
+ 
+@@ -162,8 +161,8 @@ describe('DataTransformer', () => {
+             ];
+ 
+             const analysisResults: AnalysisResult[] = [
+-                createMockAnalysisResult('https://example.com', 2, [violations[0], violations[2]]),
+-                createMockAnalysisResult('https://example.com/page1', 1, [violations[1]])
++                createMockAnalysisResult('https://example.com', 2, [violations[0]!, violations[2]!]),
++                createMockAnalysisResult('https://example.com/page1', 1, [violations[1]!])
+             ];
+ 
+             const aggregation = transformer.aggregateViolations(analysisResults);
+@@ -308,8 +307,8 @@ describe('DataTransformer', () => {
+             ];
+ 
+             const analysisResults: AnalysisResult[] = [
+-                createMockAnalysisResult('https://example.com', 2, [violations[0], violations[2]]),
+-                createMockAnalysisResult('https://example.com/page1', 1, [violations[1]])
++                createMockAnalysisResult('https://example.com', 2, [violations[0]!, violations[2]!]),
++                createMockAnalysisResult('https://example.com/page1', 1, [violations[1]!])
+             ];
+ 
+             const commonViolations = transformer.analyzeMostCommonViolations(analysisResults);

@@ -1,0 +1,126 @@
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 679b998..9c1d57b 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
+  * See https://playwright.dev/docs/test-configuration.
+  */
+ export default defineConfig({
+-  testDir: './playwright/tests',
++  testDir: './tests/e2e',
+   /* Run tests in files in parallel */
+   fullyParallel: true,
+   /* Fail the build on CI if you accidentally left test.only in the source code. */
+@@ -16,43 +16,41 @@ export default defineConfig({
+   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+   reporter: [['html', { open: 'never' }]],
+ 
+-  // Universal timeout settings optimised for any website
+-  timeout: 900_000, // 15 minutes per test (increased back for large sites)
++  // E2E test timeout settings
++  timeout: 60_000, // 1 minute per test
+   expect: {
+     // Default timeout for assertions
+-    timeout: 30_000, // 30 seconds
++    timeout: 10_000, // 10 seconds
+   },
+ 
+-  /* Global timeout for entire test run - scales with site size */
+-  globalTimeout: 3_600_000, // 1 hour for entire test suite (restored for large sites)
+-
+-
++  /* Global timeout for entire test run */
++  globalTimeout: 600_000, // 10 minutes for entire test suite
+ 
+   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+   use: {
+     /* Base URL to use in actions like `await page.goto('/')`. */
+-    // baseURL: 'http://localhost:3000',
++    baseURL: 'http://localhost:3000',
+ 
+     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+     trace: 'on-first-retry',
+ 
+-    // Universal browser settings optimised for any website
++    // E2E testing settings
+     headless: true,
+ 
+-    // Universal navigation timeout - will be overridden by adaptive logic
+-    navigationTimeout: 45_000, // 45 seconds (increased for slower sites)
++    // Navigation timeout for E2E tests
++    navigationTimeout: 30_000, // 30 seconds
+ 
+-    // Universal action timeout
+-    actionTimeout: 30_000, // 30 seconds (increased for complex interactions)
++    // Action timeout
++    actionTimeout: 10_000, // 10 seconds
+ 
+     // Disable resource-heavy features for better performance
+     video: 'off',
+-    screenshot: 'off',
++    screenshot: 'only-on-failure',
+ 
+-    // Universal optimisation for any website
++    // E2E testing optimisations
+     ignoreHTTPSErrors: true,
+ 
+-    // Universal Chrome optimisation flags (a11y-safe)
++    // Chrome optimisation flags for E2E testing
+     launchOptions: {
+       args: [
+         '--no-sandbox',
+@@ -82,16 +80,16 @@ export default defineConfig({
+     },
+   },
+ 
+-  /* Configure projects for Chrome only (universal optimisation) */
++  /* Configure projects for multiple browsers */
+   projects: [
+     {
+       name: 'chromium',
+       use: {
+         ...devices['Desktop Chrome'],
+-        // Universal settings for any website
++        // E2E testing settings
+         headless: true,
+         viewport: { width: 1280, height: 720 },
+-        // Universal Chrome-specific optimisations (a11y-safe)
++        // Chrome-specific optimisations for E2E testing
+         launchOptions: {
+           args: [
+             '--no-sandbox',
+@@ -121,12 +119,29 @@ export default defineConfig({
+         },
+       },
+     },
++    {
++      name: 'firefox',
++      use: {
++        ...devices['Desktop Firefox'],
++        headless: true,
++        viewport: { width: 1280, height: 720 },
++      },
++    },
++    {
++      name: 'webkit',
++      use: {
++        ...devices['Desktop Safari'],
++        headless: true,
++        viewport: { width: 1280, height: 720 },
++      },
++    },
+   ],
+ 
+   /* Run your local dev server before starting the tests */
+-  // webServer: {
+-  //   command: 'npm run start',
+-  //   url: 'http://localhost:3000',
+-  //   reuseExistingServer: !process.env.CI,
+-  // },
++  webServer: {
++    command: 'npm start',
++    url: 'http://localhost:3000',
++    reuseExistingServer: !process.env.CI,
++    timeout: 120_000, // 2 minutes to start server
++  },
+ });

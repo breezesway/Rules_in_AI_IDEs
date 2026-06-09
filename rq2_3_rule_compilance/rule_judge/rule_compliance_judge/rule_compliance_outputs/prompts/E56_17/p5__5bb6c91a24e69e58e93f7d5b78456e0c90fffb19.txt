@@ -1,0 +1,432 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: System Architecture
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: added
+- Target Rule Content:
+- utils/batch_processor.py: Batch processing utilities, progress tracking, and error aggregation
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure and source code file (specifically utils/batch_processor.py).
+- Suggested Logic: Verify that the file 'utils/batch_processor.py' exists in the repository. Optionally, use basic AST parsing or regex to check if the file contains classes or functions related to batch processing, progress tracking, or error aggregation.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=5)
+- Commit Message: encoding
+- Changed Files List: 
+src/youtube_notion/processors/youtube_processor.py	+10	-3	after_lines=919
+tests/test_error_handling.py	+73	-1	after_lines=230
+tests/test_metadata_extraction.py	+222	-0	after_lines=552
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: src/youtube_notion/processors/youtube_processor.py ---
+diff --git a/src/youtube_notion/processors/youtube_processor.py b/src/youtube_notion/processors/youtube_processor.py
+index 11af883..95e5c13 100644
+--- a/src/youtube_notion/processors/youtube_processor.py
++++ b/src/youtube_notion/processors/youtube_processor.py
+@@ -468,9 +468,16 @@ class YouTubeProcessor:
+                     details="Video may be private, deleted, or restricted"
+                 )
+             
+-            # Decode unicode escape sequences
+-            title = title.encode().decode('unicode_escape')
+-            channel = channel.encode().decode('unicode_escape')
++            # Properly decode JSON-escaped unicode sequences
++            import json
++            try:
++                # Use JSON decoder to properly handle unicode escapes while preserving UTF-8
++                title = json.loads(f'"{title}"')
++                channel = json.loads(f'"{channel}"')
++            except (json.JSONDecodeError, UnicodeDecodeError):
++                # If JSON decoding fails, use the raw strings
++                # This handles cases where the strings don't contain escape sequences
++                pass
+             
+             return {
+                 'title': title,
+
+--- FILE: tests/test_error_handling.py ---
+diff --git a/tests/test_error_handling.py b/tests/test_error_handling.py
+index 58a5c02..d894191 100644
+--- a/tests/test_error_handling.py
++++ b/tests/test_error_handling.py
+@@ -155,4 +155,76 @@ This has **special** chars: àáâãäåæçèéêë & symbols: @#$%^&*()
+         
+         # Should handle gracefully
+         result = find_database_by_name(mock_notion, "DB Name", "Page Name")
+-        assert result is None
+\ No newline at end of file
++        assert result is None
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_unicode_encoding_edge_cases(self, mock_get):
++        """Test handling of unicode encoding edge cases in web scraping."""
++        from youtube_notion.processors.youtube_processor import YouTubeProcessor
++        
++        processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
++        
++        # Test with completely malformed JSON
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Broken JSON \\u201","ownerChannelName":"Test"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        # Should handle gracefully and fall back to raw strings
++        result = processor._get_metadata_via_scraping("test123")
++        assert "Broken JSON" in result['title']
++        assert result['channel'] == "Test"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_unicode_encoding_empty_strings(self, mock_get):
++        """Test handling of empty strings in unicode encoding."""
++        from youtube_notion.processors.youtube_processor import YouTubeProcessor
++        
++        processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
++        
++        # Test with empty title and channel
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"","ownerChannelName":""
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        # Should handle empty strings gracefully by falling back to defaults
++        result = processor._get_metadata_via_scraping("test123")
++        assert result['title'] == "Unknown Title"  # Falls back to default when empty
++        assert result['channel'] == "Unknown Channel"  # Falls back to default when empty
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_unicode_encoding_null_values(self, mock_get):
++        """Test handling of null/None values in unicode encoding."""
++        from youtube_notion.processors.youtube_processor import YouTubeProcessor
++        
++        processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_key")
++        
++        # Test with HTML that doesn't contain title/channel patterns
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        var someOtherData = {"unrelated": "data"};
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        # Should handle missing patterns gracefully
++        result = processor._get_metadata_via_scraping("test123")
++        assert result['title'] == "Unknown Title"
++        assert result['channel'] == "Unknown Channel"
+\ No newline at end of file
+
+--- FILE: tests/test_metadata_extraction.py ---
+diff --git a/tests/test_metadata_extraction.py b/tests/test_metadata_extraction.py
+index 4b702a6..197bc29 100644
+--- a/tests/test_metadata_extraction.py
++++ b/tests/test_metadata_extraction.py
+@@ -298,6 +298,228 @@ class TestThumbnailConstruction:
+             assert result == expected_url
+ 
+ 
++class TestUnicodeEncoding:
++    """Test cases for unicode character encoding in metadata extraction."""
++    
++    def setup_method(self):
++        """Set up test fixtures."""
++        self.processor = YouTubeProcessor.from_api_keys(gemini_api_key="test_gemini_key")
++        self.test_video_id = "test123"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_em_dash_encoding(self, mock_get):
++        """Test that em dash characters are correctly decoded in web scraping."""
++        # Mock HTML with em dash as unicode escape sequence
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Agents vs Workflows: Why Not Both? \\u2014 Sam Bhagwat, Mastra.ai","ownerChannelName":"Test Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify em dash is correctly decoded
++        expected_title = "Agents vs Workflows: Why Not Both? — Sam Bhagwat, Mastra.ai"
++        assert result['title'] == expected_title
++        assert result['channel'] == "Test Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_smart_quotes_encoding(self, mock_get):
++        """Test that smart quotes are correctly decoded in web scraping."""
++        # Mock HTML with smart quotes as unicode escape sequences
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Testing \\u201cSmart Quotes\\u201d in Title","ownerChannelName":"Test Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify smart quotes are correctly decoded (allow for different quote styles)
++        assert "Smart Quotes" in result['title']
++        assert len(result['title']) > len("Testing Smart Quotes in Title")  # Should have quote characters
++        assert result['channel'] == "Test Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_accented_characters_encoding(self, mock_get):
++        """Test that accented characters are correctly decoded in web scraping."""
++        # Mock HTML with accented characters as unicode escape sequences
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"French Caf\\u00e9 and R\\u00e9sum\\u00e9","ownerChannelName":"Test Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify accented characters are correctly decoded
++        expected_title = "French Café and Résumé"
++        assert result['title'] == expected_title
++        assert result['channel'] == "Test Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_mathematical_symbols_encoding(self, mock_get):
++        """Test that mathematical symbols are correctly decoded in web scraping."""
++        # Mock HTML with mathematical symbols as unicode escape sequences
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Math: \\u03b1 + \\u03b2 = \\u03b3","ownerChannelName":"Test Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify mathematical symbols are correctly decoded
++        expected_title = "Math: α + β = γ"
++        assert result['title'] == expected_title
++        assert result['channel'] == "Test Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_mixed_unicode_characters(self, mock_get):
++        """Test that mixed unicode characters are correctly decoded in web scraping."""
++        # Mock HTML with various unicode characters
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Mixed: \\u2014 \\u201cQuotes\\u201d \\u00e9 \\u03b1","ownerChannelName":"Caf\\u00e9 Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify all unicode characters are correctly decoded
++        assert "—" in result['title']  # em dash
++        assert "é" in result['title']  # accented e
++        assert "α" in result['title']  # alpha
++        assert "Café" in result['channel']  # accented e in channel
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_regular_ascii_unchanged(self, mock_get):
++        """Test that regular ASCII characters remain unchanged."""
++        # Mock HTML with regular ASCII characters
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Regular ASCII Title with - dash","ownerChannelName":"Regular Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify ASCII characters remain unchanged
++        expected_title = "Regular ASCII Title with - dash"
++        assert result['title'] == expected_title
++        assert result['channel'] == "Regular Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_malformed_unicode_fallback(self, mock_get):
++        """Test that malformed unicode sequences fall back gracefully."""
++        # Mock HTML with malformed unicode escape sequences
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Malformed \\u201 incomplete","ownerChannelName":"Test Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify that malformed sequences fall back to raw strings
++        assert "Malformed" in result['title']
++        assert result['channel'] == "Test Channel"
++    
++    @patch('youtube_notion.processors.youtube_processor.build')
++    def test_api_unicode_preservation(self, mock_build):
++        """Test that YouTube API correctly preserves unicode characters."""
++        # Mock YouTube API response with unicode characters
++        mock_youtube = Mock()
++        mock_videos = Mock()
++        mock_list = Mock()
++        mock_request = Mock()
++        
++        mock_build.return_value = mock_youtube
++        mock_youtube.videos.return_value = mock_videos
++        mock_videos.list.return_value = mock_list
++        mock_list.execute.return_value = {
++            'items': [{
++                'snippet': {
++                    'title': 'Agents vs Workflows: Why Not Both? — Sam Bhagwat, Mastra.ai',
++                    'channelTitle': 'Café Channel',
++                    'description': 'Test description with α symbols',
++                    'publishedAt': '2023-01-01T00:00:00Z'
++                }
++            }]
++        }
++        
++        # Create processor with API key
++        processor_with_api = YouTubeProcessor.from_api_keys(
++            gemini_api_key="test_gemini_key", 
++            youtube_api_key="test_youtube_key"
++        )
++        
++        result = processor_with_api._get_metadata_via_api(self.test_video_id)
++        
++        # Verify unicode characters are preserved from API
++        expected_title = "Agents vs Workflows: Why Not Both? — Sam Bhagwat, Mastra.ai"
++        assert result['title'] == expected_title
++        assert result['channel'] == "Café Channel"
++        assert result['description'] == "Test description with α symbols"
++    
++    @patch('youtube_notion.processors.youtube_processor.requests.get')
++    def test_web_scraping_channel_name_encoding(self, mock_get):
++        """Test that channel names with unicode characters are correctly decoded."""
++        # Mock HTML with unicode characters in channel name
++        mock_response = Mock()
++        mock_response.text = '''
++        <html>
++        <script>
++        "title":"Regular Title","ownerChannelName":"Caf\\u00e9 \\u2014 Channel"
++        </script>
++        </html>
++        '''
++        mock_response.raise_for_status.return_value = None
++        mock_get.return_value = mock_response
++        
++        result = self.processor._get_metadata_via_scraping(self.test_video_id)
++        
++        # Verify channel name unicode characters are correctly decoded
++        expected_channel = "Café — Channel"
++        assert result['title'] == "Regular Title"
++        assert result['channel'] == expected_channel
++
++
+ class TestMetadataExtractionIntegration:
+     """Integration tests for metadata extraction methods."""
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

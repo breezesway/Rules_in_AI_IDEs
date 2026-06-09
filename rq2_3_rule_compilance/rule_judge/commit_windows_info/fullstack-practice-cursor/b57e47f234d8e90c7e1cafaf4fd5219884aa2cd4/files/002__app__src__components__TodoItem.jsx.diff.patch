@@ -1,0 +1,81 @@
+diff --git a/app/src/components/TodoItem.jsx b/app/src/components/TodoItem.jsx
+index 46cdee1..31f0e29 100644
+--- a/app/src/components/TodoItem.jsx
++++ b/app/src/components/TodoItem.jsx
+@@ -7,10 +7,39 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveD
+         title: todo.title,
+         description: todo.description || '',
+         completed: todo.completed,
+-        deadline: todo.deadline ? todo.deadline.slice(0, 16) : ''
++        deadline: todo.deadline ? formatDateForInput(todo.deadline) : ''
+     });
+     const [editErrors, setEditErrors] = useState({});
+ 
++    // Helper function to format date for datetime-local input (preserves local timezone)
++    function formatDateForInput(dateString) {
++        if (!dateString) return '';
++        const date = new Date(dateString);
++        // Convert to local timezone and format for datetime-local input
++        const year = date.getFullYear();
++        const month = String(date.getMonth() + 1).padStart(2, '0');
++        const day = String(date.getDate()).padStart(2, '0');
++        const hours = String(date.getHours()).padStart(2, '0');
++        const minutes = String(date.getMinutes()).padStart(2, '0');
++        return `${year}-${month}-${day}T${hours}:${minutes}`;
++    }
++
++    // Helper function to get current local time
++    function getCurrentLocalTime() {
++        const now = new Date();
++        // Get local time components
++        const year = now.getFullYear();
++        const month = now.getMonth();
++        const day = now.getDate();
++        const hours = now.getHours();
++        const minutes = now.getMinutes();
++        const seconds = now.getSeconds();
++        const milliseconds = now.getMilliseconds();
++        
++        // Create new date in local timezone
++        return new Date(year, month, day, hours, minutes, seconds, milliseconds);
++    }
++
+     const validateEditForm = () => {
+         const newErrors = {};
+         
+@@ -27,7 +56,7 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveD
+         // Validate deadline if set
+         if (editData.deadline) {
+             const selectedDate = new Date(editData.deadline);
+-            const now = new Date();
++            const now = getCurrentLocalTime();
+             if (selectedDate <= now) {
+                 newErrors.deadline = 'Deadline must be in the future';
+             }
+@@ -86,7 +115,7 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveD
+     };
+ 
+     const formatDate = (dateString) => {
+-        return new Date(dateString).toLocaleDateString('en-US', {
++        return new Date(dateString).toLocaleDateString('ko-KR', {
+             year: 'numeric',
+             month: 'short',
+             day: 'numeric',
+@@ -97,7 +126,7 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveD
+ 
+     const formatDeadline = (deadlineString) => {
+         const deadline = new Date(deadlineString);
+-        const now = new Date();
++        const now = getCurrentLocalTime();
+         const diffTime = deadline - now;
+         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+         const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+@@ -201,7 +230,7 @@ const TodoItem = ({ todo, onUpdate, onToggle, onDelete, onSetDeadline, onRemoveD
+                                     title: todo.title, 
+                                     description: todo.description || '',
+                                     completed: todo.completed,
+-                                    deadline: todo.deadline ? todo.deadline.slice(0, 16) : ''
++                                    deadline: todo.deadline ? formatDateForInput(todo.deadline) : ''
+                                 });
+                                 setEditErrors({});
+                             }}

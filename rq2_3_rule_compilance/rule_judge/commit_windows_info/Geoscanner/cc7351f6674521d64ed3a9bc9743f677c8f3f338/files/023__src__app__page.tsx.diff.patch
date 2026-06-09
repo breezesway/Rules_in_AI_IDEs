@@ -1,0 +1,362 @@
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 57b4564..f4d07df 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,105 +1,30 @@
+-"use client";
++'use client';
+ 
+-import { Button } from "@/components/ui/button";
+-import { Input } from "@/components/ui/input";
+-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+-import { Toggle } from "@/components/ui/toggle";
+-import { Label } from "@/components/ui/label";
+-import { Separator } from "@/components/ui/separator";
+-import { Progress } from "@/components/ui/progress";
+-import { useState } from "react";
+-import { ScanResults } from "@/components/scan-results";
+-import { useToast } from "@/components/ui/use-toast";
+-import { FeatureBanner } from "@/components/molecules/feature-banner";
++import { Button } from '@/components/ui/button';
++import { Input } from '@/components/ui/input';
++import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
++import { Toggle } from '@/components/ui/toggle';
++import { Label } from '@/components/ui/label';
++import { Separator } from '@/components/ui/separator';
++import { Progress } from '@/components/ui/progress';
++import { useState } from 'react';
++import { ScanResults } from '@/components/scan-results';
++import { useToast } from '@/components/ui/use-toast';
++import { FeatureBanner } from '@/components/molecules/feature-banner';
+ 
+ // Demo resultaat voor testen
+-const demoResult = {
+-  overallScore: 78,
+-  modules: [
+-    {
+-      id: "crawl-access",
+-      name: "Crawl-toegang",
+-      score: 20,
+-      maxScore: 25,
+-      status: "success" as const,
+-      details: [
+-        "Robots.txt is correct geconfigureerd voor AI bots",
+-        "Sitemap.xml is aanwezig en geldig",
+-        "Meta robots tags zijn correct ingesteld"
+-      ]
+-    },
+-    {
+-      id: "structured-data",
+-      name: "Structured Data",
+-      score: 15,
+-      maxScore: 25,
+-      status: "warning" as const,
+-      details: [
+-        "JSON-LD is aanwezig maar mist enkele verplichte velden",
+-        "Schema.org markup is gedeeltelijk geïmplementeerd",
+-        "Auteur informatie ontbreekt in structured data"
+-      ]
+-    },
+-    {
+-      id: "answer-ready",
+-      name: "Answer-ready content",
+-      score: 18,
+-      maxScore: 20,
+-      status: "success" as const,
+-      details: [
+-        "Content heeft een duidelijke vraag-en-antwoord structuur",
+-        "TL;DR sectie is aanwezig",
+-        "Flesch score is optimaal voor leesbaarheid"
+-      ]
+-    },
+-    {
+-      id: "authority",
+-      name: "Autoriteit & citaties",
+-      score: 10,
+-      maxScore: 15,
+-      status: "warning" as const,
+-      details: [
+-        "Auteur-bio is aanwezig maar mist expertise-indicatoren",
+-        "Outbound links naar autoriteitswebsites zijn beperkt",
+-        "Licentie statements zijn correct geïmplementeerd"
+-      ]
+-    }
+-  ],
+-  quickWins: [
+-    {
+-      module: "Structured Data",
+-      impact: "high" as const,
+-      description: "Voeg author property toe aan JSON-LD voor betere autoriteit",
+-      fix: `<script type="application/ld+json">
+-{
+-  "@context": "https://schema.org",
+-  "@type": "Article",
+-  "author": {
+-    "@type": "Person",
+-    "name": "Auteur Naam",
+-    "jobTitle": "Functietitel",
+-    "worksFor": {
+-      "@type": "Organization",
+-      "name": "Bedrijfsnaam"
+-    }
+-  }
+-}
+-</script>`
+-    },
+-    {
+-      module: "Autoriteit & citaties",
+-      impact: "medium" as const,
+-      description: "Voeg meer outbound links toe naar autoriteitswebsites",
+-      fix: "Voeg relevante links toe naar Wikipedia, wetenschappelijke artikelen of erkende bronnen in je content."
+-    }
+-  ]
+-};
++// const demoResult = { // Commented out as it's unused
++// overallScore: 78,
++// modules: [
++// ... (rest of the object commented out)
++// ],
++// };
+ 
+ export default function Home() {
+   const [isScanning, setIsScanning] = useState(false);
+   const [progress, setProgress] = useState(0);
+   const [showResults, setShowResults] = useState(false);
+-  const [url, setUrl] = useState("");
++  const [url, setUrl] = useState('');
+   const [fullDomainScan, setFullDomainScan] = useState(false);
+   const [scanResult, setScanResult] = useState<any>(null);
+   const { toast } = useToast();
+@@ -117,9 +42,9 @@ export default function Home() {
+     e.preventDefault();
+     if (!isValidUrl(url)) {
+       toast({
+-        title: "Ongeldige URL",
+-        description: "Voer een geldige URL in (inclusief http(s)://)",
+-        variant: "destructive",
++        title: 'Ongeldige URL',
++        description: 'Voer een geldige URL in (inclusief http(s)://)',
++        variant: 'destructive',
+       });
+       return;
+     }
+@@ -141,7 +66,7 @@ export default function Home() {
+       }
+ 
+       const result = await response.json();
+-      
++
+       if (result.error) {
+         throw new Error(result.error);
+       }
+@@ -150,9 +75,9 @@ export default function Home() {
+       setShowResults(true);
+     } catch (error) {
+       toast({
+-        title: "Fout",
++        title: 'Fout',
+         description: error instanceof Error ? error.message : 'Er is een fout opgetreden',
+-        variant: "destructive",
++        variant: 'destructive',
+       });
+     } finally {
+       setIsScanning(false);
+@@ -161,7 +86,7 @@ export default function Home() {
+ 
+   const handleNewScan = () => {
+     setShowResults(false);
+-    setUrl("");
++    setUrl('');
+     setFullDomainScan(false);
+     setScanResult(null);
+     setProgress(0);
+@@ -184,13 +109,16 @@ export default function Home() {
+             Is jouw website LLM-proof?
+           </CardTitle>
+           <CardDescription className="text-lg text-steel">
+-            Scan je pagina en ontdek in 10 seconden hoe goed jouw content zichtbaar is in ChatGPT, Claude en Google Gemini
++            Scan je pagina en ontdek in 10 seconden hoe goed jouw content zichtbaar is in ChatGPT,
++            Claude en Google Gemini
+           </CardDescription>
+         </CardHeader>
+         <CardContent>
+           <form onSubmit={handleSubmit} className="space-y-6">
+             <div className="space-y-2">
+-              <Label htmlFor="url" className="text-steel">URL</Label>
++              <Label htmlFor="url" className="text-steel">
++                URL
++              </Label>
+               <Input
+                 id="url"
+                 type="url"
+@@ -198,14 +126,14 @@ export default function Home() {
+                 className="w-full h-12 text-lg"
+                 disabled={isScanning}
+                 value={url}
+-                onChange={(e) => setUrl(e.target.value)}
++                onChange={e => setUrl(e.target.value)}
+                 required
+               />
+             </div>
+             <div className="flex items-center space-x-2">
+-              <Toggle 
+-                id="domain-scan" 
+-                aria-label="Volledige domeinscan" 
++              <Toggle
++                id="domain-scan"
++                aria-label="Volledige domeinscan"
+                 disabled={isScanning}
+                 pressed={fullDomainScan}
+                 onPressedChange={setFullDomainScan}
+@@ -216,11 +144,7 @@ export default function Home() {
+                 Scan alle pagina's binnen dit domein
+               </Label>
+             </div>
+-            <Button 
+-              type="submit" 
+-              className="w-full h-12 text-lg"
+-              disabled={isScanning}
+-            >
++            <Button type="submit" className="w-full h-12 text-lg" disabled={isScanning}>
+               {isScanning ? 'Bezig met scannen...' : 'Start Scan'}
+             </Button>
+           </form>
+@@ -239,7 +163,9 @@ export default function Home() {
+       <div className="w-full max-w-2xl mt-12 space-y-8">
+         <div className="text-center">
+           <h2 className="text-2xl font-display font-bold text-midnight mb-4">Hoe het werkt</h2>
+-          <p className="text-steel">We analyseren je website op 8 cruciale criteria voor LLM-visibility</p>
++          <p className="text-steel">
++            We analyseren je website op 8 cruciale criteria voor LLM-visibility
++          </p>
+         </div>
+ 
+         <div className="grid grid-cols-1 gap-4">
+@@ -249,77 +175,87 @@ export default function Home() {
+               <h3 className="font-semibold text-lg text-midnight">Crawl-toegang</h3>
+             </div>
+             <p className="text-steel">
+-              Kan Google en andere zoekmachines mijn website goed vinden en lezen? Dit criterium kijkt of je website toegankelijk is voor zoekmachines, zodat je gevonden kunt worden.
++              Kan Google en andere zoekmachines mijn website goed vinden en lezen? Dit criterium
++              kijkt of je website toegankelijk is voor zoekmachines, zodat je gevonden kunt worden.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">🔄</span>
+               <h3 className="font-semibold text-lg text-midnight">Structured Data</h3>
+             </div>
+             <p className="text-steel">
+-              Begrijpen zoekmachines waar mijn pagina over gaat? Dit controleert of je extra informatie hebt toegevoegd, zodat zoekmachines en AI je pagina beter snappen.
++              Begrijpen zoekmachines waar mijn pagina over gaat? Dit controleert of je extra
++              informatie hebt toegevoegd, zodat zoekmachines en AI je pagina beter snappen.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">❓</span>
+               <h3 className="font-semibold text-lg text-midnight">Answer-ready content</h3>
+             </div>
+             <p className="text-steel">
+-              Geeft mijn pagina direct antwoord op vragen van bezoekers? Dit kijkt of je teksten duidelijk en direct antwoord geven, zodat je kans maakt op een prominente plek in zoekresultaten.
++              Geeft mijn pagina direct antwoord op vragen van bezoekers? Dit kijkt of je teksten
++              duidelijk en direct antwoord geven, zodat je kans maakt op een prominente plek in
++              zoekresultaten.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">🏆</span>
+               <h3 className="font-semibold text-lg text-midnight">Autoriteit & citaties</h3>
+             </div>
+             <p className="text-steel">
+-              Komt mijn website betrouwbaar en deskundig over? Dit criterium meet of je pagina verwijzingen of citaties bevat, wat je betrouwbaarheid vergroot.
++              Komt mijn website betrouwbaar en deskundig over? Dit criterium meet of je pagina
++              verwijzingen of citaties bevat, wat je betrouwbaarheid vergroot.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">🕒</span>
+               <h3 className="font-semibold text-lg text-midnight">Versheid</h3>
+             </div>
+             <p className="text-steel">
+-              Is de informatie op mijn website actueel? Dit controleert of je pagina recent is bijgewerkt, zodat bezoekers en zoekmachines weten dat de informatie up-to-date is.
++              Is de informatie op mijn website actueel? Dit controleert of je pagina recent is
++              bijgewerkt, zodat bezoekers en zoekmachines weten dat de informatie up-to-date is.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">🌐</span>
+               <h3 className="font-semibold text-lg text-midnight">Cross-web footprint</h3>
+             </div>
+             <p className="text-steel">
+-              Wordt mijn content ook op andere plekken op het internet genoemd? Dit kijkt of je website of content ook op andere relevante websites of platforms te vinden is.
++              Wordt mijn content ook op andere plekken op het internet genoemd? Dit kijkt of je
++              website of content ook op andere relevante websites of platforms te vinden is.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">👁️</span>
+               <h3 className="font-semibold text-lg text-midnight">Multimodale leesbaarheid</h3>
+             </div>
+             <p className="text-steel">
+-              Is mijn website goed te begrijpen voor iedereen, ook voor mensen met een beperking? Dit criterium kijkt of je pagina duidelijk is, met bijvoorbeeld goede afbeeldingen, video's en teksten.
++              Is mijn website goed te begrijpen voor iedereen, ook voor mensen met een beperking?
++              Dit criterium kijkt of je pagina duidelijk is, met bijvoorbeeld goede afbeeldingen,
++              video's en teksten.
+             </p>
+           </div>
+-          
++
+           <div className="criterion-item p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+             <div className="flex items-center mb-2">
+               <span className="text-2xl mr-3">📊</span>
+               <h3 className="font-semibold text-lg text-midnight">Monitoring-haakjes</h3>
+             </div>
+             <p className="text-steel">
+-              Kan ik meten hoe goed mijn website presteert? Dit controleert of je tools hebt geïnstalleerd om te zien hoeveel bezoekers je hebt en hoe je pagina's scoren.
++              Kan ik meten hoe goed mijn website presteert? Dit controleert of je tools hebt
++              geïnstalleerd om te zien hoeveel bezoekers je hebt en hoe je pagina's scoren.
+             </p>
+           </div>
+         </div>
+@@ -329,13 +265,19 @@ export default function Home() {
+         {/* Footer */}
+         <footer className="text-center text-steel text-sm">
+           <div className="space-x-4 mb-4">
+-            <a href="/voorwaarden" className="hover:text-midnight">Gebruiksvoorwaarden</a>
+-            <a href="/privacy" className="hover:text-midnight">Privacy</a>
+-            <a href="/contact" className="hover:text-midnight">Contact</a>
++            <a href="/voorwaarden" className="hover:text-midnight">
++              Gebruiksvoorwaarden
++            </a>
++            <a href="/privacy" className="hover:text-midnight">
++              Privacy
++            </a>
++            <a href="/contact" className="hover:text-midnight">
++              Contact
++            </a>
+           </div>
+           <p>© 2024 GEO Scanner. Alle rechten voorbehouden.</p>
+         </footer>
+       </div>
+     </div>
+   );
+-} 
+\ No newline at end of file
++}

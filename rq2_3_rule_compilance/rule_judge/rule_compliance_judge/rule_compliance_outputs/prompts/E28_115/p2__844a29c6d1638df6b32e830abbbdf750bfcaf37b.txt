@@ -1,0 +1,1740 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- cytoscape: ^3.30.4 (Interactive graph visualization)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files (e.g., package.json, package-lock.json, or yarn.lock).
+- Suggested Logic: Scan the dependency manifest files (specifically 'package.json') to verify that 'cytoscape' is included in the dependencies list and matches the version constraint '^3.30.4'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=2)
+- Commit Message: Graph is loading as expected for first iteration
+- Changed Files List: 
+.kiro/specs/cytoscape-graph-visualization/design.md	+337	-0	after_lines=337
+.kiro/specs/cytoscape-graph-visualization/requirements.md	+87	-0	after_lines=87
+.kiro/specs/cytoscape-graph-visualization/tasks.md	+83	-0	after_lines=83
+README.md	+1	-0	after_lines=39
+docs/README.md	+1	-0	after_lines=91
+package-lock.json	+10	-0	after_lines=7385
+package.json	+1	-0	after_lines=94
+src/extension.ts	+32	-2	after_lines=160
+src/services/dependency-cruiser.service.ts	+3	-3	after_lines=275
+src/services/graph-data.service.ts	+339	-0	after_lines=339
+src/services/messenger.service.ts	+106	-8	after_lines=120
+src/side-panel-view-provider.ts	+25	-1	after_lines=55
+webview-ui/src/services/messenger.ts	+14	-0	after_lines=42
+webview-ui/src/views/GraphView.tsx	+351	-3	after_lines=357
+
+- Project Directory Tree (Snapshot after commit):
+├── .constellation
+│   └── data
+│       └── codebase-dependencies.json
+├── .github
+│   ├── copilot-instructions.md
+│   └── prompts
+│       ├── AI-Knowledge-Initial.prompt.md
+│       ├── AI-Knowledge-enhance-fe.prompt.md
+│       ├── PRD-Draft-Generator.prompt.md
+│       ├── PRD-Final-Generator.prompt.md
+│       ├── Task-Executor.prompt.md
+│       ├── Task-Generator.prompt.md
+│       └── Test-Draft-Generator.prompt.md
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   ├── 01-dependency-cruiser-integration
+│   │   │   ├── depency-cruiser-implmentation-prd.md
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── cytoscape-graph-visualization
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── dependency-scanning.md
+│       ├── messaging.md
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   └── tasks.json
+├── .vscode-test.mjs
+├── .vscodeignore
+├── CHANGELOG.md
+├── README.md
+├── cytoscape-graph-initial-prd.md
+├── docs
+│   ├── README.md
+│   ├── configuration.md
+│   ├── development.md
+│   ├── events.md
+│   ├── troubleshooting.md
+│   └── usage.md
+├── eslint.config.mjs
+├── media
+│   └── kiro.png
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── mcp-clean.mjs
+├── src
+│   ├── extension.ts
+│   ├── mcp.server.ts
+│   ├── services
+│   │   ├── dependency-cruiser.service.ts
+│   │   ├── extension-config.service.ts
+│   │   ├── graph-data.service.ts
+│   │   ├── http-bridge.service.ts
+│   │   ├── mcp-config.service.ts
+│   │   ├── messenger.service.ts
+│   │   ├── node-version.service.ts
+│   │   └── webview.service.ts
+│   ├── shared
+│   │   └── constants.ts
+│   ├── side-panel-view-provider.ts
+│   └── test
+│       └── extension.test.ts
+├── tsconfig.json
+└── webview-ui
+    ├── index.html
+    ├── src
+    │   ├── components
+    │   │   ├── App.tsx
+    │   │   └── Button.tsx
+    │   ├── main.tsx
+    │   ├── services
+    │   │   └── messenger.ts
+    │   ├── styles
+    │   │   └── global.css
+    │   ├── types
+    │   │   └── vscode-webview.d.ts
+    │   └── views
+    │       ├── GraphView.tsx
+    │       └── SidePanelView.tsx
+    ├── tsconfig.json
+    └── vite.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/cytoscape-graph-visualization/design.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/design.md b/.kiro/specs/cytoscape-graph-visualization/design.md
+new file mode 100644
+index 0000000..8db25fb
+--- /dev/null
++++ b/.kiro/specs/cytoscape-graph-visualization/design.md
+@@ -0,0 +1,337 @@
++# Design Document
++
++## Overview
++
++The Cytoscape Graph Visualization feature extends the existing Kiro Constellation extension to provide interactive dependency graph visualization. The design leverages the existing messaging architecture, dependency scanning service, and webview infrastructure to create a seamless graph viewing experience within VS Code.
++
++The system follows a request-response pattern where the GraphView webview requests data from the extension, which either serves cached dependency data or triggers a scan to generate it. The graph is rendered using Cytoscape.js with automatic layout and basic interaction capabilities.
++
++## Architecture
++
++### High-Level Data Flow
++
++```mermaid
++sequenceDiagram
++    participant U as User
++    participant GV as GraphView (Webview)
++    participant M as Messenger Service
++    participant GDS as Graph Data Service
++    participant DCS as Dependency Cruiser Service
++    participant FS as File System
++
++    U->>GV: Opens Graph Tab
++    GV->>M: post('graph/load')
++    M->>GDS: loadGraphData()
++    
++    alt Dependency file exists
++        GDS->>FS: Read codebase-dependencies.json
++        FS->>GDS: Raw dependency data
++        GDS->>GDS: Transform to graph format
++        GDS->>M: Return {nodes, edges, meta}
++        M->>GV: 'graph/data' message
++    else No dependency file
++        GDS->>DCS: runScan()
++        DCS->>FS: Generate codebase-dependencies.json
++        GDS->>M: 'graph/status' (scanning...)
++        M->>GV: Show scanning status
++        DCS->>GDS: Scan complete
++        GDS->>FS: Read generated file
++        GDS->>GDS: Transform to graph format
++        GDS->>M: Return {nodes, edges, meta}
++        M->>GV: 'graph/data' message
++    end
++    
++    GV->>GV: Render Cytoscape graph
++    U->>GV: Double-click node
++    GV->>M: post('graph/open-file', {path})
++    M->>VS Code: Open file
++```
++
++### Component Architecture
++
++The implementation extends existing components and adds new services:
++
++**Existing Components (Extended):**
++- `src/services/messenger.service.ts` - Add graph message handlers
++- `webview-ui/src/services/messenger.ts` - Add graph message types
++- `src/extension.ts` - Wire graph panel message handling
++- `webview-ui/src/views/GraphView.tsx` - Replace placeholder with Cytoscape implementation
++
++**New Components:**
++- `src/services/graph-data.service.ts` - Data loading and transformation logic
++- Graph-specific message types and interfaces
++
++## Components and Interfaces
++
++### Message Protocol
++
++The messaging system extends the existing centralized messenger with graph-specific message types:
++
++**Webview → Extension Messages:**
++```typescript
++type GraphInboundMessage = 
++  | { type: 'graph/load' }
++  | { type: 'graph/open-file'; path: string }
++  | { type: 'graph/scan' }
++
++// Extended InboundMessage union in messenger.service.ts
++export type InboundMessage = 
++  | { type: 'open-graph-view' }
++  | { type: 'ping' }
++  | GraphInboundMessage
++```
++
++**Extension → Webview Messages:**
++```typescript
++type GraphOutboundMessage =
++  | { type: 'graph/data'; payload: GraphData }
++  | { type: 'graph/error'; message: string }
++  | { type: 'graph/status'; message: string }
++
++// Sent via webview.postMessage() from extension
++```
++
++### Data Models
++
++**Core Graph Types:**
++```typescript
++interface Node {
++  id: string;           // workspace-relative path
++  label: string;        // file basename
++  path: string;         // absolute path for file operations
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other';
++}
++
++interface Edge {
++  id: string;           // `${sourceId}->${targetId}` + optional index
++  source: string;       // node id
++  target: string;       // node id
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown';
++}
++
++interface Meta {
++  generatedAt?: string;
++  count: {
++    nodes: number;
++    edges: number;
++  };
++}
++
++interface GraphData {
++  nodes: Node[];
++  edges: Edge[];
++  meta: Meta;
++}
++```
++
++**Dependency Cruiser Input Format:**
++```typescript
++interface DepCruiseResult {
++  version: 1;
++  generatedAt: string;
++  workspaceRoot: string;
++  depcruise: {
++    modules: Array<{
++      source: string;           // file path
++      dependencies: Array<{
++        resolved: string;       // target file path
++        dependencyTypes: string[]; // ['esm', 'cjs', 'dynamic', etc.]
++      }>;
++    }>;
++  };
++}
++```
++
++### Graph Data Service
++
++**Primary Interface:**
++```typescript
++// src/services/graph-data.service.ts
++export async function loadGraphData(
++  context: vscode.ExtensionContext
++): Promise<GraphData>
++
++export function transformDepCruise(
++  depResult: DepCruiseResult, 
++  workspaceRoot: string
++): GraphData
++```
++
++**Implementation Strategy:**
++1. **Workspace Detection**: Use `vscode.workspace.workspaceFolders[0]` for workspace root
++2. **File Path Resolution**: Compute `.constellation/data/codebase-dependencies.json` path
++3. **Conditional Scanning**: If file missing, call existing `runScan()` and poll for completion
++4. **Data Transformation**: Convert dependency-cruiser modules array to nodes/edges format
++5. **Error Handling**: Return appropriate error messages for missing workspace, scan failures, etc.
++
++**Polling Strategy for Scan Completion:**
++```typescript
++// Poll every 500ms for up to 30 seconds
++const pollForFile = async (filePath: string, timeoutMs: number = 30000) => {
++  const startTime = Date.now();
++  while (Date.now() - startTime < timeoutMs) {
++    if (fs.existsSync(filePath)) return true;
++    await new Promise(resolve => setTimeout(resolve, 500));
++  }
++  return false;
++};
++```
++
++## Data Models
++
++### Path Handling Strategy
++
++**Node IDs**: Use workspace-relative paths for stability and readability
++- Input: `/Users/dev/project/src/components/Button.tsx`
++- Workspace: `/Users/dev/project`
++- Node ID: `src/components/Button.tsx`
++- Node Label: `Button.tsx`
++- Node Path: `/Users/dev/project/src/components/Button.tsx` (for file operations)
++
++**Edge IDs**: Deterministic generation to handle potential duplicates
++- Format: `${sourceId}->${targetId}`
++- Duplicates: Append index if multiple edges exist between same nodes
++- Example: `src/app.ts->src/utils.ts`, `src/app.ts->src/utils.ts-1`
++
++### Dependency Type Mapping
++
++Map dependency-cruiser `dependencyTypes` to simplified categories:
++```typescript
++const mapDependencyKind = (types: string[]): Edge['kind'] => {
++  if (types.includes('esm') || types.includes('es6')) return 'import';
++  if (types.includes('cjs') || types.includes('commonjs')) return 'require';
++  if (types.includes('dynamic')) return 'dynamic';
++  return 'unknown';
++};
++```
++
++## Error Handling
++
++### Graceful Degradation Strategy
++
++**No Workspace**: Return empty graph with appropriate message
++**Scan Timeout**: Show error with manual scan suggestion
++**Parse Errors**: Log details, show user-friendly error message
++**Large Files**: Show loading indicator for files > 5MB during processing
++
++### Error Message Types
++
++```typescript
++// Specific error scenarios
++const ERROR_MESSAGES = {
++  NO_WORKSPACE: 'No workspace folder open. Open a project to view dependencies.',
++  SCAN_TIMEOUT: 'Dependency scan timed out. Try running "Constellation: Scan Dependencies" manually.',
++  SCAN_FAILED: 'Dependency scan failed. Check the output console for details.',
++  PARSE_ERROR: 'Could not parse dependency data. Try re-scanning the project.',
++  FILE_TOO_LARGE: 'Dependency file is very large. Graph rendering may take a moment.',
++} as const;
++```
++
++## Testing Strategy
++
++### Manual Testing Checklist
++
++**Basic Functionality:**
++- [ ] Graph renders with nodes and edges
++- [ ] Pan and zoom work smoothly
++- [ ] Double-click opens correct files
++- [ ] Re-scan button triggers new scan
++
++**Performance:**
++- [ ] Small projects (< 50 files) render within 3 seconds
++- [ ] Large projects show loading indicator appropriately
++- [ ] No UI blocking during background scans
++
++**Error Scenarios:**
++- [ ] No workspace shows appropriate message
++- [ ] Corrupted data file recovers gracefully
++- [ ] Scan timeout shows helpful error message
++
++## Implementation Notes
++
++### Cytoscape Integration
++
++**Layout Configuration:**
++```typescript
++const layoutOptions = {
++  name: 'cose',
++  fit: true,
++  padding: 30,
++  nodeRepulsion: 400000,
++  idealEdgeLength: 100,
++  edgeElasticity: 100,
++  nestingFactor: 5,
++  gravity: 80,
++  numIter: 1000,
++  initialTemp: 200,
++  coolingFactor: 0.95,
++  minTemp: 1.0
++};
++```
++
++**Styling Strategy:**
++```typescript
++const styleSheet = [
++  {
++    selector: 'node',
++    style: {
++      'background-color': 'var(--vscode-charts-blue, #007ACC)',
++      'label': 'data(label)',
++      'color': 'var(--vscode-foreground, #CCCCCC)',
++      'font-size': '12px',
++      'text-valign': 'center',
++      'text-halign': 'center',
++      'width': '30px',
++      'height': '30px'
++    }
++  },
++  {
++    selector: 'edge',
++    style: {
++      'line-color': 'var(--vscode-foreground, #666666)',
++      'width': 2,
++      'opacity': 0.6,
++      'curve-style': 'bezier'
++    }
++  },
++  {
++    selector: 'node:selected',
++    style: {
++      'border-width': 3,
++      'border-color': 'var(--vscode-focusBorder, #007FD4)',
++      'background-color': 'var(--vscode-charts-orange, #FF8C00)'
++    }
++  }
++];
++```
++
++### Performance Considerations
++
++**Large Graph Handling:**
++- Show loading indicator for graphs > 200 nodes
++- Consider viewport culling for graphs > 1000 nodes (future enhancement)
++- Debounce layout recalculation during window resize
++
++**Memory Management:**
++- Destroy previous Cytoscape instance before creating new one
++- Clean up event listeners on component unmount
++- Limit retained graph history to prevent memory leaks
++
++### Future Enhancement Hooks
++
++**Planned Extension Points:**
++```typescript
++// TODO: File type-based node coloring
++const getNodeColor = (language: Node['language']) => { /* ... */ };
++
++// TODO: Dependency strength visualization
++const getEdgeWidth = (importCount: number) => { /* ... */ };
++
++// TODO: Cycle detection highlighting
++const highlightCycles = (cycles: string[][]) => { /* ... */ };
++
++// TODO: Filter controls
++const applyFilters = (filters: GraphFilters) => { /* ... */ };
++```
++
++This design provides a solid foundation for M1 while establishing clear extension points for future enhancements like advanced styling, filtering, and cycle detection.
+\ No newline at end of file
+
+--- FILE: .kiro/specs/cytoscape-graph-visualization/requirements.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/requirements.md b/.kiro/specs/cytoscape-graph-visualization/requirements.md
+new file mode 100644
+index 0000000..7f1db85
+--- /dev/null
++++ b/.kiro/specs/cytoscape-graph-visualization/requirements.md
+@@ -0,0 +1,87 @@
++# Requirements Document
++
++## Introduction
++
++This feature implements interactive dependency graph visualization using Cytoscape.js within the VS Code extension's GraphView tab. The system will automatically scan project dependencies using dependency-cruiser and render them as an interactive graph where users can explore file relationships, navigate to specific files, and understand project architecture at a glance.
++
++## Requirements
++
++### Requirement 1
++
++**User Story:** As a developer, I want to visualize my project's dependency graph in an interactive format, so that I can understand the architecture and relationships between files.
++
++#### Acceptance Criteria
++
++1. WHEN I open the GraphView tab THEN the system SHALL display a Cytoscape.js graph representing files and their dependencies
++2. WHEN the dependency data file exists and is less than 5 MB THEN the system SHALL start rendering within 3 seconds on typical hardware, otherwise SHALL show "Loading graph..." until layout completes
++3. WHEN I interact with the graph THEN the system SHALL support pan and zoom operations
++4. WHEN the graph renders THEN each node SHALL represent a file with its basename as the label
++5. WHEN the graph renders THEN each edge SHALL represent a dependency relationship between files
++
++### Requirement 2
++
++**User Story:** As a developer, I want the system to automatically scan my project when dependency data is missing, so that I don't have to manually trigger scans before viewing the graph.
++
++#### Acceptance Criteria
++
++1. WHEN I open the GraphView and no dependency data exists THEN the system SHALL automatically trigger a dependency scan
++2. WHEN a scan is triggered THEN the system SHALL display "Scanning project..." status text without a progress bar
++3. WHEN the scan completes THEN the system SHALL automatically load and render the resulting graph
++4. WHEN a scan takes longer than 30 seconds THEN the system SHALL timeout and display an error message with suggestion to run "Constellation: Scan Dependencies"
++5. WHEN a scan fails THEN the system SHALL display an error message that is non-fatal to the tab
++
++### Requirement 3
++
++**User Story:** As a developer, I want to interact with graph nodes to navigate to files, so that I can efficiently explore my codebase.
++
++#### Acceptance Criteria
++
++1. WHEN I double-click on a graph node THEN the system SHALL open the corresponding file in VS Code using the absolute file path
++2. WHEN I single-click on a graph node THEN the system SHALL briefly highlight the node (no details sidebar in M1)
++
++### Requirement 4
++
++**User Story:** As a developer, I want the graph to use appropriate data from dependency-cruiser output, so that the visualization accurately represents my project structure.
++
++#### Acceptance Criteria
++
++1. WHEN transforming dependency data THEN the system SHALL read from `./.constellation/data/codebase-dependencies.json`
++2. WHEN creating nodes THEN the system SHALL use workspace-relative paths as unique identifiers
++3. WHEN creating edges THEN the system SHALL map dependency types to import/require/dynamic/unknown categories
++4. WHEN generating the graph THEN the system SHALL include metadata about node and edge counts
++5. WHEN processing dependencies THEN the system SHALL handle circular dependencies without errors
++
++### Requirement 5
++
++**User Story:** As a developer, I want the graph to have a clean, readable layout and styling, so that I can easily understand the dependency relationships.
++
++#### Acceptance Criteria
++
++1. WHEN the graph renders THEN the system SHALL use the 'cose' layout algorithm and fit the graph to the viewport on initial render
++2. WHEN styling nodes THEN the system SHALL use VS Code theme-derived colors with a static color scheme in M1
++3. WHEN styling edges THEN the system SHALL use subtle colors with no arrows in M1
++4. WHEN the layout completes THEN the system SHALL fit the entire graph within the viewport
++5. WHEN a node is selected or active THEN the system SHALL provide basic visual highlighting
++
++### Requirement 6
++
++**User Story:** As a developer, I want to manually trigger dependency rescans when needed, so that I can update the graph after making significant code changes.
++
++#### Acceptance Criteria
++
++1. WHEN I click a "Re-scan" button THEN the system SHALL trigger a new dependency scan using runScan
++2. WHEN a manual scan is triggered THEN the system SHALL show "Scanning project..." status and reload the graph after completion
++3. WHEN a manual scan fails THEN the system SHALL display an error message and leave the current graph as-is
++4. WHEN rescanning THEN the system SHALL defer view preservation guarantee and refresh the graph after scan completion
++
++### Requirement 7
++
++**User Story:** As a developer, I want the graph functionality to integrate seamlessly with the existing extension messaging system, so that it works reliably within the VS Code environment.
++
++#### Acceptance Criteria
++
++1. WHEN the webview requests graph data via 'graph/load' THEN the extension SHALL respond with 'graph/data' or 'graph/error'
++2. WHEN file opening is requested THEN the system SHALL use VS Code APIs for file operations
++3. WHEN errors occur THEN the system SHALL communicate them via the messaging channel
++4. WHEN the extension activates THEN the graph functionality SHALL run in background without blocking activation
++5. WHEN messages are exchanged THEN the system SHALL maintain type safety by defining shared types for messages
+\ No newline at end of file
+
+--- FILE: .kiro/specs/cytoscape-graph-visualization/tasks.md ---
+diff --git a/.kiro/specs/cytoscape-graph-visualization/tasks.md b/.kiro/specs/cytoscape-graph-visualization/tasks.md
+new file mode 100644
+index 0000000..35556a6
+--- /dev/null
++++ b/.kiro/specs/cytoscape-graph-visualization/tasks.md
+@@ -0,0 +1,83 @@
++# Implementation Plan
++
++- [x] 1. Add Cytoscape dependency and update package configuration
++  - Add "cytoscape": "^3.27.0" to Dependencies in root package.json
++  - Ensure Vite will bundle Cytoscape into webview UI build
++  - _Requirements: R1.1, R5.1_
++
++- [x] 2. Create graph data service for dependency transformation
++  - Create src/services/graph-data.service.ts with loadGraphData function
++  - Implement workspace detection and file path resolution logic
++  - Add polling mechanism for scan completion with 30-second timeout
++  - _Requirements: R2.1, R2.4, R4.1, R7.4_
++
++- [x] 2.1 Implement dependency-cruiser data transformation
++  - Write transformDepCruise function to convert modules array to nodes/edges
++  - Map workspace-relative paths to node IDs and absolute paths for file operations
++  - Map dependency types (esm, cjs, dynamic) to simplified edge kinds
++  - Generate unique edge IDs with collision handling
++  - _Requirements: R4.2, R4.3, R4.4, R4.5_
++
++- [x] 2.2 Add error handling and status reporting
++  - Implement graceful handling for missing workspace, scan failures, parse errors
++  - Create specific error messages for different failure scenarios
++  - Add file size checking and loading indicators for large files (>5MB)
++  - _Requirements: R2.5, R7.3_
++
++- [x] 3. Extend messaging system for graph communication
++  - Add GraphInboundMessage types to src/services/messenger.service.ts InboundMessage union
++  - Implement message handlers for 'graph/load', 'graph/open-file', and 'graph/scan'
++  - Add GraphOutboundMessage types for webview communication
++  - _Requirements: R7.1, R7.2, R7.5_
++
++- [x] 3.1 Wire graph message handling in extension
++  - Extend handleWebviewMessage function to route graph messages to graph data service
++  - Implement file opening using vscode.workspace.openTextDocument and showTextDocument
++  - Add webview message posting for graph/data, graph/error, and graph/status responses
++  - _Requirements: R3.1, R7.2_
++
++- [x] 3.2 Connect graph panel to messaging system
++  - Modify constellation.openGraphView command in src/extension.ts to attach message handlers
++  - Route webview messages through centralized messenger service
++  - Ensure proper cleanup of message handlers on panel disposal
++  - _Requirements: R7.1, R7.4_
++
++- [x] 4. Implement Cytoscape GraphView component
++  - Replace placeholder GraphView.tsx with Cytoscape integration
++  - Add cytoscape import and container div setup
++  - Implement component state for loading, error, and graph data
++  - _Requirements: R1.1, R1.4, R1.5_
++
++- [x] 4.1 Add graph data loading and rendering
++  - Send 'graph/load' message on component mount
++  - Listen for 'graph/data', 'graph/error', and 'graph/status' messages
++  - Create Cytoscape instance with nodes and edges from message payload
++  - Apply 'cose' layout with fit: true configuration
++  - _Requirements: R1.2, R2.2, R2.3, R5.1, R5.4_
++
++- [x] 4.2 Implement graph styling and interactions
++  - Apply VS Code theme-derived colors for nodes and subtle edge colors
++  - Add pan and zoom capabilities (enabled by default in Cytoscape)
++  - Implement single-click node highlighting with visual feedback
++  - Add double-click handler to send 'graph/open-file' message with node path
++  - _Requirements: R1.3, R3.1, R3.2, R5.2, R5.3, R5.5_
++
++- [x] 4.3 Add re-scan functionality and status display
++  - Create "Re-scan" button that sends 'graph/scan' message
++  - Display loading states during scanning with "Scanning project..." text
++  - Handle scan completion by automatically refreshing graph data
++  - Show error messages for scan failures without breaking current graph
++  - _Requirements: R6.1, R6.2, R6.3, R6.4_
++
++- [x] 5. Update webview messenger service for graph messages
++  - Add graph message types to webview-ui/src/services/messenger.ts Message union
++  - Ensure type safety for graph/load, graph/open-file, and graph/scan message posting
++  - Add message listener support for graph/data, graph/error, and graph/status
++  - _Requirements: R7.5_
++
++- [x] 6. Handle edge cases and performance optimization
++  - Implement timeout handling for dependency scans longer than 30 seconds
++  - Add loading indicators for large graphs and file processing
++  - Ensure proper Cytoscape instance cleanup on component unmount
++  - Handle missing workspace scenario with appropriate user messaging
++  - _Requirements: R1.2, R2.4, R2.5_
+\ No newline at end of file
+
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 458afdb..8428109 100644
+--- a/README.md
++++ b/README.md
+@@ -32,6 +32,7 @@ Docs
+ - docs/usage.md — build/run/verify and open the side panel UI
+ - docs/configuration.md — user vs workspace config, settings
+ - docs/development.md — dev loop, watchers (tsc + Vite), debug profiles
++- docs/events.md — event/messaging patterns (webview messaging + HTTP bridge)
+ - docs/troubleshooting.md — common issues (including blank side panel)
+ 
+ License
+
+--- FILE: docs/README.md ---
+diff --git a/docs/README.md b/docs/README.md
+index a29a714..de3aea1 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -86,5 +86,6 @@ Read next
+ - docs/usage.md — build, run, verify
+ - docs/configuration.md — user/workspace config details and JSON examples
+ - docs/development.md — recommended dev loop, when to reload/restart
++- docs/events.md — end-to-end messaging and bridge overview
+ - docs/troubleshooting.md — common problems and quick fixes
+
+--- FILE: package-lock.json ---
+diff --git a/package-lock.json b/package-lock.json
+index bb8b915..12a99a0 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -9,6 +9,7 @@
+       "version": "0.0.1",
+       "dependencies": {
+         "@modelcontextprotocol/sdk": "^1.18.0",
++        "cytoscape": "^3.27.0",
+         "dependency-cruiser": "^17.0.1",
+         "zod": "^3.23.8"
+       },
+@@ -2709,6 +2710,15 @@
+         "url": "https://github.com/sponsors/fb55"
+       }
+     },
++    "node_modules/cytoscape": {
++      "version": "3.33.1",
++      "resolved": "https://registry.npmjs.org/cytoscape/-/cytoscape-3.33.1.tgz",
++      "integrity": "sha512-iJc4TwyANnOGR1OmWhsS9ayRS3s+XQ185FmuHObThD+5AeJCakAAbWv8KimMTt08xCCLNgneQwFp+JRJOr9qGQ==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10"
++      }
++    },
+     "node_modules/debug": {
+       "version": "4.4.1",
+       "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.1.tgz",
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index b239f06..9196e8b 100644
+--- a/package.json
++++ b/package.json
+@@ -72,6 +72,7 @@
+   },
+   "dependencies": {
+     "@modelcontextprotocol/sdk": "^1.18.0",
++    "cytoscape": "^3.27.0",
+     "dependency-cruiser": "^17.0.1",
+     "zod": "^3.23.8"
+   },
+
+--- FILE: src/extension.ts ---
+diff --git a/src/extension.ts b/src/extension.ts
+index ba76485..bec0bab 100644
+--- a/src/extension.ts
++++ b/src/extension.ts
+@@ -11,7 +11,7 @@ let graphPanel: vscode.WebviewPanel | undefined;
+ export async function activate(context: vscode.ExtensionContext) {
+   try {
+     // Register side panel webview provider (visible when user clicks the Activity Bar icon)
+-    const provider = new SidePanelViewProvider(context.extensionUri);
++    const provider = new SidePanelViewProvider(context.extensionUri, context);
+     context.subscriptions.push(
+       vscode.window.registerWebviewViewProvider(SidePanelViewProvider.viewType, provider)
+     );
+@@ -113,9 +113,39 @@ export async function activate(context: vscode.ExtensionContext) {
+                 ],
+               }
+             );
++            
++            // Set up message handling for graph panel
++            const messageDisposable = graphPanel.webview.onDidReceiveMessage((msg) => {
++              import('./services/messenger.service.js').then(({ handleWebviewMessage }) =>
++                handleWebviewMessage(msg, {
++                  revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
++                  log: (s) => console.log(s),
++                  postMessage: (message) => graphPanel?.webview.postMessage(message),
++                  extensionContext: context,
++                  openFile: async (path: string) => {
++                    try {
++                      const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
++                      await vscode.window.showTextDocument(doc);
++                    } catch (error) {
++                      console.error('Failed to open file:', path, error);
++                    }
++                  },
++                  triggerScan: async () => {
++                    const { runScan } = await import('./services/dependency-cruiser.service.js');
++                    await runScan(context);
++                  }
++                })
++              ).catch(() => {/* ignore */})
++            });
++            
+             const { renderHtml } = await import('./services/webview.service.js');
+             graphPanel.webview.html = renderHtml(graphPanel.webview, context.extensionUri, 'graph', 'Constellation Graph');
+-            graphPanel.onDidDispose(() => { graphPanel = undefined; });
++            
++            // Ensure proper cleanup of message handlers on panel disposal
++            graphPanel.onDidDispose(() => { 
++              messageDisposable.dispose();
++              graphPanel = undefined; 
++            });
+           })
+         );
+       } catch (err: any) {
+
+--- FILE: src/services/dependency-cruiser.service.ts ---
+diff --git a/src/services/dependency-cruiser.service.ts b/src/services/dependency-cruiser.service.ts
+index 2fc0b10..0d182ad 100644
+--- a/src/services/dependency-cruiser.service.ts
++++ b/src/services/dependency-cruiser.service.ts
+@@ -131,11 +131,11 @@ function spawnScanProcess(cliPath: string, cliArgs: string[], cwd: string): Prom
+             cwd
+         });
+ 
+-        // Set up 60-second timeout
++        // Set up 30-second timeout (Requirements: R2.4)
+         timeoutHandle = setTimeout(() => {
+             if (!isResolved) {
+                 isResolved = true;
+-                console.warn('Dependency scan timed out after 60 seconds, killing process');
++                console.warn('Dependency scan timed out after 30 seconds, killing process');
+                 child.kill('SIGTERM');
+ 
+                 // Force kill if SIGTERM doesn't work
+@@ -147,7 +147,7 @@ function spawnScanProcess(cliPath: string, cliArgs: string[], cwd: string): Prom
+ 
+                 reject(new Error('Scan process timed out'));
+             }
+-        }, 60000);
++        }, 30000);
+ 
+         // Collect stdout data
+         child.stdout?.on('data', (data: Buffer) => {
+
+--- FILE: src/services/graph-data.service.ts ---
+diff --git a/src/services/graph-data.service.ts b/src/services/graph-data.service.ts
+new file mode 100644
+index 0000000..c641f15
+--- /dev/null
++++ b/src/services/graph-data.service.ts
+@@ -0,0 +1,339 @@
++import * as vscode from 'vscode';
++import * as fs from 'fs';
++import * as path from 'path';
++import { runScan } from './dependency-cruiser.service.js';
++
++// Error message constants for different failure scenarios
++// Requirements: R2.5, R7.3
++export const ERROR_MESSAGES = {
++  NO_WORKSPACE: 'No workspace folder open. Open a project to view dependencies.',
++  SCAN_TIMEOUT: 'Dependency scan timed out after 30 seconds. Try running "Constellation: Scan Dependencies" manually.',
++  SCAN_FAILED: 'Dependency scan failed. Check the output console for details.',
++  PARSE_ERROR: 'Could not parse dependency data. Try re-scanning the project.',
++  FILE_TOO_LARGE: 'Dependency file is very large. Graph rendering may take a moment.',
++  FILE_NOT_FOUND: 'Dependency data not found. Scanning project...',
++  READ_ERROR: 'Could not read dependency data file. Check file permissions.',
++  LARGE_GRAPH_WARNING: 'Large graph detected. Rendering may take a moment.',
++  VERY_LARGE_GRAPH_WARNING: 'Very large graph detected. Using simplified layout for better performance.',
++} as const;
++
++// Type definitions based on design document
++export interface Node {
++  id: string;           // workspace-relative path
++  label: string;        // file basename
++  path: string;         // absolute path for file operations
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other';
++}
++
++export interface Edge {
++  id: string;           // `${sourceId}->${targetId}` + optional index
++  source: string;       // node id
++  target: string;       // node id
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown';
++}
++
++export interface Meta {
++  generatedAt?: string;
++  count: {
++    nodes: number;
++    edges: number;
++  };
++  performanceOptimized?: boolean;
++}
++
++export interface GraphData {
++  nodes: Node[];
++  edges: Edge[];
++  meta: Meta;
++}
++
++// Dependency cruiser input format
++interface DepCruiseResult {
++  version: 1;
++  generatedAt: string;
++  workspaceRoot: string;
++  depcruise: {
++    modules: Array<{
++      source: string;           // file path
++      dependencies: Array<{
++        resolved: string;       // target file path
++        dependencyTypes: string[]; // ['esm', 'cjs', 'dynamic', etc.]
++      }>;
++    }>;
++  };
++}
++
++/**
++ * Maps dependency-cruiser dependency types to simplified categories
++ */
++function mapDependencyKind(types: string[]): Edge['kind'] {
++  if (types.includes('esm') || types.includes('es6')) {
++    return 'import';
++  }
++  if (types.includes('cjs') || types.includes('commonjs')) {
++    return 'require';
++  }
++  if (types.includes('dynamic')) {
++    return 'dynamic';
++  }
++  return 'unknown';
++}
++
++/**
++ * Determines file language based on extension
++ */
++function getFileLanguage(filePath: string): Node['language'] {
++  const ext = path.extname(filePath).toLowerCase();
++  switch (ext) {
++    case '.ts': return 'ts';
++    case '.js': return 'js';
++    case '.tsx': return 'tsx';
++    case '.jsx': return 'jsx';
++    case '.json': return 'json';
++    default: return 'other';
++  }
++}
++
++/**
++ * Checks if graph should use performance optimizations based on size
++ */
++function shouldOptimizeForPerformance(nodeCount: number, edgeCount: number): boolean {
++  return nodeCount > 500 || edgeCount > 1000;
++}
++
++/**
++ * Transforms dependency-cruiser output to graph format
++ * Requirements: R4.2, R4.3, R4.4, R4.5
++ */
++export function transformDepCruise(depResult: DepCruiseResult, workspaceRoot: string): GraphData {
++  const nodes: Node[] = [];
++  const edges: Edge[] = [];
++  const nodeSet = new Set<string>();
++  const edgeMap = new Map<string, number>(); // Track edge counts for collision handling
++
++  // Process modules to create nodes and edges
++  for (const module of depResult.depcruise.modules) {
++    const sourcePath = module.source;
++    
++    // Create workspace-relative path for node ID
++    const sourceId = path.relative(workspaceRoot, sourcePath);
++    
++    // Add source node if not already added
++    if (!nodeSet.has(sourceId)) {
++      nodeSet.add(sourceId);
++      nodes.push({
++        id: sourceId,
++        label: path.basename(sourcePath),
++        path: path.resolve(workspaceRoot, sourceId), // absolute path for file operations
++        language: getFileLanguage(sourcePath)
++      });
++    }
++
++    // Process dependencies to create edges and target nodes
++    for (const dep of module.dependencies) {
++      const targetPath = dep.resolved;
++      const targetId = path.relative(workspaceRoot, targetPath);
++      
++      // Add target node if not already added
++      if (!nodeSet.has(targetId)) {
++        nodeSet.add(targetId);
++        nodes.push({
++          id: targetId,
++          label: path.basename(targetPath),
++          path: path.resolve(workspaceRoot, targetId), // absolute path for file operations
++          language: getFileLanguage(targetPath)
++        });
++      }
++
++      // Generate unique edge ID with collision handling
++      const baseEdgeId = `${sourceId}->${targetId}`;
++      let edgeId = baseEdgeId;
++      
++      if (edgeMap.has(baseEdgeId)) {
++        const count = edgeMap.get(baseEdgeId)! + 1;
++        edgeMap.set(baseEdgeId, count);
++        edgeId = `${baseEdgeId}-${count}`;
++      } else {
++        edgeMap.set(baseEdgeId, 0);
++      }
++
++      // Create edge
++      edges.push({
++        id: edgeId,
++        source: sourceId,
++        target: targetId,
++        kind: mapDependencyKind(dep.dependencyTypes)
++      });
++    }
++  }
++
++  const result = {
++    nodes,
++    edges,
++    meta: {
++      generatedAt: depResult.generatedAt,
++      count: {
++        nodes: nodes.length,
++        edges: edges.length
++      },
++      performanceOptimized: shouldOptimizeForPerformance(nodes.length, edges.length)
++    }
++  };
++
++  return result;
++}
++
++/**
++ * Polls for file existence with timeout and progress reporting
++ * Requirements: R2.4 (30-second timeout)
++ */
++async function pollForFile(
++  filePath: string, 
++  timeoutMs: number = 30000,
++  onProgress?: (elapsed: number, remaining: number) => void
++): Promise<boolean> {
++  const startTime = Date.now();
++  const pollInterval = 500;
++  
++  while (Date.now() - startTime < timeoutMs) {
++    try {
++      if (fs.existsSync(filePath)) {
++        return true;
++      }
++    } catch (error) {
++      // Ignore file system errors during polling
++    }
++    
++    // Report progress if callback provided
++    if (onProgress) {
++      const elapsed = Date.now() - startTime;
++      const remaining = Math.max(0, timeoutMs - elapsed);
++      onProgress(elapsed, remaining);
++    }
++    
++    await new Promise(resolve => setTimeout(resolve, pollInterval));
++  }
++  return false;
++}
++
++/**
++ * Checks file size and returns appropriate status
++ * Requirements: R2.5 (file size checking for large files >5MB)
++ */
++function checkFileSize(filePath: string): { isLarge: boolean; sizeInMB: number } {
++  try {
++    const stats = fs.statSync(filePath);
++    const sizeInMB = stats.size / (1024 * 1024);
++    return {
++      isLarge: sizeInMB > 5,
++      sizeInMB
++    };
++  } catch (error) {
++    return { isLarge: false, sizeInMB: 0 };
++  }
++}
++
++/**
++ * Detects workspace and validates it exists
++ * Requirements: R2.5 (graceful handling for missing workspace)
++ */
++function detectWorkspace(): string | null {
++  if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
++    return null;
++  }
++  return vscode.workspace.workspaceFolders[0].uri.fsPath;
++}
++
++/**
++ * Main function to load graph data with automatic scanning and error handling
++ * Requirements: R2.1, R2.4, R4.1, R7.4
++ */
++export async function loadGraphData(
++  context: vscode.ExtensionContext,
++  onStatus?: (message: string) => void
++): Promise<GraphData> {
++  // Detect workspace
++  const workspaceRoot = detectWorkspace();
++  if (!workspaceRoot) {
++    throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
++  }
++
++  // Resolve dependency data file path
++  const dataFilePath = path.join(workspaceRoot, '.constellation', 'data', 'codebase-dependencies.json');
++
++  // Check if dependency data exists
++  if (!fs.existsSync(dataFilePath)) {
++    // Trigger automatic scan
++    onStatus?.(ERROR_MESSAGES.FILE_NOT_FOUND);
++    
++    try {
++      await runScan(context);
++      
++      // Poll for scan completion with 30-second timeout and progress reporting
++      const scanCompleted = await pollForFile(dataFilePath, 30000, (elapsed, remaining) => {
++        const remainingSeconds = Math.ceil(remaining / 1000);
++        onStatus?.(`Scanning project... (${remainingSeconds}s remaining)`);
++      });
++      
++      if (!scanCompleted) {
++        throw new Error(ERROR_MESSAGES.SCAN_TIMEOUT);
++      }
++    } catch (error) {
++      if (error instanceof Error && error.message === ERROR_MESSAGES.SCAN_TIMEOUT) {
++        throw error;
++      }
++      throw new Error(ERROR_MESSAGES.SCAN_FAILED);
++    }
++  }
++
++  // Check file size and provide status for large files
++  const { isLarge, sizeInMB } = checkFileSize(dataFilePath);
++  if (isLarge) {
++    onStatus?.(`${ERROR_MESSAGES.FILE_TOO_LARGE} (${sizeInMB.toFixed(1)}MB)`);
++  }
++
++  // Read and parse dependency data with progress indication for large files
++  let rawData: string;
++  try {
++    if (isLarge) {
++      onStatus?.('Reading large dependency file...');
++    }
++    rawData = fs.readFileSync(dataFilePath, 'utf8');
++  } catch (error) {
++    throw new Error(ERROR_MESSAGES.READ_ERROR);
++  }
++
++  let depResult: DepCruiseResult;
++  try {
++    if (isLarge) {
++      onStatus?.('Parsing dependency data...');
++    }
++    depResult = JSON.parse(rawData);
++  } catch (error) {
++    throw new Error(ERROR_MESSAGES.PARSE_ERROR);
++  }
++
++  // Validate the parsed data structure
++  if (!depResult.depcruise || !Array.isArray(depResult.depcruise.modules)) {
++    throw new Error(ERROR_MESSAGES.PARSE_ERROR);
++  }
++
++  // Transform to graph format with progress indication for large datasets
++  try {
++    const moduleCount = depResult.depcruise.modules.length;
++    if (moduleCount > 200) {
++      onStatus?.(`Processing ${moduleCount} modules...`);
++    }
++    
++    const result = transformDepCruise(depResult, workspaceRoot);
++    
++    // Provide final status for large graphs
++    if (result.nodes.length > 200) {
++      onStatus?.(`Rendering graph with ${result.nodes.length} nodes...`);
++    }
++    
++    return result;
++  } catch (error) {
++    throw new Error(ERROR_MESSAGES.PARSE_ERROR);
++  }
++}
+\ No newline at end of file
+
+--- FILE: src/services/messenger.service.ts ---
+diff --git a/src/services/messenger.service.ts b/src/services/messenger.service.ts
+index 6ceea74..e1d3ca3 100644
+--- a/src/services/messenger.service.ts
++++ b/src/services/messenger.service.ts
+@@ -1,22 +1,120 @@
+ // Centralized message broker for webview <-> extension communication
+ // Define allowed message shapes in one place.
+ 
++// Graph-specific message types for webview -> extension communication
++export type GraphInboundMessage = 
++  | { type: 'graph/load' }
++  | { type: 'graph/open-file'; path: string }
++  | { type: 'graph/scan' }
++
++// Graph-specific message types for extension -> webview communication
++export type GraphOutboundMessage =
++  | { type: 'graph/data'; payload: import('./graph-data.service.js').GraphData }
++  | { type: 'graph/error'; message: string }
++  | { type: 'graph/status'; message: string }
++
+ export type InboundMessage =
+   | { type: 'open-graph-view' }
+   | { type: 'ping' }
++  | GraphInboundMessage
+ 
+-export function handleWebviewMessage(msg: unknown, ctx: { revealGraphView: () => void; log: (s: string) => void }) {
+-  if (!msg || typeof (msg as any).type !== 'string') return
+-  const m = msg as InboundMessage
++export function handleWebviewMessage(
++  msg: unknown, 
++  ctx: { 
++    revealGraphView: () => void; 
++    log: (s: string) => void;
++    postMessage?: (message: GraphOutboundMessage) => void;
++    extensionContext?: import('vscode').ExtensionContext;
++    openFile?: (path: string) => Promise<void>;
++    triggerScan?: () => Promise<void>;
++  }
++) {
++  if (!msg || typeof (msg as any).type !== 'string') return;
++  const m = msg as InboundMessage;
+   switch (m.type) {
+     case 'open-graph-view':
+-      ctx.revealGraphView()
+-      break
++      ctx.revealGraphView();
++      break;
+     case 'ping':
+-      ctx.log('webview ping')
+-      break
++      ctx.log('webview ping');
++      break;
++    case 'graph/load':
++      void handleGraphLoad(ctx);
++      break;
++    case 'graph/open-file':
++      if ('path' in m && typeof m.path === 'string' && ctx.openFile) {
++        void ctx.openFile(m.path);
++      }
++      break;
++    case 'graph/scan':
++      void handleGraphScan(ctx);
++      break;
+     default:
+-      break
++      break;
++  }
++}
++
++async function handleGraphLoad(ctx: { 
++  postMessage?: (message: GraphOutboundMessage) => void;
++  extensionContext?: import('vscode').ExtensionContext;
++  log: (s: string) => void;
++}) {
++  if (!ctx.postMessage || !ctx.extensionContext) {
++    ctx.log('Graph load failed: missing context');
++    return;
++  }
++
++  try {
++    const { loadGraphData } = await import('./graph-data.service.js');
++    
++    const graphData = await loadGraphData(
++      ctx.extensionContext,
++      (status) => ctx.postMessage?.({ type: 'graph/status', message: status })
++    );
++    
++    ctx.postMessage({ type: 'graph/data', payload: graphData });
++  } catch (error) {
++    const message = error instanceof Error ? error.message : 'Unknown error occurred';
++    ctx.postMessage({ type: 'graph/error', message });
++  }
++}
++
++async function handleGraphScan(ctx: {
++  postMessage?: (message: GraphOutboundMessage) => void;
++  extensionContext?: import('vscode').ExtensionContext;
++  triggerScan?: () => Promise<void>;
++  log: (s: string) => void;
++}) {
++  if (!ctx.postMessage || !ctx.extensionContext) {
++    ctx.log('Graph scan failed: missing context');
++    return;
++  }
++
++  try {
++    // Check for workspace before starting scan
++    const vscode = await import('vscode');
++    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
++      ctx.postMessage({ 
++        type: 'graph/error', 
++        message: 'No workspace folder open. Open a project to scan dependencies.' 
++      });
++      return;
++    }
++
++    ctx.postMessage({ type: 'graph/status', message: 'Scanning project...' });
++    
++    if (ctx.triggerScan) {
++      await ctx.triggerScan();
++    } else {
++      const { runScan } = await import('./dependency-cruiser.service.js');
++      await runScan(ctx.extensionContext);
++    }
++    
++    // After scan completes, automatically load the new data
++    await handleGraphLoad(ctx);
++  } catch (error) {
++    const message = error instanceof Error ? error.message : 'Scan failed';
++    ctx.postMessage({ type: 'graph/error', message });
+   }
+ }
+
+--- FILE: src/side-panel-view-provider.ts ---
+diff --git a/src/side-panel-view-provider.ts b/src/side-panel-view-provider.ts
+index b2af686..27ead56 100644
+--- a/src/side-panel-view-provider.ts
++++ b/src/side-panel-view-provider.ts
+@@ -4,7 +4,17 @@ import { renderHtml } from "./services/webview.service.js";
+ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+   public static readonly viewType = "constellation.sidePanel";
+ 
+-  constructor(private readonly extensionUri: vscode.Uri) {}
++  constructor(
++    private readonly extensionUri: vscode.Uri,
++    private readonly extensionContext?: vscode.ExtensionContext
++  ) {}
++
++  private getExtensionContext(): vscode.ExtensionContext {
++    if (!this.extensionContext) {
++      throw new Error('Extension context not available');
++    }
++    return this.extensionContext;
++  }
+ 
+   resolveWebviewView(webviewView: vscode.WebviewView): void | Thenable<void> {
+     const { webview } = webviewView;
+@@ -15,6 +25,20 @@ export class SidePanelViewProvider implements vscode.WebviewViewProvider {
+         handleWebviewMessage(msg, {
+           revealGraphView: () => void vscode.commands.executeCommand('constellation.openGraphView'),
+           log: (s) => console.log(s),
++          postMessage: (message) => webview.postMessage(message),
++          extensionContext: this.getExtensionContext(),
++          openFile: async (path: string) => {
++            try {
++              const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(path));
++              await vscode.window.showTextDocument(doc);
++            } catch (error) {
++              console.error('Failed to open file:', path, error);
++            }
++          },
++          triggerScan: async () => {
++            const { runScan } = await import('./services/dependency-cruiser.service.js');
++            await runScan(this.getExtensionContext());
++          }
+         })
+       ).catch(() => {/* ignore */})
+     });
+
+--- FILE: webview-ui/src/services/messenger.ts ---
+diff --git a/webview-ui/src/services/messenger.ts b/webview-ui/src/services/messenger.ts
+index 17030bf..55408c2 100644
+--- a/webview-ui/src/services/messenger.ts
++++ b/webview-ui/src/services/messenger.ts
+@@ -1,9 +1,23 @@
+ // Simple message bus for the webview UI
+ // Centralized here so views/components can communicate and post to extension
+ 
++// Graph-specific message types for webview -> extension
++type GraphMessage = 
++  | { type: 'graph/load' }
++  | { type: 'graph/open-file'; path: string }
++  | { type: 'graph/scan' }
++
++// Graph-specific message types for extension -> webview
++type GraphResponseMessage =
++  | { type: 'graph/data'; payload: any } // GraphData type from extension
++  | { type: 'graph/error'; message: string }
++  | { type: 'graph/status'; message: string }
++
+ type Message =
+   | { type: 'open-graph-view' }
+   | { type: 'ping' }
++  | GraphMessage
++  | GraphResponseMessage
+ 
+ function getApi() {
+   return typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : undefined
+
+--- FILE: webview-ui/src/views/GraphView.tsx ---
+diff --git a/webview-ui/src/views/GraphView.tsx b/webview-ui/src/views/GraphView.tsx
+index 979864b..39089a6 100644
+--- a/webview-ui/src/views/GraphView.tsx
++++ b/webview-ui/src/views/GraphView.tsx
+@@ -1,8 +1,356 @@
++import { useEffect, useRef, useState } from 'preact/hooks'
++import cytoscape, { Core } from 'cytoscape'
++import { messenger } from '../services/messenger'
++
++interface Node {
++  id: string
++  label: string
++  path: string
++  language?: 'ts' | 'js' | 'tsx' | 'jsx' | 'json' | 'other'
++}
++
++interface Edge {
++  id: string
++  source: string
++  target: string
++  kind?: 'import' | 'require' | 'dynamic' | 'unknown'
++}
++
++interface Meta {
++  generatedAt?: string
++  count: {
++    nodes: number
++    edges: number
++  }
++  performanceOptimized?: boolean
++}
++
++interface GraphData {
++  nodes: Node[]
++  edges: Edge[]
++  meta: Meta
++}
++
++type ComponentState = 
++  | { type: 'loading' }
++  | { type: 'error'; message: string }
++  | { type: 'data'; data: GraphData }
++  | { type: 'scanning'; message: string }
++  | { type: 'rendering'; message: string }
++
+ export function GraphView() {
++  const containerRef = useRef<HTMLDivElement>(null)
++  const cyRef = useRef<Core | null>(null)
++  const [state, setState] = useState<ComponentState>({ type: 'loading' })
++  const [isRendering, setIsRendering] = useState(false)
++
++  // Initialize component and request graph data
++  useEffect(() => {
++    // Request graph data on mount
++    messenger.post('graph/load')
++
++    // Listen for messages from extension
++    const handleMessage = (msg: any) => {
++      switch (msg.type) {
++        case 'graph/data':
++          // Check if this is a large graph that needs rendering indication
++          const nodeCount = msg.payload.nodes.length
++          if (nodeCount > 200) {
++            setState({ type: 'rendering', message: `Rendering ${nodeCount} nodes...` })
++            // Use setTimeout to allow UI to update before heavy rendering
++            setTimeout(() => {
++              setState({ type: 'data', data: msg.payload })
++            }, 100)
++          } else {
++            setState({ type: 'data', data: msg.payload })
++          }
++          break
++        case 'graph/error':
++          setState({ type: 'error', message: msg.message })
++          break
++        case 'graph/status':
++          setState({ type: 'scanning', message: msg.message })
++          break
++      }
++    }
++
++    messenger.on(handleMessage)
++  }, [])
++
++  // Create/update Cytoscape instance when data changes
++  useEffect(() => {
++    if (state.type === 'data' && containerRef.current) {
++      setIsRendering(true)
++      
++      // Clean up previous instance to prevent memory leaks
++      if (cyRef.current) {
++        try {
++          cyRef.current.destroy()
++        } catch (error) {
++          console.warn('Error destroying previous Cytoscape instance:', error)
++        }
++        cyRef.current = null
++      }
++
++      // Transform data for Cytoscape
++      const elements = [
++        ...state.data.nodes.map(node => ({
++          data: {
++            id: node.id,
++            label: node.label,
++            path: node.path,
++            language: node.language
++          }
++        })),
++        ...state.data.edges.map(edge => ({
++          data: {
++            id: edge.id,
++            source: edge.source,
++            target: edge.target,
++            kind: edge.kind
++          }
++        }))
++      ]
++
++      // Use setTimeout for large graphs to prevent UI blocking
++      const nodeCount = state.data.nodes.length
++      const renderDelay = nodeCount > 200 ? 50 : 0
++      
++      setTimeout(() => {
++        try {
++          // Create Cytoscape instance with performance optimizations for large graphs
++          const layoutConfig = nodeCount > 500 ? {
++            // Simplified layout for very large graphs
++            name: 'grid',
++            fit: true,
++            padding: 30
++          } : {
++            // Standard layout for smaller graphs
++            name: 'cose',
++            fit: true,
++            padding: 30,
++            nodeRepulsion: 400000,
++            idealEdgeLength: 100,
++            edgeElasticity: 100,
++            nestingFactor: 5,
++            gravity: 80,
++            numIter: nodeCount > 200 ? 500 : 1000, // Reduce iterations for large graphs
++            initialTemp: 200,
++            coolingFactor: 0.95,
++            minTemp: 1.0
++          }
++
++          cyRef.current = cytoscape({
++            container: containerRef.current,
++            elements,
++            style: [
++              {
++                selector: 'node',
++                style: {
++                  'background-color': 'var(--vscode-charts-blue, #007ACC)',
++                  'label': 'data(label)',
++                  'color': 'var(--vscode-foreground, #CCCCCC)',
++                  'font-size': nodeCount > 500 ? '10px' : '12px', // Smaller font for large graphs
++                  'text-valign': 'center',
++                  'text-halign': 'center',
++                  'width': nodeCount > 500 ? '20px' : '30px', // Smaller nodes for large graphs
++                  'height': nodeCount > 500 ? '20px' : '30px'
++                }
++              },
++              {
++                selector: 'edge',
++                style: {
++                  'line-color': 'var(--vscode-foreground, #666666)',
++                  'width': nodeCount > 500 ? 1 : 2, // Thinner edges for large graphs
++                  'opacity': nodeCount > 500 ? 0.4 : 0.6, // More transparent for large graphs
++                  'curve-style': 'bezier'
++                }
++              },
++              {
++                selector: 'node:selected',
++                style: {
++                  'border-width': 3,
++                  'border-color': 'var(--vscode-focusBorder, #007FD4)',
++                  'background-color': 'var(--vscode-charts-orange, #FF8C00)'
++                }
++              }
++            ],
++            layout: layoutConfig
++          })
++
++          // Add event handlers for interactions
++          cyRef.current.on('tap', 'node', (evt) => {
++            // Single-click highlighting (node gets selected automatically by Cytoscape)
++            const node = evt.target
++            console.log('Node selected:', node.data('label'))
++          })
++
++          cyRef.current.on('dbltap', 'node', (evt) => {
++            // Double-click to open file
++            const node = evt.target
++            const path = node.data('path')
++            if (path) {
++              messenger.post('graph/open-file', { path })
++            }
++          })
++
++          // Handle layout completion for performance monitoring
++          cyRef.current.on('layoutstop', () => {
++            setIsRendering(false)
++            console.log(`Graph layout completed for ${nodeCount} nodes`)
++          })
++
++        } catch (error) {
++          console.error('Error creating Cytoscape instance:', error)
++          setIsRendering(false)
++        }
++      }, renderDelay)
++    }
++  }, [state])
++
++  // Cleanup on unmount - ensure proper Cytoscape instance cleanup
++  useEffect(() => {
++    return () => {
++      if (cyRef.current) {
++        try {
++          // Remove all event listeners before destroying
++          cyRef.current.removeAllListeners()
++          cyRef.current.destroy()
++        } catch (error) {
++          console.warn('Error during Cytoscape cleanup:', error)
++        } finally {
++          cyRef.current = null
++        }
++      }
++    }
++  }, [])
++
++  const handleRescan = () => {
++    // Reset rendering state when starting a new scan
++    setIsRendering(false)
++    messenger.post('graph/scan')
++  }
++
+   return (
+-    <div>
+-      <h1>Graph View</h1>
+-      <p>Placeholder for future dependency graph.</p>
++    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
++      <div style={{ padding: '10px', borderBottom: '1px solid var(--vscode-panel-border, #333)' }}>
++        <h2 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Dependency Graph</h2>
++        <button 
++          onClick={handleRescan}
++          style={{
++            padding: '4px 8px',
++            fontSize: '12px',
++            backgroundColor: 'var(--vscode-button-background, #0e639c)',
++            color: 'var(--vscode-button-foreground, #ffffff)',
++            border: 'none',
++            borderRadius: '2px',
++            cursor: 'pointer'
++          }}
++        >
++          Re-scan
++        </button>
++        {state.type === 'data' && (
++          <span style={{ marginLeft: '10px', fontSize: '12px', color: 'var(--vscode-descriptionForeground, #ccccccaa)' }}>
++            {state.data.meta.count.nodes} nodes, {state.data.meta.count.edges} edges
++            {state.data.meta.performanceOptimized && (
++              <span style={{ color: 'var(--vscode-charts-orange, #FF8C00)', marginLeft: '5px' }}>
++                (optimized)
++              </span>
++            )}
++          </span>
++        )}
++      </div>
++      
++      <div style={{ flex: 1, position: 'relative' }}>
++        {state.type === 'loading' && (
++          <div style={{ 
++            position: 'absolute', 
++            top: '50%', 
++            left: '50%', 
++            transform: 'translate(-50%, -50%)',
++            textAlign: 'center'
++          }}>
++            <p>Loading graph...</p>
++          </div>
++        )}
++        
++        {state.type === 'scanning' && (
++          <div style={{ 
++            position: 'absolute', 
++            top: '50%', 
++            left: '50%', 
++            transform: 'translate(-50%, -50%)',
++            textAlign: 'center'
++          }}>
++            <p>{state.message}</p>
++          </div>
++        )}
++        
++        {state.type === 'rendering' && (
++          <div style={{ 
++            position: 'absolute', 
++            top: '50%', 
++            left: '50%', 
++            transform: 'translate(-50%, -50%)',
++            textAlign: 'center'
++          }}>
++            <p>{state.message}</p>
++          </div>
++        )}
++        
++        {(isRendering && state.type === 'data') && (
++          <div style={{ 
++            position: 'absolute', 
++            top: '10px', 
++            right: '10px',
++            backgroundColor: 'var(--vscode-badge-background, #4d4d4d)',
++            color: 'var(--vscode-badge-foreground, #ffffff)',
++            padding: '4px 8px',
++            borderRadius: '3px',
++            fontSize: '11px',
++            zIndex: 1000
++          }}>
++            Rendering...
++          </div>
++        )}
++        
++        {state.type === 'error' && (
++          <div style={{ 
++            position: 'absolute', 
++            top: '50%', 
++            left: '50%', 
++            transform: 'translate(-50%, -50%)',
++            textAlign: 'center',
++            color: 'var(--vscode-errorForeground, #f48771)'
++          }}>
++            <p>Error: {state.message}</p>
++            <button 
++              onClick={() => messenger.post('graph/load')}
++              style={{
++                marginTop: '10px',
++                padding: '4px 8px',
++                fontSize: '12px',
++                backgroundColor: 'var(--vscode-button-background, #0e639c)',
++                color: 'var(--vscode-button-foreground, #ffffff)',
++                border: 'none',
++                borderRadius: '2px',
++                cursor: 'pointer'
++              }}
++            >
++              Retry
++            </button>
++          </div>
++        )}
++        
++        <div 
++          ref={containerRef} 
++          style={{ 
++            width: '100%', 
++            height: '100%',
++            display: state.type === 'data' ? 'block' : 'none'
++          }} 
++        />
++      </div>
+     </div>
+   )
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

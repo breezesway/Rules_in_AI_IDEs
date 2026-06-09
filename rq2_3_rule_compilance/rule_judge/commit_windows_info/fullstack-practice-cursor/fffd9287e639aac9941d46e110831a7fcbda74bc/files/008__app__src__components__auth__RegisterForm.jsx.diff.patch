@@ -1,0 +1,55 @@
+diff --git a/app/src/components/auth/RegisterForm.jsx b/app/src/components/auth/RegisterForm.jsx
+index cb660c1..67a8e82 100644
+--- a/app/src/components/auth/RegisterForm.jsx
++++ b/app/src/components/auth/RegisterForm.jsx
+@@ -217,6 +217,13 @@ const RegisterForm = () => {
+     setIsLoading(true);
+     
+     try {
++      console.log('Submitting registration form with data:', {
++        username: formData.username,
++        email: formData.email,
++        firstName: formData.firstName,
++        lastName: formData.lastName
++      });
++      
+       const result = await register({
+         username: formData.username,
+         email: formData.email,
+@@ -225,10 +232,19 @@ const RegisterForm = () => {
+         lastName: formData.lastName || null
+       });
+       
++      console.log('Registration result:', result);
++      
+       if (result.success) {
+-        // Redirect to login success page with flag indicating new user
+-        navigate('/login-success', { state: { fromRegistration: true } });
++        console.log('Registration successful, redirecting to email verification');
++        // Redirect to email verification page
++        navigate('/verify-email', { 
++          state: { 
++            email: formData.email,
++            message: 'Registration successful! Please check your email for verification code.' 
++          } 
++        });
+       } else {
++        console.log('Registration failed with error:', result.error);
+         // Map server errors to specific fields
+         const fieldErrors = {};
+         
+@@ -252,12 +268,14 @@ const RegisterForm = () => {
+           }
+         }
+         
++        console.log('Setting field errors:', fieldErrors);
+         setErrors(prev => ({
+           ...prev,
+           ...fieldErrors
+         }));
+       }
+     } catch (error) {
++      console.error('Unexpected error during registration:', error);
+       setErrors({ general: 'An unexpected error occurred' });
+     } finally {
+       setIsLoading(false);

@@ -1,0 +1,169 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Framework Usage
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+-- AuthHandler: Authentication and session management
++- AuthHandler: Authentication and session management with Hono JWT middleware
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files where 'AuthHandler' is implemented (e.g., AuthHandler.ts, auth.ts) and the associated framework middleware configuration.
+- Suggested Logic: 1. Search for the file or class named 'AuthHandler'.
+2. Verify that the implementation utilizes the Hono framework's JWT middleware (e.g., checking for 'import { jwt } from "hono/jwt"' and the presence of 'jwt({...})' or 'app.use(...jwt(...))' logic within the AuthHandler context).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Configure wrangler.toml with proper environment settings
+
+- Update development JWT secret with clear dev-only warning
+- Add localhost:3000 to CORS origins for additional dev server support
+- Reduce dev max file size to 50MB for local testing
+- Standardize staging and production environment configurations
+- Use placeholder secrets that require replacement in deployment
+- Set appropriate file size limits per environment (50MB dev, 100MB staging, 200MB prod)
+- Organize environment sections in logical order (dev, staging, prod)
+- Changed Files List: 
+.gitignore	+1	-0	after_lines=43
+.kiro/specs/r2-file-explorer/tasks.md	+1	-1	after_lines=170
+worker/wrangler.toml	+17	-17	after_lines=48
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── Cargo.lock
+    ├── Cargo.toml
+    ├── SETUP.md
+    ├── src
+    │   ├── lib.rs
+    │   └── utils.rs
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index 3d3003d..f6414d7 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,6 +1,7 @@
+ # Dependencies
+ node_modules/
+ /target/
++/worker/target/
+ 
+ # Build outputs
+ dist/
+
+--- FILE: .kiro/specs/r2-file-explorer/tasks.md ---
+diff --git a/.kiro/specs/r2-file-explorer/tasks.md b/.kiro/specs/r2-file-explorer/tasks.md
+index 1abe735..e8db719 100644
+--- a/.kiro/specs/r2-file-explorer/tasks.md
++++ b/.kiro/specs/r2-file-explorer/tasks.md
+@@ -11,7 +11,7 @@
+   - Create basic README.md with setup instructions
+   - _Requirements: All requirements depend on proper project setup_
+ 
+-- [ ] 2. Configure Cloudflare Worker environment and bindings
++- [x] 2. Configure Cloudflare Worker environment and bindings
+   - Set up wrangler.toml with R2 bucket and KV namespace bindings
+   - Configure environment variables for JWT secret and CORS origins
+   - Create development and production environment configurations
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index c046485..f2ce253 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -19,30 +19,30 @@ preview_id = "session-storage-namespace-preview"
+ 
+ # Development environment variables
+ [vars]
+-JWT_SECRET = "dev-jwt-secret-change-in-production"
+-CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
++JWT_SECRET = "dev-secret-key-for-local-development-only-not-secure"
++CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
+ JWT_EXPIRY_HOURS = "24"
+-MAX_FILE_SIZE_MB = "100"
++MAX_FILE_SIZE_MB = "50"
+ ENVIRONMENT = "development"
+ 
+-# Production environment configuration
+-[env.production]
+-name = "r2-file-explorer-api-prod"
+-
+-[env.production.vars]
+-JWT_SECRET = "production-jwt-secret-change-this"
+-CORS_ORIGINS = "https://your-production-domain.pages.dev"
+-JWT_EXPIRY_HOURS = "8"
+-MAX_FILE_SIZE_MB = "500"
+-ENVIRONMENT = "production"
+-
+ # Staging environment configuration
+ [env.staging]
+ name = "r2-file-explorer-api-staging"
+ 
+ [env.staging.vars]
+-JWT_SECRET = "staging-jwt-secret-change-this"
+-CORS_ORIGINS = "https://staging-domain.pages.dev"
++JWT_SECRET = "REPLACE_WITH_SECURE_STAGING_SECRET"
++CORS_ORIGINS = "https://r2-file-explorer-staging.pages.dev"
+ JWT_EXPIRY_HOURS = "12"
++MAX_FILE_SIZE_MB = "100"
++ENVIRONMENT = "staging"
++
++# Production environment configuration
++[env.production]
++name = "r2-file-explorer-api-prod"
++
++[env.production.vars]
++JWT_SECRET = "REPLACE_WITH_SECURE_PRODUCTION_SECRET"
++CORS_ORIGINS = "https://r2-file-explorer.pages.dev"
++JWT_EXPIRY_HOURS = "8"
+ MAX_FILE_SIZE_MB = "200"
+-ENVIRONMENT = "staging"
+\ No newline at end of file
++ENVIRONMENT = "production"
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,45 @@
+diff --git a/src/components/DeckIcon.vue b/src/components/DeckIcon.vue
+index e29fbaa..70c8b79 100644
+--- a/src/components/DeckIcon.vue
++++ b/src/components/DeckIcon.vue
+@@ -6,6 +6,7 @@
+     @mousemove="onMove"
+     @mouseleave="onLeave"
+     @click="onClick"
++    ref="root"
+   >
+     <span class="icon">🃏</span>
+     <span class="count" v-if="count > 0">{{ count }}</span>
+@@ -34,7 +35,24 @@ export default {
+   data() {
+     return { showPreview: false };
+   },
++  watch: {
++    count(nv, ov) {
++      if (nv !== ov) this.$nextTick(() => this.triggerBump(this.$refs.root));
++    }
++  },
+   methods: {
++    // 重启动画，使整个组件有一个缩放跳动
++    triggerBump(el) {
++      if (!el) return;
++      el.classList.remove('stat-bump');
++      // 强制回流
++      // eslint-disable-next-line no-unused-expressions
++      el.offsetWidth;
++      el.classList.add('stat-bump');
++      el.addEventListener('animationend', () => {
++        el.classList.remove('stat-bump');
++      }, { once: true });
++    },
+     onEnter(e) {
+       this.showPreview = true;
+       const listHtml = this.names && this.names.length
+@@ -80,6 +98,7 @@ export default {
+   cursor: pointer;
+   user-select: none;
+   z-index: var(--z-overlay);
++  will-change: transform;
+ }
+ .deck-icon .icon { font-size: 22px; line-height: 1; }
+ .deck-icon .count {

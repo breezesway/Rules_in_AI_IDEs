@@ -1,0 +1,140 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Directory Structure
+- Rule File Path: .kiro/steering/structure.md
+- Change Type: modified
+- Target Rule Content:
+- **dicom_criterion/**: Main package containing all source code
++ **dicomcriterion/**: Main package containing all source code
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File directory structure and file paths within the repository.
+- Suggested Logic: Verify that the directory 'dicomcriterion/' exists and contains the project's source code, and check that the old directory name 'dicom_criterion/' has been renamed or removed.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Renames package to dicomcriterion, removes minus. Fixes flake8 and black
+- Changed Files List: 
+.github/ISSUE_TEMPLATE.md	+15	-0	after_lines=15
+.github/workflows/build.yml	+48	-0	after_lines=48
+
+- Project Directory Tree (Snapshot after commit):
+├── .github
+│   ├── ISSUE_TEMPLATE.md
+│   └── workflows
+│       └── build.yml
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── dicom-criterion-class
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── .pre-commit-config.yaml
+├── README.md
+├── dicom_criterion
+│   ├── __init__.py
+│   ├── criterion.py
+│   ├── exceptions.py
+│   ├── functions.py
+│   └── symbol.py
+├── examples
+│   ├── advanced_usage.py
+│   └── basic_usage.py
+├── pyproject.toml
+├── setup.cfg
+└── tests
+    ├── test_criterion.py
+    ├── test_exceptions.py
+    ├── test_function_registry.py
+    ├── test_functions.py
+    ├── test_integration.py
+    └── test_symbol.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .github/ISSUE_TEMPLATE.md ---
+diff --git a/.github/ISSUE_TEMPLATE.md b/.github/ISSUE_TEMPLATE.md
+new file mode 100644
+index 0000000..3c2513d
+--- /dev/null
++++ b/.github/ISSUE_TEMPLATE.md
+@@ -0,0 +1,15 @@
++* IDIS Core version:
++* Python version:
++* Operating System:
++
++### Description
++
++Describe what you were trying to get done.
++Tell us what happened, what went wrong, and what you expected to happen.
++
++### What I Did
++
++```
++Paste the command(s) you ran and the output.
++If there was a crash, please include the traceback here.
++```
+
+--- FILE: .github/workflows/build.yml ---
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+new file mode 100644
+index 0000000..a8840c0
+--- /dev/null
++++ b/.github/workflows/build.yml
+@@ -0,0 +1,48 @@
++name: CI
++
++on:
++  push:
++  pull_request:
++  release:
++    types:
++      - published
++
++env:
++  MINIMUM_PYTHON_VERSION: '3.12'
++
++jobs:
++
++  precommit:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Install Python ${{ env.MINIMUM_PYTHON_VERSION }}
++        uses: actions/setup-python@v2
++        with:
++          python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
++      - uses: actions/checkout@v2
++      - name: Install pre-commit
++        run: |
++          python -m pip install --upgrade pip
++          python -m pip install pre-commit virtualenv!=20.0.6
++          pre-commit install
++      - name: Run static code inspections
++        run: pre-commit run --all-files
++
++  build:
++    runs-on: ubuntu-latest
++    strategy:
++      matrix:
++        python-version: [3.12]
++    steps:
++      - uses: actions/checkout@v2
++      - name: Set up Python ${{ matrix.python-version }}
++        uses: actions/setup-python@v2
++        with:
++          python-version: ${{ matrix.python-version }}
++      - name: Install dependencies
++        run: |
++          python -m pip install --upgrade pip
++          python -m pip install tox tox-gh-actions poetry
++      - name: Test with tox
++        run: |
++          tox
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

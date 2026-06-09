@@ -1,0 +1,200 @@
+diff --git a/src/lib/scanner.ts b/src/lib/scanner.ts
+index bd8caf0..df5c9ed 100644
+--- a/src/lib/scanner.ts
++++ b/src/lib/scanner.ts
+@@ -90,12 +90,12 @@ export class Scanner {
+         signal: controller.signal,
+         headers: {
+           'User-Agent': 'GEO-Scanner/1.0 (https://geoscanner.nl)',
+-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
++          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+           'Accept-Language': 'nl,en-US;q=0.7,en;q=0.3',
+-          'Connection': 'keep-alive',
++          Connection: 'keep-alive',
+           'Upgrade-Insecure-Requests': '1',
+-          'Cache-Control': 'max-age=0'
+-        }
++          'Cache-Control': 'max-age=0',
++        },
+       });
+       clearTimeout(timeoutId);
+       return response;
+@@ -110,7 +110,7 @@ export class Scanner {
+       const parsed = parseUrl(baseUrl);
+       const robotsUrl = `${parsed.protocol}//${parsed.host}/robots.txt`;
+       const response = await this.fetchWithTimeout(robotsUrl, 3000);
+-      
++
+       if (response.ok) {
+         return await response.text();
+       }
+@@ -125,7 +125,7 @@ export class Scanner {
+       const parsed = parseUrl(baseUrl);
+       const sitemapUrl = `${parsed.protocol}//${parsed.host}/sitemap.xml`;
+       const response = await this.fetchWithTimeout(sitemapUrl, 3000);
+-      
++
+       if (response.ok) {
+         return await response.text();
+       }
+@@ -138,7 +138,7 @@ export class Scanner {
+   private static async fetchHtml(url: string): Promise<string | null> {
+     try {
+       const response = await this.fetchWithTimeout(url, 8000);
+-      
++
+       if (response.ok) {
+         return await response.text();
+       }
+@@ -163,7 +163,7 @@ export class Scanner {
+       if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+ 
+       const [directive, value] = trimmedLine.split(':').map(s => s.trim());
+-      
++
+       switch (directive.toLowerCase()) {
+         case 'user-agent':
+           currentUserAgent = value;
+@@ -198,7 +198,7 @@ export class Scanner {
+   private static parseSitemapXml(content: string): SitemapData {
+     const parser = new XMLParser({
+       ignoreAttributes: false,
+-      attributeNamePrefix: '@_'
++      attributeNamePrefix: '@_',
+     });
+ 
+     try {
+@@ -206,8 +206,8 @@ export class Scanner {
+       const urls: SitemapUrl[] = [];
+ 
+       if (result.urlset?.url) {
+-        const urlEntries = Array.isArray(result.urlset.url) 
+-          ? result.urlset.url 
++        const urlEntries = Array.isArray(result.urlset.url)
++          ? result.urlset.url
+           : [result.urlset.url];
+ 
+         for (const entry of urlEntries) {
+@@ -215,14 +215,14 @@ export class Scanner {
+             loc: entry.loc,
+             lastModified: entry.lastmod,
+             priority: entry.priority ? parseFloat(entry.priority) : undefined,
+-            changefreq: entry.changefreq
++            changefreq: entry.changefreq,
+           });
+         }
+       }
+ 
+       return {
+         urls,
+-        lastModified: result.urlset?.lastmod
++        lastModified: result.urlset?.lastmod,
+       };
+     } catch (error) {
+       console.error('Error parsing sitemap:', error);
+@@ -232,7 +232,7 @@ export class Scanner {
+ 
+   private static extractMetadata(html: string): HtmlSnapshot['metadata'] {
+     const metadata: HtmlSnapshot['metadata'] = {};
+-    
++
+     // Extract title
+     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+     if (titleMatch) {
+@@ -281,11 +281,14 @@ export class Scanner {
+       content: html,
+       hash,
+       timestamp,
+-      metadata
++      metadata,
+     };
+   }
+ 
+-  public static async scan(url: string, options: ScanOptions = { fullDomainScan: false }): Promise<CrawlResult> {
++  public static async scan(
++    url: string,
++    options: ScanOptions = { fullDomainScan: false }
++  ): Promise<CrawlResult> {
+     if (!this.isValidUrl(url)) {
+       return this.getEmptyCrawlResult(url);
+     }
+@@ -293,38 +296,38 @@ export class Scanner {
+     try {
+       // Parallelle data fetching met Promise.all voor betere performance
+       console.time('scan'); // Timing voor performance tracking
+-      
++
+       const [robotsTxt, sitemapXml, html] = await Promise.all([
+         this.fetchRobotsTxt(url),
+         this.fetchSitemapXml(url),
+-        this.fetchHtml(url)
++        this.fetchHtml(url),
+       ]);
+-      
++
+       console.timeLog('scan', 'Data fetching complete');
+ 
+       const robotsRules = robotsTxt ? this.parseRobotsTxt(robotsTxt) : null;
+       const sitemapData = sitemapXml ? this.parseSitemapXml(sitemapXml) : null;
+       const htmlSnapshot = html ? this.createHtmlSnapshot(html) : null;
+-      
++
+       console.timeLog('scan', 'Parsing complete');
+ 
+       // Analyse modules in batches uitvoeren voor betere performance
+       // Batch 1: Basis analyses die door meerdere andere analyses worden gebruikt
+       const [crawlAccess, structuredData, contentAnalysis] = await Promise.all([
+-        Promise.resolve(analyzeCrawlAccess(robotsRules, sitemapData, htmlSnapshot, 200)), 
++        Promise.resolve(analyzeCrawlAccess(robotsRules, sitemapData, htmlSnapshot, 200)),
+         Promise.resolve(htmlSnapshot ? analyzeStructuredData(htmlSnapshot) : null),
+-        Promise.resolve(htmlSnapshot ? analyzeContent(htmlSnapshot) : null)
++        Promise.resolve(htmlSnapshot ? analyzeContent(htmlSnapshot) : null),
+       ]);
+-      
++
+       console.timeLog('scan', 'Batch 1 complete');
+ 
+       // Batch 2: Analyses die Batch 1 resultaten kunnen gebruiken
+       const [technicalSeo, answerReady, authority] = await Promise.all([
+         Promise.resolve(htmlSnapshot ? analyzeTechnicalSeo(htmlSnapshot) : null),
+         Promise.resolve(htmlSnapshot ? analyzeAnswerReady(htmlSnapshot) : null),
+-        Promise.resolve(htmlSnapshot ? analyzeAuthority(htmlSnapshot) : null)
++        Promise.resolve(htmlSnapshot ? analyzeAuthority(htmlSnapshot) : null),
+       ]);
+-      
++
+       console.timeLog('scan', 'Batch 2 complete');
+ 
+       // Batch 3: Overige analyses
+@@ -333,9 +336,9 @@ export class Scanner {
+         Promise.resolve(htmlSnapshot ? analyzeCrossWeb(htmlSnapshot, url) : null),
+         Promise.resolve(htmlSnapshot ? analyzeMultimodal(htmlSnapshot) : null),
+         Promise.resolve(htmlSnapshot ? analyzeMonitoring(htmlSnapshot) : null),
+-        Promise.resolve(htmlSnapshot ? analyzeSchemaAdvanced(htmlSnapshot) : null)
++        Promise.resolve(htmlSnapshot ? analyzeSchemaAdvanced(htmlSnapshot) : null),
+       ]);
+-      
++
+       console.timeEnd('scan');
+ 
+       return {
+@@ -353,7 +356,7 @@ export class Scanner {
+         crossWeb,
+         multimodal,
+         monitoring,
+-        schemaAdvanced
++        schemaAdvanced,
+       };
+     } catch (error) {
+       console.error('Scan error:', error);
+@@ -377,7 +380,7 @@ export class Scanner {
+       crossWeb: null,
+       multimodal: null,
+       monitoring: null,
+-      schemaAdvanced: null
++      schemaAdvanced: null,
+     };
+   }
+-} 
+\ No newline at end of file
++}

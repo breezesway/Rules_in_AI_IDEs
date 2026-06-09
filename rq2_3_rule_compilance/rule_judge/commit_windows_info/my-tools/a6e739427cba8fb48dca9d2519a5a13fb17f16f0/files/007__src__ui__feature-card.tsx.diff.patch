@@ -1,0 +1,81 @@
+diff --git a/src/ui/feature-card.tsx b/src/ui/feature-card.tsx
+index c46065f..35f607f 100644
+--- a/src/ui/feature-card.tsx
++++ b/src/ui/feature-card.tsx
+@@ -5,12 +5,51 @@ interface FeatureCardProps {
+   title: string;
+   description: string;
+   onClick: () => void;
++  theme?: 'blue' | 'green' | 'purple' | 'orange';
+ }
+ 
+-export function FeatureCard({ icon, title, description, onClick }: FeatureCardProps) {
++export function FeatureCard({ icon, title, description, onClick, theme = 'blue' }: FeatureCardProps) {
++  // 定义不同主题的颜色配置
++  const themeConfig = {
++    blue: {
++      hoverBorder: 'hover:border-blue-300 dark:hover:border-blue-600',
++      focusRing: 'focus:ring-blue-500/20 dark:focus:ring-blue-400/20',
++      iconHover: 'group-hover:from-blue-50 group-hover:to-blue-100 dark:group-hover:from-blue-900/30 dark:group-hover:to-blue-800/30',
++      titleHover: 'group-hover:text-blue-900 dark:group-hover:text-blue-100',
++      button: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700',
++      buttonFocus: 'focus:ring-blue-500/50'
++    },
++    green: {
++      hoverBorder: 'hover:border-green-300 dark:hover:border-green-600',
++      focusRing: 'focus:ring-green-500/20 dark:focus:ring-green-400/20',
++      iconHover: 'group-hover:from-green-50 group-hover:to-green-100 dark:group-hover:from-green-900/30 dark:group-hover:to-green-800/30',
++      titleHover: 'group-hover:text-green-900 dark:group-hover:text-green-100',
++      button: 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 dark:from-green-500 dark:to-green-600 dark:hover:from-green-600 dark:hover:to-green-700',
++      buttonFocus: 'focus:ring-green-500/50'
++    },
++    purple: {
++      hoverBorder: 'hover:border-purple-300 dark:hover:border-purple-600',
++      focusRing: 'focus:ring-purple-500/20 dark:focus:ring-purple-400/20',
++      iconHover: 'group-hover:from-purple-50 group-hover:to-purple-100 dark:group-hover:from-purple-900/30 dark:group-hover:to-purple-800/30',
++      titleHover: 'group-hover:text-purple-900 dark:group-hover:text-purple-100',
++      button: 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700',
++      buttonFocus: 'focus:ring-purple-500/50'
++    },
++    orange: {
++      hoverBorder: 'hover:border-orange-300 dark:hover:border-orange-600',
++      focusRing: 'focus:ring-orange-500/20 dark:focus:ring-orange-400/20',
++      iconHover: 'group-hover:from-orange-50 group-hover:to-orange-100 dark:group-hover:from-orange-900/30 dark:group-hover:to-orange-800/30',
++      titleHover: 'group-hover:text-orange-900 dark:group-hover:text-orange-100',
++      button: 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700',
++      buttonFocus: 'focus:ring-orange-500/50'
++    }
++  };
++
++  const currentTheme = themeConfig[theme];
++
+   return (
+     <div 
+-      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:ring-offset-2 dark:focus:ring-offset-gray-900" 
++      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer ${currentTheme.hoverBorder} hover:-translate-y-1 focus:outline-none focus:ring-4 ${currentTheme.focusRing} group`}
+       onClick={onClick}
+       onKeyDown={(e) => {
+         if (e.key === 'Enter' || e.key === ' ') {
+@@ -20,13 +59,17 @@ export function FeatureCard({ icon, title, description, onClick }: FeatureCardPr
+       }}
+       tabIndex={0}
+     >
+-      <div className="mb-4 p-3 w-fit rounded-xl bg-gray-50 dark:bg-gray-700">
++      <div className={`mb-6 p-4 w-fit rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 ${currentTheme.iconHover} transition-all duration-300`}>
+         {icon}
+       </div>
+-      <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">{title}</h3>
+-      <p className="text-gray-600 dark:text-gray-400 mb-4">{description}</p>
+-      <button className="w-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 py-3 px-4 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors duration-200">
+-        使用
++      <h3 className={`text-2xl font-bold mb-3 text-gray-900 dark:text-gray-100 ${currentTheme.titleHover} transition-colors duration-300`}>
++        {title}
++      </h3>
++      <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
++        {description}
++      </p>
++      <button className={`w-full ${currentTheme.button} text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-4 ${currentTheme.buttonFocus}`}>
++        开始使用
+       </button>
+     </div>
+   );

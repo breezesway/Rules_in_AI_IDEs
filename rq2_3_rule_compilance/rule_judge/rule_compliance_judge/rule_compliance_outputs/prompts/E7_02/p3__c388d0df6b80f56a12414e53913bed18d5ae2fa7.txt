@@ -1,0 +1,1038 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: feat: set up project styling, dependencies, and base layout
+
+    * Install and configure dependencies: class-variance-authority, clsx, lucide-react, tailwind-merge, zustand, tw-animate-css, and update bun.lock and package.json accordingly
+    * Overhaul globals.css to add custom color themes, dark mode support, and Tailwind/CSS variable integration
+    * Replace page.tsx contents with base layout components <Sidebar /> and <CanvasContainer />
+    * Scaffold initial untracked structure: components.json, src/components, src/lib, and src/store
+- Changed Files List: 
+bun.lock	+18	-0	after_lines=867
+components.json	+21	-0	after_lines=21
+package.json	+11	-5	after_lines=33
+src/app/globals.css	+109	-13	after_lines=122
+src/app/page.tsx	+5	-97	after_lines=11
+src/components/Canvas.tsx	+353	-0	after_lines=353
+src/components/CanvasContainer.tsx	+13	-0	after_lines=13
+src/components/CanvasToolbar.tsx	+34	-0	after_lines=34
+src/components/Sidebar.tsx	+39	-0	after_lines=39
+src/lib/constants.ts	+4	-0	after_lines=4
+src/lib/utils.ts	+6	-0	after_lines=6
+src/store/index.ts	+61	-0	after_lines=61
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: bun.lock ---
+diff --git a/bun.lock b/bun.lock
+index b283bae..9535be2 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -4,9 +4,14 @@
+     "": {
+       "name": "ascii-canvas",
+       "dependencies": {
++        "class-variance-authority": "^0.7.1",
++        "clsx": "^2.1.1",
++        "lucide-react": "^0.525.0",
+         "next": "15.3.4",
+         "react": "^19.0.0",
+         "react-dom": "^19.0.0",
++        "tailwind-merge": "^3.3.1",
++        "zustand": "^5.0.6",
+       },
+       "devDependencies": {
+         "@eslint/eslintrc": "^3",
+@@ -17,6 +22,7 @@
+         "eslint": "^9",
+         "eslint-config-next": "15.3.4",
+         "tailwindcss": "^4",
++        "tw-animate-css": "^1.3.4",
+         "typescript": "^5",
+       },
+     },
+@@ -312,8 +318,12 @@
+ 
+     "chownr": ["chownr@3.0.0", "", {}, "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="],
+ 
++    "class-variance-authority": ["class-variance-authority@0.7.1", "", { "dependencies": { "clsx": "^2.1.1" } }, "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg=="],
++
+     "client-only": ["client-only@0.0.1", "", {}, "sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA=="],
+ 
++    "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
++
+     "color": ["color@4.2.3", "", { "dependencies": { "color-convert": "^2.0.1", "color-string": "^1.9.0" } }, "sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A=="],
+ 
+     "color-convert": ["color-convert@2.0.1", "", { "dependencies": { "color-name": "~1.1.4" } }, "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ=="],
+@@ -588,6 +598,8 @@
+ 
+     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
+ 
++    "lucide-react": ["lucide-react@0.525.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-Tm1txJ2OkymCGkvwoHt33Y2JpN5xucVq1slHcgE6Lk0WjDfjgKWor5CdVER8U6DvcfMwh4M8XxmpTiyzfmfDYQ=="],
++
+     "magic-string": ["magic-string@0.30.17", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0" } }, "sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA=="],
+ 
+     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
+@@ -746,6 +758,8 @@
+ 
+     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
+ 
++    "tailwind-merge": ["tailwind-merge@3.3.1", "", {}, "sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g=="],
++
+     "tailwindcss": ["tailwindcss@4.1.11", "", {}, "sha512-2E9TBm6MDD/xKYe+dvJZAmg3yxIEDNRc0jwlNyDg/4Fil2QcSLjFKGVff0lAf1jjeaArlG/M75Ey/EYr/OJtBA=="],
+ 
+     "tapable": ["tapable@2.2.2", "", {}, "sha512-Re10+NauLTMCudc7T5WLFLAwDhQ0JWdrMK+9B2M8zR5hRExKmsRDCBA7/aV/pNJFltmBFO5BAMlQFi/vq3nKOg=="],
+@@ -762,6 +776,8 @@
+ 
+     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+ 
++    "tw-animate-css": ["tw-animate-css@1.3.4", "", {}, "sha512-dd1Ht6/YQHcNbq0znIT6dG8uhO7Ce+VIIhZUhjsryXsMPJQz3bZg7Q2eNzLwipb25bRZslGb2myio5mScd1TFg=="],
++
+     "type-check": ["type-check@0.4.0", "", { "dependencies": { "prelude-ls": "^1.2.1" } }, "sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew=="],
+ 
+     "typed-array-buffer": ["typed-array-buffer@1.0.3", "", { "dependencies": { "call-bound": "^1.0.3", "es-errors": "^1.3.0", "is-typed-array": "^1.1.14" } }, "sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw=="],
+@@ -798,6 +814,8 @@
+ 
+     "yocto-queue": ["yocto-queue@0.1.0", "", {}, "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="],
+ 
++    "zustand": ["zustand@5.0.6", "", { "peerDependencies": { "@types/react": ">=18.0.0", "immer": ">=9.0.6", "react": ">=18.0.0", "use-sync-external-store": ">=1.2.0" }, "optionalPeers": ["@types/react", "immer", "react", "use-sync-external-store"] }, "sha512-ihAqNeUVhe0MAD+X8M5UzqyZ9k3FFZLBTtqo6JLPwV53cbRB/mJwBI0PxcIgqhBBHlEs8G45OTDTMq3gNcLq3A=="],
++
+     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
+ 
+     "@eslint/plugin-kit/@eslint/core": ["@eslint/core@0.15.1", "", { "dependencies": { "@types/json-schema": "^7.0.15" } }, "sha512-bkOp+iumZCCbt1K1CmWf0R9pM5yKpDv+ZXtvSyQpudrI9kuFLp+bM2WOPXImuD/ceQuaa8f5pj93Y7zyECIGNA=="],
+
+--- FILE: components.json ---
+diff --git a/components.json b/components.json
+new file mode 100644
+index 0000000..421c026
+--- /dev/null
++++ b/components.json
+@@ -0,0 +1,21 @@
++{
++  "$schema": "https://ui.shadcn.com/schema.json",
++  "style": "new-york",
++  "rsc": true,
++  "tsx": true,
++  "tailwind": {
++    "config": "",
++    "css": "src/app/globals.css",
++    "baseColor": "gray",
++    "cssVariables": true,
++    "prefix": ""
++  },
++  "aliases": {
++    "components": "@/components",
++    "utils": "@/lib/utils",
++    "ui": "@/components/ui",
++    "lib": "@/lib",
++    "hooks": "@/hooks"
++  },
++  "iconLibrary": "lucide"
++}
+\ No newline at end of file
+
+--- FILE: package.json ---
+diff --git a/package.json b/package.json
+index 030ea06..7831c66 100644
+--- a/package.json
++++ b/package.json
+@@ -9,19 +9,25 @@
+     "lint": "next lint"
+   },
+   "dependencies": {
++    "class-variance-authority": "^0.7.1",
++    "clsx": "^2.1.1",
++    "lucide-react": "^0.525.0",
++    "next": "15.3.4",
+     "react": "^19.0.0",
+     "react-dom": "^19.0.0",
+-    "next": "15.3.4"
++    "tailwind-merge": "^3.3.1",
++    "zustand": "^5.0.6"
+   },
+   "devDependencies": {
+-    "typescript": "^5",
++    "@eslint/eslintrc": "^3",
++    "@tailwindcss/postcss": "^4",
+     "@types/node": "^20",
+     "@types/react": "^19",
+     "@types/react-dom": "^19",
+-    "@tailwindcss/postcss": "^4",
+-    "tailwindcss": "^4",
+     "eslint": "^9",
+     "eslint-config-next": "15.3.4",
+-    "@eslint/eslintrc": "^3"
++    "tailwindcss": "^4",
++    "tw-animate-css": "^1.3.4",
++    "typescript": "^5"
+   }
+ }
+
+--- FILE: src/app/globals.css ---
+diff --git a/src/app/globals.css b/src/app/globals.css
+index a2dc41e..4fced5d 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -1,26 +1,122 @@
+ @import "tailwindcss";
++@import "tw-animate-css";
+ 
+-:root {
+-  --background: #ffffff;
+-  --foreground: #171717;
+-}
++@custom-variant dark (&:is(.dark *));
+ 
+ @theme inline {
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+   --font-sans: var(--font-geist-sans);
+   --font-mono: var(--font-geist-mono);
++  --color-sidebar-ring: var(--sidebar-ring);
++  --color-sidebar-border: var(--sidebar-border);
++  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
++  --color-sidebar-accent: var(--sidebar-accent);
++  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
++  --color-sidebar-primary: var(--sidebar-primary);
++  --color-sidebar-foreground: var(--sidebar-foreground);
++  --color-sidebar: var(--sidebar);
++  --color-chart-5: var(--chart-5);
++  --color-chart-4: var(--chart-4);
++  --color-chart-3: var(--chart-3);
++  --color-chart-2: var(--chart-2);
++  --color-chart-1: var(--chart-1);
++  --color-ring: var(--ring);
++  --color-input: var(--input);
++  --color-border: var(--border);
++  --color-destructive: var(--destructive);
++  --color-accent-foreground: var(--accent-foreground);
++  --color-accent: var(--accent);
++  --color-muted-foreground: var(--muted-foreground);
++  --color-muted: var(--muted);
++  --color-secondary-foreground: var(--secondary-foreground);
++  --color-secondary: var(--secondary);
++  --color-primary-foreground: var(--primary-foreground);
++  --color-primary: var(--primary);
++  --color-popover-foreground: var(--popover-foreground);
++  --color-popover: var(--popover);
++  --color-card-foreground: var(--card-foreground);
++  --color-card: var(--card);
++  --radius-sm: calc(var(--radius) - 4px);
++  --radius-md: calc(var(--radius) - 2px);
++  --radius-lg: var(--radius);
++  --radius-xl: calc(var(--radius) + 4px);
+ }
+ 
+-@media (prefers-color-scheme: dark) {
+-  :root {
+-    --background: #0a0a0a;
+-    --foreground: #ededed;
+-  }
++:root {
++  --radius: 0.625rem;
++  --background: oklch(1 0 0);
++  --foreground: oklch(0.13 0.028 261.692);
++  --card: oklch(1 0 0);
++  --card-foreground: oklch(0.13 0.028 261.692);
++  --popover: oklch(1 0 0);
++  --popover-foreground: oklch(0.13 0.028 261.692);
++  --primary: oklch(0.21 0.034 264.665);
++  --primary-foreground: oklch(0.985 0.002 247.839);
++  --secondary: oklch(0.967 0.003 264.542);
++  --secondary-foreground: oklch(0.21 0.034 264.665);
++  --muted: oklch(0.967 0.003 264.542);
++  --muted-foreground: oklch(0.551 0.027 264.364);
++  --accent: oklch(0.967 0.003 264.542);
++  --accent-foreground: oklch(0.21 0.034 264.665);
++  --destructive: oklch(0.577 0.245 27.325);
++  --border: oklch(0.928 0.006 264.531);
++  --input: oklch(0.928 0.006 264.531);
++  --ring: oklch(0.707 0.022 261.325);
++  --chart-1: oklch(0.646 0.222 41.116);
++  --chart-2: oklch(0.6 0.118 184.704);
++  --chart-3: oklch(0.398 0.07 227.392);
++  --chart-4: oklch(0.828 0.189 84.429);
++  --chart-5: oklch(0.769 0.188 70.08);
++  --sidebar: oklch(0.985 0.002 247.839);
++  --sidebar-foreground: oklch(0.13 0.028 261.692);
++  --sidebar-primary: oklch(0.21 0.034 264.665);
++  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
++  --sidebar-accent: oklch(0.967 0.003 264.542);
++  --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
++  --sidebar-border: oklch(0.928 0.006 264.531);
++  --sidebar-ring: oklch(0.707 0.022 261.325);
+ }
+ 
+-body {
+-  background: var(--background);
+-  color: var(--foreground);
+-  font-family: Arial, Helvetica, sans-serif;
++.dark {
++  --background: oklch(0.13 0.028 261.692);
++  --foreground: oklch(0.985 0.002 247.839);
++  --card: oklch(0.21 0.034 264.665);
++  --card-foreground: oklch(0.985 0.002 247.839);
++  --popover: oklch(0.21 0.034 264.665);
++  --popover-foreground: oklch(0.985 0.002 247.839);
++  --primary: oklch(0.928 0.006 264.531);
++  --primary-foreground: oklch(0.21 0.034 264.665);
++  --secondary: oklch(0.278 0.033 256.848);
++  --secondary-foreground: oklch(0.985 0.002 247.839);
++  --muted: oklch(0.278 0.033 256.848);
++  --muted-foreground: oklch(0.707 0.022 261.325);
++  --accent: oklch(0.278 0.033 256.848);
++  --accent-foreground: oklch(0.985 0.002 247.839);
++  --destructive: oklch(0.704 0.191 22.216);
++  --border: oklch(1 0 0 / 10%);
++  --input: oklch(1 0 0 / 15%);
++  --ring: oklch(0.551 0.027 264.364);
++  --chart-1: oklch(0.488 0.243 264.376);
++  --chart-2: oklch(0.696 0.17 162.48);
++  --chart-3: oklch(0.769 0.188 70.08);
++  --chart-4: oklch(0.627 0.265 303.9);
++  --chart-5: oklch(0.645 0.246 16.439);
++  --sidebar: oklch(0.21 0.034 264.665);
++  --sidebar-foreground: oklch(0.985 0.002 247.839);
++  --sidebar-primary: oklch(0.488 0.243 264.376);
++  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
++  --sidebar-accent: oklch(0.278 0.033 256.848);
++  --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
++  --sidebar-border: oklch(1 0 0 / 10%);
++  --sidebar-ring: oklch(0.551 0.027 264.364);
++}
++
++@layer base {
++  * {
++    @apply border-border outline-ring/50;
++  }
++  body {
++    @apply bg-background text-foreground;
++  }
+ }
+
+--- FILE: src/app/page.tsx ---
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index e68abe6..923a000 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,103 +1,11 @@
+-import Image from "next/image";
++import CanvasContainer from "@/components/CanvasContainer";
++import Sidebar from "@/components/Sidebar";
+ 
+ export default function Home() {
+   return (
+-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+-        <Image
+-          className="dark:invert"
+-          src="/next.svg"
+-          alt="Next.js logo"
+-          width={180}
+-          height={38}
+-          priority
+-        />
+-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+-          <li className="mb-2 tracking-[-.01em]">
+-            Get started by editing{" "}
+-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+-              src/app/page.tsx
+-            </code>
+-            .
+-          </li>
+-          <li className="tracking-[-.01em]">
+-            Save and see your changes instantly.
+-          </li>
+-        </ol>
+-
+-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+-          <a
+-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-            target="_blank"
+-            rel="noopener noreferrer"
+-          >
+-            <Image
+-              className="dark:invert"
+-              src="/vercel.svg"
+-              alt="Vercel logomark"
+-              width={20}
+-              height={20}
+-            />
+-            Deploy now
+-          </a>
+-          <a
+-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
+-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-            target="_blank"
+-            rel="noopener noreferrer"
+-          >
+-            Read our docs
+-          </a>
+-        </div>
+-      </main>
+-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
+-        <a
+-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-          target="_blank"
+-          rel="noopener noreferrer"
+-        >
+-          <Image
+-            aria-hidden
+-            src="/file.svg"
+-            alt="File icon"
+-            width={16}
+-            height={16}
+-          />
+-          Learn
+-        </a>
+-        <a
+-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-          target="_blank"
+-          rel="noopener noreferrer"
+-        >
+-          <Image
+-            aria-hidden
+-            src="/window.svg"
+-            alt="Window icon"
+-            width={16}
+-            height={16}
+-          />
+-          Examples
+-        </a>
+-        <a
+-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-          target="_blank"
+-          rel="noopener noreferrer"
+-        >
+-          <Image
+-            aria-hidden
+-            src="/globe.svg"
+-            alt="Globe icon"
+-            width={16}
+-            height={16}
+-          />
+-          Go to nextjs.org →
+-        </a>
+-      </footer>
++    <div className="flex h-dvh w-dvw">
++      <Sidebar />
++      <CanvasContainer />
+     </div>
+   );
+ }
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+new file mode 100644
+index 0000000..400044b
+--- /dev/null
++++ b/src/components/Canvas.tsx
+@@ -0,0 +1,353 @@
++"use client";
++
++import { useLayersStore, useShapeStore } from "@/store";
++import { useEffect, useRef, useState } from "react";
++import {
++  CANVAS_ROWS,
++  CANVAS_COLS,
++  CELL_WIDTH,
++  CELL_HEIGHT,
++} from "@/lib/constants";
++
++const CANVAS_WIDTH = CANVAS_COLS * CELL_WIDTH;
++const CANVAS_HEIGHT = CANVAS_ROWS * CELL_HEIGHT;
++
++console.log(
++  `Canvas dimensions: ${CANVAS_WIDTH}x${CANVAS_HEIGHT}, Cell size: ${CELL_WIDTH}x${CELL_HEIGHT}`
++);
++
++// ASCII characters for different shapes
++const SHAPE_CHARS = {
++  rectangle: {
++    top: "-",
++    bottom: "-",
++    left: "|",
++    right: "|",
++    corner: "+",
++    fill: " ",
++  },
++  circle: {
++    outline: "O",
++    fill: " ",
++  },
++  line: {
++    horizontal: "-",
++    vertical: "|",
++    diagonal: "/",
++  },
++};
++
++export default function Canvas() {
++  const layers = useLayersStore((state) => state.layers);
++  const addLayer = useLayersStore((state) => state.addLayer);
++  const canvasRef = useRef<HTMLCanvasElement>(null);
++  const selectedShape = useShapeStore((state) => state.selectedShape);
++
++  const [isDrawing, setIsDrawing] = useState(false);
++  const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
++    null
++  );
++
++  // Get canvas coordinates from mouse position
++  const getCanvasCoords = (clientX: number, clientY: number) => {
++    const rect = canvasRef.current?.getBoundingClientRect();
++    if (!rect) return null;
++
++    // Convert mouse position to canvas coordinates
++    const x = Math.floor((clientX - rect.left) / CELL_WIDTH);
++    const y = Math.floor((clientY - rect.top) / CELL_HEIGHT);
++
++    // Clamp coordinates to canvas bounds
++    const clampedX = Math.max(0, Math.min(x, CANVAS_COLS - 1));
++    const clampedY = Math.max(0, Math.min(y, CANVAS_ROWS - 1));
++
++    console.log(
++      `Mouse: (${clientX}, ${clientY}) -> Canvas: (${clampedX}, ${clampedY})`
++    );
++    console.log(
++      `Canvas rect: left=${rect.left}, top=${rect.top}, width=${rect.width}, height=${rect.height}`
++    );
++
++    return { x: clampedX, y: clampedY };
++  };
++
++  // Generate ASCII characters for rectangle
++  const generateRectangle = (
++    startX: number,
++    startY: number,
++    endX: number,
++    endY: number
++  ) => {
++    const canvas = Array.from({ length: CANVAS_ROWS }, () =>
++      Array.from({ length: CANVAS_COLS }, () => " ")
++    );
++
++    const minX = Math.max(0, Math.min(startX, endX));
++    const maxX = Math.min(CANVAS_COLS - 1, Math.max(startX, endX));
++    const minY = Math.max(0, Math.min(startY, endY));
++    const maxY = Math.min(CANVAS_ROWS - 1, Math.max(startY, endY));
++
++    for (let y = minY; y <= maxY; y++) {
++      for (let x = minX; x <= maxX; x++) {
++        if (y === minY || y === maxY) {
++          // Top or bottom edge
++          if (x === minX || x === maxX) {
++            canvas[y][x] = SHAPE_CHARS.rectangle.corner;
++          } else {
++            canvas[y][x] = SHAPE_CHARS.rectangle.top;
++          }
++        } else if (x === minX || x === maxX) {
++          // Left or right edge
++          canvas[y][x] = SHAPE_CHARS.rectangle.left;
++        } else {
++          // Fill
++          canvas[y][x] = SHAPE_CHARS.rectangle.fill;
++        }
++      }
++    }
++
++    return canvas;
++  };
++
++  // Generate ASCII characters for circle
++  const generateCircle = (
++    startX: number,
++    startY: number,
++    endX: number,
++    endY: number
++  ) => {
++    const canvas = Array.from({ length: CANVAS_ROWS }, () =>
++      Array.from({ length: CANVAS_COLS }, () => " ")
++    );
++
++    const centerX = Math.floor((startX + endX) / 2);
++    const centerY = Math.floor((startY + endY) / 2);
++    const radiusX = Math.abs(endX - startX) / 2;
++    const radiusY = Math.abs(endY - startY) / 2;
++
++    for (let y = 0; y < CANVAS_ROWS; y++) {
++      for (let x = 0; x < CANVAS_COLS; x++) {
++        const dx = x - centerX;
++        const dy = y - centerY;
++        const distance = Math.sqrt(
++          (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY)
++        );
++
++        if (distance >= 0.8 && distance <= 1.2) {
++          canvas[y][x] = SHAPE_CHARS.circle.outline;
++        } else if (distance < 0.8) {
++          canvas[y][x] = SHAPE_CHARS.circle.fill;
++        }
++      }
++    }
++
++    return canvas;
++  };
++
++  // Generate ASCII characters for line
++  const generateLine = (
++    startX: number,
++    startY: number,
++    endX: number,
++    endY: number
++  ) => {
++    const canvas = Array.from({ length: CANVAS_ROWS }, () =>
++      Array.from({ length: CANVAS_COLS }, () => " ")
++    );
++
++    const dx = Math.abs(endX - startX);
++    const dy = Math.abs(endY - startY);
++    const sx = startX < endX ? 1 : -1;
++    const sy = startY < endY ? 1 : -1;
++    let err = dx - dy;
++
++    let x = startX;
++    let y = startY;
++
++    while (true) {
++      if (x >= 0 && x < CANVAS_COLS && y >= 0 && y < CANVAS_ROWS) {
++        if (dx > dy) {
++          canvas[y][x] = SHAPE_CHARS.line.horizontal;
++        } else {
++          canvas[y][x] = SHAPE_CHARS.line.vertical;
++        }
++      }
++
++      if (x === endX && y === endY) break;
++
++      const e2 = 2 * err;
++      if (e2 > -dy) {
++        err -= dy;
++        x += sx;
++      }
++      if (e2 < dx) {
++        err += dx;
++        y += sy;
++      }
++    }
++
++    return canvas;
++  };
++
++  // Handle mouse down
++  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
++    if (!selectedShape) return;
++
++    const coords = getCanvasCoords(e.clientX, e.clientY);
++    if (!coords) return;
++
++    console.log(`Mouse down at canvas position: (${coords.x}, ${coords.y})`);
++
++    setIsDrawing(true);
++    setStartPos(coords);
++  };
++
++  // Handle mouse move
++  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
++    if (!isDrawing || !startPos || !selectedShape) return;
++
++    const coords = getCanvasCoords(e.clientX, e.clientY);
++    if (!coords) return;
++
++    // Redraw canvas with preview
++    const ctx = canvasRef.current?.getContext("2d");
++    if (!ctx) return;
++
++    // Clear and redraw existing layers
++    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
++    ctx.fillStyle = "#ffffff";
++    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
++
++    // Draw existing layers
++    layers.forEach((layer) => {
++      layer.canvas.forEach((row, rowIndex) => {
++        row.forEach((cell, colIndex) => {
++          if (cell !== " ") {
++            ctx.fillStyle = "#000000";
++            ctx.font = `${CELL_HEIGHT}px monospace`;
++            ctx.textAlign = "left";
++            ctx.textBaseline = "top";
++            ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++          }
++        });
++      });
++    });
++
++    // Draw preview
++    let previewCanvas: string[][] = [];
++    switch (selectedShape.type) {
++      case "rectangle":
++        previewCanvas = generateRectangle(
++          startPos.x,
++          startPos.y,
++          coords.x,
++          coords.y
++        );
++        break;
++      case "circle":
++        previewCanvas = generateCircle(
++          startPos.x,
++          startPos.y,
++          coords.x,
++          coords.y
++        );
++        break;
++      case "line":
++        previewCanvas = generateLine(
++          startPos.x,
++          startPos.y,
++          coords.x,
++          coords.y
++        );
++        break;
++    }
++
++    // Draw preview
++    ctx.fillStyle = "#ff0000";
++    previewCanvas.forEach((row, rowIndex) => {
++      row.forEach((cell, colIndex) => {
++        if (cell !== " ") {
++          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++        }
++      });
++    });
++  };
++
++  // Handle mouse up
++  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
++    if (!isDrawing || !startPos || !selectedShape) return;
++
++    const coords = getCanvasCoords(e.clientX, e.clientY);
++    if (!coords) return;
++
++    console.log(
++      `Drawing shape from (${startPos.x}, ${startPos.y}) to (${coords.x}, ${coords.y})`
++    );
++
++    // Generate the shape
++    let newCanvas: string[][] = [];
++    switch (selectedShape.type) {
++      case "rectangle":
++        newCanvas = generateRectangle(
++          startPos.x,
++          startPos.y,
++          coords.x,
++          coords.y
++        );
++        break;
++      case "circle":
++        newCanvas = generateCircle(startPos.x, startPos.y, coords.x, coords.y);
++        break;
++      case "line":
++        newCanvas = generateLine(startPos.x, startPos.y, coords.x, coords.y);
++        break;
++    }
++
++    // Add new layer
++    const newLayer = {
++      id: `layer-${Date.now()}`,
++      canvas: newCanvas,
++    };
++    addLayer(newLayer);
++
++    setIsDrawing(false);
++    setStartPos(null);
++  };
++
++  useEffect(() => {
++    const ctx = canvasRef.current?.getContext("2d");
++    if (!ctx) return;
++
++    // Clear the canvas
++    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
++    ctx.fillStyle = "#ffffff";
++    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
++
++    // Draw each layer
++    layers.forEach((layer) => {
++      layer.canvas.forEach((row, rowIndex) => {
++        row.forEach((cell, colIndex) => {
++          if (cell !== " ") {
++            ctx.fillStyle = "#000000";
++            ctx.font = `${CELL_HEIGHT}px monospace`;
++            ctx.textAlign = "left";
++            ctx.textBaseline = "top";
++            ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++          }
++        });
++      });
++    });
++  }, [layers]);
++
++  return (
++    <canvas
++      ref={canvasRef}
++      width={CANVAS_WIDTH}
++      height={CANVAS_HEIGHT}
++      className="bg-gray-100 border border-gray-300 cursor-crosshair"
++      onMouseDown={handleMouseDown}
++      onMouseMove={handleMouseMove}
++      onMouseUp={handleMouseUp}
++    />
++  );
++}
+
+--- FILE: src/components/CanvasContainer.tsx ---
+diff --git a/src/components/CanvasContainer.tsx b/src/components/CanvasContainer.tsx
+new file mode 100644
+index 0000000..dc88c09
+--- /dev/null
++++ b/src/components/CanvasContainer.tsx
+@@ -0,0 +1,13 @@
++import Canvas from "./Canvas";
++import CanvasToolbar from "./CanvasToolbar";
++
++export default function CanvasContainer() {
++  return (
++    <div className="flex h-full w-full flex-col">
++      <div className="flex-1 size-full overflow-auto bg-gray-100">
++        <Canvas />
++      </div>
++      <CanvasToolbar />
++    </div>
++  );
++}
+
+--- FILE: src/components/CanvasToolbar.tsx ---
+diff --git a/src/components/CanvasToolbar.tsx b/src/components/CanvasToolbar.tsx
+new file mode 100644
+index 0000000..3667d4e
+--- /dev/null
++++ b/src/components/CanvasToolbar.tsx
+@@ -0,0 +1,34 @@
++"use client";
++
++import { useShapeStore } from "@/store";
++
++export default function CanvasToolbar() {
++  const shapes = useShapeStore((state) => state.shapes);
++  const selectShape = useShapeStore((state) => state.selectShape);
++  const unselectShape = useShapeStore((state) => state.unselectShape);
++  const selectedShape = useShapeStore((state) => state.selectedShape);
++
++  return (
++    <div className="flex h-16 w-full items-center justify-between bg-gray-200 p-4">
++      <div className="flex space-x-4">
++        {shapes.map((shape) => (
++          <button
++            key={shape.id}
++            className={`px-4 py-2 rounded ${
++              selectedShape?.id === shape.id
++                ? "bg-blue-500 text-white"
++                : "bg-gray-300 hover:bg-gray-400"
++            }`}
++            onClick={() =>
++              selectedShape?.id === shape.id
++                ? unselectShape()
++                : selectShape(shape)
++            }
++          >
++            {shape.type}
++          </button>
++        ))}
++      </div>
++    </div>
++  );
++}
+
+--- FILE: src/components/Sidebar.tsx ---
+diff --git a/src/components/Sidebar.tsx b/src/components/Sidebar.tsx
+new file mode 100644
+index 0000000..fbaf8f1
+--- /dev/null
++++ b/src/components/Sidebar.tsx
+@@ -0,0 +1,39 @@
++"use client";
++
++import { useLayersStore } from "@/store";
++
++export default function Sidebar() {
++  const layers = useLayersStore((state) => state.layers);
++
++  return (
++    <div className="flex h-full w-64 flex-col bg-gray-800 p-4 text-white shrink-0">
++      <h2 className="mb-4 text-xl font-bold">Layers</h2>
++      <ul className="space-y-2">
++        {layers.map((layer) => (
++          <li key={layer.id} className="flex items-center justify-between">
++            <span>{layer.id}</span>
++            <button
++              className="text-red-500 hover:text-red-700"
++              onClick={() => useLayersStore.getState().removeLayer(layer.id)}
++            >
++              Remove
++            </button>
++          </li>
++        ))}
++      </ul>
++      <button
++        className="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
++        onClick={() =>
++          useLayersStore.getState().addLayer({
++            id: `layer-${layers.length}`,
++            canvas: Array.from({ length: 100 }, () =>
++              Array(100).fill(Math.random() > 0.5 ? "X" : "O"),
++            ),
++          })
++        }
++      >
++        Add Layer
++      </button>
++    </div>
++  );
++}
+
+--- FILE: src/lib/constants.ts ---
+diff --git a/src/lib/constants.ts b/src/lib/constants.ts
+new file mode 100644
+index 0000000..dd0a25b
+--- /dev/null
++++ b/src/lib/constants.ts
+@@ -0,0 +1,4 @@
++export const CANVAS_ROWS = 40; // Num of rows in the canvas
++export const CANVAS_COLS = 100; // Num of columns in the canvas
++export const CELL_WIDTH = 5; // Width of each cell in pixels
++export const CELL_HEIGHT = 8; // Height of each cell in pixels
+
+--- FILE: src/lib/utils.ts ---
+diff --git a/src/lib/utils.ts b/src/lib/utils.ts
+new file mode 100644
+index 0000000..bd0c391
+--- /dev/null
++++ b/src/lib/utils.ts
+@@ -0,0 +1,6 @@
++import { clsx, type ClassValue } from "clsx"
++import { twMerge } from "tailwind-merge"
++
++export function cn(...inputs: ClassValue[]) {
++  return twMerge(clsx(inputs))
++}
+
+--- FILE: src/store/index.ts ---
+diff --git a/src/store/index.ts b/src/store/index.ts
+new file mode 100644
+index 0000000..3e1043a
+--- /dev/null
++++ b/src/store/index.ts
+@@ -0,0 +1,61 @@
++import { create } from "zustand";
++
++interface Layer {
++  id: string;
++  canvas: string[][];
++}
++
++interface LayersStore {
++  layers: Layer[];
++  addLayer: (layer: Layer) => void;
++  removeLayer: (id: string) => void;
++  updateLayer: (id: string, canvas: string[][]) => void;
++  reorderLayers: (fromIndex: number, toIndex: number) => void;
++}
++
++export const useLayersStore = create<LayersStore>((set) => ({
++  layers: [],
++  addLayer: (layer) => set((state) => ({ layers: [...state.layers, layer] })),
++  removeLayer: (id) =>
++    set((state) => ({
++      layers: state.layers.filter((layer) => layer.id !== id),
++    })),
++  updateLayer: (id, canvas) =>
++    set((state) => ({
++      layers: state.layers.map((layer) =>
++        layer.id === id ? { ...layer, canvas } : layer
++      ),
++    })),
++  reorderLayers: (fromIndex, toIndex) =>
++    set((state) => {
++      const layers = [...state.layers];
++      const [movedLayer] = layers.splice(fromIndex, 1);
++      layers.splice(toIndex, 0, movedLayer);
++      return { layers };
++    }),
++}));
++
++interface Shape {
++  id: string;
++  type: "rectangle" | "circle" | "line";
++}
++
++interface ShapeStore {
++  selectedShape: Shape | null;
++  selectShape: (shape: Shape | null) => void;
++  unselectShape: () => void;
++  shapes: Shape[];
++}
++
++const defaultShapes: Shape[] = [
++  { id: "shape-1", type: "rectangle" },
++  { id: "shape-2", type: "circle" },
++  { id: "shape-3", type: "line" },
++];
++
++export const useShapeStore = create<ShapeStore>((set) => ({
++  selectedShape: defaultShapes[0],
++  selectShape: (shape) => set({ selectedShape: shape }),
++  unselectShape: () => set({ selectedShape: null }),
++  shapes: defaultShapes,
++}));
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,437 @@
+import React, { useState } from 'react';
+import { Image, FolderOpen, Settings, Eye } from 'lucide-react';
+import { Modal } from '../ui/modal';
+import { ImagePreview } from '../ui/image-preview';
+import { formatFileSize } from '../lib/utils';
+import { toast } from 'sonner';
+
+interface ImageCompressorProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface ImageFile {
+  name: string;
+  path: string;
+  size: number;
+  status: 'ready' | 'processing' | 'done' | 'error';
+}
+
+interface PreviewData {
+  originalPath: string;
+  previewPath: string;
+  originalBase64: string;
+  compressedBase64: string;
+  original: {
+    size: number;
+    width: number;
+    height: number;
+    format: string;
+  };
+  compressed: {
+    size: number;
+    width: number;
+    height: number;
+    format: string;
+  };
+  compressionRatio: number;
+  sizeDifference: number;
+}
+
+
+
+export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
+  const [files, setFiles] = useState<ImageFile[]>([]);
+  const [compressionMethod, setCompressionMethod] = useState('quality'); // 'quality', 'size', 'dimension'
+  const [qualityLevel, setQualityLevel] = useState(70);
+  const [targetSize, setTargetSize] = useState(500);
+  const [maxDimension, setMaxDimension] = useState(1920);
+  const [outputFormat, setOutputFormat] = useState('original');
+  const [namingSuffix, setNamingSuffix] = useState('_compressed');
+  const [saveLocation, setSaveLocation] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // 预览相关状态
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [selectedFileForPreview, setSelectedFileForPreview] = useState<ImageFile | null>(null);
+
+  // 初始化保存位置 - 每次打开时都重新获取最新配置
+  React.useEffect(() => {
+    if (isOpen) {
+      window.electronAPI.getAppConfig().then(config => {
+        if (config.defaultSaveLocation) {
+          setSaveLocation(config.defaultSaveLocation);
+        } else {
+          setSaveLocation(''); // 如果没有设置默认位置，清空当前设置
+        }
+      }).catch(err => {
+        console.error('获取应用配置失败:', err);
+      });
+    }
+  }, [isOpen]); // 移除 saveLocation 依赖，确保每次打开都重新获取
+
+  const handleFileSelect = async () => {
+    try {
+      const result = await window.electronAPI.selectImages();
+      if (result.success && result.files) {
+        const imageFiles: ImageFile[] = result.files.map(file => ({
+          name: file.name,
+          path: file.path,
+          size: file.size,
+          status: 'ready' as const
+        }));
+        setFiles(prev => [...prev, ...imageFiles]);
+      }
+    } catch (error) {
+      console.error('选择文件失败:', error);
+      toast.error('选择文件失败，请重试');
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 生成预览
+  const handlePreview = async (file: ImageFile) => {
+    if (isGeneratingPreview) return;
+    
+    setSelectedFileForPreview(file);
+    setIsGeneratingPreview(true);
+    setShowPreview(true);
+    setPreviewData(null);
+
+    try {
+      const settings = {
+        method: compressionMethod,
+        quality: qualityLevel,
+        targetSize,
+        maxDimension,
+        outputFormat
+      };
+
+      const result = await window.electronAPI.generateImagePreview(file.path, settings);
+      
+      if (result.success && result.preview) {
+        setPreviewData(result.preview);
+      } else {
+        toast.error(result.error || '生成预览失败');
+        setShowPreview(false);
+      }
+    } catch (error) {
+      console.error('生成预览失败:', error);
+      toast.error('生成预览失败，请重试');
+      setShowPreview(false);
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
+  // 关闭预览
+  const handleClosePreview = async () => {
+    if (previewData?.previewPath) {
+      // 清理预览文件
+      try {
+        await window.electronAPI.cleanupImagePreview(previewData.previewPath);
+      } catch (error) {
+        console.error('清理预览文件失败:', error);
+      }
+    }
+    
+    setShowPreview(false);
+    setPreviewData(null);
+    setSelectedFileForPreview(null);
+  };
+
+  // 确认压缩（从预览界面）
+  const handleConfirmFromPreview = async () => {
+    if (!selectedFileForPreview) return;
+    
+    // 关闭预览
+    await handleClosePreview();
+    
+    // 执行压缩
+    await handleCompress();
+  };
+
+
+
+  const handleCompress = async () => {
+    if (files.length === 0) return;
+
+    setIsProcessing(true);
+
+    try {
+      const settings = {
+        method: compressionMethod,
+        quality: qualityLevel,
+        targetSize,
+        maxDimension,
+        outputFormat,
+        namingSuffix,
+        saveLocation: saveLocation || undefined
+      };
+
+      const result = await window.electronAPI.compressImages(
+        files.map(f => f.path),
+        settings
+      );
+
+      if (result.success) {
+        toast.success(`成功压缩 ${result.processedCount} 张图片`);
+        setFiles([]);
+        onClose();
+      } else {
+        toast.error(result.error || '压缩失败');
+      }
+    } catch (error) {
+      console.error('压缩失败:', error);
+      toast.error('压缩失败，请重试');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+
+  const footerContent = (
+    <div className="flex justify-end space-x-3">
+      <button
+        onClick={onClose}
+        className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors duration-200 text-gray-900 dark:text-gray-100"
+      >
+        关闭
+      </button>
+      <button
+        onClick={handleCompress}
+        disabled={files.length === 0 || isProcessing}
+        className="px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+      >
+        {isProcessing ? '压缩中...' : '压缩图片'}
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <ImagePreview
+        isOpen={showPreview}
+        onClose={handleClosePreview}
+        preview={previewData}
+        onConfirm={handleConfirmFromPreview}
+        isGenerating={isGeneratingPreview}
+      />
+      
+      <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
+      <div className="space-y-6">
+        {/* 文件选择区域 */}
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-12 text-center hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-2xl">
+              <FolderOpen className="h-8 w-8 text-gray-600 dark:text-gray-300" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium text-gray-900 dark:text-gray-100">选择图片文件进行压缩</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">支持 JPG, PNG, WebP 格式</p>
+            </div>
+            <button
+              onClick={handleFileSelect}
+              disabled={isProcessing}
+              className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 px-6 py-3 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              选择文件
+            </button>
+          </div>
+        </div>
+
+        {/* 文件列表 */}
+        {files.length > 0 && (
+          <div className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 font-medium border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+              已选择的文件 ({files.length})
+            </div>
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-48 overflow-y-auto">
+              {files.map((file, index) => (
+                <li key={index} className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-xl">
+                      <Image className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handlePreview(file)}
+                      disabled={isProcessing || isGeneratingPreview}
+                      className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="预览压缩效果"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => removeFile(index)}
+                      disabled={isProcessing}
+                      className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900 p-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 压缩设置 */}
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">压缩设置</h3>
+          </div>
+
+          {/* 压缩方式选择 */}
+          <div className="grid grid-cols-3 gap-4">
+            <button
+              onClick={() => setCompressionMethod('quality')}
+              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
+                compressionMethod === 'quality'
+                  ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-600 ring-1 ring-gray-900/10 dark:ring-gray-100/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              <div className="font-medium text-gray-900 dark:text-gray-100">按质量等级</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">中等质量</div>
+            </button>
+            <button
+              onClick={() => setCompressionMethod('size')}
+              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
+                compressionMethod === 'size'
+                  ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-600 ring-1 ring-gray-900/10 dark:ring-gray-100/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              <div className="font-medium text-gray-900 dark:text-gray-100">按文件大小</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">压缩至指定大小</div>
+            </button>
+            <button
+              onClick={() => setCompressionMethod('dimension')}
+              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
+                compressionMethod === 'dimension'
+                  ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-600 ring-1 ring-gray-900/10 dark:ring-gray-100/20'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              <div className="font-medium text-gray-900 dark:text-gray-100">按图片尺寸</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">调整图片尺寸</div>
+            </button>
+          </div>
+
+          {/* 压缩参数设置 */}
+          {compressionMethod === 'quality' && (
+            <div>
+              <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">
+                质量等级: {qualityLevel}%
+              </label>
+              <div className="px-1">
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  value={qualityLevel}
+                  onChange={(e) => setQualityLevel(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-xl appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  <span>高压缩</span>
+                  <span>高质量</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {compressionMethod === 'size' && (
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+                目标文件大小 (KB)
+              </label>
+              <input
+                type="number"
+                value={targetSize}
+                onChange={(e) => setTargetSize(parseInt(e.target.value))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="500"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">压缩后的图片将尽量接近此大小</p>
+            </div>
+          )}
+
+          {compressionMethod === 'dimension' && (
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+                最大尺寸 (像素)
+              </label>
+              <input
+                type="number"
+                value={maxDimension}
+                onChange={(e) => setMaxDimension(parseInt(e.target.value))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="1920"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">图片的宽度或高度将不超过此值，保持原始比例</p>
+            </div>
+          )}
+
+          {/* 输出格式和文件名设置 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">输出格式</label>
+              <select
+                value={outputFormat}
+                onChange={(e) => setOutputFormat(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                <option value="original">保持原格式</option>
+                <option value="jpg">JPG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WebP</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">文件名后缀</label>
+              <input
+                type="text"
+                value={namingSuffix}
+                onChange={(e) => setNamingSuffix(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                placeholder="_compressed"
+              />
+            </div>
+          </div>
+
+          {/* 保存位置信息 */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">保存位置</label>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+              {saveLocation ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">将保存到: {saveLocation}</p>
+              ) : (
+                <p className="text-sm text-gray-700 dark:text-gray-300">将使用应用设置中配置的默认保存位置</p>
+              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                可在应用设置中修改默认保存位置
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+    </>
+  );
+} 

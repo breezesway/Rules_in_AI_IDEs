@@ -1,0 +1,28 @@
+diff --git a/game/tictactoe.go b/game/tictactoe.go
+index 88795ae..2a86617 100644
+--- a/game/tictactoe.go
++++ b/game/tictactoe.go
+@@ -44,5 +44,22 @@ func (g *Game) Board() [9]string {
+ }
+ 
+ func (g *Game) Winner() string {
+-	return ""
++	winningCombinations := [][3]int{
++		{0, 1, 2}, // Top row
++		{3, 4, 5}, // Middle row
++		{6, 7, 8}, // Bottom row
++		{0, 3, 6}, // Left column
++		{1, 4, 7}, // Middle column
++		{2, 5, 8}, // Right column
++		{0, 4, 8}, // Diagonal \
++		{2, 4, 6}, // Diagonal /
++	}
++
++	for _, combo := range winningCombinations {
++		if g.board[combo[0]] != "" && g.board[combo[0]] == g.board[combo[1]] && g.board[combo[1]] == g.board[combo[2]] {
++			return g.board[combo[0]] // Return the winner ("X" or "O")
++		}
++	}
++
++	return "" // No winner
+ }

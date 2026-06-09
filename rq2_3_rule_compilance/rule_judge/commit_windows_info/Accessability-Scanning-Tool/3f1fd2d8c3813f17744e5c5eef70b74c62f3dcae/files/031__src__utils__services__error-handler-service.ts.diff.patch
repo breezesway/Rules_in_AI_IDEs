@@ -1,0 +1,31 @@
+diff --git a/src/utils/services/error-handler-service.ts b/src/utils/services/error-handler-service.ts
+index 3217bfe..24e5360 100644
+--- a/src/utils/services/error-handler-service.ts
++++ b/src/utils/services/error-handler-service.ts
+@@ -117,16 +117,25 @@ export class ErrorHandlerService {
+     timeoutMs: number,
+     context: string
+   ): Promise<ServiceResult<T>> {
++    let timeoutId: NodeJS.Timeout | undefined;
+     const timeoutPromise = new Promise<never>((_, reject) => {
+-      setTimeout(() => {
++      timeoutId = setTimeout(() => {
+         reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+       }, timeoutMs);
+     });
+ 
+     try {
+       const result = await Promise.race([promise, timeoutPromise]);
++      // Clear the timeout if the promise resolves
++      if (timeoutId) {
++        clearTimeout(timeoutId);
++      }
+       return this.createSuccess(result);
+     } catch (error) {
++      // Clear the timeout if there's an error
++      if (timeoutId) {
++        clearTimeout(timeoutId);
++      }
+       return this.handleError(error, context);
+     }
+   }

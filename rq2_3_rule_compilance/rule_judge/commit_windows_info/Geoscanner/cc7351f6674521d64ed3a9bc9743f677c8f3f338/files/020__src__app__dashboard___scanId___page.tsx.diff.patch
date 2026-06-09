@@ -1,0 +1,139 @@
+diff --git a/src/app/dashboard/[scanId]/page.tsx b/src/app/dashboard/[scanId]/page.tsx
+index 0ac1017..04e3d05 100644
+--- a/src/app/dashboard/[scanId]/page.tsx
++++ b/src/app/dashboard/[scanId]/page.tsx
+@@ -1,10 +1,9 @@
+-"use client";
++'use client';
+ 
+ import { useState, useEffect } from 'react';
+ import { useParams } from 'next/navigation';
+-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+-import { Separator } from "@/components/ui/separator";
+-import { Skeleton } from "@/components/ui/skeleton";
++import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
++import { Skeleton } from '@/components/ui/skeleton';
+ import { ModuleOverview } from '@/components/results/ModuleOverview/ModuleOverview';
+ import { ScoreHero } from '@/components/results/ScoreHero/ScoreHero';
+ import { QuickWinsPanel } from '@/components/results/QuickWinsPanel/QuickWinsPanel';
+@@ -29,24 +28,24 @@ export default function ScanDetailPage() {
+         setLoading(true);
+         const result = await fetchScanResult(scanId as string);
+         setScanResult(result);
+-        
++
+         // Haal scangeschiedenis op
+         const history = await fetchScanHistory(result.url);
+         setScanHistory(history);
+-        
++
+         // Genereer scoregeschiedenis data voor de grafiek
+         const scoreData = [];
+         for (const scan of history) {
+           const date = new Date(scan.date).toISOString();
+-          
++
+           // Voeg totale score toe
+           scoreData.push({
+             date,
+             score: scan.overallScore,
+             moduleId: 'overall',
+-            moduleName: 'Totale Score'
++            moduleName: 'Totale Score',
+           });
+-          
++
+           // Voeg individuele module scores toe
+           for (const module of scan.modules) {
+             scoreData.push({
+@@ -54,7 +53,7 @@ export default function ScanDetailPage() {
+               score: module.score,
+               moduleId: module.id,
+               moduleName: module.name,
+-              scanId: scan.id
++              scanId: scan.id,
+             });
+           }
+         }
+@@ -92,7 +91,10 @@ export default function ScanDetailPage() {
+     return (
+       <div className="container mx-auto py-8">
+         <h1 className="text-2xl font-bold mb-4">Scan niet gevonden</h1>
+-        <p>De opgevraagde scan kon niet worden gevonden. Controleer het scanID of probeer een nieuwe scan uit te voeren.</p>
++        <p>
++          De opgevraagde scan kon niet worden gevonden. Controleer het scanID of probeer een nieuwe
++          scan uit te voeren.
++        </p>
+       </div>
+     );
+   }
+@@ -101,11 +103,7 @@ export default function ScanDetailPage() {
+     <div className="container mx-auto py-8 space-y-8">
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+         <div className="md:col-span-1">
+-          <ScoreHero 
+-            score={scanResult.overallScore} 
+-            url={scanResult.url} 
+-            date={scanResult.date}
+-          />
++          <ScoreHero score={scanResult.overallScore} url={scanResult.url} date={scanResult.date} />
+         </div>
+         <div className="md:col-span-2">
+           <ModuleOverview modules={scanResult.modules} />
+@@ -120,38 +118,36 @@ export default function ScanDetailPage() {
+           <TabsTrigger value="history">Score Geschiedenis</TabsTrigger>
+           <TabsTrigger value="comparison">Vergelijkende Analyse</TabsTrigger>
+         </TabsList>
+-        
++
+         <TabsContent value="detailed" className="mt-4">
+-          <DetailedAnalysis 
++          <DetailedAnalysis
+             sections={scanResult.modules.map((module: any) => ({
+               id: module.id,
+               title: module.name,
+               description: `Analyse van de ${module.name.toLowerCase()} aspecten van je website.`,
+-              codeSnippets: module.fixes?.map((fix: any) => ({
+-                code: fix.fix,
+-                language: 'html',
+-                title: fix.description
+-              })) || [],
++              codeSnippets:
++                module.fixes?.map((fix: any) => ({
++                  code: fix.fix,
++                  language: 'html',
++                  title: fix.description,
++                })) || [],
+               currentScore: Math.round((module.score / module.maxScore) * 100),
+-              predictedScore: Math.min(100, Math.round((module.score / module.maxScore) * 100) + 15)
++              predictedScore: Math.min(
++                100,
++                Math.round((module.score / module.maxScore) * 100) + 15
++              ),
+             }))}
+           />
+         </TabsContent>
+-        
++
+         <TabsContent value="history" className="mt-4">
+-          <InteractiveChart 
+-            data={scoreHistory} 
+-            title="Score Verloop" 
+-          />
++          <InteractiveChart data={scoreHistory} title="Score Verloop" />
+         </TabsContent>
+-        
++
+         <TabsContent value="comparison" className="mt-4">
+-          <ComparativeAnalysis 
+-            scans={scanHistory} 
+-            primaryScanId={scanId as string}
+-          />
++          <ComparativeAnalysis scans={scanHistory} primaryScanId={scanId as string} />
+         </TabsContent>
+       </Tabs>
+     </div>
+   );
+-} 
+\ No newline at end of file
++}

@@ -1,0 +1,274 @@
+diff --git a/src/components/image-compressor.tsx b/src/components/image-compressor.tsx
+new file mode 100644
+index 0000000..24a26b1
+--- /dev/null
++++ b/src/components/image-compressor.tsx
+@@ -0,0 +1,267 @@
++import React, { useState } from 'react';
++import { Image, FolderOpen, Settings } from 'lucide-react';
++import { Modal } from '../ui/modal';
++
++interface ImageCompressorProps {
++  isOpen: boolean;
++  onClose: () => void;
++}
++
++export function ImageCompressor({ isOpen, onClose }: ImageCompressorProps) {
++  const [files, setFiles] = useState<File[]>([]);
++  const [compressionMethod, setCompressionMethod] = useState('quality'); // 'quality', 'size', 'dimension'
++  const [qualityLevel, setQualityLevel] = useState(70);
++  const [targetSize, setTargetSize] = useState(500);
++  const [maxDimension, setMaxDimension] = useState(1920);
++  const [outputFormat, setOutputFormat] = useState('original');
++  const [namingSuffix, setNamingSuffix] = useState('_compressed');
++
++  const handleDrop = (e: React.DragEvent) => {
++    e.preventDefault();
++    const allFiles = Array.from(e.dataTransfer.files) as File[];
++    const droppedFiles = allFiles.filter(
++      (file: File) => file.type.startsWith('image/')
++    );
++    setFiles(prev => [...prev, ...droppedFiles]);
++  };
++
++  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
++    if (e.target.files) {
++      const selectedFiles = Array.from(e.target.files);
++      setFiles(prev => [...prev, ...selectedFiles]);
++    }
++  };
++
++  const removeFile = (index: number) => {
++    setFiles(prev => prev.filter((_, i) => i !== index));
++  };
++
++  const footerContent = (
++    <div className="flex justify-end space-x-3">
++      <button
++        onClick={onClose}
++        className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200"
++      >
++        关闭
++      </button>
++      <button
++        disabled={files.length === 0}
++        className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
++      >
++        压缩图片
++      </button>
++    </div>
++  );
++
++  return (
++    <Modal isOpen={isOpen} onClose={onClose} title="图片压缩" footer={footerContent}>
++      <div className="space-y-6">
++        {/* 文件拖拽区域 */}
++        <div
++          className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
++          onDrop={handleDrop}
++          onDragOver={(e) => e.preventDefault()}
++        >
++          <div className="flex flex-col items-center space-y-4">
++            <div className="p-4 bg-gray-100 rounded-2xl">
++              <FolderOpen className="h-8 w-8 text-gray-600" />
++            </div>
++            <div className="space-y-2">
++              <p className="font-medium text-gray-900">拖拽图片文件到此处，或</p>
++              <p className="text-sm text-gray-500">支持 JPG, PNG, WebP 格式</p>
++            </div>
++            <input
++              type="file"
++              accept="image/*"
++              multiple
++              onChange={handleFileSelect}
++              className="hidden"
++              id="image-input"
++            />
++            <label
++              htmlFor="image-input"
++              className="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 cursor-pointer transition-colors duration-200"
++            >
++              选择文件
++            </label>
++          </div>
++        </div>
++
++        {/* 文件列表 */}
++        {files.length > 0 && (
++          <div className="border border-gray-200 rounded-2xl overflow-hidden">
++            <div className="p-4 bg-gray-50 font-medium border-b border-gray-200 text-gray-900">
++              已选择的文件 ({files.length})
++            </div>
++            <ul className="divide-y divide-gray-200 max-h-48 overflow-y-auto">
++              {files.map((file, index) => (
++                <li key={index} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200">
++                  <div className="flex items-center space-x-3">
++                    <div className="p-2 bg-green-100 rounded-xl">
++                      <Image className="h-5 w-5 text-green-600" />
++                    </div>
++                    <div>
++                      <p className="font-medium text-gray-900">{file.name}</p>
++                      <p className="text-sm text-gray-500">
++                        {(file.size / 1024 / 1024).toFixed(2)} MB
++                      </p>
++                    </div>
++                  </div>
++                  <button
++                    onClick={() => removeFile(index)}
++                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200"
++                  >
++                    删除
++                  </button>
++                </li>
++              ))}
++            </ul>
++          </div>
++        )}
++
++        {/* 压缩设置 */}
++        <div className="space-y-6">
++          <div className="flex items-center space-x-2 mb-4">
++            <Settings className="h-5 w-5 text-gray-600" />
++            <h3 className="text-lg font-medium text-gray-900">压缩设置</h3>
++          </div>
++
++          {/* 压缩方式选择 */}
++          <div className="grid grid-cols-3 gap-4">
++            <button
++              onClick={() => setCompressionMethod('quality')}
++              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
++                compressionMethod === 'quality'
++                  ? 'border-gray-900 bg-gray-50'
++                  : 'border-gray-200 hover:border-gray-300'
++              }`}
++            >
++              <div className="font-medium text-gray-900">按质量等级</div>
++              <div className="text-sm text-gray-500 mt-1">中等质量</div>
++            </button>
++            <button
++              onClick={() => setCompressionMethod('size')}
++              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
++                compressionMethod === 'size'
++                  ? 'border-gray-900 bg-gray-50'
++                  : 'border-gray-200 hover:border-gray-300'
++              }`}
++            >
++              <div className="font-medium text-gray-900">按文件大小</div>
++              <div className="text-sm text-gray-500 mt-1">压缩至指定大小</div>
++            </button>
++            <button
++              onClick={() => setCompressionMethod('dimension')}
++              className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
++                compressionMethod === 'dimension'
++                  ? 'border-gray-900 bg-gray-50'
++                  : 'border-gray-200 hover:border-gray-300'
++              }`}
++            >
++              <div className="font-medium text-gray-900">按图片尺寸</div>
++              <div className="text-sm text-gray-500 mt-1">调整图片尺寸</div>
++            </button>
++          </div>
++
++          {/* 压缩参数设置 */}
++          {compressionMethod === 'quality' && (
++            <div>
++              <label className="block text-sm font-medium mb-3 text-gray-900">
++                质量等级: {qualityLevel}%
++              </label>
++              <div className="px-1">
++                <input
++                  type="range"
++                  min="10"
++                  max="100"
++                  value={qualityLevel}
++                  onChange={(e) => setQualityLevel(parseInt(e.target.value))}
++                  className="w-full h-2 bg-gray-200 rounded-xl appearance-none cursor-pointer slider"
++                />
++                <div className="flex justify-between text-xs text-gray-500 mt-2">
++                  <span>高压缩</span>
++                  <span>高质量</span>
++                </div>
++              </div>
++            </div>
++          )}
++
++          {compressionMethod === 'size' && (
++            <div>
++              <label className="block text-sm font-medium mb-2 text-gray-900">
++                目标文件大小 (KB)
++              </label>
++              <input
++                type="number"
++                value={targetSize}
++                onChange={(e) => setTargetSize(parseInt(e.target.value))}
++                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200"
++                placeholder="500"
++              />
++              <p className="text-sm text-gray-500 mt-2">压缩后的图片将尽量接近此大小</p>
++            </div>
++          )}
++
++          {compressionMethod === 'dimension' && (
++            <div>
++              <label className="block text-sm font-medium mb-2 text-gray-900">
++                最大尺寸 (像素)
++              </label>
++              <input
++                type="number"
++                value={maxDimension}
++                onChange={(e) => setMaxDimension(parseInt(e.target.value))}
++                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200"
++                placeholder="1920"
++              />
++              <p className="text-sm text-gray-500 mt-2">图片的宽度或高度将不超过此值，保持原始比例</p>
++            </div>
++          )}
++
++          {/* 输出格式和文件名设置 */}
++          <div className="grid grid-cols-2 gap-4">
++            <div>
++              <label className="block text-sm font-medium mb-2 text-gray-900">输出格式</label>
++              <select
++                value={outputFormat}
++                onChange={(e) => setOutputFormat(e.target.value)}
++                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200"
++              >
++                <option value="original">保持原格式</option>
++                <option value="jpg">JPG</option>
++                <option value="png">PNG</option>
++                <option value="webp">WebP</option>
++              </select>
++            </div>
++            <div>
++              <label className="block text-sm font-medium mb-2 text-gray-900">文件名后缀</label>
++              <input
++                type="text"
++                value={namingSuffix}
++                onChange={(e) => setNamingSuffix(e.target.value)}
++                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200"
++                placeholder="_compressed"
++              />
++            </div>
++          </div>
++
++          {/* 保存位置 */}
++          <div>
++            <label className="block text-sm font-medium mb-2 text-gray-900">保存位置</label>
++            <div className="flex space-x-3">
++              <input
++                type="text"
++                value="默认下载目录"
++                readOnly
++                className="flex-1 border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-600"
++              />
++              <button className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200 whitespace-nowrap">
++                浏览
++              </button>
++            </div>
++          </div>
++        </div>
++      </div>
++    </Modal>
++  );
++} 
+\ No newline at end of file

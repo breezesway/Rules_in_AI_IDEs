@@ -1,0 +1,55 @@
+diff --git a/game/tictactoe_test.go b/game/tictactoe_test.go
+index 4a65cb5..37f9252 100644
+--- a/game/tictactoe_test.go
++++ b/game/tictactoe_test.go
+@@ -167,3 +167,50 @@ func TestWinner(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestWinnerText(t *testing.T) {
++	tests := []struct {
++		name         string
++		setupMoves   []int
++		expectedText string
++	}{
++		{
++			name:         "X wins top row",
++			setupMoves:   []int{0, 3, 1, 4, 2},
++			expectedText: "X has won!",
++		},
++		{
++			name:         "O wins diagonal",
++			setupMoves:   []int{1, 0, 3, 4, 7, 8},
++			expectedText: "O has won!",
++		},
++		{
++			name:         "no winner on empty board",
++			setupMoves:   []int{},
++			expectedText: "X to move",
++		},
++		{
++			name:         "no winner in ongoing game",
++			setupMoves:   []int{0, 1, 2, 3},
++			expectedText: "X to move",
++		},
++	}
++
++	for _, test := range tests {
++		t.Run(test.name, func(t *testing.T) {
++			game := NewGame()
++
++			// Perform setup moves
++			for _, move := range test.setupMoves {
++				_ = game.MakeMove(move)
++			}
++
++			// Check the text based on the winner
++			if winner := game.Winner(); winner != "" {
++				assert.Equal(t, winner+" has won!", game.Text())
++			} else {
++				assert.Equal(t, "X to move", game.Text())
++			}
++		})
++	}
++}

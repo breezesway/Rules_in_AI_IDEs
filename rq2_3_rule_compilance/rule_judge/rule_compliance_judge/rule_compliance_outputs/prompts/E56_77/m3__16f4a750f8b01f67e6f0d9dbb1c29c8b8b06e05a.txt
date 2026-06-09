@@ -1,0 +1,649 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+- Follow modern Python packaging with pyproject.toml
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system structure (specifically the presence of 'pyproject.toml' in the repository).
+- Suggested Logic: Verify that a file named 'pyproject.toml' exists in the root directory or relevant project subdirectories to ensure modern Python packaging standards are followed.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=3)
+- Commit Message: batch mode
+- Changed Files List: 
+README.md	+176	-8	after_lines=932
+src/youtube_notion/main.py	+57	-35	after_lines=331
+youtube_notion_cli.py	+95	-6	after_lines=154
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── specs
+│   │   └── youtube-video-processing
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── README.md
+├── chat_logs
+│   └── README.md
+├── fix_tests.py
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   ├── example_data.py
+│       │   └── settings.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       ├── processors
+│       │   ├── __init__.py
+│       │   ├── exceptions.py
+│       │   └── youtube_processor.py
+│       └── utils
+│           ├── __init__.py
+│           ├── chat_logger.py
+│           └── markdown_converter.py
+├── test_summary.py
+├── tests
+│   ├── TEST_SUITE_SUMMARY.md
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_chat_logging.py
+│   ├── test_cli.py
+│   ├── test_configuration.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_error_handling.py
+│   ├── test_gemini_integration.py
+│   ├── test_integration.py
+│   ├── test_main.py
+│   ├── test_main_youtube_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_metadata_extraction.py
+│   ├── test_notion_operations.py
+│   ├── test_performance.py
+│   ├── test_retry_error_handling.py
+│   ├── test_timestamp_enrichment.py
+│   ├── test_url_validation.py
+│   ├── test_youtube_end_to_end.py
+│   ├── test_youtube_performance_comprehensive.py
+│   └── test_youtube_processor_integration.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index c8b4496..a42e089 100644
+--- a/README.md
++++ b/README.md
+@@ -149,12 +149,18 @@ The application supports two main modes of operation:
+ Process any YouTube video with AI-generated summaries:
+ 
+ ```bash
+-# Basic usage - process a YouTube video
++# Basic usage - process a single YouTube video
+ python youtube_notion_cli.py --url "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ 
+-# Use a custom prompt for AI summary generation
++# Use a custom prompt for AI summary generation (single URL only)
+ python youtube_notion_cli.py --url "https://youtu.be/dQw4w9WgXcQ" --prompt "Focus on the key technical concepts and provide detailed timestamps"
+ 
++# Process multiple URLs with comma-separated list
++python youtube_notion_cli.py --urls "https://youtu.be/dQw4w9WgXcQ,https://youtu.be/oHg5SJYRHA0,https://youtu.be/kJQP7kiw5Fk"
++
++# Process URLs from a file (one URL per line, empty lines ignored)
++python youtube_notion_cli.py --file urls.txt
++
+ # Example with different URL formats (all supported):
+ python youtube_notion_cli.py --url "https://www.youtube.com/watch?v=VIDEO_ID"
+ python youtube_notion_cli.py --url "https://youtu.be/VIDEO_ID"
+@@ -178,9 +184,11 @@ python youtube_notion_cli.py --example-data
+ 
+ | Option | Description | Example |
+ |--------|-------------|---------|
+-| `--url URL` | Process a specific YouTube video URL | `--url "https://youtu.be/abc123"` |
++| `--url URL` | Process a single YouTube video URL | `--url "https://youtu.be/abc123"` |
++| `--urls URLS` | Process multiple URLs (comma-separated) | `--urls "https://youtu.be/abc123,https://youtu.be/def456"` |
++| `--file FILE` | Process URLs from file (one per line) | `--file urls.txt` |
+ | `--example-data` | Use built-in example data (default) | `--example-data` |
+-| `--prompt TEXT` | Custom AI prompt (only with --url) | `--prompt "Summarize key points"` |
++| `--prompt TEXT` | Custom AI prompt (only with single --url) | `--prompt "Summarize key points"` |
+ | `--help` | Show help message and exit | `--help` |
+ 
+ #### Alternative Execution Methods
+@@ -406,6 +414,121 @@ Use timestamps in the format [MM:SS] or [MM:SS-MM:SS] for time ranges.
+ 
+ You can override this by setting `DEFAULT_SUMMARY_PROMPT` in your `.env` file.
+ 
++## Multi-URL Processing
++
++The application supports processing multiple YouTube URLs in a single command, making it easy to batch process educational content, meeting recordings, or entire playlists.
++
++### Input Methods
++
++#### 1. Comma-Separated URLs
++```bash
++# Process multiple URLs at once
++python youtube_notion_cli.py --urls "https://youtu.be/dQw4w9WgXcQ,https://youtu.be/oHg5SJYRHA0,https://youtu.be/kJQP7kiw5Fk"
++
++# URLs can have spaces around commas (automatically trimmed)
++python youtube_notion_cli.py --urls "https://youtu.be/abc123, https://youtu.be/def456 , https://youtu.be/ghi789"
++
++# Empty entries are automatically ignored
++python youtube_notion_cli.py --urls "https://youtu.be/abc123,,https://youtu.be/def456"
++```
++
++#### 2. File Input
++Create a text file with one URL per line:
++
++```bash
++# Create urls.txt
++cat > urls.txt << EOF
++https://youtu.be/dQw4w9WgXcQ
++
++https://youtu.be/oHg5SJYRHA0
++https://youtu.be/kJQP7kiw5Fk
++EOF
++
++# Process all URLs from file
++python youtube_notion_cli.py --file urls.txt
++```
++
++**File format features:**
++- One URL per line
++- Empty lines are automatically ignored
++- Leading/trailing whitespace is trimmed
++- Supports any text file encoding (UTF-8 recommended)
++
++### Batch Processing Features
++
++#### Progress Tracking
++```
++Processing 3 YouTube URLs...
++============================================================
++
++[1/3] Processing: https://youtu.be/dQw4w9WgXcQ
++----------------------------------------
++✓ Processed: Rick Astley - Never Gonna Give You Up
++✓ Added to Notion: Rick Astley - Never Gonna Give You Up
++
++[2/3] Processing: https://youtu.be/oHg5SJYRHA0
++----------------------------------------
++✓ Processed: RickRoll'D
++✓ Added to Notion: RickRoll'D
++
++[3/3] Processing: https://youtu.be/kJQP7kiw5Fk
++----------------------------------------
++✓ Processed: Luis Fonsi - Despacito ft. Daddy Yankee
++✓ Added to Notion: Luis Fonsi - Despacito ft. Daddy Yankee
++```
++
++#### Error Handling & Summary
++```
++============================================================
++BATCH PROCESSING SUMMARY
++============================================================
++Total URLs processed: 5
++Successful: 3
++Failed: 2
++
++Failed URLs:
++  - https://invalid-url.com
++  - https://youtu.be/nonexistent123
++```
++
++#### Key Benefits
++- **Resilient**: Continues processing even if individual URLs fail
++- **Informative**: Shows progress and detailed error messages
++- **Efficient**: Optimized output for batch operations (less verbose per item)
++- **Complete**: Provides comprehensive summary at the end
++
++### Limitations
++
++- **Custom prompts**: Only supported with single `--url` (not with `--urls` or `--file`)
++- **Rate limits**: Respects API rate limits automatically with built-in retry logic
++- **Memory usage**: Processes URLs sequentially to manage memory efficiently
++
++### Use Cases
++
++#### Educational Content Curation
++```bash
++# Process an entire course or tutorial series
++python youtube_notion_cli.py --file course_videos.txt
++```
++
++#### Meeting/Conference Processing
++```bash
++# Process multiple recorded sessions
++python youtube_notion_cli.py --urls "https://youtu.be/session1,https://youtu.be/session2,https://youtu.be/session3"
++```
++
++#### Research & Documentation
++```bash
++# Process research videos for a project
++cat > research_videos.txt << EOF
++https://youtu.be/paper1_presentation
++https://youtu.be/paper2_discussion
++https://youtu.be/expert_interview
++EOF
++
++python youtube_notion_cli.py --file research_videos.txt
++```
++
+ ## Usage Patterns & Examples
+ 
+ ### Common Workflows
+@@ -445,14 +568,32 @@ python youtube_notion_cli.py \
+   --prompt "Create a step-by-step guide with clear instructions. Include timestamps for each step and highlight any prerequisites or important warnings."
+ ```
+ 
+-#### 3. Batch Processing (Manual)
++#### 3. Batch Processing
++
++**Multiple URLs at once:**
+ ```bash
+-# Process multiple videos (run separately)
++# Comma-separated URLs
++python youtube_notion_cli.py --urls "https://youtu.be/video1,https://youtu.be/video2,https://youtu.be/video3"
++
++# From a file (create urls.txt with one URL per line)
++echo "https://youtu.be/video1" > urls.txt
++echo "https://youtu.be/video2" >> urls.txt
++echo "https://youtu.be/video3" >> urls.txt
++python youtube_notion_cli.py --file urls.txt
++
++# Manual processing (run separately)
+ python youtube_notion_cli.py --url "https://youtu.be/video1"
+ python youtube_notion_cli.py --url "https://youtu.be/video2"
+ python youtube_notion_cli.py --url "https://youtu.be/video3"
+ ```
+ 
++**Batch processing features:**
++- Progress tracking with `[1/3]` indicators
++- Comprehensive error handling per URL
++- Summary report showing successful vs failed URLs
++- Continues processing even if individual URLs fail
++- Optimized output for batch operations (less verbose)
++
+ #### 4. Development and Testing
+ ```bash
+ # Test with debug output
+@@ -701,18 +842,45 @@ python -c "import os; print('NOTION_TOKEN' in os.environ)"
+ 
+ **Invalid Argument Combinations**
+ ```bash
+-# ❌ Cannot use --prompt without --url
++# ❌ Cannot use --prompt without single --url
+ python youtube_notion_cli.py --prompt "Custom prompt" --example-data
++python youtube_notion_cli.py --prompt "Custom prompt" --urls "url1,url2"
++python youtube_notion_cli.py --prompt "Custom prompt" --file urls.txt
+ 
+-# ❌ Cannot use both --url and --example-data
++# ❌ Cannot combine multiple input methods
+ python youtube_notion_cli.py --url "https://youtu.be/abc" --example-data
++python youtube_notion_cli.py --urls "url1,url2" --file urls.txt
++python youtube_notion_cli.py --url "https://youtu.be/abc" --urls "url1,url2"
+ 
+ # ✅ Valid combinations
+ python youtube_notion_cli.py --url "https://youtu.be/abc" --prompt "Custom prompt"
++python youtube_notion_cli.py --urls "https://youtu.be/abc,https://youtu.be/def"
++python youtube_notion_cli.py --file urls.txt
+ python youtube_notion_cli.py --example-data
+ python youtube_notion_cli.py  # Defaults to example data
+ ```
+ 
++**File Input Validation**
++```bash
++# ❌ File not found
++python youtube_notion_cli.py --file nonexistent.txt
++# Error: File 'nonexistent.txt' not found
++
++# ❌ Empty file or no valid URLs
++python youtube_notion_cli.py --file empty.txt
++# Error: No URLs found in file
++
++# ✅ Valid file with mixed content (empty lines ignored)
++cat > mixed_urls.txt << EOF
++https://youtu.be/abc123
++
++https://youtu.be/def456
++   
++https://youtu.be/ghi789
++EOF
++python youtube_notion_cli.py --file mixed_urls.txt
++```
++
+ ### Debug Mode
+ 
+ Enable verbose output for troubleshooting:
+
+--- FILE: src/youtube_notion/main.py ---
+diff --git a/src/youtube_notion/main.py b/src/youtube_notion/main.py
+index 161392e..622b25a 100644
+--- a/src/youtube_notion/main.py
++++ b/src/youtube_notion/main.py
+@@ -85,7 +85,7 @@ def find_notion_database(notion: Client, config: ApplicationConfig) -> Optional[
+         return None
+ 
+ 
+-def process_youtube_video(youtube_url: str, custom_prompt: Optional[str], config: ApplicationConfig) -> Optional[Dict[str, Any]]:
++def process_youtube_video(youtube_url: str, custom_prompt: Optional[str], config: ApplicationConfig, batch_mode: bool = False) -> Optional[Dict[str, Any]]:
+     """
+     Process a YouTube video using the YouTubeProcessor.
+     
+@@ -130,14 +130,18 @@ def process_youtube_video(youtube_url: str, custom_prompt: Optional[str], config
+             return None
+         
+         # Process the video
+-        print(f"Processing YouTube video: {youtube_url}")
+-        if custom_prompt:
+-            print("Using custom prompt for AI summary generation")
++        if not batch_mode:
++            print(f"Processing YouTube video: {youtube_url}")
++            if custom_prompt:
++                print("Using custom prompt for AI summary generation")
+         
+         video_data = processor.process_video(youtube_url, custom_prompt)
+         
+-        print(f"✓ Successfully processed video: {video_data['Title']}")
+-        print(f"✓ Channel: {video_data['Channel']}")
++        if not batch_mode:
++            print(f"✓ Successfully processed video: {video_data['Title']}")
++            print(f"✓ Channel: {video_data['Channel']}")
++        else:
++            print(f"✓ Processed: {video_data['Title']}")
+         
+         return video_data
+         
+@@ -219,7 +223,7 @@ def add_to_notion_database(notion: Client, database_id: str, video_data: Dict[st
+         return False
+ 
+ 
+-def main(youtube_url: Optional[str] = None, custom_prompt: Optional[str] = None) -> bool:
++def main(youtube_url: Optional[str] = None, custom_prompt: Optional[str] = None, batch_mode: bool = False) -> bool:
+     """
+     Main function to add YouTube summary to Notion database.
+     
+@@ -228,6 +232,7 @@ def main(youtube_url: Optional[str] = None, custom_prompt: Optional[str] = None)
+     Args:
+         youtube_url: YouTube URL to process. If None, uses EXAMPLE_DATA.
+         custom_prompt: Custom prompt for AI summary generation.
++        batch_mode: If True, reduces verbose output for batch processing.
+         
+     Returns:
+         bool: True if successful, False otherwise
+@@ -235,50 +240,59 @@ def main(youtube_url: Optional[str] = None, custom_prompt: Optional[str] = None)
+     # Determine operation mode
+     youtube_mode = youtube_url is not None
+     
+-    print("=" * 60)
+-    print("YouTube to Notion Database Integration")
+-    print("=" * 60)
+-    
+-    if youtube_mode:
+-        print(f"Mode: YouTube URL Processing")
+-        print(f"URL: {youtube_url}")
+-    else:
+-        print("Mode: Example Data")
+-    
+-    print()
++    if not batch_mode:
++        print("=" * 60)
++        print("YouTube to Notion Database Integration")
++        print("=" * 60)
++        
++        if youtube_mode:
++            print(f"Mode: YouTube URL Processing")
++            print(f"URL: {youtube_url}")
++        else:
++            print("Mode: Example Data")
++        
++        print()
+     
+     # Step 1: Load and validate configuration
+-    print("1. Loading configuration...")
++    if not batch_mode:
++        print("1. Loading configuration...")
+     config = load_application_config(youtube_mode)
+     if not config:
+         return False
+-    print("✓ Configuration loaded and validated")
++    if not batch_mode:
++        print("✓ Configuration loaded and validated")
+     
+     # Step 2: Initialize Notion client
+-    print("\n2. Initializing Notion client...")
++    if not batch_mode:
++        print("\n2. Initializing Notion client...")
+     notion = initialize_notion_client(config.notion.notion_token)
+     if not notion:
+         return False
+-    print("✓ Notion client initialized")
++    if not batch_mode:
++        print("✓ Notion client initialized")
+     
+     # Step 3: Find target database
+-    print("\n3. Finding target database...")
++    if not batch_mode:
++        print("\n3. Finding target database...")
+     database_id = find_notion_database(notion, config)
+     if not database_id:
+         return False
+-    print("✓ Found 'YT Summaries' database")
++    if not batch_mode:
++        print("✓ Found 'YT Summaries' database")
+     
+     # Step 4: Process video data
+-    print("\n4. Processing video data...")
++    if not batch_mode:
++        print("\n4. Processing video data...")
+     
+     if youtube_mode:
+         # YouTube URL processing mode
+-        video_data = process_youtube_video(youtube_url, custom_prompt, config)
++        video_data = process_youtube_video(youtube_url, custom_prompt, config, batch_mode)
+         if not video_data:
+             return False
+     else:
+         # Example data mode
+-        print("Using example data from config")
++        if not batch_mode:
++            print("Using example data from config")
+         video_data = {
+             "Title": EXAMPLE_DATA["Title"],
+             "Video URL": EXAMPLE_DATA["Video URL"],
+@@ -286,21 +300,29 @@ def main(youtube_url: Optional[str] = None, custom_prompt: Optional[str] = None)
+             "Cover": EXAMPLE_DATA["Cover"],
+             "Summary": EXAMPLE_DATA["Summary"]
+         }
+-        print(f"✓ Loaded example data: {video_data['Title']}")
++        if not batch_mode:
++            print(f"✓ Loaded example data: {video_data['Title']}")
+     
+     # Step 5: Add to Notion database
+-    print("\n5. Adding entry to Notion database...")
++    if not batch_mode:
++        print("\n5. Adding entry to Notion database...")
+     success = add_to_notion_database(notion, database_id, video_data)
+     
+     if success:
+-        print("\n" + "=" * 60)
+-        print("SUCCESS: YouTube summary added to Notion database!")
+-        print("=" * 60)
++        if not batch_mode:
++            print("\n" + "=" * 60)
++            print("SUCCESS: YouTube summary added to Notion database!")
++            print("=" * 60)
++        else:
++            print(f"✓ Added to Notion: {video_data['Title']}")
+         return True
+     else:
+-        print("\n" + "=" * 60)
+-        print("FAILED: Could not add YouTube summary to Notion database")
+-        print("=" * 60)
++        if not batch_mode:
++            print("\n" + "=" * 60)
++            print("FAILED: Could not add YouTube summary to Notion database")
++            print("=" * 60)
++        else:
++            print(f"✗ Failed to add: {video_data.get('Title', 'Unknown')}")
+         return False
+
+--- FILE: youtube_notion_cli.py ---
+diff --git a/youtube_notion_cli.py b/youtube_notion_cli.py
+index a1a1bd2..faf9da1 100644
+--- a/youtube_notion_cli.py
++++ b/youtube_notion_cli.py
+@@ -16,7 +16,9 @@ def parse_arguments():
+         epilog="""
+ Examples:
+   %(prog)s --example-data                    # Use example data (default)
+-  %(prog)s --url "https://youtube.com/watch?v=abc123"  # Process YouTube video
++  %(prog)s --url "https://youtube.com/watch?v=abc123"  # Process single YouTube video
++  %(prog)s --urls "https://youtu.be/abc123,https://youtu.be/def456"  # Process multiple URLs
++  %(prog)s --file urls.txt                   # Process URLs from file (one per line)
+   %(prog)s --url "https://youtu.be/abc123" --prompt "Custom summary prompt"
+         """
+     )
+@@ -27,7 +29,19 @@ Examples:
+     input_group.add_argument(
+         "--url",
+         type=str,
+-        help="YouTube URL to process"
++        help="Single YouTube URL to process"
++    )
++    
++    input_group.add_argument(
++        "--urls",
++        type=str,
++        help="Comma-separated list of YouTube URLs to process"
++    )
++    
++    input_group.add_argument(
++        "--file",
++        type=str,
++        help="File containing YouTube URLs (one per line, empty lines ignored)"
+     )
+     
+     input_group.add_argument(
+@@ -44,22 +58,97 @@ Examples:
+     
+     return parser.parse_args()
+ 
++def parse_urls_from_file(file_path):
++    """Parse YouTube URLs from a file, ignoring empty lines."""
++    try:
++        with open(file_path, 'r', encoding='utf-8') as f:
++            urls = []
++            for line_num, line in enumerate(f, 1):
++                line = line.strip()
++                if line:  # Ignore empty lines
++                    urls.append(line)
++            return urls
++    except FileNotFoundError:
++        print(f"Error: File '{file_path}' not found", file=sys.stderr)
++        sys.exit(1)
++    except Exception as e:
++        print(f"Error reading file '{file_path}': {e}", file=sys.stderr)
++        sys.exit(1)
++
+ def main_cli():
+     """Main CLI function that handles argument parsing and delegates to appropriate mode."""
+     args = parse_arguments()
+     
+     # Validate arguments
+     if args.prompt and not args.url:
+-        print("Error: --prompt can only be used with --url", file=sys.stderr)
++        print("Error: --prompt can only be used with single --url", file=sys.stderr)
+         sys.exit(1)
+     
+-    # Determine execution mode
++    # Determine execution mode and collect URLs
++    urls = []
++    
+     if args.url:
+-        # YouTube URL processing mode
+-        main(youtube_url=args.url, custom_prompt=args.prompt)
++        # Single YouTube URL processing mode
++        urls = [args.url]
++    elif args.urls:
++        # Multiple URLs from comma-separated string
++        urls = [url.strip() for url in args.urls.split(',') if url.strip()]
++        if not urls:
++            print("Error: No valid URLs found in comma-separated list", file=sys.stderr)
++            sys.exit(1)
++    elif args.file:
++        # URLs from file
++        urls = parse_urls_from_file(args.file)
++        if not urls:
++            print("Error: No URLs found in file", file=sys.stderr)
++            sys.exit(1)
+     else:
+         # Example data mode (default or explicitly requested)
+         main()
++        return
++    
++    # Process URLs
++    if len(urls) == 1:
++        # Single URL - use existing main function
++        main(youtube_url=urls[0], custom_prompt=args.prompt)
++    else:
++        # Multiple URLs - process each one
++        print(f"Processing {len(urls)} YouTube URLs...")
++        print("=" * 60)
++        
++        success_count = 0
++        failed_urls = []
++        
++        for i, url in enumerate(urls, 1):
++            print(f"\n[{i}/{len(urls)}] Processing: {url}")
++            print("-" * 40)
++            
++            try:
++                success = main(youtube_url=url, custom_prompt=None, batch_mode=True)
++                if success:
++                    success_count += 1
++                else:
++                    failed_urls.append(url)
++            except Exception as e:
++                print(f"✗ Error processing {url}: {e}")
++                failed_urls.append(url)
++        
++        # Summary
++        print("\n" + "=" * 60)
++        print("BATCH PROCESSING SUMMARY")
++        print("=" * 60)
++        print(f"Total URLs processed: {len(urls)}")
++        print(f"Successful: {success_count}")
++        print(f"Failed: {len(failed_urls)}")
++        
++        if failed_urls:
++            print("\nFailed URLs:")
++            for url in failed_urls:
++                print(f"  - {url}")
++            sys.exit(1)
++        else:
++            print("\n✓ All URLs processed successfully!")
++            sys.exit(0)
+ 
+ if __name__ == "__main__":
+     main_cli()
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

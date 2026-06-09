@@ -1,0 +1,30 @@
+diff --git a/Makefile b/Makefile
+index f6fe5fb..c976481 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,21 @@
++GOFILES := $(shell find . -name '*.go')
++WASMFILE := web/static/main.wasm
++WASMEXEC := web/static/wasm_exec.js
+ 
++$(WASMFILE): $(GOFILES)
++	GOOS=js GOARCH=wasm go build -o $(WASMFILE)
+ 
+-web/static/main.wasm: *.go
+-	GOOS=js GOARCH=wasm go build -o web/static/main.wasm
++.PHONY: test
++test:
++	go test -v ./...
+ 
+-run: web/static/main.wasm
+-	cd web/static && python3 -m http.server 8080
++$(WASMEXEC):
++	cp "$(shell go env GOROOT)/lib/wasm/wasm_exec.js" $(WASMEXEC)
++
++.PHONY: serve
++serve:
++	cd web/static && python -m http.server 8080
++
++.PHONY: setup
++setup: $(WASMEXEC) $(WASMFILE)
+ 

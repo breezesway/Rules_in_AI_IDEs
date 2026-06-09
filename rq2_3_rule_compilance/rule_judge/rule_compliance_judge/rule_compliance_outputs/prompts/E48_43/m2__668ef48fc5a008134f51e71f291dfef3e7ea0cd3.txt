@@ -1,0 +1,855 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Workflow Conventions
+- Rule File Path: .kiro/steering/project-context.md
+- Change Type: modified
+- Target Rule Content:
+- Build command: npm run build
++ Build command: pnpm run build
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Package manager lock files (pnpm-lock.yaml, package-lock.json), CI/CD configuration files (e.g., .github/workflows/*.yml, Jenkinsfile), and project documentation (README.md).
+- Suggested Logic: 1. Verify the presence of 'pnpm-lock.yaml' and the absence of 'package-lock.json' in the root directory. 
+2. Search CI/CD configuration files and documentation for the string 'pnpm run build' and ensure 'npm run build' is no longer present.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=2)
+- Commit Message: ✨ Add global settings scanning with advanced security filtering
+
+Extend CollectionService with comprehensive global ~/.kiro/ scanning:
+- Add GlobalSettingsData interface for structured global settings
+- Implement collectGlobalSettings() method for ~/ scanning
+- Collect user-config.md, global-preferences.md from root
+- Scan ~/.kiro/templates/ for prompt templates (.md/.txt files)
+- Scan ~/.kiro/config/ for configuration files (.json/.yaml/.yml/.md)
+- Add sophisticated security filtering for API keys, tokens, secrets, passwords
+- Support JSON and YAML formats with flexible regex patterns
+- Handle permission denied and missing directory scenarios gracefully
+- Add comprehensive test suite with 8 test cases covering all scenarios
+- Mark security-filtered content with securityFiltered flag
+
+Complete task 3.2 as per project workflow guidelines
+- Changed Files List: 
+.kiro/specs/taptik-build-command/tasks.md	+2	-2	after_lines=148
+src/modules/build/services/collection.service.spec.ts	+277	-1	after_lines=574
+src/modules/build/services/collection.service.ts	+237	-0	after_lines=448
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── commit-lint-check.kiro.hook
+│   │   ├── lint-on-save.kiro.hook
+│   │   ├── run-tests-save.kiro.hook
+│   │   └── test-on-save.json
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   ├── auth-login-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── auth-refactoring
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── eslint-prettier-setup
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── info-module-feature
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-export-deploy
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── supabase-integration
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   ├── taptik-build-command
+│   │   │   ├── design.md
+│   │   │   ├── requirements.md
+│   │   │   └── tasks.md
+│   │   └── vitest-migration
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── PRD.md
+│       ├── TDD.md
+│       ├── TEST.md
+│       ├── architecture.md
+│       ├── flags.md
+│       ├── git.md
+│       ├── mcp.md
+│       ├── nestjs-standards.md
+│       ├── persona.md
+│       ├── principle.md
+│       └── project-context.md
+├── .npmignore
+├── .prettierignore
+├── .prettierrc
+├── .vscode
+│   └── settings.json
+├── LICENSE
+├── README.md
+├── docs
+│   ├── LINTING_AND_FORMATTING.md
+│   ├── PRD.md
+│   ├── deploy-module.md
+│   ├── deploy-platform-extension.md
+│   ├── deploy-security-guide.md
+│   └── deploy-usage-examples.md
+├── eslint.config.mjs
+├── nest-cli.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── src
+│   ├── app.module.ts
+│   ├── cli.ts
+│   ├── commands
+│   │   ├── health.command.spec.ts
+│   │   └── health.command.ts
+│   ├── models
+│   │   └── user.model.ts
+│   ├── modules
+│   │   ├── auth
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── commands
+│   │   │   │   ├── login.command.ts
+│   │   │   │   ├── logout.command.ts
+│   │   │   │   └── oauth-callback.command.ts
+│   │   │   ├── oauth-callback-server.ts
+│   │   │   ├── services
+│   │   │   │   ├── oauth-provider.service.ts
+│   │   │   │   ├── session.service.spec.ts
+│   │   │   │   └── session.service.ts
+│   │   │   ├── session-storage.ts
+│   │   │   └── types
+│   │   │       └── index.ts
+│   │   ├── build
+│   │   │   ├── build.module.ts
+│   │   │   ├── commands
+│   │   │   │   └── build.command.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── build-config.interface.ts
+│   │   │   │   ├── settings-data.interface.ts
+│   │   │   │   └── taptik-format.interface.ts
+│   │   │   └── services
+│   │   │       ├── collection.service.spec.ts
+│   │   │       ├── collection.service.ts
+│   │   │       ├── interactive.service.spec.ts
+│   │   │       └── interactive.service.ts
+│   │   ├── context
+│   │   │   ├── constants
+│   │   │   │   ├── cloud.constants.ts
+│   │   │   │   ├── export-format.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platforms.constants.ts
+│   │   │   │   ├── security.constants.ts
+│   │   │   │   └── validation.constants.ts
+│   │   │   ├── context.module.ts
+│   │   │   ├── dto
+│   │   │   │   ├── context-validation.dto.ts
+│   │   │   │   └── validation-result.dto.ts
+│   │   │   ├── index.ts
+│   │   │   ├── interfaces
+│   │   │   │   └── taptik-context.interface.ts
+│   │   │   └── utils
+│   │   │       ├── format-validator.utility.spec.ts
+│   │   │       └── format-validator.utility.ts
+│   │   ├── deploy
+│   │   │   ├── commands
+│   │   │   │   └── deploy.command.ts
+│   │   │   ├── constants
+│   │   │   │   ├── deployment.constants.ts
+│   │   │   │   ├── exit-codes.constants.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── platform-paths.constants.ts
+│   │   │   │   └── security.constants.ts
+│   │   │   ├── deploy.integration.spec.ts
+│   │   │   ├── deploy.module.ts
+│   │   │   ├── errors
+│   │   │   │   └── deploy.error.ts
+│   │   │   ├── interfaces
+│   │   │   │   ├── component-types.interface.ts
+│   │   │   │   ├── conflict-strategy.interface.ts
+│   │   │   │   ├── deploy-options.interface.ts
+│   │   │   │   ├── deployment-result.interface.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── merge-strategy.interface.ts
+│   │   │   │   ├── migration-result.interface.ts
+│   │   │   │   ├── platform-config.interface.ts
+│   │   │   │   ├── secret-management.interface.ts
+│   │   │   │   └── security-config.interface.ts
+│   │   │   ├── services
+│   │   │   │   ├── backup.service.spec.ts
+│   │   │   │   ├── backup.service.ts
+│   │   │   │   ├── deployment-logger.service.ts
+│   │   │   │   ├── deployment.service.spec.ts
+│   │   │   │   ├── deployment.service.ts
+│   │   │   │   ├── diff.service.spec.ts
+│   │   │   │   ├── diff.service.ts
+│   │   │   │   ├── error-handler.service.spec.ts
+│   │   │   │   ├── error-handler.service.ts
+│   │   │   │   ├── error-recovery.service.spec.ts
+│   │   │   │   ├── error-recovery.service.ts
+│   │   │   │   ├── import.service.spec.ts
+│   │   │   │   ├── import.service.ts
+│   │   │   │   ├── large-file-streamer.service.spec.ts
+│   │   │   │   ├── large-file-streamer.service.ts
+│   │   │   │   ├── locking.service.spec.ts
+│   │   │   │   ├── locking.service.ts
+│   │   │   │   ├── performance-monitor.service.spec.ts
+│   │   │   │   ├── performance-monitor.service.ts
+│   │   │   │   ├── platform-validator.service.spec.ts
+│   │   │   │   ├── platform-validator.service.ts
+│   │   │   │   ├── prompt.service.spec.ts
+│   │   │   │   ├── prompt.service.ts
+│   │   │   │   ├── rollback-comprehensive.integration.spec.ts
+│   │   │   │   ├── schema-migration.service.spec.ts
+│   │   │   │   ├── schema-migration.service.ts
+│   │   │   │   ├── secret-management.service.spec.ts
+│   │   │   │   ├── secret-management.service.ts
+│   │   │   │   ├── security-scanner.service.spec.ts
+│   │   │   │   ├── security-scanner.service.ts
+│   │   │   │   └── test-helpers.ts
+│   │   │   ├── tests
+│   │   │   │   └── README.md
+│   │   │   └── utils
+│   │   │       ├── path-resolver.utility.spec.ts
+│   │   │       ├── path-resolver.utility.ts
+│   │   │       ├── performance-optimizer.utility.spec.ts
+│   │   │       └── performance-optimizer.utility.ts
+│   │   ├── info
+│   │   │   ├── commands
+│   │   │   │   └── info.command.ts
+│   │   │   ├── info.module.ts
+│   │   │   └── services
+│   │   │       ├── info.service.spec.ts
+│   │   │       └── info.service.ts
+│   │   └── supabase
+│   │       ├── supabase.module.ts
+│   │       └── supabase.service.ts
+│   ├── supabase
+│   │   ├── supabase-client.spec.ts
+│   │   ├── supabase-client.ts
+│   │   └── supabase.module.ts
+│   └── utils
+│       └── port-utilities.ts
+├── templates
+│   ├── personal-context-template.json
+│   ├── project-context-template.json
+│   └── prompt-context-template.json
+├── test
+│   └── setup.ts
+├── tsconfig.build.json
+├── tsconfig.json
+├── vitest.config.ts
+└── vitest.e2e.config.ts
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/taptik-build-command/tasks.md ---
+diff --git a/.kiro/specs/taptik-build-command/tasks.md b/.kiro/specs/taptik-build-command/tasks.md
+index ff59e3d..b53134b 100644
+--- a/.kiro/specs/taptik-build-command/tasks.md
++++ b/.kiro/specs/taptik-build-command/tasks.md
+@@ -21,7 +21,7 @@
+     - Write unit tests for category selection and validation
+     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
+ 
+-- [ ] 3. Implement data collection service
++- [x] 3. Implement data collection service
+   - [x] 3.1 Create CollectionService with local settings scanning
+     - Implement scanning of `.kiro/` directory for project settings
+     - Collect `settings/context.md`, `settings/user-preferences.md`, `settings/project-spec.md`
+@@ -30,7 +30,7 @@
+     - Write unit tests with mocked file system operations
+     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
+ 
+-  - [ ] 3.2 Implement global settings scanning functionality
++  - [x] 3.2 Implement global settings scanning functionality
+     - Add scanning of `~/.kiro/` directory for user-wide settings
+     - Collect user configuration files, global prompt templates, and preferences
+     - Implement security filtering to exclude API keys and sensitive tokens
+
+--- FILE: src/modules/build/services/collection.service.spec.ts ---
+diff --git a/src/modules/build/services/collection.service.spec.ts b/src/modules/build/services/collection.service.spec.ts
+index e2e32cb..b5dbba9 100644
+--- a/src/modules/build/services/collection.service.spec.ts
++++ b/src/modules/build/services/collection.service.spec.ts
+@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
+ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+ import { promises as fs } from 'fs';
+ import * as path from 'path';
+-import { CollectionService, LocalSettingsData } from './collection.service';
++import * as os from 'os';
++import { CollectionService, LocalSettingsData, GlobalSettingsData } from './collection.service';
+ 
+ // Mock the fs module
+ vi.mock('fs', () => ({
+@@ -13,9 +14,15 @@ vi.mock('fs', () => ({
+   },
+ }));
+ 
++// Mock the os module
++vi.mock('os', () => ({
++  homedir: vi.fn(),
++}));
++
+ describe('CollectionService', () => {
+   let service: CollectionService;
+   const mockFs = fs as any;
++  const mockOs = os as any;
+ 
+   beforeEach(async () => {
+     const module: TestingModule = await Test.createTestingModule({
+@@ -295,4 +302,273 @@ describe('CollectionService', () => {
+       expect(result.hookFiles).toEqual([]);
+     });
+   });
++
++  describe('collectGlobalSettings', () => {
++    beforeEach(() => {
++      mockOs.homedir.mockReturnValue('/home/user');
++    });
++
++    it('should throw error when ~/.kiro directory does not exist', async () => {
++      mockFs.access.mockRejectedValue(new Error('Directory not found'));
++
++      await expect(service.collectGlobalSettings()).rejects.toThrow(
++        'No global .kiro directory found at: /home/user/.kiro'
++      );
++    });
++
++    it('should collect data from complete ~/.kiro directory structure', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      // Mock ~/.kiro directory exists
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === globalKiroPath || 
++            dirPath === path.join(globalKiroPath, 'templates') ||
++            dirPath === path.join(globalKiroPath, 'config')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Not found'));
++      });
++
++      // Mock readdir for templates and config
++      mockFs.readdir.mockImplementation((dirPath: string) => {
++        if (dirPath === path.join(globalKiroPath, 'templates')) {
++          return Promise.resolve(['prompt1.md', 'prompt2.txt', 'other.json']);
++        }
++        if (dirPath === path.join(globalKiroPath, 'config')) {
++          return Promise.resolve(['app.json', 'settings.yaml', 'readme.md', 'script.sh']);
++        }
++        return Promise.resolve([]);
++      });
++
++      // Mock readFile
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        switch (basename) {
++          case 'user-config.md':
++            return Promise.resolve('# User Config\nUser configuration content');
++          case 'global-preferences.md':
++            return Promise.resolve('# Global Preferences\napi_key=secret123\npreference=value');
++          case 'prompt1.md':
++            return Promise.resolve('# Prompt 1\nPrompt template content');
++          case 'prompt2.txt':
++            return Promise.resolve('Prompt template 2 content');
++          case 'app.json':
++            return Promise.resolve('{"app": "config", "token": "abc123"}');
++          case 'settings.yaml':
++            return Promise.resolve('setting: value\nsecret: hidden');
++          case 'readme.md':
++            return Promise.resolve('# Config Readme');
++          default:
++            return Promise.reject(new Error('File not found'));
++        }
++      });
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result).toEqual({
++        userConfig: '# User Config\nUser configuration content',
++        globalPreferences: '# Global Preferences\napi_key=[REDACTED]\npreference=value',
++        promptTemplates: [
++          {
++            filename: 'prompt1.md',
++            content: '# Prompt 1\nPrompt template content',
++            path: path.join(globalKiroPath, 'templates', 'prompt1.md'),
++          },
++          {
++            filename: 'prompt2.txt',
++            content: 'Prompt template 2 content',
++            path: path.join(globalKiroPath, 'templates', 'prompt2.txt'),
++          },
++        ],
++        configFiles: [
++          {
++            filename: 'app.json',
++            content: '{"app": "config", "token":[REDACTED]}',
++            path: path.join(globalKiroPath, 'config', 'app.json'),
++          },
++          {
++            filename: 'settings.yaml',
++            content: 'setting: value\nsecret:[REDACTED]',
++            path: path.join(globalKiroPath, 'config', 'settings.yaml'),
++          },
++          {
++            filename: 'readme.md',
++            content: '# Config Readme',
++            path: path.join(globalKiroPath, 'config', 'readme.md'),
++          },
++        ],
++        sourcePath: globalKiroPath,
++        collectedAt: expect.any(String),
++        securityFiltered: true,
++      });
++
++      expect(result.collectedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
++    });
++
++    it('should handle missing templates directory gracefully', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === globalKiroPath) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        if (basename === 'user-config.md') {
++          return Promise.resolve('User config content');
++        }
++        return Promise.reject(new Error('File not found'));
++      });
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result.promptTemplates).toEqual([]);
++      expect(result.configFiles).toEqual([]);
++      expect(result.userConfig).toBe('User config content');
++    });
++
++    it('should handle missing config directory gracefully', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === globalKiroPath || dirPath === path.join(globalKiroPath, 'templates')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockImplementation((dirPath: string) => {
++        if (dirPath === path.join(globalKiroPath, 'templates')) {
++          return Promise.resolve(['template.md']);
++        }
++        return Promise.resolve([]);
++      });
++
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        return Promise.resolve('File content');
++      });
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result.configFiles).toEqual([]);
++      expect(result.promptTemplates).toHaveLength(1);
++    });
++
++    it('should apply security filtering correctly', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockResolvedValue(undefined);
++      mockFs.readdir.mockResolvedValue([]);
++
++      // Test with sensitive content
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        if (basename === 'user-config.md') {
++          return Promise.resolve(`
++            API_KEY=sk-1234567890abcdef1234567890abcdef
++            database_url=postgres://user:password123@localhost/db
++            access_token=ghp_1234567890abcdef1234567890abcdef123456
++            normal_setting=value
++          `);
++        }
++        return Promise.reject(new Error('File not found'));
++      });
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result.userConfig).toContain('[REDACTED]');
++      expect(result.userConfig).not.toContain('sk-1234567890abcdef1234567890abcdef');
++      expect(result.userConfig).not.toContain('password123');
++      expect(result.userConfig).not.toContain('ghp_1234567890abcdef1234567890abcdef123456');
++      expect(result.userConfig).toContain('normal_setting=value');
++      expect(result.securityFiltered).toBe(true);
++    });
++
++    it('should handle file read errors gracefully', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockResolvedValue(undefined);
++      mockFs.readdir.mockResolvedValue([]);
++      mockFs.readFile.mockRejectedValue(new Error('Permission denied'));
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result).toEqual({
++        userConfig: undefined,
++        globalPreferences: undefined,
++        promptTemplates: [],
++        configFiles: [],
++        sourcePath: globalKiroPath,
++        collectedAt: expect.any(String),
++        securityFiltered: false,
++      });
++    });
++
++    it('should handle readdir errors gracefully', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === globalKiroPath ||
++            dirPath === path.join(globalKiroPath, 'templates') ||
++            dirPath === path.join(globalKiroPath, 'config')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockRejectedValue(new Error('Permission denied'));
++      mockFs.readFile.mockResolvedValue('File content');
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result.promptTemplates).toEqual([]);
++      expect(result.configFiles).toEqual([]);
++    });
++
++    it('should filter files correctly in templates and config directories', async () => {
++      const homeDir = '/home/user';
++      const globalKiroPath = path.join(homeDir, '.kiro');
++
++      mockFs.access.mockImplementation((dirPath: string) => {
++        if (dirPath === globalKiroPath ||
++            dirPath === path.join(globalKiroPath, 'templates') ||
++            dirPath === path.join(globalKiroPath, 'config')) {
++          return Promise.resolve();
++        }
++        return Promise.reject(new Error('Directory not found'));
++      });
++
++      mockFs.readdir.mockImplementation((dirPath: string) => {
++        if (dirPath === path.join(globalKiroPath, 'templates')) {
++          return Promise.resolve(['valid.md', 'valid.txt', 'invalid.json', 'another.md']);
++        }
++        if (dirPath === path.join(globalKiroPath, 'config')) {
++          return Promise.resolve(['valid.json', 'valid.yaml', 'valid.yml', 'valid.md', 'invalid.txt']);
++        }
++        return Promise.resolve([]);
++      });
++
++      mockFs.readFile.mockImplementation((filePath: string) => {
++        const basename = path.basename(filePath);
++        return Promise.resolve(`Content of ${basename}`);
++      });
++
++      const result = await service.collectGlobalSettings();
++
++      expect(result.promptTemplates).toHaveLength(3);
++      expect(result.promptTemplates.map(f => f.filename)).toEqual(['valid.md', 'valid.txt', 'another.md']);
++
++      expect(result.configFiles).toHaveLength(4);
++      expect(result.configFiles.map(f => f.filename)).toEqual(['valid.json', 'valid.yaml', 'valid.yml', 'valid.md']);
++    });
++  });
+ });
+\ No newline at end of file
+
+--- FILE: src/modules/build/services/collection.service.ts ---
+diff --git a/src/modules/build/services/collection.service.ts b/src/modules/build/services/collection.service.ts
+index 1340144..5547051 100644
+--- a/src/modules/build/services/collection.service.ts
++++ b/src/modules/build/services/collection.service.ts
+@@ -1,6 +1,7 @@
+ import { Injectable, Logger } from '@nestjs/common';
+ import { promises as fs } from 'fs';
+ import * as path from 'path';
++import * as os from 'os';
+ 
+ /**
+  * Interface for collected settings data from local Kiro configuration
+@@ -30,6 +31,34 @@ export interface LocalSettingsData {
+   collectedAt: string;
+ }
+ 
++/**
++ * Interface for collected settings data from global Kiro configuration
++ */
++export interface GlobalSettingsData {
++  /** Global user configuration content */
++  userConfig?: string;
++  /** Global preferences content */
++  globalPreferences?: string;
++  /** Array of global prompt template files */
++  promptTemplates: Array<{
++    filename: string;
++    content: string;
++    path: string;
++  }>;
++  /** Array of global configuration files */
++  configFiles: Array<{
++    filename: string;
++    content: string;
++    path: string;
++  }>;
++  /** Source directory path where data was collected */
++  sourcePath: string;
++  /** Timestamp when data was collected */
++  collectedAt: string;
++  /** Flag indicating if security filtering was applied */
++  securityFiltered: boolean;
++}
++
+ /**
+  * Service for collecting data from local Kiro settings and configuration files
+  */
+@@ -191,6 +220,214 @@ export class CollectionService {
+     }
+   }
+ 
++  /**
++   * Scans and collects data from global ~/.kiro/ directory
++   * @returns Promise resolving to collected global settings data
++   */
++  async collectGlobalSettings(): Promise<GlobalSettingsData> {
++    const homeDir = os.homedir();
++    const globalKiroPath = path.join(homeDir, '.kiro');
++
++    this.logger.log(`Scanning global Kiro settings in: ${globalKiroPath}`);
++
++    // Check if ~/.kiro directory exists
++    try {
++      await fs.access(globalKiroPath);
++    } catch (error) {
++      this.logger.warn(`No global .kiro directory found at: ${globalKiroPath}`);
++      throw new Error(`No global .kiro directory found at: ${globalKiroPath}`);
++    }
++
++    const globalSettingsData: GlobalSettingsData = {
++      promptTemplates: [],
++      configFiles: [],
++      sourcePath: globalKiroPath,
++      collectedAt: new Date().toISOString(),
++      securityFiltered: false,
++    };
++
++    // Collect global configuration files
++    await this.collectGlobalConfigFiles(globalKiroPath, globalSettingsData);
++
++    // Collect prompt templates
++    await this.collectPromptTemplates(globalKiroPath, globalSettingsData);
++
++    // Collect other configuration files
++    await this.collectOtherConfigFiles(globalKiroPath, globalSettingsData);
++
++    this.logger.log(`Successfully collected global data from ${globalKiroPath}`);
++    return globalSettingsData;
++  }
++
++  /**
++   * Collects global configuration files from ~/.kiro/
++   * @private
++   */
++  private async collectGlobalConfigFiles(globalKiroPath: string, globalData: GlobalSettingsData): Promise<void> {
++    // Collect user-config.md
++    await this.collectFileWithSecurity(
++      path.join(globalKiroPath, 'user-config.md'),
++      'user-config.md',
++      (content, filtered) => {
++        globalData.userConfig = content;
++        if (filtered) globalData.securityFiltered = true;
++      }
++    );
++
++    // Collect global-preferences.md
++    await this.collectFileWithSecurity(
++      path.join(globalKiroPath, 'global-preferences.md'),
++      'global-preferences.md',
++      (content, filtered) => {
++        globalData.globalPreferences = content;
++        if (filtered) globalData.securityFiltered = true;
++      }
++    );
++  }
++
++  /**
++   * Collects prompt template files from ~/.kiro/templates/
++   * @private
++   */
++  private async collectPromptTemplates(globalKiroPath: string, globalData: GlobalSettingsData): Promise<void> {
++    const templatesPath = path.join(globalKiroPath, 'templates');
++
++    try {
++      await fs.access(templatesPath);
++      this.logger.debug(`Found templates directory: ${templatesPath}`);
++    } catch (error) {
++      this.logger.warn(`Templates directory not found: ${templatesPath}`);
++      return;
++    }
++
++    try {
++      const files = await fs.readdir(templatesPath);
++      const templateFiles = files.filter(file => file.endsWith('.md') || file.endsWith('.txt'));
++
++      for (const filename of templateFiles) {
++        const filePath = path.join(templatesPath, filename);
++        await this.collectFileWithSecurity(filePath, filename, (content, filtered) => {
++          globalData.promptTemplates.push({
++            filename,
++            content,
++            path: filePath,
++          });
++          if (filtered) globalData.securityFiltered = true;
++        });
++      }
++
++      this.logger.debug(`Collected ${globalData.promptTemplates.length} prompt template files`);
++    } catch (error) {
++      this.logger.error(`Error reading templates directory: ${error.message}`);
++    }
++  }
++
++  /**
++   * Collects other configuration files from ~/.kiro/config/
++   * @private
++   */
++  private async collectOtherConfigFiles(globalKiroPath: string, globalData: GlobalSettingsData): Promise<void> {
++    const configPath = path.join(globalKiroPath, 'config');
++
++    try {
++      await fs.access(configPath);
++      this.logger.debug(`Found config directory: ${configPath}`);
++    } catch (error) {
++      this.logger.warn(`Config directory not found: ${configPath}`);
++      return;
++    }
++
++    try {
++      const files = await fs.readdir(configPath);
++      const configFiles = files.filter(file => 
++        file.endsWith('.json') || 
++        file.endsWith('.yaml') || 
++        file.endsWith('.yml') || 
++        file.endsWith('.md')
++      );
++
++      for (const filename of configFiles) {
++        const filePath = path.join(configPath, filename);
++        await this.collectFileWithSecurity(filePath, filename, (content, filtered) => {
++          globalData.configFiles.push({
++            filename,
++            content,
++            path: filePath,
++          });
++          if (filtered) globalData.securityFiltered = true;
++        });
++      }
++
++      this.logger.debug(`Collected ${globalData.configFiles.length} config files`);
++    } catch (error) {
++      this.logger.error(`Error reading config directory: ${error.message}`);
++    }
++  }
++
++  /**
++   * Safely reads a file with security filtering and executes callback with content
++   * @private
++   */
++  private async collectFileWithSecurity(
++    filePath: string,
++    filename: string,
++    onSuccess: (content: string, securityFiltered: boolean) => void
++  ): Promise<void> {
++    try {
++      const content = await fs.readFile(filePath, 'utf8');
++      const { filteredContent, wasFiltered } = this.applySecurityFilter(content);
++      onSuccess(filteredContent, wasFiltered);
++      
++      if (wasFiltered) {
++        this.logger.warn(`Security filtering applied to file: ${filename}`);
++      }
++      this.logger.debug(`Successfully read file: ${filename}`);
++    } catch (error) {
++      this.logger.warn(`Could not read file ${filename}: ${error.message}`);
++    }
++  }
++
++  /**
++   * Applies security filtering to remove sensitive information
++   * @private
++   */
++  private applySecurityFilter(content: string): { filteredContent: string; wasFiltered: boolean } {
++    let filteredContent = content;
++    let wasFiltered = false;
++
++    // Define patterns for sensitive information with simpler approach
++    const sensitivePatterns = [
++      // API keys - match common API key patterns
++      { pattern: /(["']?(?:api[_-]?key|apikey|api_key)["']?)\s*[=:]\s*["']?([a-zA-Z0-9_-]{6,})["']?/gi, name: 'API key' },
++      // Tokens - match various token types
++      { pattern: /(["']?(?:token|access_token|auth_token)["']?)\s*[=:]\s*["']?([a-zA-Z0-9_.-]{6,})["']?/gi, name: 'Token' },
++      // Secrets - match secret patterns
++      { pattern: /(["']?(?:secret|client_secret|app_secret)["']?)\s*[=:]\s*["']?([a-zA-Z0-9_.-]{6,})["']?/gi, name: 'Secret' },
++      // Passwords - match password patterns
++      { pattern: /(["']?(?:password|passwd|pwd)["']?)\s*[=:]\s*["']?([^\s"']{6,})["']?/gi, name: 'Password' },
++      // Database URLs - match database connection strings with credentials
++      { pattern: /(["']?(?:database_url|db_url)["']?)\s*[=:]\s*["']?[^"'\s]*:\/\/[^"'\s@]*:[^"'\s@]*@[^"'\s]*["']?/gi, name: 'Database URL' },
++    ];
++
++    for (const { pattern, name } of sensitivePatterns) {
++      if (pattern.test(filteredContent)) {
++        filteredContent = filteredContent.replace(pattern, (match, key) => {
++          const equalIndex = match.indexOf('=');
++          const colonIndex = match.indexOf(':');
++          const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
++          
++          if (separatorIndex !== -1) {
++            return match.substring(0, separatorIndex + 1) + '[REDACTED]';
++          }
++          return '[REDACTED]';
++        });
++        wasFiltered = true;
++      }
++    }
++
++    return { filteredContent, wasFiltered };
++  }
++
+   /**
+    * Safely reads a file and executes callback with content
+    * @private
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

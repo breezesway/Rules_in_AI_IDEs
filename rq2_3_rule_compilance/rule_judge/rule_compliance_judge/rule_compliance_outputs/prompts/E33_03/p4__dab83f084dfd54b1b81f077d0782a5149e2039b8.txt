@@ -1,0 +1,1000 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Environment Configuration
+- Rule File Path: pkg/config/.cursor/rules/config.mdc
+- Change Type: added
+- Target Rule Content:
+// Database defaults
+v.SetDefault("database.host", "localhost")
+v.SetDefault("database.port", 5432)
+v.SetDefault("database.name", "mtsg")
+v.SetDefault("database.user", "mtsg_user")
+v.SetDefault("database.password", "")
+v.SetDefault("database.sslmode", "disable")
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files, specifically configuration initialization files (e.g., Go files using the Viper library).
+- Suggested Logic: Verify the presence of specific function calls: `v.SetDefault` with the exact key-value pairs specified in the rule (e.g., 'database.host' as 'localhost', 'database.port' as 5432, 'database.name' as 'mtsg', etc.).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: refactor: remove tenant checking from token verification
+
+- Update authentication rule to focus on identity-only validation
+- Remove tenant parameter from VerifyToken method signature
+- Update authentication interface and implementation
+- Remove tenant validation logic from token verification
+- Update auth middleware to use identity-only verification
+- Update all related tests to match new interface
+- Regenerate authentication mock with new signature
+- Add gomock dependency for mock generation
+
+This change follows separation of concerns principle:
+- Token verification = Identity validation only
+- Authorization = Handled separately in middleware, use cases, etc.
+
+Benefits:
+- More flexible and reusable token verification
+- Cleaner separation between identity and authorization
+- Easier to implement different authorization strategies
+- Better testability and maintainability
+
+All tests pass and application functionality is preserved.
+- Changed Files List: 
+go.mod	+1	-0	after_lines=65
+go.sum	+14	-0	after_lines=221
+internal/presentation/http/middleware/auth.go	+3	-4	after_lines=101
+internal/repository/user.go	+3	-3	after_lines=78
+internal/usecase/.cursor/rules/authentication.mdc	+0	-4	after_lines=135
+internal/usecase/authentication.go	+9	-16	after_lines=309
+internal/usecase/authentication_test.go	+5	-56	after_lines=754
+testmock/Authentication_mock.go	+66	-284	after_lines=97
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── global.mdc
+│       └── mock.mdc
+├── .env.example
+├── .gitignore
+├── .mockery.yml
+├── Makefile
+├── README.md
+├── cmd
+│   └── main.go
+├── config
+│   └── config.yaml
+├── docker-compose.yml
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+├── go.sum
+├── internal
+│   ├── .cursor
+│   │   └── rules
+│   │       └── dependency-injection.mdc
+│   ├── di
+│   │   ├── README.md
+│   │   ├── di_test.go
+│   │   ├── provider
+│   │   │   ├── container.go
+│   │   │   ├── pkg.go
+│   │   │   └── usecase.go
+│   │   ├── wire.go
+│   │   └── wire_gen.go
+│   ├── domain
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── entity.mdc
+│   │   │       ├── generic-types.mdc
+│   │   │       └── unit-test.mdc
+│   │   ├── authentication
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── credential.mdc
+│   │   │   │       └── session.mdc
+│   │   │   ├── authentication_test.go
+│   │   │   ├── credential.go
+│   │   │   ├── error.go
+│   │   │   └── session.go
+│   │   ├── project
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── project.mdc
+│   │   │   └── project.go
+│   │   ├── tenant
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       └── tenant.mdc
+│   │   │   └── tenant.go
+│   │   └── user
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── datatypes.mdc
+│   │       │       └── user.mdc
+│   │       ├── datatypes.go
+│   │       ├── datatypes_test.go
+│   │       └── user.go
+│   ├── presentation
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── presentation.mdc
+│   │   ├── dto
+│   │   │   ├── .cursor
+│   │   │   │   └── rules
+│   │   │   │       ├── authentication.mdc
+│   │   │   │       └── dto.mdc
+│   │   │   ├── auth.go
+│   │   │   ├── auth_test.go
+│   │   │   ├── common.go
+│   │   │   └── common_test.go
+│   │   └── http
+│   │       ├── .cursor
+│   │       │   └── rules
+│   │       │       ├── errorhandler.mdc
+│   │       │       ├── middleware.mdc
+│   │       │       ├── server.mdc
+│   │       │       └── swagger.mdc
+│   │       ├── docs
+│   │       │   ├── docs.go
+│   │       │   ├── swagger.json
+│   │       │   └── swagger.yaml
+│   │       ├── handler
+│   │       │   ├── .cursor
+│   │       │   │   └── rules
+│   │       │   │       └── authentication.mdc
+│   │       │   ├── auth.go
+│   │       │   ├── handlers.go
+│   │       │   └── ping.go
+│   │       ├── middleware
+│   │       │   ├── auth.go
+│   │       │   ├── container.go
+│   │       │   ├── cors.go
+│   │       │   ├── error.go
+│   │       │   ├── factory.go
+│   │       │   ├── logging.go
+│   │       │   ├── rate_limit.go
+│   │       │   ├── recovery.go
+│   │       │   └── validation.go
+│   │       └── server.go
+│   ├── repository
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── repository.mdc
+│   │   │       └── user.mdc
+│   │   └── user.go
+│   └── usecase
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── authentication.mdc
+│       │       └── usecase.mdc
+│       ├── authentication.go
+│       └── authentication_test.go
+├── pkg
+│   ├── .cursor
+│   │   └── rules
+│   │       └── pkg.mdc
+│   ├── config
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── config.mdc
+│   │   ├── README.md
+│   │   ├── config.go
+│   │   └── config_test.go
+│   ├── error
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       ├── http.mdc
+│   │   │       └── stacktraceable.mdc
+│   │   ├── http.go
+│   │   ├── http_test.go
+│   │   ├── stackerror.go
+│   │   └── stackerror_test.go
+│   ├── redis
+│   │   ├── .cursor
+│   │   │   └── rules
+│   │   │       └── redis.mdc
+│   │   └── redis.go
+│   └── token
+│       ├── .cursor
+│       │   └── rules
+│       │       ├── service.mdc
+│       │       └── token.mdc
+│       ├── service.go
+│       ├── service_test.go
+│       └── token.go
+└── testmock
+    ├── AdapterRepository_mock.go
+    ├── Authentication_mock.go
+    ├── GeneratorRepository_mock.go
+    ├── UserRepository_mock.go
+    └── mock_redis_adapter.go
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: go.mod ---
+diff --git a/go.mod b/go.mod
+index 293b62e..01d0a2a 100644
+--- a/go.mod
++++ b/go.mod
+@@ -32,6 +32,7 @@ require (
+ 	github.com/go-playground/universal-translator v0.18.1 // indirect
+ 	github.com/go-playground/validator/v10 v10.27.0 // indirect
+ 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
++	github.com/golang/mock v1.6.0 // indirect
+ 	github.com/josharian/intern v1.0.0 // indirect
+ 	github.com/labstack/gommon v0.4.2 // indirect
+ 	github.com/leodido/go-urn v1.4.0 // indirect
+
+--- FILE: go.sum ---
+diff --git a/go.sum b/go.sum
+index f9b8aa6..f7a28d5 100644
+--- a/go.sum
++++ b/go.sum
+@@ -40,6 +40,8 @@ github.com/go-redis/redis/v8 v8.11.5 h1:AcZZR7igkdvfVmQTPnu9WE37LRrO/YrBH5zWyjDC
+ github.com/go-redis/redis/v8 v8.11.5/go.mod h1:gREzHqY1hg6oD9ngVRbLStwAWKhA0FEgq8Jd4h5lpwo=
+ github.com/go-viper/mapstructure/v2 v2.2.1 h1:ZAaOCxANMuZx5RCeg0mBdEZk7DZasvvZIxtHqx8aGss=
+ github.com/go-viper/mapstructure/v2 v2.2.1/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
++github.com/golang/mock v1.6.0 h1:ErTB+efbowRARo13NNdxyJji2egdxLGQhRaY+DUumQc=
++github.com/golang/mock v1.6.0/go.mod h1:p6yTPP+5HYm5mzsMV8JkE6ZKdX+/wYM6Hr+LicevLPs=
+ github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
+ github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+ github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+@@ -118,25 +120,30 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
+ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
+ github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
+ github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
++github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
+ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
+ go.uber.org/atomic v1.9.0 h1:ECmE8Bn/WFTYwEW/bpKD3M8VtR/zQVbavAoalC1PYyE=
+ go.uber.org/atomic v1.9.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
+ go.uber.org/multierr v1.9.0 h1:7fIwc/ZtS0q++VgcfqFDxSBZVv/Xo49/SYnDFupUwlI=
+ go.uber.org/multierr v1.9.0/go.mod h1:X2jQV1h+kxSjClGpnseKVIxpmcjrj7MNnI0bnlfKTVQ=
+ golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
++golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
+ golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
+ golang.org/x/crypto v0.13.0/go.mod h1:y6Z2r+Rw4iayiXXAIxJIDAJ1zMW4yaTpebo8fPOliYc=
+ golang.org/x/crypto v0.18.0/go.mod h1:R0j02AL6hcrfOiy9T4ZYp/rcWeMxM3L6QYxlOuEG1mg=
+ golang.org/x/crypto v0.40.0 h1:r4x+VvoG5Fm+eJcxMaY8CQM7Lb0l1lsmjGBQ6s8BfKM=
+ golang.org/x/crypto v0.40.0/go.mod h1:Qr1vMER5WyS2dfPHAlsOj01wgLbsyWtFn/aY+5+ZdxY=
++golang.org/x/mod v0.4.2/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
+ golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4/go.mod h1:jJ57K6gSWd91VN4djpZkiMVwK6gcyfeH4XE8wZrZaV4=
+ golang.org/x/mod v0.8.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
+ golang.org/x/mod v0.12.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
+ golang.org/x/mod v0.14.0/go.mod h1:hTbmBsO62+eylJbnUtE2MGJUyE7QWk4xUqPFrRgJ+7c=
+ golang.org/x/mod v0.25.0 h1:n7a+ZbQKQA/Ysbyb0/6IbB1H/X41mKgbhfv7AfG/44w=
+ golang.org/x/mod v0.25.0/go.mod h1:IXM97Txy2VM4PJ3gI61r1YEk/gAj6zAHN3AdZt6S9Ww=
++golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
+ golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+ golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
++golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4/go.mod h1:p54w0d4576C0XHj96bSt6lcn1PtDYWL6XObtHCRCNQM=
+ golang.org/x/net v0.0.0-20210421230115-4e50805a0758/go.mod h1:72T/g9IO56b78aLF+1Kcs5dz7/ng1VjMUvfKvpfy+jM=
+ golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
+ golang.org/x/net v0.6.0/go.mod h1:2Tu9+aMcznHK/AK1HMvgo6xiTLG5rD5rZLDS+rp2Bjs=
+@@ -146,6 +153,7 @@ golang.org/x/net v0.20.0/go.mod h1:z8BVo6PvndSri0LbOE3hAn0apkU+1YvI6E70E9jsnvY=
+ golang.org/x/net v0.41.0 h1:vBTly1HeNPEn3wtREYfy4GZ/NECgw2Cnl+nK6Nz3uvw=
+ golang.org/x/net v0.41.0/go.mod h1:B/K4NNqkfmg07DQYrbwvSluqCJOOXwUjeb/5lOisjbA=
+ golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
++golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+ golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+ golang.org/x/sync v0.1.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+ golang.org/x/sync v0.3.0/go.mod h1:FU7BRWz2tNW+3quACPkgCx/L+uEAv1htQ0V83Z9Rj+Y=
+@@ -153,8 +161,11 @@ golang.org/x/sync v0.6.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
+ golang.org/x/sync v0.16.0 h1:ycBJEhp9p4vXvUZNszeOq0kGTPghopOL8q0fq3vstxw=
+ golang.org/x/sync v0.16.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
+ golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
++golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+ golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
++golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+ golang.org/x/sys v0.0.0-20210420072515-93ed5bcd2bfe/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
++golang.org/x/sys v0.0.0-20210510120138-977fb7262007/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+ golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+ golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+ golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+@@ -185,6 +196,7 @@ golang.org/x/time v0.11.0 h1:/bpjEDfN9tkoN/ryeYHnv5hcMlc8ncjMcM4XBk5NWV0=
+ golang.org/x/time v0.11.0/go.mod h1:CDIdPxbZBQxdj6cxyCIdrNogrJKMJ7pr37NYpMcMDSg=
+ golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
+ golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
++golang.org/x/tools v0.1.1/go.mod h1:o0xws9oXOQQZyjljx8fwUC0k7L1pTE6eaCbjGeHmOkk=
+ golang.org/x/tools v0.1.12/go.mod h1:hNGJHUnrk76NpqgfD5Aqm5Crs+Hm0VOH/i9J2+nxYbc=
+ golang.org/x/tools v0.6.0/go.mod h1:Xwgl3UAJ/d3gWutnCtw505GrjyAbvKui8lOU390QaIU=
+ golang.org/x/tools v0.13.0/go.mod h1:HvlwmtVNQAhOuCjW7xxvovg8wbNq7LwfXh/k7wXUl58=
+@@ -192,6 +204,8 @@ golang.org/x/tools v0.17.0/go.mod h1:xsh6VxdV005rRVaS6SSAf9oiAqljS7UZUacMZ8Bnsps
+ golang.org/x/tools v0.34.0 h1:qIpSLOxeCYGg9TrcJokLBG4KFA6d795g0xkBkiESGlo=
+ golang.org/x/tools v0.34.0/go.mod h1:pAP9OwEaY1CAW3HOmg3hLZC5Z0CCmzjAF2UQMSqNARg=
+ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
++golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
++golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+ gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+ gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f h1:BLraFXnmrev5lT+xlilqcH8XK9/i0At2xKjWk4p6zsU=
+
+--- FILE: internal/presentation/http/middleware/auth.go ---
+diff --git a/internal/presentation/http/middleware/auth.go b/internal/presentation/http/middleware/auth.go
+index 2c45aee..cff9173 100644
+--- a/internal/presentation/http/middleware/auth.go
++++ b/internal/presentation/http/middleware/auth.go
+@@ -4,7 +4,6 @@ import (
+ 	"strings"
+ 
+ 	"github.com/google/uuid"
+-	"github.com/harungurubudi/mtsg/internal/domain/tenant"
+ 	"github.com/harungurubudi/mtsg/internal/domain/user"
+ 	http_error "github.com/harungurubudi/mtsg/pkg/error"
+ 	"github.com/harungurubudi/mtsg/pkg/token"
+@@ -45,9 +44,9 @@ func ValidateTokenAndGetUser(c echo.Context, tokenStr token.Token) (*user.User,
+ 	}
+ 
+ 	// Validate token using auth use case from container
+-	// For now, we'll use a default tenant ID since we don't have tenant context
+-	// In a real application, you might get tenant ID from subdomain, header, or other context
+-	user, err := container.Authentication.VerifyToken(c.Request().Context(), tokenStr, "access_token", tenant.TenantID{})
++	// Token verification now only handles identity validation
++	// Authorization (tenant checking, etc.) should be handled elsewhere
++	user, err := container.Authentication.VerifyToken(c.Request().Context(), tokenStr, "access_token")
+ 	if err != nil {
+ 		return nil, http_error.NewUnauthorizedError("invalid or expired token")
+ 	}
+
+--- FILE: internal/repository/user.go ---
+diff --git a/internal/repository/user.go b/internal/repository/user.go
+index c986e9c..0fa8e25 100644
+--- a/internal/repository/user.go
++++ b/internal/repository/user.go
+@@ -24,9 +24,9 @@ type UserPersistence struct {
+ 
+ // NewUserPersistence creates a new UserPersistence with two hardcoded users.
+ func NewUserPersistence() *UserPersistence {
+-	uid1 := userdomain.UserID(uuid.New())
+-	uid2 := userdomain.UserID(uuid.New())
+-	tid := tenantdomain.TenantID(uuid.New())
++	uid1 := userdomain.UserID(uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"))
++	uid2 := userdomain.UserID(uuid.MustParse("123e4567-e89b-12d3-a456-426614174001"))
++	tid := tenantdomain.TenantID(uuid.MustParse("123e4567-e89b-12d3-a456-426614174002"))
+ 
+ 	password1 := userdomain.Password("password1")
+ 	hashedPassword1, _ := userdomain.NewCipherText(password1)
+
+--- FILE: internal/usecase/.cursor/rules/authentication.mdc ---
+diff --git a/internal/usecase/.cursor/rules/authentication.mdc b/internal/usecase/.cursor/rules/authentication.mdc
+index 6ce6b6c..521b442 100644
+--- a/internal/usecase/.cursor/rules/authentication.mdc
++++ b/internal/usecase/.cursor/rules/authentication.mdc
+@@ -71,22 +71,18 @@ It has arguments :
+ - ctx context.Context
+ - token token.Token
+ - subject string, desired subject
+-- tenantID tenant.TenantID
+ 
+ It resulted :
+ - *user.User matched user with the payload
+ - Error, it can be : 
+   - authentication.ErrInvalidAuthentication
+   - authentication.ErrForbidden
+-  - authentication.ErrTenantMismatch
+ 
+ It has flow : 
+ 1. Verify if token is valid for the subject using tokenGen.Validate()
+ 2. If valid, get matched user from UserID in the token claim using userRepo.GetOneByID(). Otherwise, return authentication.ErrInvalidAuthentication
+ 3. On success, check if returned user has TenantID equal with required tenantID in the args. Then go to step 5
+ 4. On error, check if the error is user.ErrUserNotFound. If yes, return authentication.ErrInvalidAuthentication. If not, wrap the error with stackerror.NewStackError function 
+-5. If tenantID is matched, return the user. Otherwise return authentication.ErrTenantMismatch
+-
+ ---
+ 
+ ### Refresh Token
+
+--- FILE: internal/usecase/authentication.go ---
+diff --git a/internal/usecase/authentication.go b/internal/usecase/authentication.go
+index 61a5bd7..20ef15f 100644
+--- a/internal/usecase/authentication.go
++++ b/internal/usecase/authentication.go
+@@ -6,7 +6,6 @@ import (
+ 
+ 	"github.com/google/uuid"
+ 	"github.com/harungurubudi/mtsg/internal/domain/authentication"
+-	"github.com/harungurubudi/mtsg/internal/domain/tenant"
+ 	"github.com/harungurubudi/mtsg/internal/domain/user"
+ 	"github.com/harungurubudi/mtsg/internal/repository"
+ 	stackerror "github.com/harungurubudi/mtsg/pkg/error"
+@@ -16,7 +15,7 @@ import (
+ // Authentication defines the interface for authentication-related usecases
+ type Authentication interface {
+ 	Login(ctx context.Context, credential *authentication.Credential) (*authentication.Session, error)
+-	VerifyToken(ctx context.Context, token token.Token, subject string, tenantID tenant.TenantID) (*user.User, error)
++	VerifyToken(ctx context.Context, token token.Token, subject string) (*user.User, error)
+ 	RefreshToken(ctx context.Context, refreshToken token.Token) (*authentication.Session, error)
+ 	Logout(ctx context.Context, accessToken token.Token) error
+ }
+@@ -93,19 +92,18 @@ func (a *authenticationUsecase) Login(ctx context.Context, credential *authentic
+ 	return session, nil
+ }
+ 
+-// VerifyToken verifies if token is valid for a specific subject and tenantID.
+-// This method implements secure token validation with multi-tenant support.
++// VerifyToken verifies if token is valid for a specific subject.
++// This method implements secure token validation for identity verification only.
+ //
+ // The verification process follows these steps:
+ // 1. Token Validation: Verify token validity for the specified subject
+ // 2. User Extraction: Extract user from token claims on success
+-// 3. Tenant Validation: Check if user belongs to required tenant
+-// 4. Error Handling: Proper error wrapping for internal errors
+-// 5. Authorization Check: Return forbidden if tenant doesn't match
++// 3. Error Handling: Proper error wrapping for internal errors
++// 4. Return matched user object
+ //
+ // Security Features:
+ // - Subject validation ensures tokens are used for intended purpose
+-// - Multi-tenant validation for data isolation
++// - Identity-only validation (authorization handled elsewhere)
+ // - Proper error messages that don't leak sensitive information
+ // - Stack trace preservation for debugging internal errors
+ //
+@@ -113,7 +111,7 @@ func (a *authenticationUsecase) Login(ctx context.Context, credential *authentic
+ //   - Business errors (authentication.ErrInvalidAuthentication, etc.) are returned directly
+ //   - Internal errors are wrapped with stackerror for debugging
+ //   - User not found errors are converted to authentication errors
+-func (a *authenticationUsecase) VerifyToken(ctx context.Context, token token.Token, subject string, tenantID tenant.TenantID) (*user.User, error) {
++func (a *authenticationUsecase) VerifyToken(ctx context.Context, token token.Token, subject string) (*user.User, error) {
+ 	// Step 1: Verify if token is valid for the subject using tokenGen.Validate()
+ 	claims, err := a.tokenGen.Validate(ctx, token)
+ 	if err != nil {
+@@ -128,7 +126,7 @@ func (a *authenticationUsecase) VerifyToken(ctx context.Context, token token.Tok
+ 
+ 	matchedUser, err := a.userRepo.GetOneByID(ctx, user.UserID(userID))
+ 	if err != nil {
+-		// Step 4: On error, check if the error is user.ErrUserNotFound
++		// Step 3: On error, check if the error is user.ErrUserNotFound
+ 		if err == user.ErrUserNotFound {
+ 			return nil, authentication.ErrInvalidAuthentication
+ 		}
+@@ -136,12 +134,7 @@ func (a *authenticationUsecase) VerifyToken(ctx context.Context, token token.Tok
+ 		return nil, stackerror.NewStackError("failed to get user by ID", err)
+ 	}
+ 
+-	// Step 3: On success, check if returned user has TenantID equal with required tenantID in the args
+-	// Step 5: If tenantID is matched, return the user. Otherwise return authentication.ErrTenantMismatch
+-	if matchedUser.TenantID != tenantID {
+-		return nil, authentication.ErrTenantMismatch
+-	}
+-
++	// Step 4: On success, return matched user object
+ 	return matchedUser, nil
+ }
+
+--- FILE: internal/usecase/authentication_test.go ---
+diff --git a/internal/usecase/authentication_test.go b/internal/usecase/authentication_test.go
+index 32b2ed5..acfdc04 100644
+--- a/internal/usecase/authentication_test.go
++++ b/internal/usecase/authentication_test.go
+@@ -298,7 +298,7 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_Success() {
+ 	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+ 
+ 	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, tenantID)
++	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject)
+ 
+ 	// Assert
+ 	assert.NoError(suite.T(), err)
+@@ -317,7 +317,6 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_InvalidToken() {
+ 	// Create test token
+ 	testToken := token.Token("invalid_token")
+ 	subject := authentication.AccessTokenSubject
+-	tenantID := tenant.TenantID(uuid.New())
+ 
+ 	// Mock expectations
+ 	tokenError := errors.New("token validation failed")
+@@ -327,7 +326,7 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_InvalidToken() {
+ 	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+ 
+ 	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, tenantID)
++	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject)
+ 
+ 	// Assert
+ 	assert.Error(suite.T(), err)
+@@ -345,7 +344,6 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_UserNotFound() {
+ 	// Create test token
+ 	testToken := token.Token("valid_token")
+ 	subject := authentication.AccessTokenSubject
+-	tenantID := tenant.TenantID(uuid.New())
+ 	userID := user.UserID(uuid.New())
+ 
+ 	// Mock expectations
+@@ -362,7 +360,7 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_UserNotFound() {
+ 	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+ 
+ 	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, tenantID)
++	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject)
+ 
+ 	// Assert
+ 	assert.Error(suite.T(), err)
+@@ -370,53 +368,6 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_UserNotFound() {
+ 	assert.Equal(suite.T(), authentication.ErrInvalidAuthentication, err)
+ }
+ 
+-// TestVerifyToken_TenantMismatch tests token verification with tenant mismatch
+-func (suite *AuthenticationTestSuite) TestVerifyToken_TenantMismatch() {
+-	// Arrange
+-	ctx := context.Background()
+-	mockUserRepo := testmock.NewMockUserRepository(suite.T())
+-	mockTokenGen := testmock.NewMockGeneratorRepository(suite.T())
+-
+-	// Create test user with different tenant
+-	userID := user.UserID(uuid.New())
+-	userTenantID := tenant.TenantID(uuid.New())
+-	requiredTenantID := tenant.TenantID(uuid.New()) // Different tenant
+-	testUser := &user.User{
+-		ID:         userID,
+-		TenantID:   userTenantID,
+-		Email:      "test@example.com",
+-		Name:       "Test User",
+-		Role:       "admin",
+-		CipherText: "hashedpassword",
+-		Status:     user.UserStatusActive,
+-	}
+-
+-	// Create test token
+-	testToken := token.Token("valid_token")
+-	subject := authentication.AccessTokenSubject
+-
+-	// Mock expectations
+-	expectedClaims := &token.Claims{
+-		Subject:    subject,
+-		Identifier: uuid.UUID(userID).String(),
+-		EXP:        1234567890,
+-		JTI:        uuid.New(),
+-	}
+-	mockTokenGen.EXPECT().Validate(ctx, testToken).Return(expectedClaims, nil)
+-	mockUserRepo.EXPECT().GetOneByID(ctx, userID).Return(testUser, nil)
+-
+-	// Create usecase
+-	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+-
+-	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, requiredTenantID)
+-
+-	// Assert
+-	assert.Error(suite.T(), err)
+-	assert.Nil(suite.T(), resultUser)
+-	assert.Equal(suite.T(), authentication.ErrTenantMismatch, err)
+-}
+-
+ // TestVerifyToken_RepositoryError tests token verification when repository returns an error
+ func (suite *AuthenticationTestSuite) TestVerifyToken_RepositoryError() {
+ 	// Arrange
+@@ -427,7 +378,6 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_RepositoryError() {
+ 	// Create test token
+ 	testToken := token.Token("valid_token")
+ 	subject := authentication.AccessTokenSubject
+-	tenantID := tenant.TenantID(uuid.New())
+ 	userID := user.UserID(uuid.New())
+ 
+ 	// Mock expectations
+@@ -445,7 +395,7 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_RepositoryError() {
+ 	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+ 
+ 	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, tenantID)
++	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject)
+ 
+ 	// Assert
+ 	assert.Error(suite.T(), err)
+@@ -463,7 +413,6 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_InvalidUserID() {
+ 	// Create test token
+ 	testToken := token.Token("valid_token")
+ 	subject := authentication.AccessTokenSubject
+-	tenantID := tenant.TenantID(uuid.New())
+ 
+ 	// Mock expectations with invalid UUID
+ 	expectedClaims := &token.Claims{
+@@ -478,7 +427,7 @@ func (suite *AuthenticationTestSuite) TestVerifyToken_InvalidUserID() {
+ 	authUsecase := NewAuthentication(mockUserRepo, mockTokenGen)
+ 
+ 	// Act
+-	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject, tenantID)
++	resultUser, err := authUsecase.VerifyToken(ctx, testToken, subject)
+ 
+ 	// Assert
+ 	assert.Error(suite.T(), err)
+
+--- FILE: testmock/Authentication_mock.go ---
+diff --git a/testmock/Authentication_mock.go b/testmock/Authentication_mock.go
+index 8a8c466..0509adc 100644
+--- a/testmock/Authentication_mock.go
++++ b/testmock/Authentication_mock.go
+@@ -1,315 +1,97 @@
+-// Code generated by mockery; DO NOT EDIT.
+-// github.com/vektra/mockery
+-// template: testify
++// Code generated by MockGen. DO NOT EDIT.
++// Source: internal/usecase/authentication.go
+ 
++// Package testmock is a generated GoMock package.
+ package testmock
+ 
+ import (
+-	"context"
++	context "context"
++	reflect "reflect"
+ 
+-	"github.com/harungurubudi/mtsg/internal/domain/authentication"
+-	"github.com/harungurubudi/mtsg/internal/domain/tenant"
+-	"github.com/harungurubudi/mtsg/internal/domain/user"
+-	"github.com/harungurubudi/mtsg/pkg/token"
+-	mock "github.com/stretchr/testify/mock"
++	gomock "github.com/golang/mock/gomock"
++	authentication "github.com/harungurubudi/mtsg/internal/domain/authentication"
++	user "github.com/harungurubudi/mtsg/internal/domain/user"
++	token "github.com/harungurubudi/mtsg/pkg/token"
+ )
+ 
+-// NewMockAuthentication creates a new instance of MockAuthentication. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+-// The first argument is typically a *testing.T value.
+-func NewMockAuthentication(t interface {
+-	mock.TestingT
+-	Cleanup(func())
+-}) *MockAuthentication {
+-	mock := &MockAuthentication{}
+-	mock.Mock.Test(t)
+-
+-	t.Cleanup(func() { mock.AssertExpectations(t) })
+-
+-	return mock
+-}
+-
+-// MockAuthentication is an autogenerated mock type for the Authentication type
++// MockAuthentication is a mock of Authentication interface.
+ type MockAuthentication struct {
+-	mock.Mock
+-}
+-
+-type MockAuthentication_Expecter struct {
+-	mock *mock.Mock
+-}
+-
+-func (_m *MockAuthentication) EXPECT() *MockAuthentication_Expecter {
+-	return &MockAuthentication_Expecter{mock: &_m.Mock}
+-}
+-
+-// Login provides a mock function for the type MockAuthentication
+-func (_mock *MockAuthentication) Login(ctx context.Context, credential *authentication.Credential) (*authentication.Session, error) {
+-	ret := _mock.Called(ctx, credential)
+-
+-	if len(ret) == 0 {
+-		panic("no return value specified for Login")
+-	}
+-
+-	var r0 *authentication.Session
+-	var r1 error
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, *authentication.Credential) (*authentication.Session, error)); ok {
+-		return returnFunc(ctx, credential)
+-	}
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, *authentication.Credential) *authentication.Session); ok {
+-		r0 = returnFunc(ctx, credential)
+-	} else {
+-		if ret.Get(0) != nil {
+-			r0 = ret.Get(0).(*authentication.Session)
+-		}
+-	}
+-	if returnFunc, ok := ret.Get(1).(func(context.Context, *authentication.Credential) error); ok {
+-		r1 = returnFunc(ctx, credential)
+-	} else {
+-		r1 = ret.Error(1)
+-	}
+-	return r0, r1
+-}
+-
+-// MockAuthentication_Login_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Login'
+-type MockAuthentication_Login_Call struct {
+-	*mock.Call
+-}
+-
+-// Login is a helper method to define mock.On call
+-//   - ctx context.Context
+-//   - credential *authentication.Credential
+-func (_e *MockAuthentication_Expecter) Login(ctx interface{}, credential interface{}) *MockAuthentication_Login_Call {
+-	return &MockAuthentication_Login_Call{Call: _e.mock.On("Login", ctx, credential)}
+-}
+-
+-func (_c *MockAuthentication_Login_Call) Run(run func(ctx context.Context, credential *authentication.Credential)) *MockAuthentication_Login_Call {
+-	_c.Call.Run(func(args mock.Arguments) {
+-		var arg0 context.Context
+-		if args[0] != nil {
+-			arg0 = args[0].(context.Context)
+-		}
+-		var arg1 *authentication.Credential
+-		if args[1] != nil {
+-			arg1 = args[1].(*authentication.Credential)
+-		}
+-		run(
+-			arg0,
+-			arg1,
+-		)
+-	})
+-	return _c
+-}
+-
+-func (_c *MockAuthentication_Login_Call) Return(session *authentication.Session, err error) *MockAuthentication_Login_Call {
+-	_c.Call.Return(session, err)
+-	return _c
+-}
+-
+-func (_c *MockAuthentication_Login_Call) RunAndReturn(run func(ctx context.Context, credential *authentication.Credential) (*authentication.Session, error)) *MockAuthentication_Login_Call {
+-	_c.Call.Return(run)
+-	return _c
+-}
+-
+-// Logout provides a mock function for the type MockAuthentication
+-func (_mock *MockAuthentication) Logout(ctx context.Context, accessToken token.Token) error {
+-	ret := _mock.Called(ctx, accessToken)
+-
+-	if len(ret) == 0 {
+-		panic("no return value specified for Logout")
+-	}
+-
+-	var r0 error
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, token.Token) error); ok {
+-		r0 = returnFunc(ctx, accessToken)
+-	} else {
+-		r0 = ret.Error(0)
+-	}
+-	return r0
+-}
+-
+-// MockAuthentication_Logout_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Logout'
+-type MockAuthentication_Logout_Call struct {
+-	*mock.Call
+-}
+-
+-// Logout is a helper method to define mock.On call
+-//   - ctx context.Context
+-//   - accessToken token.Token
+-func (_e *MockAuthentication_Expecter) Logout(ctx interface{}, accessToken interface{}) *MockAuthentication_Logout_Call {
+-	return &MockAuthentication_Logout_Call{Call: _e.mock.On("Logout", ctx, accessToken)}
+-}
+-
+-func (_c *MockAuthentication_Logout_Call) Run(run func(ctx context.Context, accessToken token.Token)) *MockAuthentication_Logout_Call {
+-	_c.Call.Run(func(args mock.Arguments) {
+-		var arg0 context.Context
+-		if args[0] != nil {
+-			arg0 = args[0].(context.Context)
+-		}
+-		var arg1 token.Token
+-		if args[1] != nil {
+-			arg1 = args[1].(token.Token)
+-		}
+-		run(
+-			arg0,
+-			arg1,
+-		)
+-	})
+-	return _c
++	ctrl     *gomock.Controller
++	recorder *MockAuthenticationMockRecorder
+ }
+ 
+-func (_c *MockAuthentication_Logout_Call) Return(err error) *MockAuthentication_Logout_Call {
+-	_c.Call.Return(err)
+-	return _c
++// MockAuthenticationMockRecorder is the mock recorder for MockAuthentication.
++type MockAuthenticationMockRecorder struct {
++	mock *MockAuthentication
+ }
+ 
+-func (_c *MockAuthentication_Logout_Call) RunAndReturn(run func(ctx context.Context, accessToken token.Token) error) *MockAuthentication_Logout_Call {
+-	_c.Call.Return(run)
+-	return _c
+-}
+-
+-// RefreshToken provides a mock function for the type MockAuthentication
+-func (_mock *MockAuthentication) RefreshToken(ctx context.Context, refreshToken token.Token) (*authentication.Session, error) {
+-	ret := _mock.Called(ctx, refreshToken)
+-
+-	if len(ret) == 0 {
+-		panic("no return value specified for RefreshToken")
+-	}
+-
+-	var r0 *authentication.Session
+-	var r1 error
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, token.Token) (*authentication.Session, error)); ok {
+-		return returnFunc(ctx, refreshToken)
+-	}
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, token.Token) *authentication.Session); ok {
+-		r0 = returnFunc(ctx, refreshToken)
+-	} else {
+-		if ret.Get(0) != nil {
+-			r0 = ret.Get(0).(*authentication.Session)
+-		}
+-	}
+-	if returnFunc, ok := ret.Get(1).(func(context.Context, token.Token) error); ok {
+-		r1 = returnFunc(ctx, refreshToken)
+-	} else {
+-		r1 = ret.Error(1)
+-	}
+-	return r0, r1
+-}
+-
+-// MockAuthentication_RefreshToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RefreshToken'
+-type MockAuthentication_RefreshToken_Call struct {
+-	*mock.Call
+-}
+-
+-// RefreshToken is a helper method to define mock.On call
+-//   - ctx context.Context
+-//   - refreshToken token.Token
+-func (_e *MockAuthentication_Expecter) RefreshToken(ctx interface{}, refreshToken interface{}) *MockAuthentication_RefreshToken_Call {
+-	return &MockAuthentication_RefreshToken_Call{Call: _e.mock.On("RefreshToken", ctx, refreshToken)}
++// NewMockAuthentication creates a new mock instance.
++func NewMockAuthentication(ctrl *gomock.Controller) *MockAuthentication {
++	mock := &MockAuthentication{ctrl: ctrl}
++	mock.recorder = &MockAuthenticationMockRecorder{mock}
++	return mock
+ }
+ 
+-func (_c *MockAuthentication_RefreshToken_Call) Run(run func(ctx context.Context, refreshToken token.Token)) *MockAuthentication_RefreshToken_Call {
+-	_c.Call.Run(func(args mock.Arguments) {
+-		var arg0 context.Context
+-		if args[0] != nil {
+-			arg0 = args[0].(context.Context)
+-		}
+-		var arg1 token.Token
+-		if args[1] != nil {
+-			arg1 = args[1].(token.Token)
+-		}
+-		run(
+-			arg0,
+-			arg1,
+-		)
+-	})
+-	return _c
++// EXPECT returns an object that allows the caller to indicate expected use.
++func (m *MockAuthentication) EXPECT() *MockAuthenticationMockRecorder {
++	return m.recorder
+ }
+ 
+-func (_c *MockAuthentication_RefreshToken_Call) Return(session *authentication.Session, err error) *MockAuthentication_RefreshToken_Call {
+-	_c.Call.Return(session, err)
+-	return _c
++// Login mocks base method.
++func (m *MockAuthentication) Login(ctx context.Context, credential *authentication.Credential) (*authentication.Session, error) {
++	m.ctrl.T.Helper()
++	ret := m.ctrl.Call(m, "Login", ctx, credential)
++	ret0, _ := ret[0].(*authentication.Session)
++	ret1, _ := ret[1].(error)
++	return ret0, ret1
+ }
+ 
+-func (_c *MockAuthentication_RefreshToken_Call) RunAndReturn(run func(ctx context.Context, refreshToken token.Token) (*authentication.Session, error)) *MockAuthentication_RefreshToken_Call {
+-	_c.Call.Return(run)
+-	return _c
++// Login indicates an expected call of Login.
++func (mr *MockAuthenticationMockRecorder) Login(ctx, credential interface{}) *gomock.Call {
++	mr.mock.ctrl.T.Helper()
++	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockAuthentication)(nil).Login), ctx, credential)
+ }
+ 
+-// VerifyToken provides a mock function for the type MockAuthentication
+-func (_mock *MockAuthentication) VerifyToken(ctx context.Context, token1 token.Token, subject string, tenantID tenant.TenantID) (*user.User, error) {
+-	ret := _mock.Called(ctx, token1, subject, tenantID)
+-
+-	if len(ret) == 0 {
+-		panic("no return value specified for VerifyToken")
+-	}
+-
+-	var r0 *user.User
+-	var r1 error
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, token.Token, string, tenant.TenantID) (*user.User, error)); ok {
+-		return returnFunc(ctx, token1, subject, tenantID)
+-	}
+-	if returnFunc, ok := ret.Get(0).(func(context.Context, token.Token, string, tenant.TenantID) *user.User); ok {
+-		r0 = returnFunc(ctx, token1, subject, tenantID)
+-	} else {
+-		if ret.Get(0) != nil {
+-			r0 = ret.Get(0).(*user.User)
+-		}
+-	}
+-	if returnFunc, ok := ret.Get(1).(func(context.Context, token.Token, string, tenant.TenantID) error); ok {
+-		r1 = returnFunc(ctx, token1, subject, tenantID)
+-	} else {
+-		r1 = ret.Error(1)
+-	}
+-	return r0, r1
++// Logout mocks base method.
++func (m *MockAuthentication) Logout(ctx context.Context, accessToken token.Token) error {
++	m.ctrl.T.Helper()
++	ret := m.ctrl.Call(m, "Logout", ctx, accessToken)
++	ret0, _ := ret[0].(error)
++	return ret0
+ }
+ 
+-// MockAuthentication_VerifyToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyToken'
+-type MockAuthentication_VerifyToken_Call struct {
+-	*mock.Call
++// Logout indicates an expected call of Logout.
++func (mr *MockAuthenticationMockRecorder) Logout(ctx, accessToken interface{}) *gomock.Call {
++	mr.mock.ctrl.T.Helper()
++	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuthentication)(nil).Logout), ctx, accessToken)
+ }
+ 
+-// VerifyToken is a helper method to define mock.On call
+-//   - ctx context.Context
+-//   - token1 token.Token
+-//   - subject string
+-//   - tenantID tenant.TenantID
+-func (_e *MockAuthentication_Expecter) VerifyToken(ctx interface{}, token1 interface{}, subject interface{}, tenantID interface{}) *MockAuthentication_VerifyToken_Call {
+-	return &MockAuthentication_VerifyToken_Call{Call: _e.mock.On("VerifyToken", ctx, token1, subject, tenantID)}
++// RefreshToken mocks base method.
++func (m *MockAuthentication) RefreshToken(ctx context.Context, refreshToken token.Token) (*authentication.Session, error) {
++	m.ctrl.T.Helper()
++	ret := m.ctrl.Call(m, "RefreshToken", ctx, refreshToken)
++	ret0, _ := ret[0].(*authentication.Session)
++	ret1, _ := ret[1].(error)
++	return ret0, ret1
+ }
+ 
+-func (_c *MockAuthentication_VerifyToken_Call) Run(run func(ctx context.Context, token1 token.Token, subject string, tenantID tenant.TenantID)) *MockAuthentication_VerifyToken_Call {
+-	_c.Call.Run(func(args mock.Arguments) {
+-		var arg0 context.Context
+-		if args[0] != nil {
+-			arg0 = args[0].(context.Context)
+-		}
+-		var arg1 token.Token
+-		if args[1] != nil {
+-			arg1 = args[1].(token.Token)
+-		}
+-		var arg2 string
+-		if args[2] != nil {
+-			arg2 = args[2].(string)
+-		}
+-		var arg3 tenant.TenantID
+-		if args[3] != nil {
+-			arg3 = args[3].(tenant.TenantID)
+-		}
+-		run(
+-			arg0,
+-			arg1,
+-			arg2,
+-			arg3,
+-		)
+-	})
+-	return _c
++// RefreshToken indicates an expected call of RefreshToken.
++func (mr *MockAuthenticationMockRecorder) RefreshToken(ctx, refreshToken interface{}) *gomock.Call {
++	mr.mock.ctrl.T.Helper()
++	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshToken", reflect.TypeOf((*MockAuthentication)(nil).RefreshToken), ctx, refreshToken)
+ }
+ 
+-func (_c *MockAuthentication_VerifyToken_Call) Return(user1 *user.User, err error) *MockAuthentication_VerifyToken_Call {
+-	_c.Call.Return(user1, err)
+-	return _c
++// VerifyToken mocks base method.
++func (m *MockAuthentication) VerifyToken(ctx context.Context, token token.Token, subject string) (*user.User, error) {
++	m.ctrl.T.Helper()
++	ret := m.ctrl.Call(m, "VerifyToken", ctx, token, subject)
++	ret0, _ := ret[0].(*user.User)
++	ret1, _ := ret[1].(error)
++	return ret0, ret1
+ }
+ 
+-func (_c *MockAuthentication_VerifyToken_Call) RunAndReturn(run func(ctx context.Context, token1 token.Token, subject string, tenantID tenant.TenantID) (*user.User, error)) *MockAuthentication_VerifyToken_Call {
+-	_c.Call.Return(run)
+-	return _c
++// VerifyToken indicates an expected call of VerifyToken.
++func (mr *MockAuthenticationMockRecorder) VerifyToken(ctx, token, subject interface{}) *gomock.Call {
++	mr.mock.ctrl.T.Helper()
++	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyToken", reflect.TypeOf((*MockAuthentication)(nil).VerifyToken), ctx, token, subject)
+ }
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

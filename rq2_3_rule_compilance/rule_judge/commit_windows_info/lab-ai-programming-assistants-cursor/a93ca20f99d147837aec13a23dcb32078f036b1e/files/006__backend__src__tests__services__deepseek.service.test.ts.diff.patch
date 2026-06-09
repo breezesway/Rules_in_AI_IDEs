@@ -1,0 +1,154 @@
+diff --git a/backend/src/tests/services/deepseek.service.test.ts b/backend/src/tests/services/deepseek.service.test.ts
+index 1d7e139..426f549 100644
+--- a/backend/src/tests/services/deepseek.service.test.ts
++++ b/backend/src/tests/services/deepseek.service.test.ts
+@@ -3,19 +3,15 @@ import { mock, mockDeep, MockProxy } from 'jest-mock-extended';
+ import OpenAI from 'openai';
+ import { DeepSeekService } from '../../services/deepseek.service';
+ import type { OptimizePromptRequest } from '../../types/api';
++import { Response } from 'express';
+ 
+ describe('DeepSeekService', () => {
+   // Create a mock OpenAI client with proper structure
+-  let mockOpenAI: MockProxy<OpenAI> & {
+-    chat: {
+-      completions: {
+-        create: jest.Mock;
+-      };
+-    };
+-  };
++  let mockOpenAI: MockProxy<OpenAI>;
+ 
+   // Create an instance of the service with the mock
+   let deepseekService: DeepSeekService;
++  let mockResponse: jest.Mocked<Response>;
+ 
+   // Test data
+   const testPrompt: OptimizePromptRequest = {
+@@ -49,16 +45,18 @@ describe('DeepSeekService', () => {
+ 
+   beforeEach(() => {
+     // Create a fresh mock for each test
+-    mockOpenAI = mockDeep<OpenAI>() as MockProxy<OpenAI> & {
+-      chat: {
+-        completions: {
+-          create: jest.Mock;
+-        };
+-      };
+-    };
++    mockOpenAI = mockDeep<OpenAI>();
+ 
+-    // Manually set up the nested structure needed for the test
+-    mockOpenAI.chat = {
++    // Set up mock response for streaming tests
++    mockResponse = {
++      setHeader: jest.fn(),
++      write: jest.fn(),
++      end: jest.fn(),
++      headersSent: false
++    } as any;
++
++    // Cast to 'any' to avoid TypeScript errors with the chat structure
++    (mockOpenAI as any).chat = {
+       completions: {
+         create: jest.fn().mockResolvedValue(expectedApiResponse)
+       }
+@@ -74,7 +72,7 @@ describe('DeepSeekService', () => {
+       const result = await deepseekService.optimizePrompt(testPrompt);
+ 
+       // Verify that the API was called with the expected parameters
+-      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith({
++      expect((mockOpenAI as any).chat.completions.create).toHaveBeenCalledWith({
+         messages: [
+           { role: 'system', content: testPrompt.systemPrompt },
+           { role: 'user', content: testPrompt.prompt }
+@@ -96,7 +94,7 @@ describe('DeepSeekService', () => {
+       await deepseekService.optimizePrompt(promptWithoutSystem);
+ 
+       // Verify the system prompt is the default
+-      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith({
++      expect((mockOpenAI as any).chat.completions.create).toHaveBeenCalledWith({
+         messages: [
+           { role: 'system', content: 'You are a helpful assistant.' },
+           { role: 'user', content: promptWithoutSystem.prompt }
+@@ -108,10 +106,78 @@ describe('DeepSeekService', () => {
+     it('should handle API errors properly', async () => {
+       // Set up the mock to throw an error
+       const errorMessage = 'API rate limit exceeded';
+-      mockOpenAI.chat.completions.create.mockRejectedValueOnce(new Error(errorMessage));
++      (mockOpenAI as any).chat.completions.create.mockRejectedValueOnce(new Error(errorMessage));
+ 
+       // Call the method and expect it to throw
+       await expect(deepseekService.optimizePrompt(testPrompt)).rejects.toThrow(errorMessage);
+     });
+   });
++  
++  describe('optimizePromptStream', () => {
++    it('should properly handle streaming response', async () => {
++      // Given: Mock stream implementation
++      const mockStream = [
++        { choices: [{ delta: { content: 'First' } }] },
++        { choices: [{ delta: { content: ' chunk' } }] },
++        { choices: [{ delta: { content: ' of text' } }] }
++      ];
++      (mockOpenAI as any).chat.completions.create.mockResolvedValue({
++        [Symbol.asyncIterator]: jest.fn().mockImplementation(() => {
++          let i = 0;
++          return {
++            next: () => {
++              if (i < mockStream.length) {
++                return Promise.resolve({ done: false, value: mockStream[i++] });
++              }
++              return Promise.resolve({ done: true });
++            }
++          };
++        })
++      });
++      
++      // When: Calling the stream method
++      await deepseekService.optimizePromptStream(testPrompt, mockResponse);
++      
++      // Then: Response headers should be set correctly
++      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
++      expect(mockResponse.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
++      expect(mockResponse.setHeader).toHaveBeenCalledWith('Connection', 'keep-alive');
++      
++      // Then: Should write each chunk to the response
++      expect(mockResponse.write).toHaveBeenCalledTimes(4); // 3 chunks + completion message
++      expect(mockResponse.write).toHaveBeenNthCalledWith(
++        1, 
++        `data: ${JSON.stringify({ chunk: 'First', complete: false })}\n\n`
++      );
++      expect(mockResponse.write).toHaveBeenNthCalledWith(
++        2, 
++        `data: ${JSON.stringify({ chunk: ' chunk', complete: false })}\n\n`
++      );
++      expect(mockResponse.write).toHaveBeenNthCalledWith(
++        3, 
++        `data: ${JSON.stringify({ chunk: ' of text', complete: false })}\n\n`
++      );
++      
++      // Then: Should send completion message
++      expect(mockResponse.write).toHaveBeenLastCalledWith(
++        `data: ${JSON.stringify({ chunk: "", complete: true, fullResponse: "First chunk of text" })}\n\n`
++      );
++      expect(mockResponse.end).toHaveBeenCalled();
++    });
++
++    it('should handle streaming errors properly', async () => {
++      // Given: A streaming error
++      const testError = new Error('Stream error');
++      (mockOpenAI as any).chat.completions.create.mockRejectedValue(testError);
++      
++      // When: Calling the stream method
++      await expect(deepseekService.optimizePromptStream(testPrompt, mockResponse)).rejects.toThrow('Stream error');
++      
++      // Then: Should send error to client and end response
++      expect(mockResponse.write).toHaveBeenCalledWith(
++        `data: ${JSON.stringify({ error: 'Error processing stream', complete: true })}\n\n`
++      );
++      expect(mockResponse.end).toHaveBeenCalled();
++    });
++  });
+ }); 
+\ No newline at end of file

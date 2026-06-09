@@ -1,0 +1,46 @@
+diff --git a/web/static/index.html b/web/static/index.html
+index 8f21258..ea23a56 100644
+--- a/web/static/index.html
++++ b/web/static/index.html
+@@ -33,24 +33,28 @@
+     
+     <script src="wasm_exec.js"></script>
+     <script>
++        function renderBoard() {
++            const board = document.getElementById('board');
++            board.innerHTML = ''; // Clear the board
++            const cells = game.board();
++            cells.forEach((cell, index) => {
++                const button = document.createElement('button');
++                button.className = 'cell';
++                button.textContent = cell || '';
++                button.onclick = () => {
++                    game.makeMove(index);
++                    renderBoard(); // Re-render after move
++                };
++                board.appendChild(button);
++            });
++        }
++
+         const go = new Go();
+         WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
+             .then((result) => {
+-                console.log(`Running WASM`);
+                 go.run(result.instance);
+                 document.getElementById('content').textContent = game.text();
+-                
+-                const board = document.getElementById('board');
+-                const cells = game.board();
+-                cells.forEach((cell, index) => {
+-                    const button = document.createElement('button');
+-                    button.className = 'cell';
+-                    button.textContent = cell || '';
+-                    button.onclick = () => {
+-                        console.log(`Clicked cell ${index}`);
+-                    };
+-                    board.appendChild(button);
+-                });
++                renderBoard();
+             });
+     </script>
+ </body>

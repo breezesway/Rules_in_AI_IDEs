@@ -1,0 +1,219 @@
+diff --git a/src/main.ts b/src/main.ts
+index 5c5979d..4eb3bd2 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -600,6 +600,214 @@ ipcMain.handle('select-save-location', async () => {
+   }
+ });
+ 
++// 生成图片压缩预览
++ipcMain.handle('generate-image-preview', async (event, filePath: string, settings: {
++  method: string;
++  quality?: number;
++  targetSize?: number;
++  maxDimension?: number;
++  outputFormat?: string;
++}) => {
++  try {
++    // 动态导入sharp
++    const sharp = await import('sharp');
++    
++    // 获取原始文件信息
++    const originalStats = await fs.stat(filePath);
++    const originalSize = originalStats.size;
++    
++    // 获取原始图片信息
++    const originalInfo = await sharp.default(filePath).metadata();
++    
++    // 创建临时预览文件
++    const tempDir = path.join(app.getPath('temp'), 'image-preview');
++    await fs.mkdir(tempDir, { recursive: true });
++    
++    const fileName = path.basename(filePath);
++    const fileNameWithoutExt = path.parse(fileName).name;
++    
++    // 确定输出格式
++    let outputFormat = settings.outputFormat || 'original';
++    if (outputFormat === 'original') {
++      const ext = path.extname(filePath).toLowerCase();
++      if (ext === '.jpg' || ext === '.jpeg') {
++        outputFormat = 'jpeg';
++      } else if (ext === '.png') {
++        outputFormat = 'png';
++      } else if (ext === '.webp') {
++        outputFormat = 'webp';
++      } else {
++        outputFormat = 'jpeg';
++      }
++    }
++
++    // 根据输出格式确定临时文件扩展名
++    let tempExt: string;
++    switch (outputFormat) {
++      case 'jpeg':
++      case 'jpg':
++        tempExt = 'jpg';
++        break;
++      case 'png':
++        tempExt = 'png';
++        break;
++      case 'webp':
++        tempExt = 'webp';
++        break;
++      default:
++        tempExt = 'jpg';
++    }
++    
++    const tempPath = path.join(tempDir, `${fileNameWithoutExt}_preview.${tempExt}`);
++    
++    // 创建sharp实例
++    let sharpInstance = sharp.default(filePath);
++    
++    
++    // 根据压缩方法处理图片
++    if (settings.method === 'quality') {
++      const quality = settings.quality || 70;
++      
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        sharpInstance = sharpInstance.jpeg({ quality });
++      } else if (outputFormat === 'png') {
++        const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - quality) / 10)));
++        sharpInstance = sharpInstance.png({ 
++          compressionLevel,
++          progressive: true
++        });
++      } else if (outputFormat === 'webp') {
++        sharpInstance = sharpInstance.webp({ quality });
++      }
++    } else if (settings.method === 'size') {
++      const targetSizeKB = settings.targetSize || 500;
++      const targetSizeBytes = targetSizeKB * 1024;
++      
++      // 简化的质量估算用于预览
++      const compressionRatio = targetSizeBytes / originalSize;
++      let estimatedQuality: number;
++      
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        estimatedQuality = Math.max(20, Math.min(85, Math.round(compressionRatio * 120)));
++        sharpInstance = sharpInstance.jpeg({ quality: estimatedQuality });
++      } else if (outputFormat === 'png') {
++        estimatedQuality = Math.max(10, Math.min(80, Math.round(compressionRatio * 100)));
++        const compressionLevel = Math.max(0, Math.min(9, Math.round((100 - estimatedQuality) / 10)));
++        sharpInstance = sharpInstance.png({ compressionLevel, progressive: true });
++      } else if (outputFormat === 'webp') {
++        estimatedQuality = Math.max(25, Math.min(90, Math.round(compressionRatio * 130)));
++        sharpInstance = sharpInstance.webp({ quality: estimatedQuality });
++      }
++    } else if (settings.method === 'dimension') {
++      const maxDimension = settings.maxDimension || 1920;
++      sharpInstance = sharpInstance.resize(maxDimension, maxDimension, {
++        fit: 'inside',
++        withoutEnlargement: true
++      });
++      
++      // 尺寸压缩时应用适中的质量
++      if (outputFormat === 'jpeg' || outputFormat === 'jpg') {
++        sharpInstance = sharpInstance.jpeg({ quality: 80 });
++      } else if (outputFormat === 'png') {
++        sharpInstance = sharpInstance.png({ compressionLevel: 6, progressive: true });
++      } else if (outputFormat === 'webp') {
++        sharpInstance = sharpInstance.webp({ quality: 80 });
++      }
++    }
++    
++    // 生成预览图片
++    await sharpInstance.toFile(tempPath);
++    
++    // 获取压缩后的文件信息
++    const compressedStats = await fs.stat(tempPath);
++    const compressedSize = compressedStats.size;
++    const compressedInfo = await sharp.default(tempPath).metadata();
++    
++    // 计算压缩率
++    const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
++    
++    // 将图片转换为base64
++    const originalBuffer = await fs.readFile(filePath);
++    const compressedBuffer = await fs.readFile(tempPath);
++    
++    // 正确的MIME类型映射
++    const getMimeType = (format: string) => {
++      switch (format.toLowerCase()) {
++        case 'jpeg':
++        case 'jpg':
++          return 'image/jpeg';
++        case 'png':
++          return 'image/png';
++        case 'webp':
++          return 'image/webp';
++        default:
++          return 'image/jpeg';
++      }
++    };
++    
++    const originalMimeType = getMimeType(originalInfo.format || 'jpeg');
++    const compressedMimeType = getMimeType(compressedInfo.format || 'jpeg');
++    
++    const originalBase64 = `data:${originalMimeType};base64,${originalBuffer.toString('base64')}`;
++    const compressedBase64 = `data:${compressedMimeType};base64,${compressedBuffer.toString('base64')}`;
++    
++    console.log('预览生成信息:', {
++      originalPath: filePath,
++      compressedPath: tempPath,
++      originalSize: originalBuffer.length,
++      compressedSize: compressedBuffer.length,
++      originalFormat: originalInfo.format,
++      compressedFormat: compressedInfo.format,
++      originalMimeType,
++      compressedMimeType,
++      outputFormat,
++      tempExt
++    });
++    
++    return {
++      success: true,
++      preview: {
++        originalPath: filePath,
++        previewPath: tempPath,
++        originalBase64,
++        compressedBase64,
++        original: {
++          size: originalSize,
++          width: originalInfo.width || 0,
++          height: originalInfo.height || 0,
++          format: originalInfo.format || 'unknown'
++        },
++        compressed: {
++          size: compressedSize,
++          width: compressedInfo.width || 0,
++          height: compressedInfo.height || 0,
++          format: compressedInfo.format || 'unknown'
++        },
++        compressionRatio: Math.round(compressionRatio * 100) / 100,
++        sizeDifference: originalSize - compressedSize
++      }
++    };
++    
++  } catch (error) {
++    console.error('生成预览失败:', error);
++    return { 
++      success: false, 
++      error: error instanceof Error ? error.message : '生成预览失败' 
++    };
++  }
++});
++
++// 清理预览文件
++ipcMain.handle('cleanup-image-preview', async (event, previewPath: string) => {
++  try {
++    await fs.unlink(previewPath);
++    return { success: true };
++  } catch (error) {
++    console.error('清理预览文件失败:', error);
++    return { success: false };
++  }
++});
++
+ // 压缩图片
+ ipcMain.handle('compress-images', async (event, filePaths: string[], settings: {
+   method: string;

@@ -1,0 +1,856 @@
+- Rule Primary Category: Quality Assurance
+- Rule Secondary Category: Testing Strategy
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Frontend: Jest + React Testing Library
++ - Frontend: Vitest + React Testing Library
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project configuration files (package.json, package-lock.json, yarn.lock), Vitest configuration files (vitest.config.ts, vitest.config.js), and frontend test source code files (*.test.js, *.test.tsx, etc.).
+- Suggested Logic: 1. Check 'package.json' to ensure 'vitest' is present in devDependencies and 'jest' is removed or deprecated.
+2. Verify the existence of a 'vitest.config.ts' or 'vitest.config.js' file in the root or frontend directory.
+3. Check the 'scripts' section of 'package.json' to ensure the test command triggers 'vitest' instead of 'jest'.
+4. Scan test files for Vitest-specific imports (e.g., import { expect, it } from 'vitest') or the absence of Jest-specific globals if globals are disabled.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=3)
+- Commit Message: Test: Complete tests for components built in Task 12
+- Changed Files List: 
+.kiro/specs/r2-file-explorer/tasks.md	+1	-1	after_lines=171
+frontend/src/components/Breadcrumb.test.tsx	+84	-0	after_lines=84
+frontend/src/components/Breadcrumb.tsx	+61	-0	after_lines=61
+frontend/src/components/FileExplorer.test.tsx	+136	-0	after_lines=136
+frontend/src/components/FileExplorer.tsx	+245	-17	after_lines=278
+frontend/src/components/Toolbar.test.tsx	+94	-0	after_lines=94
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── commit-message.txt
+├── frontend
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── AuthForm.test.tsx
+│   │   │   ├── AuthForm.tsx
+│   │   │   ├── Breadcrumb.test.tsx
+│   │   │   ├── Breadcrumb.tsx
+│   │   │   ├── ErrorBoundary.test.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── FileExplorer.test.tsx
+│   │   │   ├── FileExplorer.tsx
+│   │   │   ├── Layout.tsx
+│   │   │   ├── ProtectedRoute.test.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   ├── Toolbar.test.tsx
+│   │   │   └── Toolbar.tsx
+│   │   ├── contexts
+│   │   │   ├── AuthContext.test.tsx
+│   │   │   ├── AuthContext.tsx
+│   │   │   └── auth.ts
+│   │   ├── hooks
+│   │   │   └── useAuth.ts
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── providers
+│   │   │   └── QueryProvider.tsx
+│   │   ├── services
+│   │   │   ├── analytics.test.ts
+│   │   │   ├── analytics.ts
+│   │   │   └── api.ts
+│   │   ├── test
+│   │   │   └── setup.ts
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   ├── utils
+│   │   │   ├── __mocks__
+│   │   │   │   └── performance-monitor.ts
+│   │   │   ├── error-handler.ts
+│   │   │   ├── performance-monitor.test.ts
+│   │   │   └── performance-monitor.ts
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts
+│   └── vitest.config.ts
+├── package-lock.json
+└── worker
+    ├── .env.example
+    ├── SETUP.md
+    ├── TESTING.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── handlers
+    │   │   ├── analytics.ts
+    │   │   ├── auth.test.ts
+    │   │   └── auth.ts
+    │   ├── index.ts
+    │   ├── integration.test.ts
+    │   ├── middleware
+    │   │   ├── auth.test.ts
+    │   │   ├── auth.ts
+    │   │   └── error-handler.ts
+    │   ├── services
+    │   │   ├── auth.test.ts
+    │   │   ├── auth.ts
+    │   │   ├── r2.test.ts
+    │   │   └── r2.ts
+    │   ├── types
+    │   │   └── index.ts
+    │   └── utils
+    │       ├── error-handler.ts
+    │       ├── index.ts
+    │       └── logger.ts
+    ├── tsconfig.json
+    ├── vitest.config.ts
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/specs/r2-file-explorer/tasks.md ---
+diff --git a/.kiro/specs/r2-file-explorer/tasks.md b/.kiro/specs/r2-file-explorer/tasks.md
+index e96e046..6a56f0a 100644
+--- a/.kiro/specs/r2-file-explorer/tasks.md
++++ b/.kiro/specs/r2-file-explorer/tasks.md
+@@ -89,7 +89,7 @@
+   - Build analytics client for sending metrics to backend
+   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+ 
+-- [ ] 12. Implement core file explorer interface
++- [x] 12. Implement core file explorer interface
+   - Create FileExplorer main container component
+   - Build Toolbar component with navigation buttons and actions
+   - Implement breadcrumb navigation for current path display
+
+--- FILE: frontend/src/components/Breadcrumb.test.tsx ---
+diff --git a/frontend/src/components/Breadcrumb.test.tsx b/frontend/src/components/Breadcrumb.test.tsx
+new file mode 100644
+index 0000000..040ad66
+--- /dev/null
++++ b/frontend/src/components/Breadcrumb.test.tsx
+@@ -0,0 +1,84 @@
++import React from 'react';
++import { render, screen, fireEvent } from '@testing-library/react';
++import { Breadcrumb } from './Breadcrumb';
++import { describe, it, expect, vi } from 'vitest';
++
++describe('Breadcrumb', () => {
++  const defaultProps = {
++    path: 'folder1/folder2/folder3',
++    onNavigate: vi.fn(),
++    isLoading: false
++  };
++
++  it('renders correctly with path segments', () => {
++    render(<Breadcrumb {...defaultProps} />);
++    
++    // Check if all path segments are rendered
++    expect(screen.getByText('folder1')).toBeInTheDocument();
++    expect(screen.getByText('folder2')).toBeInTheDocument();
++    expect(screen.getByText('folder3')).toBeInTheDocument();
++    
++    // Home icon should be present
++    const homeButton = screen.getAllByRole('button')[0];
++    expect(homeButton).toBeInTheDocument();
++    expect(homeButton.querySelector('svg')).toBeInTheDocument();
++  });
++
++  it('renders only Home when path is empty', () => {
++    render(<Breadcrumb {...defaultProps} path="" />);
++    
++    // Home icon should be present
++    const homeButton = screen.getByRole('button');
++    expect(homeButton).toBeInTheDocument();
++    expect(homeButton.querySelector('svg')).toBeInTheDocument();
++    
++    // No other segments should be present
++    expect(screen.queryByText('folder1')).not.toBeInTheDocument();
++  });
++
++  it('calls onNavigate with correct path when segment is clicked', () => {
++    render(<Breadcrumb {...defaultProps} />);
++    
++    // Click on the first folder
++    fireEvent.click(screen.getByText('folder1'));
++    expect(defaultProps.onNavigate).toHaveBeenCalledWith('folder1');
++    
++    // Click on the second folder
++    fireEvent.click(screen.getByText('folder2'));
++    expect(defaultProps.onNavigate).toHaveBeenCalledWith('folder1/folder2');
++  });
++
++  it('calls onNavigate with empty string when Home is clicked', () => {
++    render(<Breadcrumb {...defaultProps} />);
++    
++    // Click on Home (first button)
++    const homeButton = screen.getAllByRole('button')[0];
++    fireEvent.click(homeButton);
++    expect(defaultProps.onNavigate).toHaveBeenCalledWith('');
++  });
++
++  it('disables all buttons when isLoading is true', () => {
++    render(<Breadcrumb {...defaultProps} isLoading={true} />);
++    
++    // All buttons should be disabled
++    const buttons = screen.getAllByRole('button');
++    buttons.forEach(button => {
++      expect(button).toBeDisabled();
++    });
++  });
++
++  it('disables the current (last) segment', () => {
++    render(<Breadcrumb {...defaultProps} />);
++    
++    // Get all buttons
++    const buttons = screen.getAllByRole('button');
++    
++    // The last segment should be disabled (current location)
++    expect(buttons[buttons.length - 1]).toBeDisabled();
++    
++    // Other segments should be enabled
++    for (let i = 0; i < buttons.length - 1; i++) {
++      expect(buttons[i]).not.toBeDisabled();
++    }
++  });
++});
+\ No newline at end of file
+
+--- FILE: frontend/src/components/Breadcrumb.tsx ---
+diff --git a/frontend/src/components/Breadcrumb.tsx b/frontend/src/components/Breadcrumb.tsx
+new file mode 100644
+index 0000000..8e05855
+--- /dev/null
++++ b/frontend/src/components/Breadcrumb.tsx
+@@ -0,0 +1,61 @@
++// Breadcrumb component for file path navigation
++
++import React from 'react';
++
++interface BreadcrumbProps {
++  path: string;
++  onNavigate: (path: string) => void;
++  isLoading: boolean;
++}
++
++export const Breadcrumb: React.FC<BreadcrumbProps> = ({ path, onNavigate, isLoading }) => {
++  // Split the path into segments
++  const segments = path ? path.split('/').filter(Boolean) : [];
++  
++  // Generate breadcrumb items with paths
++  const breadcrumbItems = React.useMemo(() => {
++    const items = [{ name: 'Home', path: '' }];
++    
++    let currentPath = '';
++    segments.forEach(segment => {
++      currentPath = currentPath ? `${currentPath}/${segment}` : segment;
++      items.push({ name: segment, path: currentPath });
++    });
++    
++    return items;
++  }, [segments]);
++
++  return (
++    <nav className="flex py-3 px-2" aria-label="Breadcrumb">
++      <ol className="flex items-center space-x-1 md:space-x-2 flex-wrap">
++        {breadcrumbItems.map((item, index) => (
++          <li key={item.path || 'home'} className="flex items-center">
++            {index > 0 && (
++              <svg className="flex-shrink-0 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
++                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
++              </svg>
++            )}
++            <button
++              onClick={() => onNavigate(item.path)}
++              disabled={isLoading || (index === breadcrumbItems.length - 1)}
++              className={`ml-1 text-sm font-medium ${
++                index === breadcrumbItems.length - 1
++                  ? 'text-gray-700 cursor-default'
++                  : 'text-blue-600 hover:text-blue-800'
++              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
++              aria-current={index === breadcrumbItems.length - 1 ? 'page' : undefined}
++            >
++              {item.name === 'Home' ? (
++                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
++                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
++                </svg>
++              ) : (
++                item.name
++              )}
++            </button>
++          </li>
++        ))}
++      </ol>
++    </nav>
++  );
++};
+\ No newline at end of file
+
+--- FILE: frontend/src/components/FileExplorer.test.tsx ---
+diff --git a/frontend/src/components/FileExplorer.test.tsx b/frontend/src/components/FileExplorer.test.tsx
+new file mode 100644
+index 0000000..8ba0be3
+--- /dev/null
++++ b/frontend/src/components/FileExplorer.test.tsx
+@@ -0,0 +1,136 @@
++import React from 'react';
++import { render, screen, waitFor } from '@testing-library/react';
++import { FileExplorer } from './FileExplorer';
++import { describe, it, expect, vi, beforeEach } from 'vitest';
++import { apiClient } from '../services/api';
++import { useAuth } from '../hooks/useAuth';
++
++// Mock dependencies
++vi.mock('../services/api', () => ({
++  apiClient: {
++    listFiles: vi.fn()
++  }
++}));
++
++vi.mock('../hooks/useAuth', () => ({
++  useAuth: vi.fn()
++}));
++
++vi.mock('../utils/performance-monitor', () => ({
++  performanceMonitor: {
++    trackPageLoad: vi.fn(),
++    trackUserInteraction: vi.fn()
++  }
++}));
++
++describe('FileExplorer', () => {
++  const mockAddAlert = vi.fn();
++  
++  const mockDirectoryListing = {
++    objects: [
++      { key: 'file1.txt', name: 'file1.txt', size: 1024, lastModified: new Date(), etag: '123', type: 'file' },
++      { key: 'file2.jpg', name: 'file2.jpg', size: 2048, lastModified: new Date(), etag: '456', type: 'file' }
++    ],
++    folders: [
++      { prefix: 'folder1/', name: 'folder1', type: 'folder' },
++      { prefix: 'folder2/', name: 'folder2', type: 'folder' }
++    ],
++    currentPath: '',
++    hasMore: false
++  };
++  
++  beforeEach(() => {
++    vi.clearAllMocks();
++    
++    // Mock useAuth hook
++    (useAuth as any).mockReturnValue({
++      isAuthenticated: true,
++      bucketName: 'test-bucket'
++    });
++    
++    // Mock API response
++    (apiClient.listFiles as any).mockResolvedValue(mockDirectoryListing);
++  });
++  
++  it('renders loading state initially', () => {
++    render(<FileExplorer addAlert={mockAddAlert} />);
++    
++    // Should show loading spinner
++    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
++  });
++  
++  it('renders toolbar and breadcrumb components', async () => {
++    render(<FileExplorer addAlert={mockAddAlert} />);
++    
++    // Wait for data to load
++    await waitFor(() => {
++      expect(apiClient.listFiles).toHaveBeenCalled();
++    });
++    
++    // Toolbar buttons should be present
++    expect(screen.getByTitle('Back')).toBeInTheDocument();
++    expect(screen.getByTitle('Up to parent folder')).toBeInTheDocument();
++    expect(screen.getByTitle('Refresh')).toBeInTheDocument();
++    
++    // Breadcrumb navigation should be present
++    expect(screen.getByLabelText('Breadcrumb')).toBeInTheDocument();
++  });
++  
++  it('displays folders and files when data is loaded', async () => {
++    render(<FileExplorer addAlert={mockAddAlert} />);
++    
++    // Wait for data to load
++    await waitFor(() => {
++      expect(apiClient.listFiles).toHaveBeenCalled();
++    });
++    
++    // Should display folders
++    expect(screen.getByText('folder1')).toBeInTheDocument();
++    expect(screen.getByText('folder2')).toBeInTheDocument();
++    
++    // Should display files
++    expect(screen.getByText('file1.txt')).toBeInTheDocument();
++    expect(screen.getByText('file2.jpg')).toBeInTheDocument();
++  });
++  
++  it('displays empty state when no files or folders exist', async () => {
++    // Mock empty directory
++    (apiClient.listFiles as any).mockResolvedValue({
++      objects: [],
++      folders: [],
++      currentPath: '',
++      hasMore: false
++    });
++    
++    render(<FileExplorer addAlert={mockAddAlert} />);
++    
++    // Wait for data to load
++    await waitFor(() => {
++      expect(apiClient.listFiles).toHaveBeenCalled();
++    });
++    
++    // Should display empty state message
++    expect(screen.getByText('No files or folders')).toBeInTheDocument();
++    expect(screen.getByText('This directory is empty.')).toBeInTheDocument();
++  });
++  
++  it('shows error alert when API call fails', async () => {
++    // Mock API error
++    const error = new Error('Failed to load directory');
++    (apiClient.listFiles as any).mockRejectedValue(error);
++    
++    render(<FileExplorer addAlert={mockAddAlert} />);
++    
++    // Wait for error handling
++    await waitFor(() => {
++      expect(apiClient.listFiles).toHaveBeenCalled();
++    });
++    
++    // Should call addAlert with error message
++    expect(mockAddAlert).toHaveBeenCalledWith(
++      'error',
++      'Failed to load directory: Failed to load directory',
++      expect.any(Object)
++    );
++  });
++});
+\ No newline at end of file
+
+--- FILE: frontend/src/components/FileExplorer.tsx ---
+diff --git a/frontend/src/components/FileExplorer.tsx b/frontend/src/components/FileExplorer.tsx
+index d39af0d..3cee01a 100644
+--- a/frontend/src/components/FileExplorer.tsx
++++ b/frontend/src/components/FileExplorer.tsx
+@@ -1,10 +1,154 @@
+-// Main file explorer component - placeholder for now
++// Main file explorer component
+ 
+-import React, { useEffect } from 'react';
++import React, { useEffect, useState, useCallback } from 'react';
+ import { ErrorBoundary } from './ErrorBoundary';
++import { Toolbar } from './Toolbar';
++import { Breadcrumb } from './Breadcrumb';
+ import { performanceMonitor } from '../utils/performance-monitor';
++import { apiClient } from '../services/api';
++import { DirectoryListing, FileObject, FolderObject } from '../types';
++import { useAuth } from '../hooks/useAuth';
++import { ErrorHandler } from '../utils/error-handler';
+ 
+-export const FileExplorer: React.FC = () => {
++interface FileExplorerProps {
++  addAlert?: (type: 'success' | 'error' | 'warning' | 'info', message: string, action?: { label: string; onClick: () => void }, timeout?: number) => string;
++}
++
++export const FileExplorer: React.FC<FileExplorerProps> = ({ addAlert }) => {
++  // State for file explorer
++  const [currentPath, setCurrentPath] = useState<string>('');
++  const [directoryListing, setDirectoryListing] = useState<DirectoryListing | null>(null);
++  const [isLoading, setIsLoading] = useState<boolean>(true);
++  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
++  const [navigationHistory, setNavigationHistory] = useState<string[]>(['']);
++  const [historyIndex, setHistoryIndex] = useState<number>(0);
++  
++  const { isAuthenticated } = useAuth();
++  
++  // Load directory contents
++  const loadDirectory = useCallback(async (path: string) => {
++    if (!isAuthenticated) return;
++    
++    setIsLoading(true);
++    const startTime = performance.now();
++    
++    try {
++      const listing = await apiClient.listFiles(path);
++      setDirectoryListing(listing);
++      
++      // Track successful directory load
++      performanceMonitor.trackUserInteraction(
++        'directory_load',
++        performance.now() - startTime,
++        true,
++        { 
++          path,
++          fileCount: listing.objects.length,
++          folderCount: listing.folders.length
++        }
++      );
++    } catch (error) {
++      const apiError = ErrorHandler.parseApiError(error);
++      
++      // Track failed directory load
++      performanceMonitor.trackUserInteraction(
++        'directory_load',
++        performance.now() - startTime,
++        false,
++        { 
++          path,
++          error: apiError.error,
++          code: apiError.code
++        }
++      );
++      
++      // Show error alert
++      if (addAlert) {
++        addAlert('error', `Failed to load directory: ${apiError.error}`, {
++          label: 'Retry',
++          onClick: () => loadDirectory(path)
++        });
++      }
++    } finally {
++      setIsLoading(false);
++    }
++  }, [isAuthenticated, addAlert]);
++  
++  // Navigate to a specific path
++  const navigateTo = useCallback((path: string) => {
++    // Add to navigation history, truncating any forward history
++    setNavigationHistory(prev => {
++      const newHistory = prev.slice(0, historyIndex + 1);
++      if (newHistory[newHistory.length - 1] !== path) {
++        newHistory.push(path);
++      }
++      return newHistory;
++    });
++    setHistoryIndex(prev => {
++      const newIndex = prev + (navigationHistory[prev] !== path ? 1 : 0);
++      return newIndex;
++    });
++    
++    setCurrentPath(path);
++    loadDirectory(path);
++  }, [loadDirectory, navigationHistory, historyIndex]);
++  
++  // Navigate back in history
++  const navigateBack = useCallback(() => {
++    if (historyIndex > 0) {
++      const newIndex = historyIndex - 1;
++      setHistoryIndex(newIndex);
++      const previousPath = navigationHistory[newIndex];
++      setCurrentPath(previousPath);
++      loadDirectory(previousPath);
++    }
++  }, [historyIndex, navigationHistory, loadDirectory]);
++  
++  // Navigate up to parent directory
++  const navigateUp = useCallback(() => {
++    if (currentPath === '') return;
++    
++    const pathParts = currentPath.split('/').filter(Boolean);
++    pathParts.pop();
++    const parentPath = pathParts.join('/');
++    navigateTo(parentPath);
++  }, [currentPath, navigateTo]);
++  
++  // Handle folder click
++  const handleFolderClick = useCallback((folder: FolderObject) => {
++    navigateTo(folder.prefix);
++  }, [navigateTo]);
++  
++  // Handle file click
++  const handleFileClick = useCallback((file: FileObject) => {
++    // File click handling will be implemented in a future task
++    console.log('File clicked:', file);
++  }, []);
++  
++  // Handle create folder
++  const handleCreateFolder = useCallback(() => {
++    // Create folder functionality will be implemented in a future task
++    if (addAlert) {
++      addAlert('info', 'Create folder functionality will be implemented in a future task');
++    }
++  }, [addAlert]);
++  
++  // Handle upload
++  const handleUpload = useCallback(() => {
++    // Upload functionality will be implemented in a future task
++    if (addAlert) {
++      addAlert('info', 'Upload functionality will be implemented in a future task');
++    }
++  }, [addAlert]);
++  
++  // Initial load
++  useEffect(() => {
++    if (isAuthenticated) {
++      loadDirectory('');
++    }
++  }, [isAuthenticated, loadDirectory]);
++  
++  // Performance tracking
+   useEffect(() => {
+     // Track component mount time
+     const mountTime = performance.now();
+@@ -26,23 +170,107 @@ export const FileExplorer: React.FC = () => {
+   
+   return (
+     <ErrorBoundary componentName="FileExplorer">
+-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+-        <div className="bg-white shadow rounded-lg">
+-          <div className="px-4 py-5 sm:p-6">
+-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+-              File Explorer
+-            </h3>
+-            <div className="mt-2 max-w-xl text-sm text-gray-500">
+-              <p>Your R2 bucket file explorer will appear here.</p>
++      <div className="bg-white shadow rounded-lg overflow-hidden">
++        {/* Toolbar */}
++        <Toolbar
++          currentPath={currentPath}
++          onNavigateBack={navigateBack}
++          onNavigateUp={navigateUp}
++          onRefresh={() => loadDirectory(currentPath)}
++          onCreateFolder={handleCreateFolder}
++          onUpload={handleUpload}
++          onViewModeChange={setViewMode}
++          viewMode={viewMode}
++          isLoading={isLoading}
++        />
++        
++        {/* Breadcrumb */}
++        <Breadcrumb
++          path={currentPath}
++          onNavigate={navigateTo}
++          isLoading={isLoading}
++        />
++        
++        {/* Content area - placeholder for now */}
++        <div className="p-4">
++          {isLoading ? (
++            <div className="flex justify-center items-center h-64">
++              <div data-testid="loading-spinner" className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+             </div>
+-            <div className="mt-5">
+-              <div className="rounded-md bg-blue-50 p-4">
+-                <div className="text-sm text-blue-700">
+-                  File explorer functionality will be implemented in subsequent tasks.
++          ) : directoryListing ? (
++            <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' : 'space-y-2'}`}>
++              {/* Folders */}
++              {directoryListing.folders.length === 0 && directoryListing.objects.length === 0 ? (
++                <div className="col-span-full text-center py-12">
++                  <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
++                  </svg>
++                  <h3 className="mt-2 text-sm font-medium text-gray-900">No files or folders</h3>
++                  <p className="mt-1 text-sm text-gray-500">This directory is empty.</p>
++                  <div className="mt-6">
++                    <button
++                      type="button"
++                      onClick={handleUpload}
++                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
++                    >
++                      <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
++                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
++                      </svg>
++                      Upload files
++                    </button>
++                  </div>
+                 </div>
+-              </div>
++              ) : (
++                <>
++                  {directoryListing.folders.map((folder) => (
++                    <div 
++                      key={folder.prefix}
++                      onClick={() => handleFolderClick(folder)}
++                      className={`cursor-pointer ${
++                        viewMode === 'grid' 
++                          ? 'p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center' 
++                          : 'p-2 border rounded hover:bg-gray-50 flex items-center'
++                      }`}
++                    >
++                      <svg xmlns="http://www.w3.org/2000/svg" className={`${viewMode === 'grid' ? 'h-12 w-12' : 'h-6 w-6 mr-3'} text-yellow-500`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
++                      </svg>
++                      <span className={`${viewMode === 'grid' ? 'mt-2 text-center' : ''} truncate`}>{folder.name}</span>
++                    </div>
++                  ))}
++                  
++                  {/* Files - placeholder for now */}
++                  {directoryListing.objects.map((file) => (
++                    <div 
++                      key={file.key}
++                      onClick={() => handleFileClick(file)}
++                      className={`cursor-pointer ${
++                        viewMode === 'grid' 
++                          ? 'p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-center' 
++                          : 'p-2 border rounded hover:bg-gray-50 flex items-center'
++                      }`}
++                    >
++                      <svg xmlns="http://www.w3.org/2000/svg" className={`${viewMode === 'grid' ? 'h-12 w-12' : 'h-6 w-6 mr-3'} text-blue-500`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
++                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
++                      </svg>
++                      <div className={`${viewMode === 'grid' ? 'mt-2 text-center' : 'flex-grow'}`}>
++                        <div className="truncate">{file.name}</div>
++                        {viewMode === 'list' && (
++                          <div className="text-xs text-gray-500">
++                            {new Intl.NumberFormat().format(file.size)} bytes • {new Date(file.lastModified).toLocaleString()}
++                          </div>
++                        )}
++                      </div>
++                    </div>
++                  ))}
++                </>
++              )}
++            </div>
++          ) : (
++            <div className="text-center py-12">
++              <p className="text-gray-500">No data available. Please try refreshing.</p>
+             </div>
+-          </div>
++          )}
+         </div>
+       </div>
+     </ErrorBoundary>
+
+--- FILE: frontend/src/components/Toolbar.test.tsx ---
+diff --git a/frontend/src/components/Toolbar.test.tsx b/frontend/src/components/Toolbar.test.tsx
+new file mode 100644
+index 0000000..f1bbaec
+--- /dev/null
++++ b/frontend/src/components/Toolbar.test.tsx
+@@ -0,0 +1,94 @@
++import React from 'react';
++import { render, screen, fireEvent } from '@testing-library/react';
++import { Toolbar } from './Toolbar';
++import { describe, it, expect, vi } from 'vitest';
++
++describe('Toolbar', () => {
++  const defaultProps = {
++    currentPath: 'test/path',
++    onNavigateBack: vi.fn(),
++    onNavigateUp: vi.fn(),
++    onRefresh: vi.fn(),
++    onCreateFolder: vi.fn(),
++    onUpload: vi.fn(),
++    onViewModeChange: vi.fn(),
++    viewMode: 'grid' as const,
++    isLoading: false
++  };
++
++  it('renders correctly', () => {
++    render(<Toolbar {...defaultProps} />);
++    
++    // Check if navigation buttons are present
++    expect(screen.getByTitle('Back')).toBeInTheDocument();
++    expect(screen.getByTitle('Up to parent folder')).toBeInTheDocument();
++    expect(screen.getByTitle('Refresh')).toBeInTheDocument();
++    
++    // Check if action buttons are present
++    expect(screen.getByTitle('Create new folder')).toBeInTheDocument();
++    expect(screen.getByTitle('Upload files')).toBeInTheDocument();
++    
++    // Check if view mode toggles are present
++    expect(screen.getByTitle('Grid view')).toBeInTheDocument();
++    expect(screen.getByTitle('List view')).toBeInTheDocument();
++  });
++
++  it('calls onNavigateBack when back button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('Back'));
++    expect(defaultProps.onNavigateBack).toHaveBeenCalledTimes(1);
++  });
++
++  it('calls onNavigateUp when up button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('Up to parent folder'));
++    expect(defaultProps.onNavigateUp).toHaveBeenCalledTimes(1);
++  });
++
++  it('calls onRefresh when refresh button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('Refresh'));
++    expect(defaultProps.onRefresh).toHaveBeenCalledTimes(1);
++  });
++
++  it('calls onCreateFolder when create folder button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('Create new folder'));
++    expect(defaultProps.onCreateFolder).toHaveBeenCalledTimes(1);
++  });
++
++  it('calls onUpload when upload button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('Upload files'));
++    expect(defaultProps.onUpload).toHaveBeenCalledTimes(1);
++  });
++
++  it('calls onViewModeChange with "grid" when grid view button is clicked', () => {
++    render(<Toolbar {...defaultProps} viewMode="list" />);
++    fireEvent.click(screen.getByTitle('Grid view'));
++    expect(defaultProps.onViewModeChange).toHaveBeenCalledWith('grid');
++  });
++
++  it('calls onViewModeChange with "list" when list view button is clicked', () => {
++    render(<Toolbar {...defaultProps} />);
++    fireEvent.click(screen.getByTitle('List view'));
++    expect(defaultProps.onViewModeChange).toHaveBeenCalledWith('list');
++  });
++
++  it('disables buttons when isLoading is true', () => {
++    render(<Toolbar {...defaultProps} isLoading={true} />);
++    
++    expect(screen.getByTitle('Back')).toBeDisabled();
++    expect(screen.getByTitle('Up to parent folder')).toBeDisabled();
++    expect(screen.getByTitle('Refresh')).toBeDisabled();
++    expect(screen.getByTitle('Create new folder')).toBeDisabled();
++    expect(screen.getByTitle('Upload files')).toBeDisabled();
++    expect(screen.getByTitle('Grid view')).toBeDisabled();
++    expect(screen.getByTitle('List view')).toBeDisabled();
++  });
++
++  it('disables up button when at root path', () => {
++    render(<Toolbar {...defaultProps} currentPath="" />);
++    expect(screen.getByTitle('Up to parent folder')).toBeDisabled();
++  });
++});
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

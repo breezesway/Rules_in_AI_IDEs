@@ -1,0 +1,374 @@
+import React, { useState } from 'react';
+import { FileText, FolderOpen, AlertCircle, GripVertical, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Modal } from '../ui/modal';
+
+interface PdfFile {
+  id: string;
+  name: string;
+  size: number;
+  path: string;
+  status: 'ready' | 'invalid' | 'processing' | 'done' | 'error';
+  error?: string;
+}
+
+interface PdfMergerProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function PdfMerger({ isOpen, onClose }: PdfMergerProps) {
+  const [files, setFiles] = useState<PdfFile[]>([]);
+  const [outputFileName, setOutputFileName] = useState('merged-document.pdf');
+  const [outputPath, setOutputPath] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentFile, setCurrentFile] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  // 初始化默认保存路径
+  React.useEffect(() => {
+    if (isOpen && !outputPath) {
+      window.electronAPI?.getDownloadsPath().then(path => {
+        setOutputPath(path);
+      }).catch(err => {
+        console.error('获取下载目录失败:', err);
+        setOutputPath('');
+      });
+    }
+  }, [isOpen, outputPath]);
+
+  const validateFile = (fileInfo: { name: string; size: number }): { valid: boolean; error?: string } => {
+    if (!fileInfo.name.toLowerCase().endsWith('.pdf')) {
+      return { valid: false, error: '只支持PDF格式文件' };
+    }
+    if (fileInfo.size > 100 * 1024 * 1024) {
+      return { valid: false, error: '文件大小不能超过100MB' };
+    }
+    return { valid: true };
+  };
+
+  const handleSelectFiles = async () => {
+    try {
+      const selectedFiles = await window.electronAPI?.selectPdfFiles();
+      
+      if (!selectedFiles) {
+        return; // 用户取消选择
+      }
+
+      const currentTotalSize = files.reduce((sum, file) => sum + file.size, 0);
+      
+      if (files.length + selectedFiles.length > 10) {
+        setError('最多只能选择10个文件');
+        return;
+      }
+
+      const newFiles: PdfFile[] = [];
+      let newTotalSize = currentTotalSize;
+
+      for (const fileInfo of selectedFiles) {
+        const validation = validateFile(fileInfo);
+        
+        if (newTotalSize + fileInfo.size > 500 * 1024 * 1024) {
+          setError('文件总大小不能超过500MB');
+          break;
+        }
+
+        newFiles.push({
+          id: Math.random().toString(36).substring(2, 9),
+          name: fileInfo.name,
+          size: fileInfo.size,
+          path: fileInfo.path,
+          status: validation.valid ? 'ready' : 'invalid',
+          error: validation.error
+        });
+
+        newTotalSize += fileInfo.size;
+      }
+
+      setFiles(prev => [...prev, ...newFiles]);
+      setError(null);
+    } catch (err) {
+      console.error('选择文件失败:', err);
+      setError('选择文件失败');
+    }
+  };
+
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(file => file.id !== id));
+  };
+
+  const resetForm = () => {
+    setFiles([]);
+    setOutputFileName('merged-document.pdf');
+    setError(null);
+    setProgress(0);
+    setCurrentFile('');
+  };
+
+  const selectSavePath = async () => {
+    try {
+      const result = await window.electronAPI?.selectSavePath();
+      if (result) {
+        setOutputPath(result.directory);
+        setOutputFileName(result.fileName);
+      }
+    } catch (err) {
+      console.error('选择保存路径失败:', err);
+      setError('选择保存路径失败');
+    }
+  };
+
+  const handleMerge = async () => {
+    const validFiles = files.filter(f => f.status === 'ready');
+    if (validFiles.length < 2) {
+      setError('请至少选择两个有效的PDF文件进行合并');
+      return;
+    }
+
+    if (!outputPath) {
+      setError('请选择保存位置');
+      return;
+    }
+
+    setIsProcessing(true);
+    setProgress(0);
+    setCurrentFile('');
+    setError(null);
+
+    try {
+      // 设置进度监听
+      const cleanupProgress = window.electronAPI?.onMergeProgress((progressData) => {
+        setProgress(progressData.progress);
+        setCurrentFile(progressData.currentFile);
+      });
+
+      // 获取文件路径
+      const filePaths = validFiles.map(f => f.path);
+
+      // 调用主进程合并PDF
+      const result = await window.electronAPI?.mergePdfs({
+        filePaths,
+        outputPath,
+        outputFileName
+      });
+
+      // 清理进度监听
+      cleanupProgress?.();
+
+      if (result?.success) {
+        // 更新文件状态为完成
+        setFiles(prev => prev.map(f => 
+          f.status === 'ready' ? { ...f, status: 'done' as const } : f
+        ));
+        setProgress(100);
+
+        // 显示成功 Toast
+        toast.success('PDF合并完成！', {
+          description: `${outputFileName} 已成功保存`,
+          duration: 5000
+        });
+
+        // 立即重置表单
+        setTimeout(() => {
+          resetForm();
+        }, 500); // 稍微延迟一点让用户看到完成状态
+      } else {
+        throw new Error(result?.error || '合并失败');
+      }
+    } catch (err) {
+      console.error('PDF合并错误:', err);
+      const errorMessage = err instanceof Error ? err.message : '合并PDF时发生未知错误';
+      setError(errorMessage);
+      
+      // 显示错误 Toast
+      toast.error('PDF合并失败', {
+        description: errorMessage,
+        duration: 5000
+      });
+      
+      // 更新文件状态为错误
+      setFiles(prev => prev.map(f => 
+        f.status === 'ready' ? { ...f, status: 'error' as const } : f
+      ));
+    } finally {
+      setIsProcessing(false);
+      setCurrentFile('');
+    }
+  };
+
+  const cancelProcessing = () => {
+    setIsProcessing(false);
+    setProgress(0);
+  };
+
+  const footerContent = (
+    <div className="flex justify-between">
+      <button
+        onClick={resetForm}
+        className="flex items-center space-x-2 px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200"
+        disabled={isProcessing}
+      >
+        <RotateCcw className="h-4 w-4" />
+        <span>重置</span>
+      </button>
+      
+      <div className="flex space-x-3">
+        <button
+          onClick={isProcessing ? cancelProcessing : onClose}
+          className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200"
+        >
+          {isProcessing ? '取消' : '关闭'}
+        </button>
+        <button
+          onClick={handleMerge}
+          disabled={files.filter(f => f.status === 'ready').length < 2 || isProcessing}
+          className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        >
+          {isProcessing ? '合并中...' : '合并PDF'}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="合并 PDF 文件" footer={footerContent}>
+      <div className="space-y-6">
+        {/* 错误/成功提示 */}
+        {error && (
+          <div className="flex items-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            <span className="text-red-700">{error}</span>
+          </div>
+        )}
+
+        {/* 文件选择区域 */}
+        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="p-4 bg-gray-100 rounded-2xl">
+              <FolderOpen className="h-8 w-8 text-gray-600" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium text-gray-900">选择PDF文件进行合并</p>
+              <p className="text-sm text-gray-500">支持最多10个PDF文件，单个文件不超过100MB，总大小不超过500MB</p>
+            </div>
+            <button
+              onClick={handleSelectFiles}
+              className="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors duration-200"
+              disabled={isProcessing}
+            >
+              选择文件
+            </button>
+          </div>
+        </div>
+
+        {/* 文件列表 */}
+        {files.length > 0 && (
+          <div className="border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="p-4 bg-gray-50 font-medium border-b border-gray-200 text-gray-900">
+              已选择的文件 ({files.length}/10) - 总大小: {(files.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024).toFixed(2)} MB
+            </div>
+            <ul className="divide-y divide-gray-200">
+              {files.map((file) => (
+                <li key={file.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      className="cursor-move p-1 hover:bg-gray-200 rounded"
+                      title="拖拽调整顺序"
+                    >
+                      <GripVertical className="h-4 w-4 text-gray-400" />
+                    </button>
+                    <div className={`p-2 rounded-xl ${
+                      file.status === 'ready' ? 'bg-blue-100' :
+                      file.status === 'invalid' ? 'bg-red-100' :
+                      file.status === 'processing' ? 'bg-yellow-100' :
+                      file.status === 'done' ? 'bg-green-100' : 'bg-red-100'
+                    }`}>
+                      <FileText className={`h-5 w-5 ${
+                        file.status === 'ready' ? 'text-blue-600' :
+                        file.status === 'invalid' ? 'text-red-600' :
+                        file.status === 'processing' ? 'text-yellow-600' :
+                        file.status === 'done' ? 'text-green-600' : 'text-red-600'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{file.name}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        {file.error && (
+                          <span className="text-xs text-red-500">• {file.error}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFile(file.id)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all duration-200"
+                  >
+                    删除
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 进度条 */}
+        {isProcessing && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>合并进度</span>
+              <span>{progress}%</span>
+            </div>
+            {currentFile && (
+              <div className="text-sm text-gray-600">
+                正在处理: {currentFile}
+              </div>
+            )}
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gray-900 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* 输出设置 */}
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900">输出文件名</label>
+            <input
+              type="text"
+              value={outputFileName}
+              onChange={(e) => setOutputFileName(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200"
+              placeholder="输入文件名..."
+              disabled={isProcessing}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900">保存位置</label>
+            <div className="flex space-x-3">
+              <input
+                type="text"
+                value={outputPath || '选择保存位置...'}
+                readOnly
+                className="flex-1 border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-600"
+              />
+              <button 
+                onClick={selectSavePath}
+                className="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-colors duration-200 whitespace-nowrap"
+                disabled={isProcessing}
+              >
+                浏览
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+} 

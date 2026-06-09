@@ -1,0 +1,320 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Version Control
+- Rule File Path: .cursor/rules/instruction-compliance.mdc
+- Change Type: added
+- Target Rule Content:
+User: "Create git ignore and Basic Readme"
+
+output: 
+ ✅ Add to Prompt.md:
+ #### Prompt X: Git Ignore and Basic Readme
+ User: "Create git ignore and Basic Readme"
+ Context: User wants .gitignore and README.md files
+ Outcome: Created .gitignore and README.md
+ 
+ ✅ Commit changes:
+ git add .gitignore README.md Prompt.md
+ git commit -m "docs(root): add .gitignore and basic README"
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: File system (existence of .gitignore and README.md), source code (Prompt.md content), and Git history (commit messages).
+- Suggested Logic: 1. Check if the files '.gitignore' and 'README.md' exist in the repository root.
+2. Scan 'Prompt.md' for the specific text header '#### Prompt X: Git Ignore and Basic Readme' and its associated metadata.
+3. Execute a git log command to verify if a commit exists with the exact message 'docs(root): add .gitignore and basic README'.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: refactor(rules): update instruction compliance and conventional commit rules for better enforcement
+- Changed Files List: 
+.cursor/rules/instruction-compliance.mdc	+42	-3	after_lines=110
+.cursor/rules/workflow/conventional-commits.mdc	+91	-35	after_lines=138
+.gitignore	+2	-1	after_lines=52
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       ├── README.md
+│       ├── development
+│       │   ├── README.md
+│       │   ├── code-quality.mdc
+│       │   ├── performance-guidelines.mdc
+│       │   └── testing-standards.mdc
+│       ├── instruction-compliance.mdc
+│       ├── quality
+│       │   ├── README.md
+│       │   └── documentation-standards.mdc
+│       ├── security
+│       │   ├── README.md
+│       │   └── security-best-practices.mdc
+│       └── workflow
+│           ├── README.md
+│           ├── conventional-commits.mdc
+│           └── cursor-rules-location.mdc
+├── .gitignore
+├── Prompt.md
+├── README.md
+├── SPECS.md
+├── product-ideas.md
+└── specs
+    ├── database-design.md
+    ├── opentelemetry-integration.md
+    └── system-architecture.md
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .cursor/rules/instruction-compliance.mdc ---
+diff --git a/.cursor/rules/instruction-compliance.mdc b/.cursor/rules/instruction-compliance.mdc
+index 1990b3c..8228ef4 100644
+--- a/.cursor/rules/instruction-compliance.mdc
++++ b/.cursor/rules/instruction-compliance.mdc
+@@ -36,12 +36,30 @@ actions:
+       4. ✅ Update Prompt.md with each new instruction
+       5. ✅ Maintain conversation timeline
+       6. ✅ Record key decisions and rationale
++      7. ✅ Follow conventional commit rule for all changes
++      8. ✅ Commit changes immediately after file modifications
++      
++      MANDATORY ACTIONS:
+       
+       When receiving new instructions:
+       - Add them to Prompt.md under "Conversation Timeline"
+       - Include context, outcome, and any decisions made
+       - Update "Pending Tasks" and "Current State" sections
+       - Ensure all technical decisions are recorded
++      
++      When making file changes:
++      - Stage changes immediately: git add .
++      - Commit using conventional format: git commit -m "type(scope): description"
++      - Update Prompt.md with the outcome
++      
++      CONVENTIONAL COMMIT FORMAT:
++      - feat: new feature
++      - fix: bug fix
++      - docs: documentation
++      - style: formatting
++      - refactor: code restructuring
++      - test: testing
++      - chore: maintenance
+ 
+ examples:
+   - input: |
+@@ -53,6 +71,10 @@ examples:
+       **Context**: User wants user registration functionality
+       **Outcome**: Created POST /api/v1/users/register endpoint
+       **Implementation**: [details of what was built]
++      
++      ✅ Commit changes:
++      git add .
++      git commit -m "feat(api): add user registration endpoint"
+ 
+   - input: |
+       User: "Update the database schema"
+@@ -63,9 +85,26 @@ examples:
+       **Context**: Database changes needed
+       **Outcome**: Updated schema with new tables/columns
+       **Changes**: [specific changes made]
++      
++      ✅ Commit changes:
++      git add .
++      git commit -m "feat(database): update schema with new tables"
++
++  - input: |
++      User: "Create git ignore and Basic Readme"
++    output: |
++      ✅ Add to Prompt.md:
++      #### **Prompt X: Git Ignore and Basic Readme**
++      **User**: "Create git ignore and Basic Readme"
++      **Context**: User wants .gitignore and README.md files
++      **Outcome**: Created .gitignore and README.md
++      
++      ✅ Commit changes:
++      git add .gitignore README.md Prompt.md
++      git commit -m "docs(root): add .gitignore and basic README"
+ 
+ metadata:
+-  priority: high
+-  version: 1.0
+-  tags: ["compliance", "documentation", "prompts"]
++  priority: critical
++  version: 1.1
++  tags: ["compliance", "documentation", "prompts", "conventional-commits"]
+ </rule>
+
+--- FILE: .cursor/rules/workflow/conventional-commits.mdc ---
+diff --git a/.cursor/rules/workflow/conventional-commits.mdc b/.cursor/rules/workflow/conventional-commits.mdc
+index 23b99ee..41e3f55 100644
+--- a/.cursor/rules/workflow/conventional-commits.mdc
++++ b/.cursor/rules/workflow/conventional-commits.mdc
+@@ -12,38 +12,52 @@ name: conventional_commits
+ description: Automatically commit changes made by CursorAI using conventional commits format
+ filters:
+   - type: event
+-    pattern: "build_success"
+-  - type: file_change
+-    pattern: "*"
++    pattern: "file_save"
++  - type: event
++    pattern: "file_create"
++  - type: event
++    pattern: "file_change"
++  - type: event
++    pattern: "user_message"
+ 
+ actions:
+   - type: execute
+     command: |
+-      # Extract the change type and scope from the changes
+-      CHANGE_TYPE=""
+-      case "$CHANGE_DESCRIPTION" in
+-        *"add"*|*"create"*|*"implement"*) CHANGE_TYPE="feat";;
+-        *"fix"*|*"correct"*|*"resolve"*) CHANGE_TYPE="fix";;
+-        *"refactor"*|*"restructure"*) CHANGE_TYPE="refactor";;
+-        *"test"*) CHANGE_TYPE="test";;
+-        *"doc"*|*"comment"*) CHANGE_TYPE="docs";;
+-        *"style"*|*"format"*) CHANGE_TYPE="style";;
+-        *"perf"*|*"optimize"*) CHANGE_TYPE="perf";;
+-        *) CHANGE_TYPE="chore";;
+-      esac
++      # Check if there are uncommitted changes
++      if [ -n "$(git status --porcelain)" ]; then
++        echo "Uncommitted changes detected - should commit using conventional format"
++        
++        # Extract the change type and scope from the changes
++        CHANGE_TYPE=""
++        case "$CHANGE_DESCRIPTION" in
++          *"add"*|*"create"*|*"implement"*) CHANGE_TYPE="feat";;
++          *"fix"*|*"correct"*|*"resolve"*) CHANGE_TYPE="fix";;
++          *"refactor"*|*"restructure"*) CHANGE_TYPE="refactor";;
++          *"test"*) CHANGE_TYPE="test";;
++          *"doc"*|*"comment"*|*"readme"*) CHANGE_TYPE="docs";;
++          *"style"*|*"format"*) CHANGE_TYPE="style";;
++          *"perf"*|*"optimize"*) CHANGE_TYPE="perf";;
++          *) CHANGE_TYPE="chore";;
++        esac
+ 
+-      # Extract scope from file path
+-      SCOPE=$(dirname "$FILE" | tr '/' '-')
++        # Extract scope from file path or use default
++        if [ -n "$FILE" ]; then
++          SCOPE=$(dirname "$FILE" | tr '/' '-' | sed 's/^\.-//')
++        else
++          SCOPE="root"
++        fi
+ 
+-      # Commit the changes
+-      git add "$FILE"
+-      git commit -m "$CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION"
++        echo "Suggested commit: $CHANGE_TYPE($SCOPE): $CHANGE_DESCRIPTION"
++      fi
+ 
+   - type: suggest
+     message: |
+-      Changes should be committed using conventional commits format:
++      CONVENTIONAL COMMIT ENFORCEMENT:
++      
++      MANDATORY: All file changes must be committed using conventional commits format
++      
+       Format: <type>(<scope>): <description>
+-
++      
+       Types:
+       - feat: A new feature
+       - fix: A bug fix
+@@ -53,26 +67,68 @@ actions:
+       - perf: A code change that improves performance
+       - test: Adding missing tests or correcting existing tests
+       - chore: Changes to the build process or auxiliary tools
+-
+-      The scope should be derived from the file path or affected component.
+-      The description should be clear and concise, written in imperative mood.
++      
++      COMMIT IMMEDIATELY AFTER CHANGES:
++      ```bash
++      git add .
++      git commit -m "type(scope): description"
++      ```
++      
++      EXAMPLES:
++      - feat(api): add user registration endpoint
++      - fix(auth): resolve JWT token validation issue
++      - docs(readme): update installation instructions
++      - refactor(domain): restructure user service
++      - test(handlers): add unit tests for transaction API
++      - chore(deps): update Go dependencies
++      
++      SCOPE GUIDELINES:
++      - api: API endpoints and handlers
++      - domain: Business logic and models
++      - database: Database migrations and schema
++      - auth: Authentication and authorization
++      - config: Configuration management
++      - docs: Documentation files
++      - deps: Dependencies and go.mod
++      - root: Root level files (.gitignore, README, etc.)
+ 
+ examples:
+   - input: |
+-      # After adding a new function
+-      CHANGE_DESCRIPTION="add user authentication function"
+-      FILE="src/auth/login.ts"
+-    output: "feat(src-auth): add user authentication function"
++      # After creating a new API handler
++      FILE="internal/api/handlers/user.go"
++      CHANGE_DESCRIPTION="add user registration handler"
++    output: |
++      git add internal/api/handlers/user.go
++      git commit -m "feat(api): add user registration handler"
++
++  - input: |
++      # After fixing a bug in authentication
++      FILE="internal/domain/user/service.go"
++      CHANGE_DESCRIPTION="fix password validation logic"
++    output: |
++      git add internal/domain/user/service.go
++      git commit -m "fix(auth): fix password validation logic"
++
++  - input: |
++      # After updating documentation
++      FILE="README.md"
++      CHANGE_DESCRIPTION="update setup instructions"
++    output: |
++      git add README.md
++      git commit -m "docs(readme): update setup instructions"
+ 
+   - input: |
+-      # After fixing a bug
+-      CHANGE_DESCRIPTION="fix incorrect date parsing"
+-      FILE="lib/utils/date.js"
+-    output: "fix(lib-utils): fix incorrect date parsing"
++      # After adding new dependencies
++      FILE="go.mod"
++      CHANGE_DESCRIPTION="add new Go dependencies"
++    output: |
++      git add go.mod go.sum
++      git commit -m "chore(deps): add new Go dependencies"
+ 
+ metadata:
+-  priority: high
+-  version: 1.0
++  priority: critical
++  version: 1.1
++  tags: ["git", "conventional-commits", "workflow"]
+ </rule>
+
+--- FILE: .gitignore ---
+diff --git a/.gitignore b/.gitignore
+index d870550..726b0c5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -46,6 +46,7 @@ coverage/
+ # Node (if any frontend)
+ node_modules/
+ 
+-# Cursor and local history
++# Cursor and local history (but allow .cursor/rules)
+ .cursor/
++!.cursor/rules/
+ .history/
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

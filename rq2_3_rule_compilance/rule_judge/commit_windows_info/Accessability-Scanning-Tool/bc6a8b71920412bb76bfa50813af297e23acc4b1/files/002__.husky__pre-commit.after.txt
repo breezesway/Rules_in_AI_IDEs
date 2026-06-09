@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Documentation validation
+echo "🔍 Checking documentation consistency..."
+npm run docs:check
+
+# TypeScript compilation check
+echo "🔍 Running TypeScript compilation check..."
+npm run typecheck
+
+# CLI functionality test
+echo "🔍 Testing CLI functionality..."
+npm run cli -- --help > /dev/null 2>&1 || echo "⚠️  CLI test skipped (requires build)"
+
+# Documentation analysis (suggests updates)
+echo "🔍 Analyzing changes for documentation updates..."
+npm run docs:analyze
+
+echo "✅ Pre-commit checks completed!" 

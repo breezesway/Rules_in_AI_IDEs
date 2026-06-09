@@ -1,0 +1,852 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: modified
+- Target Rule Content:
+- - Frontend Hosting: Cloudflare Pages
++ - Frontend Hosting: Cloudflare Workers with Static Assets
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Cloudflare configuration files (e.g., wrangler.toml) and package configuration files (e.g., package.json).
+- Suggested Logic: Search for 'wrangler.toml' in the repository. To verify 'Cloudflare Workers with Static Assets', check for the presence of the '[site]' block with a 'bucket' parameter or the 'assets' field. This distinguishes the setup from 'Cloudflare Pages', which typically uses a different configuration or is managed through the Cloudflare Dashboard/Pages-specific CLI settings.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=1)
+- Commit Message: Update R2 File Explorer implementation tasks specification
+
+- Updated project structure to use TypeScript/JavaScript instead of Rust
+- Modified wrangler.toml configuration for TypeScript worker
+- Added new worker source files and package configuration
+- Cleaned up Rust build artifacts
+- Changed Files List: 
+.kiro/steering/structure.md	+10	-9	after_lines=58
+.kiro/steering/tech.md	+6	-6	after_lines=60
+README.md	+10	-8	after_lines=134
+worker/Cargo.lock	+0	-1177	after_lines=0
+worker/Cargo.toml	+0	-19	after_lines=0
+worker/SETUP.md	+44	-22	after_lines=118
+worker/package-lock.json	+3497	-0	after_lines=3497
+worker/package.json	+31	-0	after_lines=31
+worker/src/index.js	+0	-9	after_lines=0
+worker/src/index.ts	+213	-0	after_lines=213
+worker/src/lib.rs	+0	-47	after_lines=0
+worker/src/types/index.ts	+63	-0	after_lines=63
+worker/src/utils.rs	+0	-9	after_lines=0
+worker/tsconfig.json	+29	-0	after_lines=29
+worker/wrangler.toml	+1	-1	after_lines=78
+*(Note: The following files are filtered due to large per-file changes (>1000 lines): worker/Cargo.lock, worker/package-lock.json.)*
+
+- Project Directory Tree (Snapshot after commit):
+├── .gitignore
+├── .kiro
+│   ├── hooks
+│   │   ├── auto-commit-task.kiro.hook
+│   │   └── kiro-git-sync.kiro.hook
+│   ├── settings
+│   │   └── mcp.json
+│   ├── specs
+│   │   └── r2-file-explorer
+│   │       ├── design.md
+│   │       ├── requirements.md
+│   │       └── tasks.md
+│   └── steering
+│       ├── product.md
+│       ├── structure.md
+│       └── tech.md
+├── LICENSE
+├── README.md
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+└── worker
+    ├── SETUP.md
+    ├── package-lock.json
+    ├── package.json
+    ├── src
+    │   ├── index.ts
+    │   └── types
+    │       └── index.ts
+    ├── tsconfig.json
+    └── wrangler.toml
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: .kiro/steering/structure.md ---
+diff --git a/.kiro/steering/structure.md b/.kiro/steering/structure.md
+index 986d9ca..26c7f32 100644
+--- a/.kiro/steering/structure.md
++++ b/.kiro/steering/structure.md
+@@ -17,14 +17,15 @@ r2-file-explorer/
+ │   │   └── utils/             # Helper functions
+ │   ├── public/                # Static assets
+ │   └── package.json           # Frontend dependencies
+-├── worker/                    # Cloudflare Worker (Rust)
++├── worker/                    # Cloudflare Worker (JavaScript/TypeScript)
+ │   ├── src/
+-│   │   ├── lib.rs             # Main Worker entry point
++│   │   ├── index.ts           # Main Worker entry point
+ │   │   ├── handlers/          # Request handlers
+ │   │   ├── services/          # Business logic services
+-│   │   ├── models/            # Data structures
++│   │   ├── models/            # Data structures and types
+ │   │   └── utils/             # Helper functions
+-│   ├── Cargo.toml             # Rust dependencies
++│   ├── package.json           # Worker dependencies
++│   ├── tsconfig.json          # TypeScript configuration
+ │   └── wrangler.toml          # Worker configuration
+ └── README.md                  # Project documentation
+ ```
+@@ -41,12 +42,12 @@ r2-file-explorer/
+ 
+ ## Backend Service Architecture
+ 
+-- **Router**: Request routing and middleware
+-- **AuthHandler**: Authentication and session management
+-- **FileHandler**: File operation endpoints
++- **Hono App**: Main application with routing and middleware
++- **AuthHandler**: Authentication and session management with Hono JWT middleware
++- **FileHandler**: File operation endpoints using Hono routes
+ - **R2Service**: Direct R2 bucket operations
+-- **S3Service**: S3-compatible API client (fallback)
+-- **AuthService**: JWT and session management
++- **AuthService**: JWT and session management with KV storage
++- **Middleware**: CORS, authentication, error handling, and logging
+ 
+ ## Key Conventions
+
+--- FILE: .kiro/steering/tech.md ---
+diff --git a/.kiro/steering/tech.md b/.kiro/steering/tech.md
+index 51f79db..b642d83 100644
+--- a/.kiro/steering/tech.md
++++ b/.kiro/steering/tech.md
+@@ -10,7 +10,7 @@
+ 
+ ## Backend
+ - **Runtime**: Cloudflare Workers
+-- **Language**: Rust with worker-rs framework
++- **Language**: JavaScript/TypeScript with Hono framework
+ - **Storage**: Direct R2 bindings (no S3 SDK needed)
+ - **Session Storage**: Cloudflare KV
+ - **Authentication**: JWT tokens
+@@ -24,8 +24,8 @@
+ 
+ ## Development Tools
+ - **Local Development**: Wrangler CLI for Workers development
+-- **Package Manager**: npm/yarn for frontend, Cargo for Rust
+-- **Testing**: Jest + React Testing Library (frontend), Rust test framework (backend)
++- **Package Manager**: npm/yarn for both frontend and backend
++- **Testing**: Jest + React Testing Library (frontend), Vitest (backend)
+ 
+ ## Observability
+ - **API Observability**: Workers Analytics Engine for data points
+@@ -44,7 +44,7 @@ wrangler publish               # Deploy Worker
+ 
+ # Testing
+ npm test                       # Run frontend tests
+-cargo test                     # Run Rust tests
++npm run test:worker            # Run Worker tests
+ ```
+ 
+ ### Deployment
+@@ -56,5 +56,5 @@ npm run build && npm run deploy
+ 
+ ## Configuration Files
+ - `wrangler.toml` - Worker configuration and bindings
+-- `package.json` - Frontend dependencies and scripts
+-- `Cargo.toml` - Rust dependencies and metadata
+\ No newline at end of file
++- `package.json` - Frontend and Worker dependencies and scripts
++- `tsconfig.json` - TypeScript configuration
+\ No newline at end of file
+
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 3f848fb..5358f31 100644
+--- a/README.md
++++ b/README.md
+@@ -23,7 +23,7 @@ A web-based file management application that provides a familiar desktop file ma
+ 
+ ### Backend
+ - **Runtime**: Cloudflare Workers
+-- **Language**: Rust with worker-rs framework
++- **Language**: JavaScript/TypeScript with Hono framework
+ - **Storage**: Direct R2 bindings (no S3 SDK needed)
+ - **Session Storage**: Cloudflare KV
+ - **Authentication**: JWT tokens
+@@ -41,14 +41,15 @@ r2-file-explorer/
+ │   │   └── utils/             # Helper functions
+ │   ├── public/                # Static assets
+ │   └── package.json           # Frontend dependencies
+-├── worker/                    # Cloudflare Worker (Rust)
++├── worker/                    # Cloudflare Worker (JavaScript/TypeScript)
+ │   ├── src/
+-│   │   ├── lib.rs             # Main Worker entry point
++│   │   ├── index.ts           # Main Worker entry point
+ │   │   ├── handlers/          # Request handlers
+ │   │   ├── services/          # Business logic services
+-│   │   ├── models/            # Data structures
++│   │   ├── types/             # TypeScript type definitions
+ │   │   └── utils/             # Helper functions
+-│   ├── Cargo.toml             # Rust dependencies
++│   ├── package.json           # Worker dependencies
++│   ├── tsconfig.json          # TypeScript configuration
+ │   └── wrangler.toml          # Worker configuration
+ └── README.md                  # Project documentation
+ ```
+@@ -58,7 +59,6 @@ r2-file-explorer/
+ ### Prerequisites
+ 
+ - Node.js 18+ and npm
+-- Rust and Cargo
+ - Wrangler CLI (`npm install -g wrangler`)
+ - Cloudflare account with R2 and Workers enabled
+ 
+@@ -99,9 +99,11 @@ npm run lint                   # Run ESLint
+ 
+ ### Worker
+ ```bash
+-wrangler dev                   # Start local development
++npm install                    # Install dependencies
++npm run dev                    # Start local development
++npm run type-check             # Check TypeScript types
++npm test                       # Run tests
+ wrangler publish               # Deploy to production
+-cargo test                     # Run Rust tests
+ ```
+ 
+ ## Deployment
+
+--- FILE: worker/Cargo.toml ---
+diff --git a/worker/Cargo.toml b/worker/Cargo.toml
+deleted file mode 100644
+index 5570f51..0000000
+--- a/worker/Cargo.toml
++++ /dev/null
+@@ -1,19 +0,0 @@
+-[package]
+-name = "r2-file-explorer-worker"
+-version = "0.1.0"
+-edition = "2021"
+-
+-[lib]
+-crate-type = ["cdylib"]
+-
+-[dependencies]
+-worker = "0.6.0"
+-serde = { version = "1.0", features = ["derive"] }
+-serde_json = "1.0"
+-chrono = { version = "0.4", features = ["serde"] }
+-uuid = { version = "1.0", features = ["v4", "serde", "js"] }
+-console_error_panic_hook = "0.1"
+-wasm-bindgen = "0.2"
+-
+-# JWT support will be added later with a WebAssembly-compatible library
+-# jsonwebtoken = { version = "9.2", default-features = false }
+
+--- FILE: worker/SETUP.md ---
+diff --git a/worker/SETUP.md b/worker/SETUP.md
+index b0f973d..eff635e 100644
+--- a/worker/SETUP.md
++++ b/worker/SETUP.md
+@@ -2,32 +2,34 @@
+ 
+ ## Prerequisites
+ 
+-1. **Rust and Cargo**: Install via rustup (recommended) or your system package manager
+-2. **Wrangler CLI**: Install globally with `npm install -g wrangler`
+-3. **wasm-pack**: Install with `cargo install wasm-pack`
+-4. **WebAssembly target**: Add with `rustup target add wasm32-unknown-unknown`
++1. **Node.js 18+**: Install via nvm, homebrew, or official installer
++2. **npm or yarn**: Package manager (comes with Node.js)
++3. **Wrangler CLI**: Install globally with `npm install -g wrangler`
+ 
+ ## Development Setup
+ 
+ ### 1. Install Dependencies
+ 
+ ```bash
+-# Install Rust dependencies
+-cargo build
++# Install Worker dependencies
++npm install
+ 
+-# Install wasm-pack if not already installed
+-cargo install wasm-pack
+-
+-# Add WebAssembly target
+-rustup target add wasm32-unknown-unknown
++# Install Wrangler CLI globally if not already installed
++npm install -g wrangler
+ ```
+ 
+ ### 2. Configure Cloudflare Resources
+ 
+ Before running the worker locally, you need to create the required Cloudflare resources:
+ 
+-1. **R2 Bucket**: Create a bucket named `file-explorer-storage` in your Cloudflare dashboard
+-2. **KV Namespace**: Create a KV namespace for session storage
++1. **R2 Buckets**: Create environment-specific buckets:
++   - `file-explorer-storage-dev` (development)
++   - `file-explorer-storage-staging` (staging)
++   - `file-explorer-storage-prod` (production)
++2. **KV Namespaces**: Create environment-specific KV namespaces:
++   - `file-explorer-sessions-dev` (development)
++   - `file-explorer-sessions-staging` (staging)
++   - `file-explorer-sessions-prod` (production)
+ 3. **Update wrangler.toml**: Replace the placeholder IDs with your actual resource IDs
+ 
+ ### 3. Environment Variables
+@@ -74,23 +76,43 @@ wrangler publish --env staging
+ wrangler publish --env production
+ ```
+ 
++## Development Commands
++
++```bash
++# Type checking
++npm run type-check
++
++# Run tests
++npm test
++
++# Run tests in watch mode
++npm run test:watch
++
++# Deploy to specific environments
++npm run deploy:staging
++npm run deploy:production
++```
++
+ ## Troubleshooting
+ 
+ ### Common Issues
+ 
+-1. **"No loader is configured for .rs files"**: This indicates wrangler needs to build the Rust code to WebAssembly first
+-2. **"wasm32-unknown-unknown target not found"**: Install the WebAssembly target with `rustup target add wasm32-unknown-unknown`
+-3. **Resource binding errors**: Ensure your R2 bucket and KV namespace exist and the IDs in wrangler.toml are correct
++1. **TypeScript compilation errors**: Run `npm run type-check` to identify and fix type issues
++2. **Resource binding errors**: Ensure your R2 bucket and KV namespace exist and the IDs in wrangler.toml are correct
++3. **CORS issues**: Check that your frontend URL is included in the `CORS_ORIGINS` environment variable
++4. **Authentication errors**: Verify that `JWT_SECRET` is properly configured for your environment
+ 
+ ### Build Process
+ 
+-For Rust Workers, the build process is:
+-1. Rust code → WebAssembly (via wasm-pack or cargo)
+-2. WebAssembly → Worker bundle (via wrangler)
++For JavaScript/TypeScript Workers with Hono:
++1. TypeScript code → JavaScript (via esbuild in wrangler)
++2. JavaScript → Worker bundle (via wrangler)
+ 
+ If you encounter build issues, try:
+ ```bash
+-# Clean build
+-cargo clean
+-wrangler build --env development
++# Check TypeScript compilation
++npm run type-check
++
++# Clear wrangler cache
++wrangler dev --local --port 8787
+ ```
+\ No newline at end of file
+
+--- FILE: worker/package.json ---
+diff --git a/worker/package.json b/worker/package.json
+new file mode 100644
+index 0000000..ed8680d
+--- /dev/null
++++ b/worker/package.json
+@@ -0,0 +1,31 @@
++{
++  "name": "r2-file-explorer-worker",
++  "version": "1.0.0",
++  "description": "Cloudflare Worker API for R2 File Explorer",
++  "main": "src/index.ts",
++  "scripts": {
++    "dev": "wrangler dev",
++    "deploy": "wrangler deploy",
++    "deploy:staging": "wrangler deploy --env staging",
++    "deploy:production": "wrangler deploy --env production",
++    "test": "vitest",
++    "test:watch": "vitest --watch",
++    "type-check": "tsc --noEmit"
++  },
++  "dependencies": {
++    "hono": "^4.0.0",
++    "jsonwebtoken": "^9.0.2",
++    "uuid": "^9.0.1"
++  },
++  "devDependencies": {
++    "@cloudflare/workers-types": "^4.20240117.0",
++    "@types/jsonwebtoken": "^9.0.5",
++    "@types/uuid": "^9.0.7",
++    "typescript": "^5.3.3",
++    "vitest": "^1.2.0",
++    "wrangler": "^3.25.0"
++  },
++  "engines": {
++    "node": ">=18.0.0"
++  }
++}
+\ No newline at end of file
+
+--- FILE: worker/src/index.js ---
+diff --git a/worker/src/index.js b/worker/src/index.js
+deleted file mode 100644
+index c1f858d..0000000
+--- a/worker/src/index.js
++++ /dev/null
+@@ -1,9 +0,0 @@
+-// ES Module wrapper for Rust WebAssembly Worker
+-import { fetch as wasmFetch } from '../pkg/r2_file_explorer_worker.js';
+-
+-export default {
+-  async fetch(request, env, ctx) {
+-    // Call the Rust fetch function directly
+-    return await wasmFetch(request, env, ctx);
+-  }
+-};
+\ No newline at end of file
+
+--- FILE: worker/src/index.ts ---
+diff --git a/worker/src/index.ts b/worker/src/index.ts
+new file mode 100644
+index 0000000..685bc4e
+--- /dev/null
++++ b/worker/src/index.ts
+@@ -0,0 +1,213 @@
++import { Hono } from 'hono'
++import { cors } from 'hono/cors'
++import { logger } from 'hono/logger'
++import { prettyJSON } from 'hono/pretty-json'
++
++// Type definitions for Cloudflare Workers environment
++type Bindings = {
++  R2_BUCKET: R2Bucket
++  KV_SESSIONS: KVNamespace
++  ANALYTICS?: AnalyticsEngineDataset
++  JWT_SECRET: string
++  CORS_ORIGINS: string
++  JWT_EXPIRY_HOURS: string
++  MAX_FILE_SIZE_MB: string
++  ENVIRONMENT: string
++}
++
++// Create Hono app with type bindings
++const app = new Hono<{ Bindings: Bindings }>()
++
++// Global middleware
++app.use('*', logger())
++app.use('*', prettyJSON())
++
++// CORS middleware with dynamic origins
++app.use('*', async (c, next) => {
++  const corsOrigins = c.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
++  
++  return cors({
++    origin: corsOrigins,
++    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
++    allowHeaders: ['Content-Type', 'Authorization'],
++    credentials: true,
++  })(c, next)
++})
++
++// Health check endpoint
++app.get('/health', (c) => {
++  return c.json({
++    status: 'healthy',
++    timestamp: new Date().toISOString(),
++    environment: c.env.ENVIRONMENT,
++    version: '1.0.0'
++  })
++})
++
++// API root endpoint
++app.get('/', (c) => {
++  return c.json({
++    name: 'R2 File Explorer API',
++    version: '1.0.0',
++    environment: c.env.ENVIRONMENT,
++    endpoints: {
++      health: '/health',
++      auth: '/api/auth',
++      files: '/api/files'
++    }
++  })
++})
++
++// Authentication routes
++app.post('/api/auth/login', async (c) => {
++  // TODO: Implement authentication logic
++  return c.json({ message: 'Authentication endpoint - to be implemented' })
++})
++
++app.post('/api/auth/logout', async (c) => {
++  // TODO: Implement logout logic
++  return c.json({ message: 'Logout endpoint - to be implemented' })
++})
++
++app.get('/api/auth/verify', async (c) => {
++  // TODO: Implement token verification
++  return c.json({ message: 'Token verification endpoint - to be implemented' })
++})
++
++// File operation routes
++app.get('/api/files', async (c) => {
++  try {
++    const bucket = c.env.R2_BUCKET
++    const prefix = c.req.query('prefix') || ''
++    
++    const objects = await bucket.list({ prefix })
++    
++    return c.json({
++      success: true,
++      objects: objects.objects.map(obj => ({
++        key: obj.key,
++        size: obj.size,
++        lastModified: obj.uploaded,
++        etag: obj.etag
++      })),
++      truncated: objects.truncated,
++      ...(objects.truncated && 'cursor' in objects ? { cursor: objects.cursor } : {})
++    })
++  } catch (error) {
++    console.error('Error listing files:', error)
++    return c.json({ 
++      success: false, 
++      error: 'Failed to list files' 
++    }, 500)
++  }
++})
++
++app.post('/api/files/upload', async (c) => {
++  try {
++    const bucket = c.env.R2_BUCKET
++    const maxSizeMB = parseInt(c.env.MAX_FILE_SIZE_MB)
++    
++    // Get file from request
++    const body = await c.req.blob()
++    
++    // Check file size
++    if (body.size > maxSizeMB * 1024 * 1024) {
++      return c.json({
++        success: false,
++        error: `File size exceeds maximum of ${maxSizeMB}MB`
++      }, 413)
++    }
++    
++    // Get filename from query or generate one
++    const filename = c.req.query('filename') || `upload-${Date.now()}`
++    
++    // Upload to R2
++    await bucket.put(filename, body)
++    
++    return c.json({
++      success: true,
++      message: 'File uploaded successfully',
++      filename,
++      size: body.size
++    })
++  } catch (error) {
++    console.error('Error uploading file:', error)
++    return c.json({
++      success: false,
++      error: 'Failed to upload file'
++    }, 500)
++  }
++})
++
++app.get('/api/files/:filename', async (c) => {
++  try {
++    const bucket = c.env.R2_BUCKET
++    const filename = c.req.param('filename')
++    
++    const object = await bucket.get(filename)
++    
++    if (!object) {
++      return c.json({
++        success: false,
++        error: 'File not found'
++      }, 404)
++    }
++    
++    return new Response(object.body, {
++      headers: {
++        'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
++        'Content-Length': object.size.toString(),
++        'ETag': object.etag,
++        'Last-Modified': object.uploaded.toUTCString()
++      }
++    })
++  } catch (error) {
++    console.error('Error downloading file:', error)
++    return c.json({
++      success: false,
++      error: 'Failed to download file'
++    }, 500)
++  }
++})
++
++app.delete('/api/files/:filename', async (c) => {
++  try {
++    const bucket = c.env.R2_BUCKET
++    const filename = c.req.param('filename')
++    
++    await bucket.delete(filename)
++    
++    return c.json({
++      success: true,
++      message: 'File deleted successfully',
++      filename
++    })
++  } catch (error) {
++    console.error('Error deleting file:', error)
++    return c.json({
++      success: false,
++      error: 'Failed to delete file'
++    }, 500)
++  }
++})
++
++// 404 handler
++app.notFound((c) => {
++  return c.json({
++    success: false,
++    error: 'Not Found',
++    message: 'The requested endpoint does not exist'
++  }, 404)
++})
++
++// Error handler
++app.onError((err, c) => {
++  console.error('Unhandled error:', err)
++  return c.json({
++    success: false,
++    error: 'Internal Server Error',
++    message: 'An unexpected error occurred'
++  }, 500)
++})
++
++export default app
+\ No newline at end of file
+
+--- FILE: worker/src/lib.rs ---
+diff --git a/worker/src/lib.rs b/worker/src/lib.rs
+deleted file mode 100644
+index c58a90b..0000000
+--- a/worker/src/lib.rs
++++ /dev/null
+@@ -1,47 +0,0 @@
+-use worker::*;
+-
+-mod utils;
+-
+-fn log_request(req: &Request) {
+-    let coordinates = req.cf()
+-        .map(|cf| cf.coordinates().unwrap_or_default())
+-        .unwrap_or_default();
+-    let region = req.cf()
+-        .and_then(|cf| cf.region())
+-        .unwrap_or_else(|| "unknown region".into());
+-    
+-    console_log!(
+-        "{} - [{}], located at: {:?}, within: {}",
+-        Date::now().as_millis(),
+-        req.path(),
+-        coordinates,
+-        region
+-    );
+-}
+-
+-// Main entry point for ES module format
+-#[event(fetch)]
+-pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
+-    log_request(&req);
+-
+-    // Optionally, get more helpful error messages written to the console in the case of a panic.
+-    utils::set_panic_hook();
+-
+-    // Optionally, use the Router to handle matching endpoints, use ":name" placeholders, or "*name"
+-    // catch-alls to match on specific patterns. Alternatively, use `Router::with_data(D)` to
+-    // provide arbitrary data that will be accessible in each route via the `ctx.data()` method.
+-    let router = Router::new();
+-
+-    // Add some Middleware to handle CORS
+-    router
+-        .get("/", |_, _| Response::ok("R2 File Explorer API"))
+-        .get("/health", |_, _| {
+-            Response::from_json(&serde_json::json!({
+-                "status": "healthy",
+-                "timestamp": chrono::Utc::now().to_rfc3339(),
+-                "version": env!("CARGO_PKG_VERSION")
+-            }))
+-        })
+-        .run(req, env)
+-        .await
+-}
+\ No newline at end of file
+
+--- FILE: worker/src/types/index.ts ---
+diff --git a/worker/src/types/index.ts b/worker/src/types/index.ts
+new file mode 100644
+index 0000000..0b4b8b2
+--- /dev/null
++++ b/worker/src/types/index.ts
+@@ -0,0 +1,63 @@
++// Type definitions for the R2 File Explorer API
++
++export interface Bindings {
++  R2_BUCKET: R2Bucket
++  KV_SESSIONS: KVNamespace
++  ANALYTICS?: AnalyticsEngineDataset
++  JWT_SECRET: string
++  CORS_ORIGINS: string
++  JWT_EXPIRY_HOURS: string
++  MAX_FILE_SIZE_MB: string
++  ENVIRONMENT: string
++}
++
++export interface FileObject {
++  key: string
++  size: number
++  lastModified: Date
++  etag: string
++}
++
++export interface ListFilesResponse {
++  success: boolean
++  objects?: FileObject[]
++  truncated?: boolean
++  cursor?: string
++  error?: string
++}
++
++export interface UploadResponse {
++  success: boolean
++  message?: string
++  filename?: string
++  size?: number
++  error?: string
++}
++
++export interface ApiResponse<T = any> {
++  success: boolean
++  data?: T
++  error?: string
++  message?: string
++}
++
++export interface AuthCredentials {
++  accountId: string
++  accessKeyId: string
++  secretAccessKey: string
++  bucketName: string
++}
++
++export interface SessionData {
++  userId: string
++  credentials: AuthCredentials
++  expiresAt: number
++  createdAt: number
++}
++
++export interface JWTPayload {
++  userId: string
++  sessionId: string
++  exp: number
++  iat: number
++}
+\ No newline at end of file
+
+--- FILE: worker/src/utils.rs ---
+diff --git a/worker/src/utils.rs b/worker/src/utils.rs
+deleted file mode 100644
+index 7c1b13c..0000000
+--- a/worker/src/utils.rs
++++ /dev/null
+@@ -1,9 +0,0 @@
+-pub fn set_panic_hook() {
+-    // When the `console_error_panic_hook` feature is enabled, we can call the
+-    // `set_panic_hook` function at least once during initialization, and then
+-    // we will get better error messages if our code ever panics.
+-    //
+-    // For more details see
+-    // https://github.com/rustwasm/console_error_panic_hook#readme
+-    console_error_panic_hook::set_once();
+-}
+\ No newline at end of file
+
+--- FILE: worker/tsconfig.json ---
+diff --git a/worker/tsconfig.json b/worker/tsconfig.json
+new file mode 100644
+index 0000000..a8747b7
+--- /dev/null
++++ b/worker/tsconfig.json
+@@ -0,0 +1,29 @@
++{
++  "compilerOptions": {
++    "target": "ES2022",
++    "lib": ["ES2022"],
++    "module": "ESNext",
++    "moduleResolution": "bundler",
++    "allowSyntheticDefaultImports": true,
++    "esModuleInterop": true,
++    "allowJs": true,
++    "checkJs": false,
++    "strict": true,
++    "noEmit": true,
++    "verbatimModuleSyntax": true,
++    "skipLibCheck": true,
++    "resolveJsonModule": true,
++    "isolatedModules": true,
++    "types": [
++      "@cloudflare/workers-types",
++      "vitest/globals"
++    ]
++  },
++  "include": [
++    "src/**/*"
++  ],
++  "exclude": [
++    "node_modules",
++    "dist"
++  ]
++}
+\ No newline at end of file
+
+--- FILE: worker/wrangler.toml ---
+diff --git a/worker/wrangler.toml b/worker/wrangler.toml
+index 3aecd05..09c656b 100644
+--- a/worker/wrangler.toml
++++ b/worker/wrangler.toml
+@@ -1,5 +1,5 @@
+ name = "r2-file-explorer-api"
+-main = "src/index.js"
++main = "src/index.ts"
+ compatibility_date = "2024-01-01"
+ 
+ # Development R2 bucket binding for file storage
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

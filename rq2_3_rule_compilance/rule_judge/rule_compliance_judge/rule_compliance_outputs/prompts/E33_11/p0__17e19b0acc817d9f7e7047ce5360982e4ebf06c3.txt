@@ -1,0 +1,128 @@
+- Rule Primary Category: Code Implementation
+- Rule Secondary Category: Code Style Conventions
+- Rule File Path: internal/domain/.cursor/rules/entity.mdc
+- Change Type: added
+- Target Rule Content:
+All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Source code files containing data structures with field tags or decorators (e.g., Go structs, Rust structs with serde, or TypeScript classes with decorators).
+- Suggested Logic: 1. Scan source code for struct/class field definitions.
+2. Locate 'json' tags/annotations and use a regular expression to verify that the tag value follows snake_case (e.g., `^[a-z0-9_]+$`).
+3. Check for the presence of a 'secret' tag/annotation on fields.
+4. If a 'secret' tag is present, verify that the 'json' tag is set to omit the field (e.g., `json:"-"` in Go).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: same_as_rule_commit (distance=0)
+- Commit Message: docs: update entity meta-rule for code generation and field tagging
+
+- Clarify that all fields are generated with JSON tags in snake_case by default
+- Add support for 'secret' tag to exclude fields from JSON marshalling
+- Expand examples to show field definitions, constructor inputs, and secret fields
+- Improve documentation for maintainability, security, and code generation consistency
+- Changed Files List: 
+internal/domain/.cursor/rules/entity.mdc	+43	-10	after_lines=92
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursor
+│   └── rules
+│       └── global.mdc
+├── README.md
+├── docs
+│   ├── .cursor
+│   │   └── rules
+│   │       ├── architecture.mdc
+│   │       ├── datamodel.mdc
+│   │       ├── tenant.mdc
+│   │       └── user-journey.mdc
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── tenant.md
+│   └── user-journey.md
+├── go.mod
+└── internal
+    └── domain
+        └── .cursor
+            └── rules
+                ├── entity.mdc
+                └── generic-types.mdc
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: internal/domain/.cursor/rules/entity.mdc ---
+diff --git a/internal/domain/.cursor/rules/entity.mdc b/internal/domain/.cursor/rules/entity.mdc
+index 07e53a8..44c8cec 100644
+--- a/internal/domain/.cursor/rules/entity.mdc
++++ b/internal/domain/.cursor/rules/entity.mdc
+@@ -36,24 +36,57 @@ const (
+ ```
+ 
+ ---
+-### Constructor
++### Entity
++All fields are generated with JSON tags in snake_case by default. Fields marked with the 'secret' tag are not marshaled to JSON.
++
+ Entity Definition also generates constructor with field with **constructor input** tags as args
+ 
+ **Example:**
+ ```
+-ID: Identity of Tenant // constructor input
+-Name: string // constructor input
+-Status: Tenant Status // constructor input
+-CreatedAt: time.Time
++ID: Identity of Tenant - New Identity
++Name: string - constructor input
++Status: Enumerated string of "active", "inactive", default("active")
++CreatedAt: time.Time - Default: now
++SecretAttribute: string - secret
+ ```
+ Generates:
+ ```go
+-func NewTenant(id TenantID, name string, status TenantStatus) *Tenant {
++// TenantStatus represents the status of a tenant.
++type TenantStatus string
++
++const(
++    // TenantStatusActive indicates the tenant is active.
++    TenantStatusActive TenantStatus = "active"
++    // TenantStatusInactive indicates the tenant is inactive.
++    TenantStatusInactive TenantStatus = "inactive"
++)
++
++// Tenant represents a logical customer or organization using the application.
++type Tenant struct {
++    ID                  TenantID      `json:"id"` // Unique identifier for the tenant
++    Name                string        `json:"name"` // Tenant name
++    Status              TenantStatus  `json:"status"` // Status of the tenant (active or inactive)
++    CreatedAt           time.Time     `json:"created_at"` // Timestamp of tenant creation
++    SecretAttribute     string        `json:"-"` // Tenant Secret attribute
++}
++
++// NewTenant creates a new Tenant with the given name and status.
++// If status is empty, it defaults to TenantStatusActive.
++// Returns an error if ID generation fails.
++func NewTenant(name string, status TenantStatus) (*Tenant, error) {
++    id, err := uuid.New()
++    if err != nil {
++        return nil, err
++    }
++    now := time.Now().UTC()
++    if status == "" {
++        status = TenantStatusActive
++    }
+     return &Tenant{
+         ID:     id,
+         Name:   name,
+         Status: status,
+-        // other fields set to zero value or handled separately
+-    }
+-}
+-``` 
+\ No newline at end of file
++        CreatedAt: now,
++    }, nil
++} 
++
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

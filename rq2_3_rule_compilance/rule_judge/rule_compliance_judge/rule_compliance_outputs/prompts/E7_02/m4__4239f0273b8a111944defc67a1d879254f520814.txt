@@ -1,0 +1,363 @@
+- Rule Primary Category: Development Workflow & Project Management
+- Rule Secondary Category: Dependency Management
+- Rule File Path: .cursorrules
+- Change Type: added
+- Target Rule Content:
+Use bun for package management (bun add, bun install, etc.)
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Project root directory for lockfiles (e.g., bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml) and CI/CD configuration files (e.g., .github/workflows/*.yml).
+- Suggested Logic: 1. Verify the existence of the 'bun.lockb' file in the root directory. 2. Check for the absence of 'package-lock.json', 'yarn.lock', and 'pnpm-lock.yaml' to ensure exclusive use of bun. 3. Optionally, scan CI/CD scripts for the usage of 'bun install' or 'bun add' commands instead of npm/yarn/pnpm equivalents.
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: after_rule_commit (distance=4)
+- Commit Message: feat(canvas): adjust cell/grid size and center drawn characters, fix diagonal lines
+
+    * Update CANVAS_ROWS to 45, CANVAS_COLS to 80, CELL_WIDTH to 10, and CELL_HEIGHT to 12 for a better aspect ratio and visual clarity
+    * Center all characters within cells when drawing on the canvas for improved appearance
+    * Fix diagonal ASCII characters for lines to ensure correct orientation
+    * Draw a visible grid over the canvas for better cell targeting
+    * Add mouse leave handling to finalize shape if drawing is in progress
+    * Improve cursor highlight for text tool
+    * Minor refactoring and comments for maintainability
+- Changed Files List: 
+conversations/9-adjust-cell-size-add-grid-fix-diagonal-lines.md	+59	-0	after_lines=59
+src/components/Canvas.tsx	+100	-14	after_lines=615
+src/lib/constants.ts	+4	-4	after_lines=4
+
+- Project Directory Tree (Snapshot after commit):
+├── .cursorrules
+├── .gitignore
+├── README.md
+├── bun.lock
+├── components.json
+├── conversations
+│   ├── 1-chat-history-setup.md
+│   ├── 2-add-clear-all-layers-button.md
+│   ├── 3-adjust-layers-rendering.md
+│   ├── 4-implement-drag-drop-layers.md
+│   ├── 5-implement-text-shape.md
+│   ├── 6-remove-add-layer-button-fix-remove-functionality.md
+│   ├── 7-implement-layer-hover-highlighting.md
+│   ├── 8-optimize-shape-rendering.md
+│   └── 9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── src
+│   ├── app
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── Canvas.tsx
+│   │   ├── CanvasContainer.tsx
+│   │   ├── CanvasToolbar.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib
+│   │   ├── constants.ts
+│   │   └── utils.ts
+│   └── store
+│       └── index.ts
+└── tsconfig.json
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: conversations/9-adjust-cell-size-add-grid-fix-diagonal-lines.md ---
+diff --git a/conversations/9-adjust-cell-size-add-grid-fix-diagonal-lines.md b/conversations/9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+new file mode 100644
+index 0000000..ad7b325
+--- /dev/null
++++ b/conversations/9-adjust-cell-size-add-grid-fix-diagonal-lines.md
+@@ -0,0 +1,59 @@
++# Conversation 9: Adjust Cell Size, Add Grid, Fix Diagonal Lines
++
++**Date:** Current session
++
++## Participants
++- **Chuang:** User
++- **Cursor:** AI Assistant
++
++## Summary
++This conversation focused on improving the ASCII canvas by adjusting cell dimensions, adding visual grid lines, fixing diagonal line character directions, implementing mouse leave handling, and centering text within cells.
++
++## Key Changes Made
++
++### 1. Cell Size Adjustments
++- **Chuang:** "Adjust the cell size to be around the same size as a 12px char."
++- **Cursor:** Updated `CELL_WIDTH` from 5 to 12 pixels and `CELL_HEIGHT` from 8 to 12 pixels in `src/lib/constants.ts`
++
++### 2. Canvas Dimensions
++- **Chuang:** "Adjust it to 45 rows and 80 cols."
++- **Cursor:** Updated `CANVAS_ROWS` from 40 to 45 and `CANVAS_COLS` from 100 to 80
++
++### 3. Cell Grid and Diagonal Line Fixes
++- **Chuang:** "Draw cells with light gray borders as background. BTW I think you got wrong about '\\' and '/' for drawing lines."
++- **Cursor:** 
++  - Added `drawCellGrid()` function to draw light gray borders around each cell
++  - Fixed diagonal line characters: positive slope now uses `\`, negative slope uses `/`
++  - Added grid drawing to main `useEffect` and `handleMouseMove`
++
++### 4. Additional Improvements
++- **Chuang:** "I just found more issues: When mouse leaves the canvas, it should stop/finish drawing, adding the shape to a new layer. The cell is slightly larger than the text in width, adjust it again. The char in the cell should be centered."
++- **Cursor:** 
++  - Added `handleMouseLeave` function to finish drawing when mouse leaves canvas
++  - Reduced `CELL_WIDTH` from 12 to 10 pixels for better text fit
++  - Changed text alignment from "left"/"top" to "center"/"middle"
++  - Updated all text rendering to center characters in cells
++  - Fixed text cursor positioning for centered text
++
++### 5. Preview Drawing Fix
++- **Chuang:** "I find when it is drawing, the preview chars are not in the cells, creating the weird shifting between drawing and drawn."
++- **Cursor:** Fixed text alignment inconsistency in `handleMouseMove` function by ensuring both merged layers and preview use the same centered positioning
++
++## Files Modified
++- `src/lib/constants.ts`: Updated canvas dimensions and cell sizes
++- `src/components/Canvas.tsx`: Added grid drawing, fixed diagonal lines, implemented mouse leave handling, centered text rendering
++
++## Technical Details
++- Canvas size: 80×45 cells (800×540 pixels with 10×12 cell size)
++- Grid color: `#e5e7eb` (light gray)
++- Text alignment: centered both horizontally and vertically
++- Mouse leave handling creates shapes at current position when drawing is interrupted
++
++## Result
++The ASCII canvas now has:
++- Properly sized cells that fit 12px text
++- Visual grid lines for better cell visibility
++- Correct diagonal line characters that match their direction
++- Smooth drawing experience with mouse leave handling
++- Centered text rendering for better visual appearance
++- Consistent preview and final drawing positioning 
+\ No newline at end of file
+
+--- FILE: src/components/Canvas.tsx ---
+diff --git a/src/components/Canvas.tsx b/src/components/Canvas.tsx
+index 7c0c41b..6ba8c42 100644
+--- a/src/components/Canvas.tsx
++++ b/src/components/Canvas.tsx
+@@ -31,8 +31,8 @@ const SHAPE_CHARS = {
+   line: {
+     horizontal: "-",
+     vertical: "|",
+-    diagonal1: "/",
+-    diagonal2: "\\",
++    diagonal1: "\\",
++    diagonal2: "/",
+   },
+ };
+ 
+@@ -283,10 +283,10 @@ export default function Canvas() {
+           // Diagonal line - determine which diagonal
+           const slope = (endY - startY) / (endX - startX);
+           if (slope > 0) {
+-            // Positive slope: bottom-left to top-right (/)
++            // Positive slope: bottom-left to top-right (\)
+             canvas[y][x] = SHAPE_CHARS.line.diagonal1;
+           } else {
+-            // Negative slope: top-left to bottom-right (\)
++            // Negative slope: top-left to bottom-right (/)
+             canvas[y][x] = SHAPE_CHARS.line.diagonal2;
+           }
+         }
+@@ -372,6 +372,9 @@ export default function Canvas() {
+     ctx.fillStyle = "#ffffff";
+     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+ 
++    // Draw cell grid
++    drawCellGrid(ctx);
++
+     // Draw merged layers
+     const mergedCanvas = mergeLayers();
+     mergedCanvas.forEach((row, rowIndex) => {
+@@ -379,9 +382,13 @@ export default function Canvas() {
+         if (cell !== " ") {
+           ctx.fillStyle = "#000000";
+           ctx.font = `${CELL_HEIGHT}px monospace`;
+-          ctx.textAlign = "left";
+-          ctx.textBaseline = "top";
+-          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++          ctx.textAlign = "center";
++          ctx.textBaseline = "middle";
++          ctx.fillText(
++            cell, 
++            colIndex * CELL_WIDTH + CELL_WIDTH / 2, 
++            rowIndex * CELL_HEIGHT + CELL_HEIGHT / 2
++          );
+         }
+       });
+     });
+@@ -420,7 +427,11 @@ export default function Canvas() {
+     previewCanvas.forEach((row, rowIndex) => {
+       row.forEach((cell, colIndex) => {
+         if (cell !== " ") {
+-          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++          ctx.fillText(
++            cell, 
++            colIndex * CELL_WIDTH + CELL_WIDTH / 2, 
++            rowIndex * CELL_HEIGHT + CELL_HEIGHT / 2
++          );
+         }
+       });
+     });
+@@ -467,6 +478,47 @@ export default function Canvas() {
+     setStartPos(null);
+   };
+ 
++  // Handle mouse leave - finish drawing if in progress
++  const handleMouseLeave = () => {
++    if (isDrawing && startPos && selectedShape && selectedShape.type !== "text") {
++      // Use the last known position or a default position
++      const endPos = { x: startPos.x, y: startPos.y };
++      
++      console.log(
++        `Mouse left canvas, finishing shape from (${startPos.x}, ${startPos.y}) to (${endPos.x}, ${endPos.y})`
++      );
++
++      // Generate the shape
++      let newCanvas: string[][] = [];
++      switch (selectedShape.type) {
++        case "rectangle":
++          newCanvas = generateRectangle(
++            startPos.x,
++            startPos.y,
++            endPos.x,
++            endPos.y
++          );
++          break;
++        case "circle":
++          newCanvas = generateCircle(startPos.x, startPos.y, endPos.x, endPos.y);
++          break;
++        case "line":
++          newCanvas = generateLine(startPos.x, startPos.y, endPos.x, endPos.y);
++          break;
++      }
++
++      // Add new layer
++      const newLayer = {
++        id: `layer-${Date.now()}`,
++        canvas: newCanvas,
++      };
++      addLayer(newLayer);
++
++      setIsDrawing(false);
++      setStartPos(null);
++    }
++  };
++
+   useEffect(() => {
+     const ctx = canvasRef.current?.getContext("2d");
+     if (!ctx) return;
+@@ -476,6 +528,9 @@ export default function Canvas() {
+     ctx.fillStyle = "#ffffff";
+     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+ 
++    // Draw cell grid
++    drawCellGrid(ctx);
++
+     // Draw merged layers
+     const mergedCanvas = mergeLayers();
+     mergedCanvas.forEach((row, rowIndex) => {
+@@ -483,9 +538,13 @@ export default function Canvas() {
+         if (cell !== " ") {
+           ctx.fillStyle = "#000000";
+           ctx.font = `${CELL_HEIGHT}px monospace`;
+-          ctx.textAlign = "left";
+-          ctx.textBaseline = "top";
+-          ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++          ctx.textAlign = "center";
++          ctx.textBaseline = "middle";
++          ctx.fillText(
++            cell, 
++            colIndex * CELL_WIDTH + CELL_WIDTH / 2, 
++            rowIndex * CELL_HEIGHT + CELL_HEIGHT / 2
++          );
+         }
+       });
+     });
+@@ -497,7 +556,11 @@ export default function Canvas() {
+       hoveredCanvas.forEach((row, rowIndex) => {
+         row.forEach((cell, colIndex) => {
+           if (cell !== " ") {
+-            ctx.fillText(cell, colIndex * CELL_WIDTH, rowIndex * CELL_HEIGHT);
++            ctx.fillText(
++              cell, 
++              colIndex * CELL_WIDTH + CELL_WIDTH / 2, 
++              rowIndex * CELL_HEIGHT + CELL_HEIGHT / 2
++            );
+           }
+         });
+       });
+@@ -507,14 +570,36 @@ export default function Canvas() {
+     if (selectedShape?.type === "text" && cursorPos) {
+       ctx.fillStyle = "#0000ff";
+       ctx.fillRect(
+-        cursorPos.x * CELL_WIDTH,
+-        cursorPos.y * CELL_HEIGHT,
++        cursorPos.x * CELL_WIDTH + CELL_WIDTH / 2 - 1,
++        cursorPos.y * CELL_HEIGHT + CELL_HEIGHT / 2 - CELL_HEIGHT / 2,
+         2,
+         CELL_HEIGHT
+       );
+     }
+   }, [layers, selectedShape, cursorPos, hoveredLayerId]);
+ 
++  // Draw cell grid with light gray borders
++  const drawCellGrid = (ctx: CanvasRenderingContext2D) => {
++    ctx.strokeStyle = "#e5e7eb"; // Light gray
++    ctx.lineWidth = 1;
++    
++    // Draw vertical lines
++    for (let x = 0; x <= CANVAS_COLS; x++) {
++      ctx.beginPath();
++      ctx.moveTo(x * CELL_WIDTH, 0);
++      ctx.lineTo(x * CELL_WIDTH, CANVAS_HEIGHT);
++      ctx.stroke();
++    }
++    
++    // Draw horizontal lines
++    for (let y = 0; y <= CANVAS_ROWS; y++) {
++      ctx.beginPath();
++      ctx.moveTo(0, y * CELL_HEIGHT);
++      ctx.lineTo(CANVAS_WIDTH, y * CELL_HEIGHT);
++      ctx.stroke();
++    }
++  };
++
+   return (
+     <canvas
+       ref={canvasRef}
+@@ -524,6 +609,7 @@ export default function Canvas() {
+       onMouseDown={handleMouseDown}
+       onMouseMove={handleMouseMove}
+       onMouseUp={handleMouseUp}
++      onMouseLeave={handleMouseLeave}
+     />
+   );
+ }
+
+--- FILE: src/lib/constants.ts ---
+diff --git a/src/lib/constants.ts b/src/lib/constants.ts
+index dd0a25b..f85cf50 100644
+--- a/src/lib/constants.ts
++++ b/src/lib/constants.ts
+@@ -1,4 +1,4 @@
+-export const CANVAS_ROWS = 40; // Num of rows in the canvas
+-export const CANVAS_COLS = 100; // Num of columns in the canvas
+-export const CELL_WIDTH = 5; // Width of each cell in pixels
+-export const CELL_HEIGHT = 8; // Height of each cell in pixels
++export const CANVAS_ROWS = 45; // Num of rows in the canvas
++export const CANVAS_COLS = 80; // Num of columns in the canvas
++export const CELL_WIDTH = 10; // Width of each cell in pixels
++export const CELL_HEIGHT = 12; // Height of each cell in pixels
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

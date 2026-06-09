@@ -1,0 +1,119 @@
+diff --git a/docs/QUICK_REFERENCE.md b/docs/QUICK_REFERENCE.md
+index 619c1dc..c8e42ed 100644
+--- a/docs/QUICK_REFERENCE.md
++++ b/docs/QUICK_REFERENCE.md
+@@ -9,6 +9,7 @@
+ 4. **`src/web/server.ts`** - Main web server entry point
+ 5. **`tests/` directory** - Unit and integration tests
+ 6. **`jest.config.js`** - Testing framework configuration
++7. **`.github/workflows/`** - GitHub Actions CI/CD workflows
+ 
+ ### Singleton Services (Use `getInstance()`)
+ ```typescript
+@@ -136,10 +137,9 @@ npm run storybook          # Start Storybook development server
+ npm run build-storybook    # Build Storybook for production
+ npm run test-storybook     # Run Storybook tests
+ 
+-// ✅ CORRECT - Follow testing patterns from TESTING_ROADMAP.md
++// ✅ CORRECT - Follow testing patterns from tests/e2e/README.md
+ // - Use Jest for unit testing (70% of tests)
+ // - Use Jest for integration testing (20% of tests)
+-// - Use Storybook for component testing (5% of tests)
+ // - Use Playwright for E2E testing (5% of tests)
+ // - Mock external dependencies with `any` types
+ // - Test public interfaces, not implementation details
+@@ -153,7 +153,8 @@ npm run test-storybook     # Run Storybook tests
+ // - Use (global as any).testUtils.cleanupTempHtmlFiles() for HTML cleanup
+ // - Temporary files are automatically cleaned up after tests
+ // - Jest timeout issues resolved with proper clearTimeout calls
+-// - All 301 tests pass without worker process errors (214 unit + 47 integration + 9 component + 31 validation)
++// - All 301 tests pass without worker process errors (214 unit + 47 integration + 9 component + 9 validation + 23 E2E)
++// - E2E tests: 23/23 passing accessibility tests covering WCAG 2.1 AAA compliance ✅
+ 
+ // ❌ NEVER break existing tests without fixing them
+ // ❌ NEVER ignore TypeScript compilation errors in tests
+@@ -348,6 +349,41 @@ export interface PageInfo {
+ }
+ ```
+ 
++### E2E Testing Best Practices
++```typescript
++// ✅ CORRECT - Use direct focus for reliable element focusing
++async focusElement(locator: Locator) {
++    await locator.focus();
++    await expect(locator).toBeFocused();
++}
++
++// ✅ CORRECT - Test keyboard navigation with direct focus
++async testKeyboardNavigation() {
++    await this.focusFullSiteUrl();
++    await this.focusFullSiteSubmitBtn();
++    await this.focusFullSiteUrl();
++    await this.expectElementFocused(this.fullSiteUrlInput);
++}
++
++// ❌ AVOID - Don't rely on tab order prediction
++async focusWithTab() {
++    await this.pressKey('Tab'); // h1
++    await this.pressKey('Tab'); // h2
++    await this.pressKey('Tab'); // h3
++    await this.pressKey('Tab'); // input - fragile!
++    await this.expectElementFocused(this.fullSiteUrlInput);
++}
++
++// ✅ CORRECT - Use POM pattern for maintainable tests
++const homePage = new HomePage(page);
++await homePage.goto();
++await homePage.startFullSiteScan('https://example.com');
++
++// ❌ AVOID - Don't use raw selectors in tests
++await page.locator('#fullSiteUrl').fill('https://example.com');
++await page.locator('#fullSiteForm button[type="submit"]').click();
++```
++
+ ### Service Method Missing
+ ```typescript
+ // Problem: Method not found
+@@ -509,6 +545,42 @@ export { renderWebInterface } from './WebInterface';
+ // ❌ NEVER use JavaScript components when TypeScript is available
+ ```
+ 
++### CI/CD Workflow Pattern
++```yaml
++# ✅ CORRECT - GitHub Actions Workflows
++# - ci.yml: Comprehensive testing on PRs and pushes
++# - deploy.yml: Automated deployment on merges to main
++# - accessibility.yml: WCAG 2.1 AAA compliance monitoring
++# - dependencies.yml: Security and dependency management
++
++# ✅ CORRECT - Quality Gates
++# - All 301+ tests must pass
++# - WCAG 2.1 AAA compliance verified
++# - Cross-browser compatibility (Chrome, Firefox, Safari)
++# - Security audit passes
++# - Documentation validation succeeds
++
++# ✅ CORRECT - Workflow Triggers
++# - Pull Requests: Full test suite runs automatically
++# - Main Branch: Deployment and release creation
++# - Scheduled: Weekly security and accessibility monitoring
++# - Manual: Workflow dispatch for on-demand runs
++
++# ✅ CORRECT - Test Categories in CI/CD
++# - Unit Tests: 214 tests for individual functions
++# - Integration Tests: 47 tests for service interactions
++# - Component Tests: 9 Storybook component tests
++# - E2E Tests: 47 tests (23 accessibility + 24 interface)
++# - Cross-browser Tests: All tests run on 3 browsers
++# - Security Tests: Vulnerability scanning and audit
++# - Documentation Tests: Validation and consistency checks
++
++# ❌ NEVER push changes that break CI/CD
++# ❌ NEVER ignore workflow failures
++# ❌ NEVER bypass quality gates
++# ❌ NEVER skip accessibility testing
++```
++
+ ---
+ 
+ **Last Updated**: 19/12/2024 15:30 GMT

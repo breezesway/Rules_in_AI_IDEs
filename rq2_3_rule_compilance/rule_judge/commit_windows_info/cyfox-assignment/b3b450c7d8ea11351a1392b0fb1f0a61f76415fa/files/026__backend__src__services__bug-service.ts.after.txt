@@ -1,0 +1,284 @@
+import { query } from '../database/connection';
+import { Bug, CreateBugRequest, UpdateBugRequest, BugFilters } from '../models/bug';
+import { NotFoundError, DatabaseError } from '../utils/errors';
+import { projectExists } from './project-service';
+import { buildWhereClause, buildOrderByClause } from '../database/utils';
+
+/**
+ * Get all bugs for a project with optional filtering and sorting
+ */
+export async function getBugsByProject(
+  projectId: number,
+  filters: BugFilters = {}
+): Promise<Bug[]> {
+  try {
+    // Check if project exists
+    const exists = await projectExists(projectId);
+    if (!exists) {
+      throw new NotFoundError('Project', projectId);
+    }
+
+    // Build WHERE clause for filters
+    const conditions: Record<string, any> = { project_id: projectId };
+    if (filters.severity) conditions.severity = filters.severity;
+    if (filters.status) conditions.status = filters.status;
+
+    const { whereClause, params } = buildWhereClause(conditions);
+    const orderByClause = buildOrderByClause(
+      filters.sortBy || 'created_at',
+      filters.sortOrder || 'DESC'
+    );
+
+    const result = await query(
+      `SELECT 
+        id,
+        project_id as "projectId",
+        title,
+        description,
+        severity,
+        status,
+        created_at as "createdAt"
+      FROM bugs 
+      ${whereClause}
+      ${orderByClause}`,
+      params
+    );
+
+    return result.rows;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to fetch bugs', error as Error);
+  }
+}
+
+/**
+ * Get bug by ID
+ */
+export async function getBugById(projectId: number, bugId: number): Promise<Bug> {
+  try {
+    // Check if project exists
+    const exists = await projectExists(projectId);
+    if (!exists) {
+      throw new NotFoundError('Project', projectId);
+    }
+
+    const result = await query(
+      `SELECT 
+        id,
+        project_id as "projectId",
+        title,
+        description,
+        severity,
+        status,
+        created_at as "createdAt"
+      FROM bugs 
+      WHERE id = $1 AND project_id = $2`,
+      [bugId, projectId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError('Bug', bugId);
+    }
+
+    return result.rows[0] as Bug;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to fetch bug', error as Error);
+  }
+}
+
+/**
+ * Create a new bug
+ */
+export async function createBug(projectId: number, bugData: CreateBugRequest): Promise<Bug> {
+  try {
+    // Check if project exists
+    const exists = await projectExists(projectId);
+    if (!exists) {
+      throw new NotFoundError('Project', projectId);
+    }
+
+    const result = await query(
+      `INSERT INTO bugs (project_id, title, description, severity, status) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING 
+        id,
+        project_id as "projectId",
+        title,
+        description,
+        severity,
+        status,
+        created_at as "createdAt"`,
+      [
+        projectId,
+        bugData.title.trim(),
+        bugData.description.trim(),
+        bugData.severity,
+        bugData.status,
+      ]
+    );
+
+    return result.rows[0] as Bug;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to create bug', error as Error);
+  }
+}
+
+/**
+ * Update bug
+ */
+export async function updateBug(
+  projectId: number,
+  bugId: number,
+  updates: UpdateBugRequest
+): Promise<Bug> {
+  try {
+    // First check if bug exists in the project
+    await getBugById(projectId, bugId);
+
+    // Build update query dynamically
+    const updateFields: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.title !== undefined) {
+      updateFields.push(`title = $${paramIndex++}`);
+      params.push(updates.title.trim());
+    }
+    if (updates.description !== undefined) {
+      updateFields.push(`description = $${paramIndex++}`);
+      params.push(updates.description.trim());
+    }
+    if (updates.severity !== undefined) {
+      updateFields.push(`severity = $${paramIndex++}`);
+      params.push(updates.severity);
+    }
+    if (updates.status !== undefined) {
+      updateFields.push(`status = $${paramIndex++}`);
+      params.push(updates.status);
+    }
+
+    if (updateFields.length === 0) {
+      // No updates provided, return current bug
+      return await getBugById(projectId, bugId);
+    }
+
+    // Add WHERE clause parameters
+    params.push(bugId, projectId);
+
+    const result = await query(
+      `UPDATE bugs 
+       SET ${updateFields.join(', ')}
+       WHERE id = $${paramIndex++} AND project_id = $${paramIndex++}
+       RETURNING 
+        id,
+        project_id as "projectId",
+        title,
+        description,
+        severity,
+        status,
+        created_at as "createdAt"`,
+      params
+    );
+
+    return result.rows[0] as Bug;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to update bug', error as Error);
+  }
+}
+
+/**
+ * Delete bug
+ */
+export async function deleteBug(projectId: number, bugId: number): Promise<void> {
+  try {
+    // First check if bug exists in the project
+    await getBugById(projectId, bugId);
+
+    const result = await query(
+      'DELETE FROM bugs WHERE id = $1 AND project_id = $2',
+      [bugId, projectId]
+    );
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError('Bug', bugId);
+    }
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to delete bug', error as Error);
+  }
+}
+
+/**
+ * Get bug statistics for a project
+ */
+export async function getBugStatistics(projectId: number): Promise<{
+  total: number;
+  byStatus: Record<string, number>;
+  bySeverity: Record<string, number>;
+}> {
+  try {
+    // Check if project exists
+    const exists = await projectExists(projectId);
+    if (!exists) {
+      throw new NotFoundError('Project', projectId);
+    }
+
+    // Get total count
+    const totalResult = await query(
+      'SELECT COUNT(*)::int as total FROM bugs WHERE project_id = $1',
+      [projectId]
+    );
+
+    // Get counts by status
+    const statusResult = await query(
+      `SELECT status, COUNT(*)::int as count 
+       FROM bugs 
+       WHERE project_id = $1 
+       GROUP BY status`,
+      [projectId]
+    );
+
+    // Get counts by severity
+    const severityResult = await query(
+      `SELECT severity, COUNT(*)::int as count 
+       FROM bugs 
+       WHERE project_id = $1 
+       GROUP BY severity`,
+      [projectId]
+    );
+
+    const byStatus: Record<string, number> = {};
+    statusResult.rows.forEach(row => {
+      byStatus[row.status] = row.count;
+    });
+
+    const bySeverity: Record<string, number> = {};
+    severityResult.rows.forEach(row => {
+      bySeverity[row.severity] = row.count;
+    });
+
+    return {
+      total: totalResult.rows[0]?.total || 0,
+      byStatus,
+      bySeverity,
+    };
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to get bug statistics', error as Error);
+  }
+}

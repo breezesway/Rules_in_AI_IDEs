@@ -1,0 +1,1467 @@
+- Rule Primary Category: Architecture & Design
+- Rule Secondary Category: Technology Stack Selections
+- Rule File Path: .kiro/steering/tech.md
+- Change Type: added
+- Target Rule Content:
+## Key Dependencies
+notion-client
+python-dotenv
+pytest
+google-genai>=0.1.0
+google-api-python-client>=2.0.0
+requests>=2.25.0
+
+[Detection Suggestions (FOR REFERENCE ONLY)]
+- Suggested Targets: Dependency configuration files such as requirements.txt, pyproject.toml, setup.py, or Pipfile.
+- Suggested Logic: Scan the project's dependency files to ensure the specified libraries (notion-client, python-dotenv, pytest, google-genai, google-api-python-client, requests) are listed and meet the minimum version requirements specified (e.g., google-genai >= 0.1.0).
+*(Note: These targets and logic are programmatic guesses. Because rules are diverse, evaluate the specific context and decide the best verification method yourself).*
+
+[Commit Information to Evaluate]
+- Relative Position: before_rule_commit (distance=4)
+- Commit Message: restructure
+- Changed Files List: 
+README.md	+65	-21	after_lines=276
+config/__init__.py	+0	-1	after_lines=0
+config/example_data.py	+0	-49	after_lines=0
+main.py	+0	-58	after_lines=0
+pyproject.toml	+2	-4	after_lines=47
+run_tests.py	+2	-3	after_lines=52
+setup.py	+1	-1	after_lines=42
+src/__init__.py	+0	-1	after_lines=0
+src/notion_db/__init__.py	+0	-1	after_lines=0
+src/notion_db/operations.py	+0	-107	after_lines=0
+src/utils/__init__.py	+0	-1	after_lines=0
+src/utils/markdown_converter.py	+0	-283	after_lines=0
+src/youtube_notion/__init__.py	+7	-0	after_lines=7
+src/youtube_notion/config/__init__.py	+1	-0	after_lines=1
+src/youtube_notion/config/example_data.py	+49	-0	after_lines=49
+src/youtube_notion/main.py	+53	-0	after_lines=53
+src/youtube_notion/notion_db/__init__.py	+1	-0	after_lines=1
+src/youtube_notion/notion_db/operations.py	+107	-0	after_lines=107
+src/youtube_notion/utils/__init__.py	+1	-0	after_lines=1
+src/youtube_notion/utils/markdown_converter.py	+283	-0	after_lines=283
+tests/conftest.py	+2	-4	after_lines=10
+tests/test_end_to_end_timestamps.py	+1	-1	after_lines=128
+tests/test_integration.py	+2	-2	after_lines=46
+tests/test_markdown_converter.py	+1	-1	after_lines=369
+tests/test_notion_operations.py	+1	-1	after_lines=85
+tests/test_timestamp_enrichment.py	+1	-1	after_lines=170
+youtube_notion_cli.py	+10	-0	after_lines=10
+
+- Project Directory Tree (Snapshot after commit):
+├── .env.example
+├── .gitignore
+├── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── run_tests.py
+├── setup.py
+├── src
+│   └── youtube_notion
+│       ├── __init__.py
+│       ├── config
+│       │   ├── __init__.py
+│       │   └── example_data.py
+│       ├── main.py
+│       ├── notion_db
+│       │   ├── __init__.py
+│       │   └── operations.py
+│       └── utils
+│           ├── __init__.py
+│           └── markdown_converter.py
+├── tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_end_to_end_timestamps.py
+│   ├── test_integration.py
+│   ├── test_markdown_converter.py
+│   ├── test_notion_operations.py
+│   └── test_timestamp_enrichment.py
+└── youtube_notion_cli.py
+
+- File Diffs (Code Changes in this Commit):
+--- FILE: README.md ---
+diff --git a/README.md b/README.md
+index 226d7be..1fcd9e9 100644
+--- a/README.md
++++ b/README.md
+@@ -17,13 +17,24 @@ A Python application that automatically adds YouTube video summaries to a Notion
+ 
+ ```
+ youtube-notion-integration/
+-├── src/                          # Source code
+-│   ├── notion_db/               # Notion database operations
+-│   └── utils/                   # Utility modules (markdown converter)
++├── src/
++│   └── youtube_notion/          # Main package
++│       ├── __init__.py
++│       ├── main.py              # Application entry point
++│       ├── config/              # Configuration and example data
++│       │   ├── __init__.py
++│       │   └── example_data.py
++│       ├── notion_db/           # Notion database operations
++│       │   ├── __init__.py
++│       │   └── operations.py
++│       └── utils/               # Utility modules
++│           ├── __init__.py
++│           └── markdown_converter.py
+ ├── tests/                       # Comprehensive test suite
+-├── config/                      # Configuration and example data
+-├── main.py                      # Main application entry point
+-└── requirements.txt             # Dependencies
++├── youtube_notion_cli.py        # Command-line entry point
++├── pyproject.toml              # Modern Python packaging
++├── setup.py                    # Package setup
++└── requirements.txt            # Dependencies
+ ```
+ 
+ ## Prerequisites
+@@ -65,7 +76,15 @@ The full summary content will be added as the page content with proper markdown
+ ### 4. Run the Application
+ 
+ ```bash
+-python main.py
++# Option 1: Use the CLI script
++python youtube_notion_cli.py
++
++# Option 2: Install as package and use entry point
++pip install -e .
++youtube-notion
++
++# Option 3: Run as module
++python -m youtube_notion.main
+ ```
+ 
+ ## Getting a Notion Integration Token
+@@ -125,19 +144,29 @@ Run the comprehensive test suite:
+ # Easy way - use the test runner (handles path setup automatically)
+ python run_tests.py
+ 
+-# Manual way with proper Python path setup:
+-# Windows PowerShell:
+-$env:PYTHONPATH="src;config"; python -m pytest tests/ -v
++# Manual way with pytest (recommended):
++python -m pytest tests/ -v
+ 
+-# Unix/Linux/Mac:
+-PYTHONPATH=src:config python -m pytest tests/ -v
++# Or install the package in development mode first:
++pip install -e .
++pytest tests/ -v
+ ```
+ 
+ The test runner will automatically:
+-- Set up the correct Python path
++- Set up the correct Python path for the package structure
+ - Try to use pytest if available
+ - Fall back to running tests individually if pytest isn't installed
+ 
++**Note**: The project now uses a proper Python package structure, eliminating the need for manual path manipulation that was required in the previous version.
++
++### Benefits of the New Structure
++
++- **Clean imports**: No more `sys.path` manipulation needed
++- **Standard packaging**: Follows modern Python best practices
++- **IDE-friendly**: Better autocomplete and code navigation
++- **Installable**: Can be installed as a proper Python package
++- **Maintainable**: Clear separation of concerns and modules
++
+ ## Smart Timestamp Features
+ 
+ The application automatically detects and enhances timestamps in your markdown content:
+@@ -166,19 +195,33 @@ Becomes:
+ 
+ ## Development
+ 
+-### Project Structure
++### Package Structure
+ 
+-- `src/notion_db/operations.py` - Database operations (find, create entries)
+-- `src/utils/markdown_converter.py` - Markdown to Notion conversion
++- `src/youtube_notion/main.py` - Application entry point
++- `src/youtube_notion/notion_db/operations.py` - Database operations (find, create entries)
++- `src/youtube_notion/utils/markdown_converter.py` - Markdown to Notion conversion
++- `src/youtube_notion/config/example_data.py` - Sample data for testing
+ - `tests/` - Unit and integration tests
+-- `config/example_data.py` - Sample data for testing
++- `youtube_notion_cli.py` - Command-line interface script
+ 
+ ### Adding New Features
+ 
+-1. Add functionality to appropriate module in `src/`
+-2. Write tests in `tests/`
++1. Add functionality to appropriate module in `src/youtube_notion/`
++2. Write tests in `tests/` (imports use `from youtube_notion.module import ...`)
+ 3. Update documentation
+ 
++### Installation for Development
++
++```bash
++# Install in development mode (recommended)
++pip install -e .
++
++# This allows you to:
++# - Import the package from anywhere: `from youtube_notion import ...`
++# - Use the CLI command: `youtube-notion`
++# - Make changes without reinstalling
++```
++
+ ### Markdown Conversion Features
+ 
+ The markdown converter supports:
+@@ -207,8 +250,9 @@ The markdown converter supports:
+ - Property names are case-sensitive
+ 
+ **Import errors**
+-- Ensure you're running from the project root directory
+-- Check that all dependencies are installed
++- Install the package in development mode: `pip install -e .`
++- Or ensure you're running from the project root with proper Python path
++- Check that all dependencies are installed: `pip install -r requirements.txt`
+ 
+ ### Debug Mode
+
+--- FILE: config/example_data.py ---
+diff --git a/config/example_data.py b/config/example_data.py
+deleted file mode 100644
+index 68e1d1c..0000000
+--- a/config/example_data.py
++++ /dev/null
+@@ -1,49 +0,0 @@
+-EXAMPLE_DATA = {
+-    "Summary": """### The Invisible Bottleneck Killing Enterprise AI Projects
+-
+-Poor data chunking is a critical but often overlooked issue that can derail enterprise AI projects, leading to inaccurate results and significant costs. Understanding and implementing effective chunking strategies is foundational to the success of any AI system that relies on large datasets.
+-
+-#### The High Cost of Bad Chunking: A Fintech Case Study [0:01-0:07, 0:56-1:21]
+-
+-A fintech company nearly lost a major deal due to a poorly implemented AI chatbot. When asked about indemnification in a non-disclosure agreement (NDA), the chatbot gave a confidently incorrect answer. The contract stated, "Party A indemnifies Party B," but a crucial exception, "except as provided in section X," was located in the next data chunk. Because the system was using a simple token-count for chunking, it split the sentence in half.
+-
+-The AI retrieved only the first chunk and incorrectly stated that Party A fully indemnified Party B [1:15-1:23]. This error, which took many billable hours to rectify, was not a failure of the AI's intelligence but a fundamental flaw in its data preparation—a context engineering problem that newer models like GPT-5 won't solve on their own [1:25-1:42].
+-
+-#### Why Chunking is the Foundation of Effective AI
+-
+-For companies implementing Retrieval-Augmented Generation (RAG) systems, the most critical question is not which embedding model to use, but "how should we chunk our data?" [1:43-1:53]. Proper chunking is the first line of defense against model hallucinations. When an AI is fed incomplete information from poorly divided chunks, it will attempt to fill in the gaps, leading to fabrications [1:54-2:00].
+-
+-Here's how the process works and where it can go wrong:
+-*   **The Retrieval Process** [2:16-2:31]: When a user asks a question, the AI system retrieves the 3-5 most relevant chunks of data based on semantic similarity to formulate an answer.
+-*   **The Problem of Split Answers** [2:32-2:41]: If the complete, true answer is split across multiple chunks, and the AI only retrieves some of them, the response will be incomplete and likely incorrect.
+-
+-Beyond accuracy, chunking has a direct impact on operational costs. Inefficient chunking forces the system to retrieve more chunks than necessary, increasing token usage and costs. Loading excessive, and often meaningless, context into the AI's context window can overwhelm it, ironically leading to less accurate responses [2:51-3:04]. By optimizing chunking strategies, companies can reduce their AI-related expenses by double-digit percentages [3:04-3:12].
+-
+-#### RAG vs. Agentic Search: Chunking is Still Key
+-
+-While agentic search—which uses AI agents to iteratively search, read, and reason—can be effective for complex, exploratory queries across multiple data types, it is not a replacement for good chunking [3:42-3:57, 4:02-4:21]. Agentic search can be over 10 times slower and more expensive than a well-optimized RAG system [5:05-5:12].
+-
+-RAG excels at providing fast, consistent, and economical answers when queries map cleanly to specific information [4:31-4:43]. Ultimately, even agentic systems rely on well-structured data, meaning that effective chunking remains a foundational requirement [6:22-6:26].
+-
+-#### 5 Principles for Effective Chunking
+-
+-To avoid the pitfalls of poor data preparation, follow these five principles:
+-
+-1.  **Context Coherence** [8:05-8:24]: Never split a single, coherent thought or meaning across multiple chunks. Respect the natural boundaries within your data, such as sections in a legal document or functions in source code.
+-2.  **Know Your Three Levers** [8:44-9:03]: You can control chunking through three main levers:
+-    *   **Boundaries:** Where you make the cuts (e.g., by sentence, paragraph, or section).
+-    *   **Size:** How large each chunk is, which should be determined by what constitutes a complete unit of meaning.
+-    *   **Overlap:** Duplicating a small amount of information (e.g., 10-20%) between consecutive chunks to ensure no critical context is lost at the boundaries.
+-3.  **Let the Data Type Dictate Your Strategy** [9:46-10:11]: Different types of data require different chunking approaches:
+-    *   **Legal Contracts:** Chunk by section or subsection.
+-    *   **Source Code:** Chunk by function or class. Consider building dependency graphs to include all related functions in a single chunk.
+-    *   **Financial Tables:** This is notoriously difficult. A simple row-by-row approach will fail. Instead, chunk by calculable units or even convert tables to natural language descriptions.
+-4.  **Size for "Goldilocks" Outcomes** [10:54-11:17]: Find the right chunk size. If chunks are too small, they will lack context. If they are too large, they will be costly and can lead to unfocused answers. The ideal size often falls between 500 and 1000 tokens, but this should be tested against an evaluation set of questions.
+-5.  **Remember Overlap** [11:18-11:32]: Overlap is your insurance policy. It is a crucial, yet often underutilized, technique to prevent important information from being lost at chunk boundaries.
+-
+-Ultimately, there is no magic solution for messy data. The path to a high-performing AI system requires confronting the complexities of your data architecture. By applying these principles, you can build a solid foundation for your AI, ensuring more accurate, cost-effective, and truly transformative results.""",
+-    "Title": "TEST Chunking 101: The Invisible Bottleneck Killing Enterprise AI Projects",
+-    "Channel": "AI News & Strategy Daily | Nate B Jones",
+-    "Video URL": "https://www.youtube.com/watch?v=pMSXPgAUq_k",
+-    "Cover": "https://img.youtube.com/vi/pMSXPgAUq_k/maxresdefault.jpg"
+-}
+\ No newline at end of file
+
+--- FILE: main.py ---
+diff --git a/main.py b/main.py
+deleted file mode 100644
+index c7e4556..0000000
+--- a/main.py
++++ /dev/null
+@@ -1,58 +0,0 @@
+-#!/usr/bin/env python3
+-"""
+-Main application entry point for the YouTube to Notion Database Integration.
+-Adds YouTube video summaries to Notion database using EXAMPLE_DATA.
+-"""
+-
+-import os
+-import sys
+-from dotenv import load_dotenv
+-from notion_client import Client
+-
+-# Add src and config to path for imports
+-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'config'))
+-
+-from notion_db.operations import find_database_by_name, add_youtube_entry
+-from example_data import EXAMPLE_DATA
+-
+-# Load environment variables from .env file
+-load_dotenv()
+-
+-
+-def main():
+-    """Main function to add YouTube summary to Notion database using EXAMPLE_DATA."""
+-    # Initialize Notion client
+-    notion_token = os.getenv("NOTION_TOKEN")
+-    
+-    if not notion_token:
+-        print("Error: NOTION_TOKEN environment variable not set")
+-        return
+-    
+-    notion = Client(auth=notion_token)
+-    
+-    # Find the YT Summaries database
+-    database_id = find_database_by_name(notion, "YT Summaries", "YouTube Knowledge Base")
+-    
+-    if not database_id:
+-        print("Error: Could not find 'YT Summaries' database in 'YouTube Knowledge Base' page")
+-        return
+-    
+-    # Use example data
+-    video_url = EXAMPLE_DATA["Video URL"]
+-    cover_url = EXAMPLE_DATA["Cover"]
+-    channel = EXAMPLE_DATA["Channel"] 
+-    title = EXAMPLE_DATA["Title"]
+-    summary = EXAMPLE_DATA["Summary"]
+-    
+-    # Add the entry
+-    page_id = add_youtube_entry(notion, database_id, title, summary, video_url, channel, cover_url)
+-    
+-    if page_id:
+-        print(f"Entry added successfully with ID: {page_id}")
+-    else:
+-        print("Failed to add entry")
+-
+-
+-if __name__ == "__main__":
+-    main()
+\ No newline at end of file
+
+--- FILE: pyproject.toml ---
+diff --git a/pyproject.toml b/pyproject.toml
+index 97839ea..689f81e 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -30,7 +30,7 @@ dependencies = [
+ ]
+ 
+ [project.scripts]
+-youtube-notion = "main:main"
++youtube-notion = "youtube_notion.main:main"
+ 
+ [tool.pytest.ini_options]
+ testpaths = ["tests"]
+@@ -43,7 +43,5 @@ addopts = [
+     "--strict-markers"
+ ]
+ pythonpath = [
+-    ".",
+-    "src",
+-    "config"
++    "src"
+ ]
+\ No newline at end of file
+
+--- FILE: run_tests.py ---
+diff --git a/run_tests.py b/run_tests.py
+index c132bfb..722dc05 100644
+--- a/run_tests.py
++++ b/run_tests.py
+@@ -7,15 +7,14 @@ import sys
+ import os
+ import subprocess
+ 
+-# Add src and config to Python path
++# Add src to Python path
+ project_root = os.path.dirname(os.path.abspath(__file__))
+ src_path = os.path.join(project_root, 'src')
+-config_path = os.path.join(project_root, 'config')
+ 
+ # Set PYTHONPATH environment variable
+ env = os.environ.copy()
+ current_path = env.get('PYTHONPATH', '')
+-new_paths = [src_path, config_path]
++new_paths = [src_path]
+ if current_path:
+     new_paths.append(current_path)
+ env['PYTHONPATH'] = os.pathsep.join(new_paths)
+
+--- FILE: setup.py ---
+diff --git a/setup.py b/setup.py
+index fa855b7..6262af7 100644
+--- a/setup.py
++++ b/setup.py
+@@ -36,7 +36,7 @@ setup(
+     install_requires=requirements,
+     entry_points={
+         "console_scripts": [
+-            "youtube-notion=main:main",
++            "youtube-notion=youtube_notion.main:main",
+         ],
+     },
+ )
+\ No newline at end of file
+
+--- FILE: src/notion_db/operations.py ---
+diff --git a/src/notion_db/operations.py b/src/notion_db/operations.py
+deleted file mode 100644
+index 05f7f45..0000000
+--- a/src/notion_db/operations.py
++++ /dev/null
+@@ -1,107 +0,0 @@
+-"""
+-Notion database operations.
+-"""
+-
+-from utils.markdown_converter import markdown_to_notion_blocks, enrich_timestamps_with_links
+-
+-
+-def find_database_by_name(notion, database_name, parent_page_name=None):
+-    """Find database by name, optionally within a specific parent page."""
+-    try:
+-        # Search for databases
+-        databases = notion.search(filter={"property": "object", "value": "database"})
+-        
+-        for db in databases['results']:
+-            db_title = db['title'][0]['plain_text'] if db['title'] else ''
+-            
+-            if db_title == database_name:
+-                if parent_page_name:
+-                    # Check if database is in the correct parent page
+-                    parent = notion.pages.retrieve(db['parent']['page_id'])
+-                    parent_title = parent['properties']['title']['title'][0]['plain_text'] if parent['properties'].get('title') else ''
+-                    
+-                    if parent_title == parent_page_name:
+-                        return db['id']
+-                else:
+-                    return db['id']
+-        
+-        return None
+-    except Exception as e:
+-        print(f"Error finding database: {e}")
+-        return None
+-
+-
+-def add_youtube_entry(notion, database_id, title, summary, video_url, channel, cover_url):
+-    """Add a new entry to the YT Summaries database.
+-    
+-    Creates a page with:
+-    1. YouTube video embedded at the top
+-    2. A divider for visual separation
+-    3. The summary with timestamps converted to clickable YouTube links
+-    4. All content converted from markdown to formatted Notion blocks
+-    
+-    Timestamps like [8:05] or [8:05-8:24] become clickable links that jump to that time in the video.
+-    """
+-    try:
+-        # Enrich timestamps in summary with YouTube links
+-        enriched_summary = enrich_timestamps_with_links(summary, video_url)
+-        
+-        # Convert enriched markdown summary to Notion blocks
+-        summary_blocks = markdown_to_notion_blocks(enriched_summary)
+-        
+-        # Create YouTube embed block
+-        youtube_embed = {
+-            "object": "block",
+-            "type": "embed",
+-            "embed": {
+-                "url": video_url
+-            }
+-        }
+-        
+-        # Add a divider after the video for better visual separation
+-        divider = {
+-            "object": "block",
+-            "type": "divider",
+-            "divider": {}
+-        }
+-        
+-        # Combine embed, divider, and summary blocks
+-        all_blocks = [youtube_embed, divider] + summary_blocks
+-        
+-        # Create the page properties
+-        properties = {
+-            "Title": {
+-                "title": [
+-                    {
+-                        "type": "text",
+-                        "text": {"content": title}
+-                    }
+-                ]
+-            },
+-            "Video URL": {
+-                "url": video_url
+-            },
+-            "Channel": {
+-                "rich_text": [
+-                    {
+-                        "type": "text", 
+-                        "text": {"content": channel}
+-                    }
+-                ]
+-            }
+-        }
+-        
+-        # Create the page with YouTube embed and summary blocks as content
+-        page = notion.pages.create(
+-            parent={"database_id": database_id},
+-            properties=properties,
+-            children=all_blocks,
+-            cover={"type": "external", "external": {"url": cover_url}} if cover_url else None
+-        )
+-        
+-        print(f"Successfully added entry: {title}")
+-        return page['id']
+-        
+-    except Exception as e:
+-        print(f"Error adding entry to database: {e}")
+-        return None
+\ No newline at end of file
+
+--- FILE: src/utils/markdown_converter.py ---
+diff --git a/src/utils/markdown_converter.py b/src/utils/markdown_converter.py
+deleted file mode 100644
+index 73147af..0000000
+--- a/src/utils/markdown_converter.py
++++ /dev/null
+@@ -1,283 +0,0 @@
+-"""
+-Markdown to Notion converter utilities.
+-Converts markdown text to Notion's rich text block format.
+-"""
+-
+-import re
+-from urllib.parse import urlparse, parse_qs
+-
+-
+-def parse_rich_text(text):
+-    """Parse text with markdown formatting to Notion rich text format.
+-    
+-    Supports:
+-    - Links: [text](url)
+-    - Bold: **text**
+-    - Italic: *text*
+-    """
+-    rich_text = []
+-    i = 0
+-    
+-    while i < len(text):
+-        # Look for markdown link pattern [text](url)
+-        link_match = re.match(r'\[([^\]]+)\]\(([^)]+)\)', text[i:])
+-        if link_match:
+-            link_text = link_match.group(1)
+-            link_url = link_match.group(2)
+-            
+-            # Check if link text has formatting
+-            if '**' in link_text and link_text.startswith('**') and link_text.endswith('**'):
+-                # Bold link
+-                rich_text.append({
+-                    "type": "text",
+-                    "text": {"content": link_text[2:-2], "link": {"url": link_url}},
+-                    "annotations": {"bold": True}
+-                })
+-            elif '*' in link_text and link_text.startswith('*') and link_text.endswith('*'):
+-                # Italic link
+-                rich_text.append({
+-                    "type": "text",
+-                    "text": {"content": link_text[1:-1], "link": {"url": link_url}},
+-                    "annotations": {"italic": True}
+-                })
+-            else:
+-                # Regular link
+-                rich_text.append({
+-                    "type": "text",
+-                    "text": {"content": link_text, "link": {"url": link_url}}
+-                })
+-            
+-            i += link_match.end()
+-            continue
+-        
+-        # Look for bold text **text**
+-        bold_match = re.match(r'\*\*([^*]+)\*\*', text[i:])
+-        if bold_match:
+-            rich_text.append({
+-                "type": "text",
+-                "text": {"content": bold_match.group(1)},
+-                "annotations": {"bold": True}
+-            })
+-            i += bold_match.end()
+-            continue
+-        
+-        # Look for italic text *text*
+-        italic_match = re.match(r'\*([^*]+)\*', text[i:])
+-        if italic_match:
+-            rich_text.append({
+-                "type": "text",
+-                "text": {"content": italic_match.group(1)},
+-                "annotations": {"italic": True}
+-            })
+-            i += italic_match.end()
+-            continue
+-        
+-        # Regular character - find the next special character or end of string
+-        next_special = len(text)
+-        for pattern in [r'\[', r'\*\*', r'\*']:
+-            match = re.search(pattern, text[i:])
+-            if match:
+-                next_special = min(next_special, i + match.start())
+-        
+-        if next_special > i:
+-            # Add regular text
+-            regular_text = text[i:next_special]
+-            if regular_text:
+-                rich_text.append({
+-                    "type": "text",
+-                    "text": {"content": regular_text}
+-                })
+-            i = next_special
+-        else:
+-            # Single character that didn't match any pattern
+-            rich_text.append({
+-                "type": "text",
+-                "text": {"content": text[i]}
+-            })
+-            i += 1
+-    
+-    return rich_text
+-
+-
+-def markdown_to_notion_blocks(markdown_text):
+-    """Convert markdown text to Notion rich text blocks."""
+-    blocks = []
+-    lines = markdown_text.split('\n')
+-    i = 0
+-    
+-    while i < len(lines):
+-        line = lines[i].strip()
+-        
+-        if not line:
+-            i += 1
+-            continue
+-            
+-        # Handle headers (Notion supports only H1, H2, H3)
+-        if line.startswith('#'):
+-            # Count the number of # symbols
+-            header_level = 0
+-            for char in line:
+-                if char == '#':
+-                    header_level += 1
+-                else:
+-                    break
+-            
+-            header_text = line[header_level:].strip()
+-            
+-            if header_level == 1:
+-                blocks.append({
+-                    "object": "block",
+-                    "type": "heading_1",
+-                    "heading_1": {
+-                        "rich_text": parse_rich_text(header_text)
+-                    }
+-                })
+-            elif header_level == 2:
+-                blocks.append({
+-                    "object": "block",
+-                    "type": "heading_2", 
+-                    "heading_2": {
+-                        "rich_text": parse_rich_text(header_text)
+-                    }
+-                })
+-            elif header_level >= 3:
+-                # H3 and beyond all become H3 in Notion
+-                blocks.append({
+-                    "object": "block",
+-                    "type": "heading_3",
+-                    "heading_3": {
+-                        "rich_text": parse_rich_text(header_text)
+-                    }
+-                })
+-        # Handle bullet points
+-        elif line.startswith('*   ') or line.startswith('- '):
+-            bullet_text = line[4:] if line.startswith('*   ') else line[2:]
+-            blocks.append({
+-                "object": "block",
+-                "type": "bulleted_list_item",
+-                "bulleted_list_item": {
+-                    "rich_text": parse_rich_text(bullet_text)
+-                }
+-            })
+-        # Handle numbered lists
+-        elif re.match(r'^\d+\.', line):
+-            numbered_text = re.sub(r'^\d+\.\s*', '', line)
+-            blocks.append({
+-                "object": "block",
+-                "type": "numbered_list_item", 
+-                "numbered_list_item": {
+-                    "rich_text": parse_rich_text(numbered_text)
+-                }
+-            })
+-        # Handle regular paragraphs
+-        else:
+-            blocks.append({
+-                "object": "block",
+-                "type": "paragraph",
+-                "paragraph": {
+-                    "rich_text": parse_rich_text(line)
+-                }
+-            })
+-        
+-        i += 1
+-    
+-    return blocks
+-
+-
+-def parse_timestamp_to_seconds(timestamp):
+-    """Convert timestamp string like '8:05' or '1:23:45' to seconds."""
+-    parts = timestamp.split(':')
+-    if len(parts) == 2:  # MM:SS
+-        minutes, seconds = map(int, parts)
+-        if seconds >= 60:
+-            raise ValueError(f"Invalid seconds value: {seconds} (must be < 60)")
+-        return minutes * 60 + seconds
+-    elif len(parts) == 3:  # HH:MM:SS
+-        hours, minutes, seconds = map(int, parts)
+-        if minutes >= 60:
+-            raise ValueError(f"Invalid minutes value: {minutes} (must be < 60)")
+-        if seconds >= 60:
+-            raise ValueError(f"Invalid seconds value: {seconds} (must be < 60)")
+-        return hours * 3600 + minutes * 60 + seconds
+-    else:
+-        raise ValueError(f"Invalid timestamp format: {timestamp}")
+-
+-
+-def get_youtube_video_id(url):
+-    """Extract video ID from YouTube URL."""
+-    parsed_url = urlparse(url)
+-    
+-    if parsed_url.hostname in ['www.youtube.com', 'youtube.com']:
+-        if parsed_url.path == '/watch':
+-            return parse_qs(parsed_url.query).get('v', [None])[0]
+-    elif parsed_url.hostname in ['youtu.be']:
+-        return parsed_url.path[1:]  # Remove leading slash
+-    
+-    return None
+-
+-
+-def create_youtube_timestamp_url(video_url, timestamp_seconds):
+-    """Create YouTube URL with timestamp parameter."""
+-    video_id = get_youtube_video_id(video_url)
+-    if not video_id:
+-        return video_url  # Return original URL if we can't parse it
+-    
+-    return f"https://www.youtube.com/watch?v={video_id}&t={timestamp_seconds}s"
+-
+-
+-def enrich_timestamps_with_links(markdown_text, video_url):
+-    """Replace timestamps in markdown with YouTube timestamp links.
+-    
+-    Supports formats like:
+-    - [8:05] -> single timestamp
+-    - [8:05-8:24] -> timestamp range (links to start time)
+-    - [0:01-0:07, 0:56-1:21] -> multiple timestamps (links each separately)
+-    """
+-    def replace_timestamp_match(match):
+-        full_match = match.group(0)  # e.g., "[8:05-8:24]" or "[1:43-1:53]"
+-        timestamp_content = match.group(1)  # e.g., "8:05-8:24" or "1:43-1:53"
+-        
+-        # Handle multiple timestamps separated by commas
+-        if ',' in timestamp_content:
+-            parts = [part.strip() for part in timestamp_content.split(',')]
+-            linked_parts = []
+-            
+-            for part in parts:
+-                if '-' in part:
+-                    # Range like "8:05-8:24" - link to start time
+-                    start_time = part.split('-')[0].strip()
+-                else:
+-                    # Single timestamp like "8:05"
+-                    start_time = part.strip()
+-                
+-                try:
+-                    seconds = parse_timestamp_to_seconds(start_time)
+-                    timestamp_url = create_youtube_timestamp_url(video_url, seconds)
+-                    linked_parts.append(f"[{part}]({timestamp_url})")
+-                except ValueError:
+-                    # If parsing fails, keep original
+-                    linked_parts.append(part)
+-            
+-            return ', '.join(linked_parts)
+-        else:
+-            # Single timestamp or range
+-            if '-' in timestamp_content:
+-                # Range like "8:05-8:24" - link to start time
+-                start_time = timestamp_content.split('-')[0].strip()
+-            else:
+-                # Single timestamp like "8:05"
+-                start_time = timestamp_content.strip()
+-            
+-            try:
+-                seconds = parse_timestamp_to_seconds(start_time)
+-                timestamp_url = create_youtube_timestamp_url(video_url, seconds)
+-                return f"[{timestamp_content}]({timestamp_url})"
+-            except ValueError:
+-                # If parsing fails, return original
+-                return full_match
+-    
+-    # Regex to match timestamps in brackets
+-    # Matches: [8:05], [8:05-8:24], [0:01-0:07, 0:56-1:21]
+-    timestamp_pattern = r'\[([0-9]+:[0-9]+(?:-[0-9]+:[0-9]+)?(?:\s*,\s*[0-9]+:[0-9]+(?:-[0-9]+:[0-9]+)?)*)\]'
+-    
+-    return re.sub(timestamp_pattern, replace_timestamp_match, markdown_text)
+\ No newline at end of file
+
+--- FILE: src/youtube_notion/config/example_data.py ---
+diff --git a/src/youtube_notion/config/example_data.py b/src/youtube_notion/config/example_data.py
+new file mode 100644
+index 0000000..68e1d1c
+--- /dev/null
++++ b/src/youtube_notion/config/example_data.py
+@@ -0,0 +1,49 @@
++EXAMPLE_DATA = {
++    "Summary": """### The Invisible Bottleneck Killing Enterprise AI Projects
++
++Poor data chunking is a critical but often overlooked issue that can derail enterprise AI projects, leading to inaccurate results and significant costs. Understanding and implementing effective chunking strategies is foundational to the success of any AI system that relies on large datasets.
++
++#### The High Cost of Bad Chunking: A Fintech Case Study [0:01-0:07, 0:56-1:21]
++
++A fintech company nearly lost a major deal due to a poorly implemented AI chatbot. When asked about indemnification in a non-disclosure agreement (NDA), the chatbot gave a confidently incorrect answer. The contract stated, "Party A indemnifies Party B," but a crucial exception, "except as provided in section X," was located in the next data chunk. Because the system was using a simple token-count for chunking, it split the sentence in half.
++
++The AI retrieved only the first chunk and incorrectly stated that Party A fully indemnified Party B [1:15-1:23]. This error, which took many billable hours to rectify, was not a failure of the AI's intelligence but a fundamental flaw in its data preparation—a context engineering problem that newer models like GPT-5 won't solve on their own [1:25-1:42].
++
++#### Why Chunking is the Foundation of Effective AI
++
++For companies implementing Retrieval-Augmented Generation (RAG) systems, the most critical question is not which embedding model to use, but "how should we chunk our data?" [1:43-1:53]. Proper chunking is the first line of defense against model hallucinations. When an AI is fed incomplete information from poorly divided chunks, it will attempt to fill in the gaps, leading to fabrications [1:54-2:00].
++
++Here's how the process works and where it can go wrong:
++*   **The Retrieval Process** [2:16-2:31]: When a user asks a question, the AI system retrieves the 3-5 most relevant chunks of data based on semantic similarity to formulate an answer.
++*   **The Problem of Split Answers** [2:32-2:41]: If the complete, true answer is split across multiple chunks, and the AI only retrieves some of them, the response will be incomplete and likely incorrect.
++
++Beyond accuracy, chunking has a direct impact on operational costs. Inefficient chunking forces the system to retrieve more chunks than necessary, increasing token usage and costs. Loading excessive, and often meaningless, context into the AI's context window can overwhelm it, ironically leading to less accurate responses [2:51-3:04]. By optimizing chunking strategies, companies can reduce their AI-related expenses by double-digit percentages [3:04-3:12].
++
++#### RAG vs. Agentic Search: Chunking is Still Key
++
++While agentic search—which uses AI agents to iteratively search, read, and reason—can be effective for complex, exploratory queries across multiple data types, it is not a replacement for good chunking [3:42-3:57, 4:02-4:21]. Agentic search can be over 10 times slower and more expensive than a well-optimized RAG system [5:05-5:12].
++
++RAG excels at providing fast, consistent, and economical answers when queries map cleanly to specific information [4:31-4:43]. Ultimately, even agentic systems rely on well-structured data, meaning that effective chunking remains a foundational requirement [6:22-6:26].
++
++#### 5 Principles for Effective Chunking
++
++To avoid the pitfalls of poor data preparation, follow these five principles:
++
++1.  **Context Coherence** [8:05-8:24]: Never split a single, coherent thought or meaning across multiple chunks. Respect the natural boundaries within your data, such as sections in a legal document or functions in source code.
++2.  **Know Your Three Levers** [8:44-9:03]: You can control chunking through three main levers:
++    *   **Boundaries:** Where you make the cuts (e.g., by sentence, paragraph, or section).
++    *   **Size:** How large each chunk is, which should be determined by what constitutes a complete unit of meaning.
++    *   **Overlap:** Duplicating a small amount of information (e.g., 10-20%) between consecutive chunks to ensure no critical context is lost at the boundaries.
++3.  **Let the Data Type Dictate Your Strategy** [9:46-10:11]: Different types of data require different chunking approaches:
++    *   **Legal Contracts:** Chunk by section or subsection.
++    *   **Source Code:** Chunk by function or class. Consider building dependency graphs to include all related functions in a single chunk.
++    *   **Financial Tables:** This is notoriously difficult. A simple row-by-row approach will fail. Instead, chunk by calculable units or even convert tables to natural language descriptions.
++4.  **Size for "Goldilocks" Outcomes** [10:54-11:17]: Find the right chunk size. If chunks are too small, they will lack context. If they are too large, they will be costly and can lead to unfocused answers. The ideal size often falls between 500 and 1000 tokens, but this should be tested against an evaluation set of questions.
++5.  **Remember Overlap** [11:18-11:32]: Overlap is your insurance policy. It is a crucial, yet often underutilized, technique to prevent important information from being lost at chunk boundaries.
++
++Ultimately, there is no magic solution for messy data. The path to a high-performing AI system requires confronting the complexities of your data architecture. By applying these principles, you can build a solid foundation for your AI, ensuring more accurate, cost-effective, and truly transformative results.""",
++    "Title": "TEST Chunking 101: The Invisible Bottleneck Killing Enterprise AI Projects",
++    "Channel": "AI News & Strategy Daily | Nate B Jones",
++    "Video URL": "https://www.youtube.com/watch?v=pMSXPgAUq_k",
++    "Cover": "https://img.youtube.com/vi/pMSXPgAUq_k/maxresdefault.jpg"
++}
+\ No newline at end of file
+
+--- FILE: src/youtube_notion/main.py ---
+diff --git a/src/youtube_notion/main.py b/src/youtube_notion/main.py
+new file mode 100644
+index 0000000..6db9aed
+--- /dev/null
++++ b/src/youtube_notion/main.py
+@@ -0,0 +1,53 @@
++#!/usr/bin/env python3
++"""
++Main application entry point for the YouTube to Notion Database Integration.
++Adds YouTube video summaries to Notion database using EXAMPLE_DATA.
++"""
++
++import os
++from dotenv import load_dotenv
++from notion_client import Client
++
++from .notion_db.operations import find_database_by_name, add_youtube_entry
++from .config.example_data import EXAMPLE_DATA
++
++# Load environment variables from .env file
++load_dotenv()
++
++
++def main():
++    """Main function to add YouTube summary to Notion database using EXAMPLE_DATA."""
++    # Initialize Notion client
++    notion_token = os.getenv("NOTION_TOKEN")
++    
++    if not notion_token:
++        print("Error: NOTION_TOKEN environment variable not set")
++        return
++    
++    notion = Client(auth=notion_token)
++    
++    # Find the YT Summaries database
++    database_id = find_database_by_name(notion, "YT Summaries", "YouTube Knowledge Base")
++    
++    if not database_id:
++        print("Error: Could not find 'YT Summaries' database in 'YouTube Knowledge Base' page")
++        return
++    
++    # Use example data
++    video_url = EXAMPLE_DATA["Video URL"]
++    cover_url = EXAMPLE_DATA["Cover"]
++    channel = EXAMPLE_DATA["Channel"] 
++    title = EXAMPLE_DATA["Title"]
++    summary = EXAMPLE_DATA["Summary"]
++    
++    # Add the entry
++    page_id = add_youtube_entry(notion, database_id, title, summary, video_url, channel, cover_url)
++    
++    if page_id:
++        print(f"Entry added successfully with ID: {page_id}")
++    else:
++        print("Failed to add entry")
++
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+
+--- FILE: src/youtube_notion/notion_db/operations.py ---
+diff --git a/src/youtube_notion/notion_db/operations.py b/src/youtube_notion/notion_db/operations.py
+new file mode 100644
+index 0000000..cbf3180
+--- /dev/null
++++ b/src/youtube_notion/notion_db/operations.py
+@@ -0,0 +1,107 @@
++"""
++Notion database operations.
++"""
++
++from ..utils.markdown_converter import markdown_to_notion_blocks, enrich_timestamps_with_links
++
++
++def find_database_by_name(notion, database_name, parent_page_name=None):
++    """Find database by name, optionally within a specific parent page."""
++    try:
++        # Search for databases
++        databases = notion.search(filter={"property": "object", "value": "database"})
++        
++        for db in databases['results']:
++            db_title = db['title'][0]['plain_text'] if db['title'] else ''
++            
++            if db_title == database_name:
++                if parent_page_name:
++                    # Check if database is in the correct parent page
++                    parent = notion.pages.retrieve(db['parent']['page_id'])
++                    parent_title = parent['properties']['title']['title'][0]['plain_text'] if parent['properties'].get('title') else ''
++                    
++                    if parent_title == parent_page_name:
++                        return db['id']
++                else:
++                    return db['id']
++        
++        return None
++    except Exception as e:
++        print(f"Error finding database: {e}")
++        return None
++
++
++def add_youtube_entry(notion, database_id, title, summary, video_url, channel, cover_url):
++    """Add a new entry to the YT Summaries database.
++    
++    Creates a page with:
++    1. YouTube video embedded at the top
++    2. A divider for visual separation
++    3. The summary with timestamps converted to clickable YouTube links
++    4. All content converted from markdown to formatted Notion blocks
++    
++    Timestamps like [8:05] or [8:05-8:24] become clickable links that jump to that time in the video.
++    """
++    try:
++        # Enrich timestamps in summary with YouTube links
++        enriched_summary = enrich_timestamps_with_links(summary, video_url)
++        
++        # Convert enriched markdown summary to Notion blocks
++        summary_blocks = markdown_to_notion_blocks(enriched_summary)
++        
++        # Create YouTube embed block
++        youtube_embed = {
++            "object": "block",
++            "type": "embed",
++            "embed": {
++                "url": video_url
++            }
++        }
++        
++        # Add a divider after the video for better visual separation
++        divider = {
++            "object": "block",
++            "type": "divider",
++            "divider": {}
++        }
++        
++        # Combine embed, divider, and summary blocks
++        all_blocks = [youtube_embed, divider] + summary_blocks
++        
++        # Create the page properties
++        properties = {
++            "Title": {
++                "title": [
++                    {
++                        "type": "text",
++                        "text": {"content": title}
++                    }
++                ]
++            },
++            "Video URL": {
++                "url": video_url
++            },
++            "Channel": {
++                "rich_text": [
++                    {
++                        "type": "text", 
++                        "text": {"content": channel}
++                    }
++                ]
++            }
++        }
++        
++        # Create the page with YouTube embed and summary blocks as content
++        page = notion.pages.create(
++            parent={"database_id": database_id},
++            properties=properties,
++            children=all_blocks,
++            cover={"type": "external", "external": {"url": cover_url}} if cover_url else None
++        )
++        
++        print(f"Successfully added entry: {title}")
++        return page['id']
++        
++    except Exception as e:
++        print(f"Error adding entry to database: {e}")
++        return None
+\ No newline at end of file
+
+--- FILE: src/youtube_notion/utils/markdown_converter.py ---
+diff --git a/src/youtube_notion/utils/markdown_converter.py b/src/youtube_notion/utils/markdown_converter.py
+new file mode 100644
+index 0000000..73147af
+--- /dev/null
++++ b/src/youtube_notion/utils/markdown_converter.py
+@@ -0,0 +1,283 @@
++"""
++Markdown to Notion converter utilities.
++Converts markdown text to Notion's rich text block format.
++"""
++
++import re
++from urllib.parse import urlparse, parse_qs
++
++
++def parse_rich_text(text):
++    """Parse text with markdown formatting to Notion rich text format.
++    
++    Supports:
++    - Links: [text](url)
++    - Bold: **text**
++    - Italic: *text*
++    """
++    rich_text = []
++    i = 0
++    
++    while i < len(text):
++        # Look for markdown link pattern [text](url)
++        link_match = re.match(r'\[([^\]]+)\]\(([^)]+)\)', text[i:])
++        if link_match:
++            link_text = link_match.group(1)
++            link_url = link_match.group(2)
++            
++            # Check if link text has formatting
++            if '**' in link_text and link_text.startswith('**') and link_text.endswith('**'):
++                # Bold link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text[2:-2], "link": {"url": link_url}},
++                    "annotations": {"bold": True}
++                })
++            elif '*' in link_text and link_text.startswith('*') and link_text.endswith('*'):
++                # Italic link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text[1:-1], "link": {"url": link_url}},
++                    "annotations": {"italic": True}
++                })
++            else:
++                # Regular link
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": link_text, "link": {"url": link_url}}
++                })
++            
++            i += link_match.end()
++            continue
++        
++        # Look for bold text **text**
++        bold_match = re.match(r'\*\*([^*]+)\*\*', text[i:])
++        if bold_match:
++            rich_text.append({
++                "type": "text",
++                "text": {"content": bold_match.group(1)},
++                "annotations": {"bold": True}
++            })
++            i += bold_match.end()
++            continue
++        
++        # Look for italic text *text*
++        italic_match = re.match(r'\*([^*]+)\*', text[i:])
++        if italic_match:
++            rich_text.append({
++                "type": "text",
++                "text": {"content": italic_match.group(1)},
++                "annotations": {"italic": True}
++            })
++            i += italic_match.end()
++            continue
++        
++        # Regular character - find the next special character or end of string
++        next_special = len(text)
++        for pattern in [r'\[', r'\*\*', r'\*']:
++            match = re.search(pattern, text[i:])
++            if match:
++                next_special = min(next_special, i + match.start())
++        
++        if next_special > i:
++            # Add regular text
++            regular_text = text[i:next_special]
++            if regular_text:
++                rich_text.append({
++                    "type": "text",
++                    "text": {"content": regular_text}
++                })
++            i = next_special
++        else:
++            # Single character that didn't match any pattern
++            rich_text.append({
++                "type": "text",
++                "text": {"content": text[i]}
++            })
++            i += 1
++    
++    return rich_text
++
++
++def markdown_to_notion_blocks(markdown_text):
++    """Convert markdown text to Notion rich text blocks."""
++    blocks = []
++    lines = markdown_text.split('\n')
++    i = 0
++    
++    while i < len(lines):
++        line = lines[i].strip()
++        
++        if not line:
++            i += 1
++            continue
++            
++        # Handle headers (Notion supports only H1, H2, H3)
++        if line.startswith('#'):
++            # Count the number of # symbols
++            header_level = 0
++            for char in line:
++                if char == '#':
++                    header_level += 1
++                else:
++                    break
++            
++            header_text = line[header_level:].strip()
++            
++            if header_level == 1:
++                blocks.append({
++                    "object": "block",
++                    "type": "heading_1",
++                    "heading_1": {
++                        "rich_text": parse_rich_text(header_text)
++                    }
++                })
++            elif header_level == 2:
++                blocks.append({
++                    "object": "block",
++                    "type": "heading_2", 
++                    "heading_2": {
++                        "rich_text": parse_rich_text(header_text)
++                    }
++                })
++            elif header_level >= 3:
++                # H3 and beyond all become H3 in Notion
++                blocks.append({
++                    "object": "block",
++                    "type": "heading_3",
++                    "heading_3": {
++                        "rich_text": parse_rich_text(header_text)
++                    }
++                })
++        # Handle bullet points
++        elif line.startswith('*   ') or line.startswith('- '):
++            bullet_text = line[4:] if line.startswith('*   ') else line[2:]
++            blocks.append({
++                "object": "block",
++                "type": "bulleted_list_item",
++                "bulleted_list_item": {
++                    "rich_text": parse_rich_text(bullet_text)
++                }
++            })
++        # Handle numbered lists
++        elif re.match(r'^\d+\.', line):
++            numbered_text = re.sub(r'^\d+\.\s*', '', line)
++            blocks.append({
++                "object": "block",
++                "type": "numbered_list_item", 
++                "numbered_list_item": {
++                    "rich_text": parse_rich_text(numbered_text)
++                }
++            })
++        # Handle regular paragraphs
++        else:
++            blocks.append({
++                "object": "block",
++                "type": "paragraph",
++                "paragraph": {
++                    "rich_text": parse_rich_text(line)
++                }
++            })
++        
++        i += 1
++    
++    return blocks
++
++
++def parse_timestamp_to_seconds(timestamp):
++    """Convert timestamp string like '8:05' or '1:23:45' to seconds."""
++    parts = timestamp.split(':')
++    if len(parts) == 2:  # MM:SS
++        minutes, seconds = map(int, parts)
++        if seconds >= 60:
++            raise ValueError(f"Invalid seconds value: {seconds} (must be < 60)")
++        return minutes * 60 + seconds
++    elif len(parts) == 3:  # HH:MM:SS
++        hours, minutes, seconds = map(int, parts)
++        if minutes >= 60:
++            raise ValueError(f"Invalid minutes value: {minutes} (must be < 60)")
++        if seconds >= 60:
++            raise ValueError(f"Invalid seconds value: {seconds} (must be < 60)")
++        return hours * 3600 + minutes * 60 + seconds
++    else:
++        raise ValueError(f"Invalid timestamp format: {timestamp}")
++
++
++def get_youtube_video_id(url):
++    """Extract video ID from YouTube URL."""
++    parsed_url = urlparse(url)
++    
++    if parsed_url.hostname in ['www.youtube.com', 'youtube.com']:
++        if parsed_url.path == '/watch':
++            return parse_qs(parsed_url.query).get('v', [None])[0]
++    elif parsed_url.hostname in ['youtu.be']:
++        return parsed_url.path[1:]  # Remove leading slash
++    
++    return None
++
++
++def create_youtube_timestamp_url(video_url, timestamp_seconds):
++    """Create YouTube URL with timestamp parameter."""
++    video_id = get_youtube_video_id(video_url)
++    if not video_id:
++        return video_url  # Return original URL if we can't parse it
++    
++    return f"https://www.youtube.com/watch?v={video_id}&t={timestamp_seconds}s"
++
++
++def enrich_timestamps_with_links(markdown_text, video_url):
++    """Replace timestamps in markdown with YouTube timestamp links.
++    
++    Supports formats like:
++    - [8:05] -> single timestamp
++    - [8:05-8:24] -> timestamp range (links to start time)
++    - [0:01-0:07, 0:56-1:21] -> multiple timestamps (links each separately)
++    """
++    def replace_timestamp_match(match):
++        full_match = match.group(0)  # e.g., "[8:05-8:24]" or "[1:43-1:53]"
++        timestamp_content = match.group(1)  # e.g., "8:05-8:24" or "1:43-1:53"
++        
++        # Handle multiple timestamps separated by commas
++        if ',' in timestamp_content:
++            parts = [part.strip() for part in timestamp_content.split(',')]
++            linked_parts = []
++            
++            for part in parts:
++                if '-' in part:
++                    # Range like "8:05-8:24" - link to start time
++                    start_time = part.split('-')[0].strip()
++                else:
++                    # Single timestamp like "8:05"
++                    start_time = part.strip()
++                
++                try:
++                    seconds = parse_timestamp_to_seconds(start_time)
++                    timestamp_url = create_youtube_timestamp_url(video_url, seconds)
++                    linked_parts.append(f"[{part}]({timestamp_url})")
++                except ValueError:
++                    # If parsing fails, keep original
++                    linked_parts.append(part)
++            
++            return ', '.join(linked_parts)
++        else:
++            # Single timestamp or range
++            if '-' in timestamp_content:
++                # Range like "8:05-8:24" - link to start time
++                start_time = timestamp_content.split('-')[0].strip()
++            else:
++                # Single timestamp like "8:05"
++                start_time = timestamp_content.strip()
++            
++            try:
++                seconds = parse_timestamp_to_seconds(start_time)
++                timestamp_url = create_youtube_timestamp_url(video_url, seconds)
++                return f"[{timestamp_content}]({timestamp_url})"
++            except ValueError:
++                # If parsing fails, return original
++                return full_match
++    
++    # Regex to match timestamps in brackets
++    # Matches: [8:05], [8:05-8:24], [0:01-0:07, 0:56-1:21]
++    timestamp_pattern = r'\[([0-9]+:[0-9]+(?:-[0-9]+:[0-9]+)?(?:\s*,\s*[0-9]+:[0-9]+(?:-[0-9]+:[0-9]+)?)*)\]'
++    
++    return re.sub(timestamp_pattern, replace_timestamp_match, markdown_text)
+\ No newline at end of file
+
+--- FILE: tests/conftest.py ---
+diff --git a/tests/conftest.py b/tests/conftest.py
+index ed109bd..bfd9625 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -5,8 +5,6 @@ Pytest configuration and fixtures.
+ import sys
+ import os
+ 
+-# Add project root, src, and config to Python path
++# Add src to Python path for package imports
+ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+-sys.path.insert(0, project_root)
+-sys.path.insert(0, os.path.join(project_root, 'src'))
+-sys.path.insert(0, os.path.join(project_root, 'config'))
+\ No newline at end of file
++sys.path.insert(0, os.path.join(project_root, 'src'))
+\ No newline at end of file
+
+--- FILE: tests/test_end_to_end_timestamps.py ---
+diff --git a/tests/test_end_to_end_timestamps.py b/tests/test_end_to_end_timestamps.py
+index 7f11900..c90a615 100644
+--- a/tests/test_end_to_end_timestamps.py
++++ b/tests/test_end_to_end_timestamps.py
+@@ -4,7 +4,7 @@ Tests the complete flow from timestamp enrichment to Notion blocks.
+ """
+ 
+ import unittest
+-from utils.markdown_converter import enrich_timestamps_with_links, markdown_to_notion_blocks
++from youtube_notion.utils.markdown_converter import enrich_timestamps_with_links, markdown_to_notion_blocks
+ 
+ 
+ class TestEndToEndTimestamps(unittest.TestCase):
+
+--- FILE: tests/test_integration.py ---
+diff --git a/tests/test_integration.py b/tests/test_integration.py
+index eb1cdd7..7014449 100644
+--- a/tests/test_integration.py
++++ b/tests/test_integration.py
+@@ -2,8 +2,8 @@
+ Integration test to verify the markdown converter works with EXAMPLE_DATA.
+ """
+ 
+-from utils.markdown_converter import markdown_to_notion_blocks
+-from example_data import EXAMPLE_DATA
++from youtube_notion.utils.markdown_converter import markdown_to_notion_blocks
++from youtube_notion.config.example_data import EXAMPLE_DATA
+ 
+ 
+ def test_example_data_conversion():
+
+--- FILE: tests/test_markdown_converter.py ---
+diff --git a/tests/test_markdown_converter.py b/tests/test_markdown_converter.py
+index cf23e23..bed9a7e 100644
+--- a/tests/test_markdown_converter.py
++++ b/tests/test_markdown_converter.py
+@@ -4,7 +4,7 @@ Tests the conversion of markdown text to Notion rich text blocks.
+ """
+ 
+ import unittest
+-from utils.markdown_converter import parse_rich_text, markdown_to_notion_blocks
++from youtube_notion.utils.markdown_converter import parse_rich_text, markdown_to_notion_blocks
+ 
+ 
+ class TestParseRichText(unittest.TestCase):
+
+--- FILE: tests/test_notion_operations.py ---
+diff --git a/tests/test_notion_operations.py b/tests/test_notion_operations.py
+index fc83537..785ea06 100644
+--- a/tests/test_notion_operations.py
++++ b/tests/test_notion_operations.py
+@@ -4,7 +4,7 @@ Tests for Notion database operations.
+ 
+ import unittest
+ from unittest.mock import Mock, patch
+-from notion_db.operations import add_youtube_entry
++from youtube_notion.notion_db.operations import add_youtube_entry
+ 
+ 
+ class TestNotionOperations(unittest.TestCase):
+
+--- FILE: tests/test_timestamp_enrichment.py ---
+diff --git a/tests/test_timestamp_enrichment.py b/tests/test_timestamp_enrichment.py
+index 4366a2f..b7bbf34 100644
+--- a/tests/test_timestamp_enrichment.py
++++ b/tests/test_timestamp_enrichment.py
+@@ -4,7 +4,7 @@ Tests the conversion of timestamps to YouTube links.
+ """
+ 
+ import unittest
+-from utils.markdown_converter import (
++from youtube_notion.utils.markdown_converter import (
+     parse_timestamp_to_seconds,
+     get_youtube_video_id,
+     create_youtube_timestamp_url,
+
+--- FILE: youtube_notion_cli.py ---
+diff --git a/youtube_notion_cli.py b/youtube_notion_cli.py
+new file mode 100644
+index 0000000..4283a5f
+--- /dev/null
++++ b/youtube_notion_cli.py
+@@ -0,0 +1,10 @@
++#!/usr/bin/env python3
++"""
++Command-line entry point for the YouTube to Notion Database Integration.
++This script imports and runs the main function from the youtube_notion package.
++"""
++
++from src.youtube_notion.main import main
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+*(Note: Strictly judge the developer's behavior based on the '+' lines to avoid penalizing them for legacy code).*
+
+Please analyze the data above and output the evaluation in the required JSON format.

@@ -1,0 +1,22 @@
+#import "../../widgets/user_profile/user_profile.graphql"
+#import "../../widgets/repository_card/repository_card.graphql"
+
+query GetUserDetails($login: String!) {
+  user(login: $login) {
+    ...UserProfileFragment
+  }
+}
+
+query GetUserRepositories($login: String!, $first: Int!, $after: String) {
+  user(login: $login) {
+    repositories(first: $first, after: $after, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      nodes {
+        ...RepositoryCardFragment
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+diff --git a/src/utils/animationOrchestrator.js b/src/utils/animationOrchestrator.js
+index 4d5bb29..ede7cf7 100644
+--- a/src/utils/animationOrchestrator.js
++++ b/src/utils/animationOrchestrator.js
+@@ -315,7 +315,7 @@ const orchestrator = {
+ 
+ // Helper to animate by id (backend-driven)
+ const _idChains = new Map();
+-async function animateById({ id, kind, options = {}, steps, hideStart }) {
++async function animateById({ id, kind, options = {}, steps, hideStart, completionToken }) {
+   // 在入队前“抢先”克隆ghost，避免后续状态同步删除DOM后无法创建幽灵
+   try {
+     const preEl = getCardEl(id);
+@@ -336,8 +336,12 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+   const run = async () => {
+     // 排空期间：仅允许在 reset 调用前提交的动画继续执行；否则仅允许当前时代
+     if (orchestrator._draining) {
+-      if (scheduledEpoch !== orchestrator._drainEpoch) return;
++      if (scheduledEpoch !== orchestrator._drainEpoch) {
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
++        return;
++      }
+     } else if (scheduledEpoch !== orchestrator._epoch) {
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       return;
+     }
+     const el = getCardEl(id) || null;
+@@ -345,6 +349,7 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+     // 自定义steps：直接执行到ghost（不创建）
+     if (Array.isArray(steps) && steps.length) {
+       await orchestrator.playCardSequenceById(el, id, steps, { scheduledEpoch, hideStart: hideStart !== false, ...(options || {}) });
++      if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       return;
+     }
+ 
+@@ -355,33 +360,39 @@ async function animateById({ id, kind, options = {}, steps, hideStart }) {
+         const built = orchestrator.buildSteps.appearFromDeck({ durationMs });
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: true, endMode: 'restore', initialFromDeck: true, startScale, fade });
+         try { frontendEventBus.emit('card-appear-finished', { id }); } catch (_) {}
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'centerThenDeck': {
+         const built = orchestrator.buildSteps.centerThenDeck(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'flyToCenter': {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'flyToDeckFade':
+       case 'drop': {
+         const built = orchestrator.buildSteps.flyToDeckFade(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       case 'exhaust':
+       case 'burn': {
+         const built = orchestrator.buildSteps.exhaustBurn(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'destroy' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+         break;
+       }
+       default: {
+         const built = orchestrator.buildSteps.flyToCenter(options || {});
+         await orchestrator.playCardSequenceById(el, id, built, { scheduledEpoch, hideStart: hideStart !== false, endMode: 'keep' });
++        if (completionToken) try { frontendEventBus.emit('animation-card-by-id-finished', { token: completionToken }); } catch (_) {}
+       }
+     }
+   };

@@ -1,0 +1,37 @@
+diff --git a/web/static/index.html b/web/static/index.html
+index 6ce935a..fa3eefd 100644
+--- a/web/static/index.html
++++ b/web/static/index.html
+@@ -40,17 +40,19 @@
+     <script>
+         function renderBoard() {
+             const board = document.getElementById('board');
+-            board.innerHTML = ''; // Clear the board
++            board.innerHTML = '';
+             const cells = game.board();
++            const hasWinner = game.winner() !== "";
++            
+             cells.forEach((cell, index) => {
+                 const button = document.createElement('button');
+                 button.className = 'cell';
+                 button.textContent = cell || '';
+-                button.disabled = cell !== ''; // Disable if cell is occupied
++                button.disabled = cell !== '' || hasWinner;
+                 button.onclick = () => {
+                     game.makeMove(index);
+-                    renderBoard(); // Re-render after move
+-                    updateTurnText(); // Update turn text after move
++                    renderBoard();
++                    updateTurnText();
+                 };
+                 board.appendChild(button);
+             });
+@@ -58,7 +60,7 @@
+ 
+         function updateTurnText() {
+             const content = document.getElementById('content');
+-            content.textContent = game.text(); // Update the turn text
++            content.textContent = game.text();
+         }
+ 
+         const go = new Go();
