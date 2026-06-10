@@ -1,10 +1,22 @@
-# Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study
+<div align="center">
+  <h1 align="center">Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study</h1>
+</div>
 
-## 1. Repository Overview
+<div align="center">
+    <a href="https://github.com/breezesway/Rules_in_AI_IDEs">
+        <img src="https://img.shields.io/badge/GitHub-000?logo=github&logoColor=FFE165&style=for-the-badge" alt="">
+    </a>
+    <a href="https://arxiv.org/abs/xxxx.xxxxx">
+        <img src="https://img.shields.io/badge/Paper-000?logoColor=FFE165&logo=arxiv&style=for-the-badge" alt="">
+    </a>
+    <hr>
+</div>
+
+## ✨ Repository Overview
 
 This repository is the online replication package for the paper **Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study**. It contains the raw data, analysis scripts, intermediate results, and chart-generation code used throughout the study.
 
-## 2. Directory Structure
+## 📋 Directory Structure
 
 ### `data_collection/`
 
@@ -50,7 +62,7 @@ Scripts, data, and charts for the online survey study.
 - **`survey_results/`**: The final collected survey responses—99 responses in English and Chinese.
 - **`education_professional_duration/`**, **`role_domain_ide/`**: Scripts for generating survey-related charts.
 
-## 3. GitHub Project Snapshots
+## 🚀 GitHub Project Snapshots
 
 Due to their large size, snapshots of the selected GitHub project repositories are not included directly in this repository. They are hosted on Zenodo instead:
 
@@ -58,6 +70,17 @@ Due to their large size, snapshots of the selected GitHub project repositories a
 
 Please download the complete project snapshot archive via the link above.
 
-## 4. Contact
+## 🙂 Contact
 
 If you have any questions, please contact: [caigz1999@foxmail.com](mailto:caigz1999@foxmail.com)
+
+## 📝 Citation
+
+```bibtex
+@article{Wu2025FasterPy,
+  author = {Cai, Guangzong and Li, Ruiyin and Liang, Peng and Li, Zengyang and Shahin, Mojtaba},
+  title = {{Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study}},
+  journal={arXiv preprint arXiv:xxxx.xxxxx},
+  year={2026}
+}
+```
