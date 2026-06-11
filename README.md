@@ -77,7 +77,7 @@ If you have any questions, please contact: [caigz1999@foxmail.com](mailto:caigz1
 ## 📝 Citation
 
 ```bibtex
-@article{Ca2026Rules,
+@article{Cai2026Rules,
   author = {Cai, Guangzong and Li, Ruiyin and Liang, Peng and Li, Zengyang and Shahin, Mojtaba},
   title = {{Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study}},
   journal={arXiv preprint arXiv:2606.12231},
