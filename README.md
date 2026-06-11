@@ -6,7 +6,7 @@
     <a href="https://github.com/breezesway/Rules_in_AI_IDEs">
         <img src="https://img.shields.io/badge/GitHub-000?logo=github&logoColor=FFE165&style=for-the-badge" alt="">
     </a>
-    <a href="https://arxiv.org/abs/xxxx.xxxxx">
+    <a href="https://arxiv.org/abs/2606.12231">
         <img src="https://img.shields.io/badge/Paper-000?logoColor=FFE165&logo=arxiv&style=for-the-badge" alt="">
     </a>
     <hr>
@@ -80,7 +80,7 @@ If you have any questions, please contact: [caigz1999@foxmail.com](mailto:caigz1
 @article{Wu2025FasterPy,
   author = {Cai, Guangzong and Li, Ruiyin and Liang, Peng and Li, Zengyang and Shahin, Mojtaba},
   title = {{Rule Taxonomy and Evolution in AI IDEs: A Mining and Survey Study}},
-  journal={arXiv preprint arXiv:xxxx.xxxxx},
+  journal={arXiv preprint arXiv:2606.12231},
   year={2026}
 }
 ```
