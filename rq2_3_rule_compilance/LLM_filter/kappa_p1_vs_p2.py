@@ -5,6 +5,8 @@ and sampled_284_p2.csv.
 Align by rule_id; can_detect is True/False only (case-insensitive).
 JSON list order defines item index; use RANGE_START / RANGE_END below for a 1-based
 closed interval sub-range; both None uses all data.
+main() still uses that range. main_exclude_first() is an extra report that drops
+the first EXCLUDE_FIRST_N JSON items and computes kappa on the remainder.
 If PRINT_MISMATCH_DETAILS is True, print can_detect mismatches in JSON order after stats.
 """
 
@@ -18,6 +20,9 @@ from typing import Any, Dict, List, Optional, Tuple
 # Both None: use all JSON entries in file order.
 RANGE_START: Optional[int] = None
 RANGE_END: Optional[int] = None
+# Extra report only (does not change the RANGE_* run above): drop this many
+# leading JSON items, then compute kappa on the rest. 284 - 30 = 254.
+EXCLUDE_FIRST_N: int = 30
 # ================================================================
 
 # If True, list can_detect mismatches in JSON order after Kappa stats (fields mostly from JSON)
@@ -149,14 +154,25 @@ def print_mismatches_in_order(
     print("-" * 60)
 
 
-def main() -> None:
+def main(exclude_first: int = 0) -> None:
     rules = load_reconciled(RECONCILED_JSON)
     csv_map = load_csv_can_detect(LABELING_CSV)
 
-    sliced = apply_range_slice(rules)
-    range_desc = "all data"
-    if RANGE_START is not None or RANGE_END is not None:
-        range_desc = f"items {RANGE_START or 1}–{RANGE_END or len(rules)} ({len(sliced)} total)"
+    if exclude_first:
+        if exclude_first < 0 or exclude_first > len(rules):
+            raise ValueError(
+                f"exclude_first={exclude_first} is outside data length n={len(rules)}"
+            )
+        sliced = rules[exclude_first:]
+        range_desc = (
+            f"excluded first {exclude_first} items; "
+            f"items {exclude_first + 1}–{len(rules)} ({len(sliced)} total)"
+        )
+    else:
+        sliced = apply_range_slice(rules)
+        range_desc = "all data"
+        if RANGE_START is not None or RANGE_END is not None:
+            range_desc = f"items {RANGE_START or 1}–{RANGE_END or len(rules)} ({len(sliced)} total)"
 
     y_json: List[bool] = []
     y_csv: List[bool] = []
@@ -218,5 +234,15 @@ def main() -> None:
         print_mismatches_in_order(mismatch_rows)
 
 
+def main_exclude_first(n_exclude: int = EXCLUDE_FIRST_N) -> None:
+    """Extra report: kappa after dropping the first n_exclude JSON items."""
+    print()
+    print("#" * 60)
+    print(f"Additional report: exclude first {n_exclude} samples")
+    print("#" * 60)
+    main(exclude_first=n_exclude)
+
+
 if __name__ == "__main__":
     main()
+    main_exclude_first()

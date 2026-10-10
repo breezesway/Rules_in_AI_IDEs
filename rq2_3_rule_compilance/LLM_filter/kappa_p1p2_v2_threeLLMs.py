@@ -6,6 +6,9 @@ Compute Cohen's Kappa on can_detect:
 
 2) sampled_284_p2.csv vs
    majority vote of [gemini-3-flash-preview, glm-5, qwen3-max]
+
+main() uses every sample. main_exclude_first() is an extra report that drops
+the first EXCLUDE_FIRST_N samples (284 - 30 = 254) and recomputes both kappas.
 """
 
 import csv
@@ -22,6 +25,8 @@ THREE_FILES = [
     "filter_results_glm-5.json",
     "filter_results_qwen3-max.json",
 ]
+# Extra report only: drop this many leading samples, then recompute kappa.
+EXCLUDE_FIRST_N = 30
 
 
 def parse_bool(value):
@@ -173,13 +178,23 @@ def report_block(title, ref_name, y_ref, y_majority):
     return kappa
 
 
-def main():
+def main(exclude_first: int = 0):
     model_maps = load_three_model_maps()
     for filename in THREE_FILES:
         print(f"Loaded {filename}: {len(model_maps[filename])} rules with can_detect")
 
     # Block 1: sampled reconciled JSON vs majority(3)
     sampled_data = load_json(SCRIPT_DIR / SAMPLED_FILE)
+    if exclude_first:
+        if exclude_first < 0 or exclude_first > len(sampled_data):
+            raise ValueError(
+                f"exclude_first={exclude_first} is outside {SAMPLED_FILE} length n={len(sampled_data)}"
+            )
+        print(
+            f"Excluding first {exclude_first} samples of {SAMPLED_FILE}: "
+            f"{len(sampled_data)} -> {len(sampled_data) - exclude_first}"
+        )
+        sampled_data = sampled_data[exclude_first:]
     sampled_rule_ids = [obj["rule_id"] for obj in sampled_data if obj.get("rule_id") is not None]
     sampled_by_id = build_rule_id_to_can_detect_from_json(sampled_data)
     sampled_aligned_ids, sampled_y, sampled_maj = align_and_build_majority(
@@ -197,6 +212,16 @@ def main():
 
     # Block 2: CSV vs majority(3)
     csv_rule_ids, csv_by_id = load_labeling_csv(SCRIPT_DIR / LABELING_CSV)
+    if exclude_first:
+        if exclude_first > len(csv_rule_ids):
+            raise ValueError(
+                f"exclude_first={exclude_first} exceeds {LABELING_CSV} length n={len(csv_rule_ids)}"
+            )
+        print(
+            f"Excluding first {exclude_first} samples of {LABELING_CSV}: "
+            f"{len(csv_rule_ids)} -> {len(csv_rule_ids) - exclude_first}"
+        )
+        csv_rule_ids = csv_rule_ids[exclude_first:]
     csv_aligned_ids, csv_y, csv_maj = align_and_build_majority(
         csv_rule_ids, csv_by_id, model_maps
     )
@@ -223,5 +248,15 @@ def main():
         print(f"[{LABELING_CSV}] vs majority(3): N/A")
 
 
+def main_exclude_first(n_exclude: int = EXCLUDE_FIRST_N):
+    """Extra report: both kappas after dropping the first n_exclude samples."""
+    print()
+    print("#" * 72)
+    print(f"Additional report: exclude first {n_exclude} samples")
+    print("#" * 72)
+    main(exclude_first=n_exclude)
+
+
 if __name__ == "__main__":
     main()
+    main_exclude_first()

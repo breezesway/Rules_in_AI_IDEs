@@ -11,6 +11,8 @@ Binary agreement for Cohen's kappa uses two labels: Unclear and Clear.
 Row scope: set LABEL_ROW_START / LABEL_ROW_END (1-based, inclusive, below) to
 restrict which labeling CSV rows are summarized and used for kappa; both None
 uses the full table.
+main() still uses that range. main_exclude_first() is an extra report that drops
+the first EXCLUDE_FIRST_N labeling rows (308 - 30 = 278) and recomputes kappa.
 """
 
 from __future__ import annotations
@@ -50,6 +52,9 @@ REASON_JSON = DIR / "sampled_308_p1.json"
 # When both are None, tier_1 stats and Kappa use all data rows; otherwise only rows in range.
 LABEL_ROW_START: int | None = None
 LABEL_ROW_END: int | None = None
+# Extra report only (does not change the LABEL_ROW_* run): drop this many
+# leading labeling rows, then compute kappa on the rest.
+EXCLUDE_FIRST_N = 30
 
 # Binary labels: Unclear vs Clear
 BIN_UNCLEAR = "Unclear"
@@ -114,10 +119,18 @@ def slice_labeling_rows(
     return out, f"rows {lo}–{hi} ({len(out)} row(s), relative to first data row)"
 
 
-def main() -> None:
+def main(
+    row_start: int | None = None,
+    row_end: int | None = None,
+    *,
+    range_override: bool = False,
+) -> None:
+    if not range_override:
+        row_start = LABEL_ROW_START
+        row_end = LABEL_ROW_END
     labeling = load_csv_rows(LABELING_CSV)
     labeling_scope, scope_desc = slice_labeling_rows(
-        labeling, LABEL_ROW_START, LABEL_ROW_END
+        labeling, row_start, row_end
     )
 
     if not REASON_JSON.exists():
@@ -246,5 +259,15 @@ def main() -> None:
         print()
 
 
+def main_exclude_first(n_exclude: int = EXCLUDE_FIRST_N) -> None:
+    """Extra report: kappa after dropping the first n_exclude labeling rows."""
+    print()
+    print("#" * 60)
+    print(f"Additional report: exclude first {n_exclude} samples")
+    print("#" * 60)
+    main(row_start=n_exclude + 1, row_end=None, range_override=True)
+
+
 if __name__ == "__main__":
     main()
+    main_exclude_first()

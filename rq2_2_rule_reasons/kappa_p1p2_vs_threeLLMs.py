@@ -8,6 +8,9 @@ Human CSV binarization matches kappa_p1_v1_p2.py: only Clear/clear -> non-Unclea
 any other non-empty tier_1 -> Unclear (1). Rows with empty tier_1 are skipped.
 
 Model JSON: tier_1 == "Unclear" -> 1, else -> 0.
+
+main() uses every sample. main_exclude_first() is an extra report that drops
+the first EXCLUDE_FIRST_N samples (308 - 30 = 278) and recomputes both blocks.
 """
 
 import csv
@@ -43,6 +46,8 @@ MODEL_FILES = [
     "reason_results_glm-5.json",
     "reason_results_qwen3-max.json",
 ]
+# Extra report only: drop this many leading samples, then recompute kappa.
+EXCLUDE_FIRST_N = 30
 
 
 def load_json(path: Path):
@@ -228,7 +233,7 @@ def report_kappa_block(
     return per_file_kappa, k_majority
 
 
-def main():
+def main(exclude_first: int = 0):
     if len(MODEL_FILES) == 0:
         print("Error: MODEL_FILES is empty.")
         return
@@ -243,6 +248,18 @@ def main():
     if not isinstance(sampled_data, list):
         print(f"Error: {SAMPLED_FILE} is not a JSON array")
         return
+    if exclude_first:
+        if exclude_first < 0 or exclude_first > len(sampled_data):
+            print(
+                f"Error: exclude_first={exclude_first} is outside "
+                f"{SAMPLED_FILE} length n={len(sampled_data)}"
+            )
+            return
+        print(
+            f"Excluding first {exclude_first} samples of {SAMPLED_FILE}: "
+            f"{len(sampled_data)} -> {len(sampled_data) - exclude_first}"
+        )
+        sampled_data = sampled_data[exclude_first:]
     rule_ids = [obj["rule_id"] for obj in sampled_data if obj.get("rule_id") is not None]
     sampled_tier1 = [
         binarize_model_tier1(obj.get("tier_1", ""))
@@ -285,6 +302,18 @@ def main():
         print(f"\nError: file not found: {LABELING_CSV}")
         return
     csv_rule_ids, csv_bin, csv_raw = load_labeling_csv(csv_path)
+    if exclude_first:
+        if exclude_first > len(csv_rule_ids):
+            print(
+                f"Error: exclude_first={exclude_first} exceeds "
+                f"{LABELING_CSV} length n={len(csv_rule_ids)}"
+            )
+            return
+        print(
+            f"Excluding first {exclude_first} samples of {LABELING_CSV}: "
+            f"{len(csv_rule_ids)} -> {len(csv_rule_ids) - exclude_first}"
+        )
+        csv_rule_ids = csv_rule_ids[exclude_first:]
     csv_y = [csv_bin[rid] for rid in csv_rule_ids]
     n_csv0 = len(csv_rule_ids)
     print(f"\nLoaded {LABELING_CSV}: {n_csv0} rules with non-empty tier_1 (first occurrence per rule_id)")
@@ -326,5 +355,15 @@ def main():
         print(f"  vs majority ({len(MODEL_FILES)} files): {k_cm:.4f}")
 
 
+def main_exclude_first(n_exclude: int = EXCLUDE_FIRST_N):
+    """Extra report: both blocks after dropping the first n_exclude samples."""
+    print()
+    print("#" * 70)
+    print(f"Additional report: exclude first {n_exclude} samples")
+    print("#" * 70)
+    main(exclude_first=n_exclude)
+
+
 if __name__ == "__main__":
     main()
+    main_exclude_first()
