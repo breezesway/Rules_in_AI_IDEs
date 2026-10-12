@@ -50,6 +50,11 @@ LABEL_OFFSET_POINTS: dict[str, tuple[float, float]] = {
 }
 DEFAULT_LABEL_OFFSET: tuple[float, float] = (0, 10)
 
+# Badge anchors in data coordinates. Each one sits on its reference line in a gap
+# between subcategory labels (measured from rendered text boxes).
+_RC_BADGE_Y = (4.02, 4.165, 4.232)
+_MS_BADGE_X = (500.0, 640.0, 640.0)
+
 
 def _configure_matplotlib_fonts(plt_mod) -> None:
     import platform
@@ -104,6 +109,27 @@ def quantile_linear(sorted_vals: List[float], p: float) -> float:
     hi = int(math.ceil(pos))
     t = pos - lo
     return sorted_vals[lo] * (1 - t) + sorted_vals[hi] * t
+
+
+def _quartile_badge(ax, x: float, y: float, text: str, edge: str) -> None:
+    ax.text(
+        x,
+        y,
+        text,
+        ha="center",
+        va="center",
+        fontsize=12,
+        color="#2a2a2a",
+        zorder=6,
+        clip_on=True,
+        bbox=dict(
+            boxstyle="round,pad=0.2,rounding_size=0.32",
+            facecolor="white",
+            edgecolor=edge,
+            linewidth=0.65,
+            alpha=0.97,
+        ),
+    )
 
 
 def quartile_label(v: float, q25: float, q50: float, q75: float) -> int:
@@ -349,12 +375,17 @@ def main() -> int:
             clip_on=False,
         )
 
-    ax.axvline(rc25, color="#9e9e9e", linestyle="--", linewidth=1.0, zorder=1, alpha=0.85)
-    ax.axvline(rc50, color="#9e9e9e", linestyle="--", linewidth=1.0, zorder=1, alpha=0.85)
-    ax.axvline(rc75, color="#9e9e9e", linestyle="--", linewidth=1.0, zorder=1, alpha=0.85)
-    ax.axhline(ms25, color="#757575", linestyle=":", linewidth=1.05, zorder=1, alpha=0.9)
-    ax.axhline(ms50, color="#757575", linestyle=":", linewidth=1.05, zorder=1, alpha=0.9)
-    ax.axhline(ms75, color="#757575", linestyle=":", linewidth=1.05, zorder=1, alpha=0.9)
+    rc_line = "#7a7a7a"
+    ms_line = "#5e5e5e"
+    for x in (rc25, rc50, rc75):
+        ax.axvline(x, color=rc_line, linestyle="--", linewidth=1.05, zorder=1, alpha=0.9)
+    for y in (ms25, ms50, ms75):
+        ax.axhline(y, color=ms_line, linestyle=(0, (1.1, 1.5)), linewidth=1.15, zorder=1, alpha=0.9)
+
+    for k, (x, y) in enumerate(zip((rc25, rc50, rc75), _RC_BADGE_Y), start=1):
+        _quartile_badge(ax, x, y, f"Q{k} = {x:.0f}", rc_line)
+    for k, (x, y) in enumerate(zip(_MS_BADGE_X, (ms25, ms50, ms75)), start=1):
+        _quartile_badge(ax, x, y, f"Q{k} = {y:.3f}", ms_line)
 
     ax.set_xlabel("Rule Count", fontweight="medium")
     ax.set_ylabel("Importance Mean Score", fontweight="medium")
