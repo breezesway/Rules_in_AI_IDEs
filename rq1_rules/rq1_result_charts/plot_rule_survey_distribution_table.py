@@ -13,6 +13,8 @@ from matplotlib.patches import Rectangle
 
 plt.rcParams["font.size"] = 17
 plt.rcParams["axes.titlesize"] = 18
+# Thin enough to keep Mean±SD readable, thick enough to survive print scaling.
+plt.rcParams["hatch.linewidth"] = 1.0
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -39,6 +41,26 @@ LIKERT_COLORS = {
     3: "#ffe082",
     4: "#ffb74d",
     5: "#e65100",
+}
+
+# Second channel so the five scores stay distinct without relying on hue.
+# Doubled symbols keep the texture visible on narrow segments.
+LIKERT_HATCHES = {
+    1: "..",   # stipple
+    2: "//",   # diagonal
+    3: "||",   # vertical
+    4: "\\\\",  # back diagonal
+    5: "x",    # open cross; "xx" reads as a tight net under the label
+}
+
+# Hue-matched ink, a step lighter than near-black so the lines stay visible
+# without competing with the Mean±SD text. Cream on score 5.
+LIKERT_HATCH_COLORS = {
+    1: "#5C3A1E",
+    2: "#4E7324",
+    3: "#8A7040",
+    4: "#A15E1C",
+    5: "#FFF6EA",
 }
 
 # Shift divisor: larger values pull bars toward center (less left-right swing)
@@ -184,11 +206,23 @@ def draw_likert_bar(
     x_w4_left = x_w3_right
     x_w5_left = x_w4_left + w4
 
-    ax.barh(y, w1, left=x_w1_left, height=height, color=LIKERT_COLORS[1], edgecolor="none")
-    ax.barh(y, w2, left=x_w2_left, height=height, color=LIKERT_COLORS[2], edgecolor="none")
-    ax.barh(y, w3, left=x_w3_left, height=height, color=LIKERT_COLORS[3], edgecolor="none")
-    ax.barh(y, w4, left=x_w4_left, height=height, color=LIKERT_COLORS[4], edgecolor="none")
-    ax.barh(y, w5, left=x_w5_left, height=height, color=LIKERT_COLORS[5], edgecolor="none")
+    for width, left, score in (
+        (w1, x_w1_left, 1),
+        (w2, x_w2_left, 2),
+        (w3, x_w3_left, 3),
+        (w4, x_w4_left, 4),
+        (w5, x_w5_left, 5),
+    ):
+        ax.barh(
+            y,
+            width,
+            left=left,
+            height=height,
+            facecolor=LIKERT_COLORS[score],
+            edgecolor=LIKERT_HATCH_COLORS[score],
+            hatch=LIKERT_HATCHES[score],
+            linewidth=0,
+        )
 
     # Place label at geometric center of stacked bar (width-weighted midpoint)
     x_label = (
@@ -480,7 +514,16 @@ def main() -> None:
 
     # Legend below table to avoid overlap
     handles = [
-        Rectangle((0, 0), 1, 1, facecolor=LIKERT_COLORS[s], edgecolor="none", linewidth=0) for s in range(1, 6)
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            facecolor=LIKERT_COLORS[s],
+            edgecolor=LIKERT_HATCH_COLORS[s],
+            hatch=LIKERT_HATCHES[s],
+            linewidth=0,
+        )
+        for s in range(1, 6)
     ]
     labels = ["1 (Least Important)", "2", "3", "4", "5 (Most Important)"]
     legend_y = max(0.02, y_bottom_line - 0.048)

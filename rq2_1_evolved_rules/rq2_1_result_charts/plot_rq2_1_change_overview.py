@@ -68,6 +68,14 @@ def main() -> None:
     color_added = "#C5C0F0"        # light peach
     color_modified = "#C7E9F1"     # light cyan
     color_deleted = "#F6D6AD"      # light lavender
+    # Hue-matched, lighter than black so the percentage text stays primary.
+    # Single slash / backslash stay open; "x" is the diagonal cross, not a square grid.
+    hatch_added = "/"
+    hatch_modified = "x"
+    hatch_deleted = "\\"
+    ink_added = "#7A72B4"
+    ink_modified = "#4A90A0"
+    ink_deleted = "#C08040"
     color_grid = "#D9D9D9"
     color_text = "#1A1A1A"
 
@@ -79,6 +87,7 @@ def main() -> None:
             "axes.labelsize": 18,
             "xtick.labelsize": 16.5,
             "ytick.labelsize": 16.5,
+            "hatch.linewidth": 0.9,
         }
     )
 
@@ -187,9 +196,18 @@ def main() -> None:
         edge_w = 1.3 if is_first else 0.0
         alpha = 1.0 if is_first else 0.92
         # Do not add borders to each segment to avoid internal divider lines
-        ax_right.barh(yi, a, height=bar_h, color=color_added, edgecolor="none", linewidth=0, alpha=alpha)
-        ax_right.barh(yi, m, height=bar_h, left=a, color=color_modified, edgecolor="none", linewidth=0, alpha=alpha)
-        ax_right.barh(yi, d, height=bar_h, left=a + m, color=color_deleted, edgecolor="none", linewidth=0, alpha=alpha)
+        ax_right.barh(
+            yi, a, height=bar_h, facecolor=color_added, edgecolor=ink_added,
+            hatch=hatch_added, linewidth=0, alpha=alpha,
+        )
+        ax_right.barh(
+            yi, m, height=bar_h, left=a, facecolor=color_modified, edgecolor=ink_modified,
+            hatch=hatch_modified, linewidth=0, alpha=alpha,
+        )
+        ax_right.barh(
+            yi, d, height=bar_h, left=a + m, facecolor=color_deleted, edgecolor=ink_deleted,
+            hatch=hatch_deleted, linewidth=0, alpha=alpha,
+        )
         # For first-level categories, draw only the outer outline of the full bar
         if is_first:
             total_w = a + m + d
@@ -278,9 +296,9 @@ def main() -> None:
 
     # Legend at top-center for paper layout
     handles = [
-        Patch(facecolor=color_added, edgecolor="none", label="Added"),
-        Patch(facecolor=color_modified, edgecolor="none", label="Modified"),
-        Patch(facecolor=color_deleted, edgecolor="none", label="Deleted"),
+        Patch(facecolor=color_added, edgecolor=ink_added, hatch=hatch_added, linewidth=0, label="Added"),
+        Patch(facecolor=color_modified, edgecolor=ink_modified, hatch=hatch_modified, linewidth=0, label="Modified"),
+        Patch(facecolor=color_deleted, edgecolor=ink_deleted, hatch=hatch_deleted, linewidth=0, label="Deleted"),
     ]
     labels = ["Added", "Modified", "Deleted"]
     fig.legend(
