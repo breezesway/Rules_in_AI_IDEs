@@ -1,9 +1,11 @@
 """
-Butterfly chart: left tier1 (N=504), right Q10 (N=99).
+Butterfly chart: left tier1 (N=511), right Q10 (N=99).
+Both axes share a 0–100% scale so bar lengths are directly comparable.
 Center gap; split bottom axes + upward tick marks; categories sorted by left repo count descending.
 
 Tunable: ROW_GAP, FIG_WIDTH/HEIGHT, BAR_HEIGHT; BOTTOM_AXIS_AXES_Y, LABEL_DY_AXES;
-LEGEND_BBOX_*; FONT_CATEGORY / FONT_BAR_VALUE / FONT_TICK / FONT_LEGEND.
+LEGEND_BBOX_*; FONT_CATEGORY / FONT_BAR_VALUE / FONT_TICK / FONT_LEGEND;
+AXIS_MAX_PCT, TICK_STEP_PCT.
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ ORDER = [
     "Pruning",
 ]
 
-N_REPO = 504
+N_REPO = 511
 
 # Layout tunables
 # ---------------------------------------------------------------------------
@@ -39,8 +41,8 @@ N_REPO = 504
 # Suggested ~0.10–0.28; used with full x-axis span ±1.
 G_MID_GAP = 0.25
 
-# Outer padding beyond bar tips (data coords), slightly > 1 so labels/ticks are not clipped
-X_PAD_OUTER = 0.06
+# Outer padding beyond the 100% endpoints (data coords), so end ticks and bar labels are not clipped
+X_PAD_OUTER = 0.14
 
 # Figure size (inches): wide aspect; adjust freely for paper layout
 FIG_WIDTH = 12.0
@@ -50,7 +52,12 @@ FIG_HEIGHT = 3.85
 BAR_HEIGHT = 0.32
 ROW_GAP = 0.18
 
-# Baseline extension beyond full-scale endpoints (±1 → left 30% / right 80%) in data coords
+# Both sides use the same 0–100% scale (±1 in data coords).
+AXIS_MAX_PCT = 100
+# 20% steps stay readable at FONT_TICK; 10% steps crowd "100%" against its neighbors.
+TICK_STEP_PCT = 20
+
+# Baseline extension beyond the 100% endpoints, in data coords
 BASELINE_EXTEND = 0.07
 
 # Bottom axis line + tick stems share BOTTOM_AXIS_AXES_Y (axes fraction, 0 = subplot bottom)
@@ -117,11 +124,8 @@ def main() -> None:
     right_pct = [t[4] for t in rows]
     n = len(labels)
 
-    mx_l = max(left_pct) if left_pct else 1.0
-    mx_r = max(right_pct) if right_pct else 1.0
-
-    l_max = max(10, int((mx_l + 9.999) // 10) * 10)
-    r_max = max(20, int((mx_r + 19.999) // 20) * 20)
+    l_max = AXIS_MAX_PCT
+    r_max = AXIS_MAX_PCT
 
     g = G_MID_GAP
     span = 1.0 - g
@@ -189,10 +193,10 @@ def main() -> None:
     ax.plot([g, x_right_end], [yb, yb], transform=trans_xaxes, color="k", linewidth=0.9, clip_on=False, zorder=5)
 
     left_tick_specs: list[tuple[float, str]] = [
-        (x_left_tip(float(p)), f"{p}%") for p in range(0, l_max + 1, 10)
+        (x_left_tip(float(p)), f"{p}%") for p in range(0, AXIS_MAX_PCT + 1, TICK_STEP_PCT)
     ]
     right_tick_specs: list[tuple[float, str]] = [
-        (x_right_tip(float(p)), f"{p}%") for p in range(0, r_max + 1, 20)
+        (x_right_tip(float(p)), f"{p}%") for p in range(0, AXIS_MAX_PCT + 1, TICK_STEP_PCT)
     ]
     left_tick_specs.sort(key=lambda t: t[0])
     right_tick_specs.sort(key=lambda t: t[0])
